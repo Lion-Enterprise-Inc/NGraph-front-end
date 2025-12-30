@@ -11,7 +11,7 @@ import {
 import GalleryIcon from "../assets/624689.png";
 import CameraIcon from "../assets/624690.png";
 import VectorIcon from "../assets/Vectoricon.png";
-import Vector from "../assets/Vectorbtn.png";
+import Vector from "../assets/vectorbtn.png";
 import { getUiCopy } from "../i18n/uiCopy";
 
 type Attachment = {
