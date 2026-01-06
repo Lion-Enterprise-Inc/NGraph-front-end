@@ -1631,11 +1631,16 @@ body {
 }
 
 .camera-view {
-  min-height: 100vh;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
   display: flex;
   flex-direction: column;
   background: #000000;
   color: #ffffff;
+  z-index: 1000;
 }
 
 .camera-preview {
@@ -1733,12 +1738,7 @@ body {
 }
 
 @media (min-width: 640px) {
-  .camera-view {
-    width: min(520px, 100vw);
-    margin: 0 auto;
-    border-radius: 24px;
-    overflow: hidden;
-  }
+  /* Camera view is now full screen on all devices */
 }
 
 /* Store registration page */
@@ -3890,4 +3890,9 @@ textarea.form-input {
     --banner-width: 377px;
     --banner-height: 154px;
   }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }

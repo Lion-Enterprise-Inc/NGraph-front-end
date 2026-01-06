@@ -25,7 +25,10 @@ export default function CameraView({ language = 'ja' }: CameraViewProps) {
   const { language: contextLanguage, setPendingAttachment } = useAppContext()
   const galleryInputRef = useRef<HTMLInputElement | null>(null)
   const videoRef = useRef<HTMLVideoElement | null>(null)
+  const streamRef = useRef<MediaStream | null>(null)
   const [cameraError, setCameraError] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
+  const [facingMode, setFacingMode] = useState<'user' | 'environment'>('user')
   const activeLanguage = contextLanguage ?? language ?? 'ja'
   const copy = getUiCopy(activeLanguage)
 
@@ -63,30 +66,135 @@ export default function CameraView({ language = 'ja' }: CameraViewProps) {
     }, 'image/jpeg', 0.92)
   }
 
-  useEffect(() => {
-    let stream: MediaStream | null = null
-    const startCamera = async () => {
-      try {
-        stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: { ideal: 'environment' } },
-          audio: false,
-        })
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream
-          await videoRef.current.play()
-        }
-      } catch (error) {
-        console.log('camera_error', error)
+  const startCamera = async () => {
+    console.log('startCamera called, facingMode:', facingMode)
+    setIsLoading(true)
+    setCameraError(false)
+    
+    // Check if we're in a secure context
+    if (typeof window !== 'undefined' && !window.isSecureContext) {
+      console.log('Not in secure context, camera may not work')
+      console.log('Protocol:', window.location.protocol)
+      console.log('Hostname:', window.location.hostname)
+      
+      // For development/testing, allow http on localhost
+      if (window.location.protocol === 'http:' && 
+          (window.location.hostname === 'localhost' || 
+           window.location.hostname === '127.0.0.1' ||
+           window.location.hostname.includes('.local'))) {
+        console.log('Allowing camera on localhost http for development')
+      } else {
+        console.log('Camera requires HTTPS. Current protocol:', window.location.protocol)
         setCameraError(true)
+        setIsLoading(false)
+        return null
       }
     }
+    
+    // Check if MediaDevices API is available
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      console.log('MediaDevices API not available')
+      setCameraError(true)
+      setIsLoading(false)
+      return null
+    }
+    
+    // Check camera permissions if available
+    if (navigator.permissions && navigator.permissions.query) {
+      try {
+        const permissionStatus = await navigator.permissions.query({ name: 'camera' as PermissionName })
+        console.log('Camera permission status:', permissionStatus.state)
+        if (permissionStatus.state === 'denied') {
+          console.log('Camera permission denied')
+          setCameraError(true)
+          setIsLoading(false)
+          return null
+        }
+      } catch (permError) {
+        console.log('Permission query failed:', permError)
+      }
+    }
+    
+    // Add a small delay to prevent showing error too quickly
+    const timeoutId = setTimeout(() => {
+      if (isLoading) {
+        console.log('Camera loading timeout reached')
+        setIsLoading(false)
+        setCameraError(true)
+      }
+    }, 8000) // 8 second timeout
+    
+    try {
+      // Stop any existing stream
+      if (streamRef.current) {
+        console.log('Stopping existing stream')
+        streamRef.current.getTracks().forEach((track) => track.stop())
+      }
 
-    startCamera()
+      // Try with preferred facing mode first
+      let constraints: MediaStreamConstraints = {
+        video: { facingMode: { ideal: facingMode } },
+        audio: false,
+      }
+
+      console.log('Requesting camera with constraints:', constraints)
+      let stream: MediaStream
+      try {
+        stream = await navigator.mediaDevices.getUserMedia(constraints)
+        console.log('Camera access granted with preferred constraints')
+      } catch (firstError) {
+        console.log('Preferred camera failed, trying any camera:', firstError)
+        // If preferred facing mode fails, try with any camera
+        constraints = {
+          video: true,
+          audio: false,
+        }
+        console.log('Requesting camera with fallback constraints:', constraints)
+        stream = await navigator.mediaDevices.getUserMedia(constraints)
+        console.log('Camera access granted with fallback constraints')
+      }
+      
+      clearTimeout(timeoutId)
+      streamRef.current = stream
+      
+      if (videoRef.current) {
+        console.log('Setting video srcObject')
+        videoRef.current.srcObject = stream
+        console.log('Video element:', videoRef.current)
+        console.log('Stream tracks:', stream.getTracks())
+        await videoRef.current.play()
+        console.log('Video playing successfully, video dimensions:', videoRef.current.videoWidth, 'x', videoRef.current.videoHeight)
+      }
+      setCameraError(false)
+      setIsLoading(false)
+      return stream
+    } catch (error) {
+      clearTimeout(timeoutId)
+      console.log('camera_error:', error)
+      setCameraError(true)
+      setIsLoading(false)
+      return null
+    }
+  }
+
+  const flipCamera = () => {
+    setFacingMode(prev => prev === 'user' ? 'environment' : 'user')
+  }
+
+  useEffect(() => {
+    const initCamera = async () => {
+      await startCamera()
+    }
+
+    initCamera()
 
     return () => {
-      stream?.getTracks().forEach((track) => track.stop())
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((track) => track.stop())
+        streamRef.current = null
+      }
     }
-  }, [])
+  }, [facingMode])
 
   return (
     <div className="camera-view">
@@ -98,8 +206,29 @@ export default function CameraView({ language = 'ja' }: CameraViewProps) {
           muted
           autoPlay
         />
-        {cameraError && (
-          <div className="camera-fallback">{copy.camera.unavailable}</div>
+        {isLoading && (
+          <div className="camera-fallback">
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+              <div style={{ width: '40px', height: '40px', border: '3px solid #ffffff', borderTop: '3px solid transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+              Loading camera...
+            </div>
+          </div>
+        )}
+        {cameraError && !isLoading && (
+          <div className="camera-fallback" onClick={() => startCamera()}>
+            <div style={{ textAlign: 'center' }}>
+              <div>{copy.camera.unavailable}</div>
+              <div style={{ fontSize: '12px', marginTop: '8px', opacity: 0.8 }}>
+                {!window.isSecureContext && window.location.protocol !== 'https:' 
+                  ? 'Camera requires HTTPS. Please use a secure connection.'
+                  : 'Tap to retry'
+                }
+              </div>
+              <div style={{ fontSize: '10px', marginTop: '4px', opacity: 0.6 }}>
+                Protocol: {window.location.protocol}, Secure: {window.isSecureContext ? 'Yes' : 'No'}
+              </div>
+            </div>
+          </div>
         )}
         <div className="camera-overlay">
           <button
@@ -134,7 +263,7 @@ export default function CameraView({ language = 'ja' }: CameraViewProps) {
         >
           <span className="shutter-inner" />
         </button>
-        <button className="icon-button light" type="button" aria-label={copy.camera.flipCamera}>
+        <button className="icon-button light" type="button" aria-label={copy.camera.flipCamera} onClick={flipCamera}>
           <RefreshIcon />
         </button>
       </div>
