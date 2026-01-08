@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState, type ChangeEvent } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import TranslateIcon from '../components/icons/TranslateIcon'
 import ChatGalleryIcon from '../components/icons/ChatGalleryIcon'
 import RefreshIcon from '../components/icons/RefreshIcon'
@@ -22,13 +22,15 @@ function CloseIcon() {
 
 export default function CameraView({ language = 'ja' }: CameraViewProps) {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const restaurantId = searchParams?.get('restaurantId')
   const { language: contextLanguage, setPendingAttachment } = useAppContext()
   const galleryInputRef = useRef<HTMLInputElement | null>(null)
   const videoRef = useRef<HTMLVideoElement | null>(null)
   const streamRef = useRef<MediaStream | null>(null)
   const [cameraError, setCameraError] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
-  const [facingMode, setFacingMode] = useState<'user' | 'environment'>('user')
+  const [facingMode, setFacingMode] = useState<'user' | 'environment'>('environment')
   const activeLanguage = contextLanguage ?? language ?? 'ja'
   const copy = getUiCopy(activeLanguage)
 
@@ -40,7 +42,10 @@ export default function CameraView({ language = 'ja' }: CameraViewProps) {
     const file = event.target.files?.[0]
     if (file) {
       setPendingAttachment({ file, source: 'library' })
-      router.push('/capture?from=explore')
+      const captureUrl = restaurantId 
+        ? `/capture?from=restaurant&restaurantId=${restaurantId}` 
+        : '/capture?from=explore'
+      router.push(captureUrl)
     }
     event.target.value = ''
   }
@@ -62,7 +67,10 @@ export default function CameraView({ language = 'ja' }: CameraViewProps) {
       if (!blob) return
       const file = new File([blob], 'capture.jpg', { type: 'image/jpeg' })
       setPendingAttachment({ file, source: 'camera' })
-      router.push('/capture?from=explore')
+      const captureUrl = restaurantId 
+        ? `/capture?from=restaurant&restaurantId=${restaurantId}` 
+        : '/capture?from=explore'
+      router.push(captureUrl)
     }, 'image/jpeg', 0.92)
   }
 

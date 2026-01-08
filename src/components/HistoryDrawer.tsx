@@ -50,17 +50,6 @@ export default function HistoryDrawer({
             <img src={triangleImage.src} alt="" />
           </span>
         </div>
-
-        <div className="drawer-history">
-          {items.map((item) => (
-            <div key={item.id} className="drawer-history-item">
-              <div className="drawer-history-title">{item.title}</div>
-              <div className="drawer-history-date">{item.date}</div>
-            </div>
-          ))}
-        </div>
-
-        <div className="drawer-divider" />
       </aside>
     </div>
   )

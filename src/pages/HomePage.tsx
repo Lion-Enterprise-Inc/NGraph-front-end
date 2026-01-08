@@ -1,6 +1,5 @@
 import LanguageSelect from '../components/LanguageSelect'
 import CTAButton from '../components/CTAButton'
-import bannerImage from '../assets/ads-banner.jpg'
 import { getUiCopy } from '../i18n/uiCopy'
 import { useAppContext } from '../components/AppProvider'
 
@@ -27,7 +26,7 @@ export default function HomePage({
       </main>
 
       <div className="home-banner" aria-label={copy.home.bannerLabel}>
-        <img src={bannerImage.src} alt={copy.home.bannerAlt} />
+        <img src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800&auto=format&fit=crop&q=80" alt={copy.home.bannerAlt} />
       </div>
 
       <footer className="bottom-bar" />

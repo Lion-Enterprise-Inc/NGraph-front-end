@@ -17,6 +17,18 @@ import ChatDock from "../components/ChatDock";
 import { useAppContext } from "../components/AppProvider";
 import { getUiCopy, type LanguageCode } from "../i18n/uiCopy";
 
+// Helper function to render text with bold formatting
+const renderBoldText = (text: string) => {
+  const parts = text.split(/(\*\*.*?\*\*)/g);
+  return parts.map((part, index) => {
+    if (part.startsWith('**') && part.endsWith('**')) {
+      const boldText = part.slice(2, -2);
+      return <strong key={index}>{boldText}</strong>;
+    }
+    return part;
+  });
+};
+
 type Attachment = {
   id: string;
   source: string;
@@ -125,6 +137,9 @@ export default function CapturePage({
   const [typingState, setTypingState] = useState<
     Record<string, { title: string; intro: string; body: string[] }>
   >({});
+  const [typingComplete, setTypingComplete] = useState<Set<string>>(new Set());
+  const [userScrolledUp, setUserScrolledUp] = useState(false);
+  const [isTypingActive, setIsTypingActive] = useState(false);
   const sendEnabled = message.trim().length > 0 || Boolean(attachment);
   const fromHome = searchParams?.get("from") === "home" || defaultFromHome;
   const fromRestaurant = searchParams?.get("from") === "restaurant";
@@ -204,28 +219,48 @@ export default function CapturePage({
         typingTimersRef.current.push(timer);
       });
 
-    const scrollToEnd = () => {
-      const container = threadRef.current;
-      const items = container?.querySelectorAll<HTMLElement>(
-        ".chat-thread-item"
-      );
-      const last = items?.[items.length - 1] ?? null;
-      if (!last) return;
-
-      last.scrollIntoView({ behavior: "smooth", block: "start" });
-      last.setAttribute("tabindex", "-1");
-      requestAnimationFrame(() => {
-        last.focus({ preventScroll: true });
-      });
+    const scrollToBottom = (smooth = true, force = false) => {
+      const container = captureBodyRef.current;
+      if (!container) return;
+      
+      // During typing, always auto-scroll regardless of user position
+      // After typing, only scroll if forced or user hasn't scrolled up
+      if (!isTypingActive && userScrolledUp && !force) return;
+      
+      const scrollOptions: ScrollToOptions = {
+        top: container.scrollHeight,
+        behavior: smooth ? "smooth" : "auto",
+      };
+      
+      container.scrollTo(scrollOptions);
     };
 
     const typeText = async (
       fullText: string,
-      onUpdate: (value: string) => void
+      onUpdate: (value: string) => void,
+      scrollDuringTyping = false
     ) => {
-      for (let i = 1; i <= fullText.length; i += 1) {
-        await wait(22);
-        onUpdate(fullText.slice(0, i));
+      const chunkSize = 2; // Smaller chunks for more frequent updates
+      const delay = 25; // Slightly faster
+      
+      for (let i = chunkSize; i <= fullText.length; i += chunkSize) {
+        await wait(delay);
+        const text = fullText.slice(0, i);
+        onUpdate(text);
+        
+        // More frequent scrolling during typing
+        if (scrollDuringTyping && i % chunkSize === 0) {
+          scrollToBottom(true);
+        }
+      }
+      
+      // Ensure we show the full text
+      if (fullText.length % chunkSize !== 0) {
+        onUpdate(fullText);
+        // Final scroll for the last chunk
+        if (scrollDuringTyping) {
+          scrollToBottom(true);
+        }
       }
     };
 
@@ -233,11 +268,12 @@ export default function CapturePage({
       const output = response.output;
       if (!output) return;
 
-      if (responses.length > 1) {
-        requestAnimationFrame(() => {
-          requestAnimationFrame(scrollToEnd);
-        });
-      }
+      // Mark typing as active - this will enable auto-scroll during typing
+      setIsTypingActive(true);
+
+      // Initial scroll to the new message
+      await wait(100);
+      scrollToBottom(true);
 
       setTypingState((prev) => {
         if (prev[response.id]) return prev;
@@ -251,22 +287,29 @@ export default function CapturePage({
         };
       });
 
-      await typeText(output.title, (value) => {
-        setTypingState((prev) => {
-          const current = prev[response.id];
-          if (!current) return prev;
-          return { ...prev, [response.id]: { ...current, title: value } };
-        });
-      });
+      // Type title
+      if (output.title) {
+        await typeText(output.title, (value) => {
+          setTypingState((prev) => {
+            const current = prev[response.id];
+            if (!current) return prev;
+            return { ...prev, [response.id]: { ...current, title: value } };
+          });
+        }, true);
+      }
 
-      await typeText(output.intro, (value) => {
-        setTypingState((prev) => {
-          const current = prev[response.id];
-          if (!current) return prev;
-          return { ...prev, [response.id]: { ...current, intro: value } };
-        });
-      });
+      // Type intro
+      if (output.intro) {
+        await typeText(output.intro, (value) => {
+          setTypingState((prev) => {
+            const current = prev[response.id];
+            if (!current) return prev;
+            return { ...prev, [response.id]: { ...current, intro: value } };
+          });
+        }, true);
+      }
 
+      // Type body lines
       for (let index = 0; index < output.body.length; index += 1) {
         const line = output.body[index];
         await typeText(line, (value) => {
@@ -280,8 +323,32 @@ export default function CapturePage({
               [response.id]: { ...current, body: updatedBody },
             };
           });
-        });
+        }, true);
       }
+      
+      // Mark typing as complete for this response
+      setTypingComplete((prev) => new Set(prev).add(response.id));
+      
+      // Mark typing as inactive - now respect user scroll position
+      setIsTypingActive(false);
+      
+      // Ensure final scroll to bottom after all content including feedback buttons are rendered
+      // Force scroll even if user scrolled up - typing completion should always show the end
+      await wait(100);
+      
+      // Use multiple animation frames to ensure DOM is fully updated
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            scrollToBottom(true, true); // Force scroll
+            
+            // Double-check scroll after a bit more time for lengthy content
+            setTimeout(() => {
+              scrollToBottom(true, true); // Force scroll
+            }, 300);
+          });
+        });
+      });
     };
 
     responses.forEach((response) => {
@@ -292,12 +359,42 @@ export default function CapturePage({
     });
   }, [responses]);
 
+  // Auto-scroll when typing state changes during active typing
+  useEffect(() => {
+    if (isTypingActive) {
+      const container = captureBodyRef.current;
+      if (container) {
+        // Use a slight delay to ensure DOM has updated
+        setTimeout(() => {
+          container.scrollTo({
+            top: container.scrollHeight,
+            behavior: "smooth",
+          });
+        }, 10);
+      }
+    }
+  }, [typingState, isTypingActive]);
+
   const handleBackgroundClick = () => {
     textareaRef.current?.blur();
   };
 
   const handleContentScroll = (event: UIEvent<HTMLDivElement>) => {
-    if (event.currentTarget.scrollTop > 8) {
+    const container = event.currentTarget;
+    const { scrollTop, scrollHeight, clientHeight } = container;
+    const isNearBottom = scrollTop + clientHeight >= scrollHeight - 50; // Reduced threshold for better sensitivity
+    
+    // Only track user scroll position when typing is not active
+    if (!isTypingActive) {
+      // If user scrolls up significantly, mark as scrolled up
+      if (!isNearBottom && !userScrolledUp) {
+        setUserScrolledUp(true);
+      } else if (isNearBottom && userScrolledUp) {
+        setUserScrolledUp(false);
+      }
+    }
+    
+    if (scrollTop > 8) {
       setDockCollapsed(true);
     }
   };
@@ -334,6 +431,29 @@ export default function CapturePage({
     setAttachment(null);
     setHideRecommendations(true);
     setLoading(true);
+    setUserScrolledUp(false); // Reset scroll state for new message
+    setIsTypingActive(false); // Ensure typing state is reset
+
+    // Scroll to show the user's message immediately with multiple attempts
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        const container = captureBodyRef.current;
+        if (container) {
+          container.scrollTo({
+            top: container.scrollHeight,
+            behavior: "smooth",
+          });
+          
+          // Additional scroll after a short delay to ensure it works
+          setTimeout(() => {
+            container.scrollTo({
+              top: container.scrollHeight,
+              behavior: "smooth",
+            });
+          }, 100);
+        }
+      });
+    });
 
     try {
       let ocrText = "";
@@ -458,7 +578,8 @@ export default function CapturePage({
                 onOpenCamera();
                 return;
               }
-              router.push("/camera");
+              const cameraUrl = restaurantId ? `/camera?restaurantId=${restaurantId}` : "/camera";
+              router.push(cameraUrl);
             }}
           />
         </main>
@@ -513,32 +634,36 @@ export default function CapturePage({
                     </div>
                     {response.output.body.map((line, index) => (
                       <div key={`${line}-${index}`} className="assistant-line">
-                        {typingState[response.id]?.body?.[index] ?? ""}
+                        {renderBoldText(typingState[response.id]?.body?.[index] ?? "")}
                       </div>
                     ))}
                   </div>
                 </div>
               )}
 
-              {/* <div className="feedback-row">
-                <span className="feedback-question">解説は参考になりましたか</span>
-                <div className="feedback-actions">
-                  <button
-                    className={`feedback-btn${response.feedback === 'good' ? ' active' : ''}`}
-                    type="button"
-                    onClick={() => handleFeedback(response.id, 'good')}
-                  >
-                    ??
-                  </button>
-                  <button
-                    className={`feedback-btn${response.feedback === 'bad' ? ' active' : ''}`}
-                    type="button"
-                    onClick={() => handleFeedback(response.id, 'bad')}
-                  >
-                    ??
-                  </button>
+              {typingComplete.has(response.id) && (
+                <div className="feedback-row">
+                  <span className="feedback-question">解説は参考になりましたか</span>
+                  <div className="feedback-actions">
+                    <button
+                      className={`feedback-btn${response.feedback === 'good' ? ' active' : ''}`}
+                      type="button"
+                      onClick={() => handleFeedback(response.id, 'good')}
+                      aria-label="Good"
+                    >
+                      👍
+                    </button>
+                    <button
+                      className={`feedback-btn${response.feedback === 'bad' ? ' active' : ''}`}
+                      type="button"
+                      onClick={() => handleFeedback(response.id, 'bad')}
+                      aria-label="Bad"
+                    >
+                      👎
+                    </button>
+                  </div>
                 </div>
-              </div> */}
+              )}
             </div>
           ))}
           {loading && (
@@ -578,7 +703,8 @@ export default function CapturePage({
             onOpenCamera();
             return;
           }
-          router.push("/camera");
+          const cameraUrl = restaurantId ? `/camera?restaurantId=${restaurantId}` : "/camera";
+          router.push(cameraUrl);
         }}
         onRemoveAttachment={() => setAttachment(null)}
       />
