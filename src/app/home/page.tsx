@@ -6,12 +6,10 @@ import { useAppContext } from '../../components/AppProvider'
 
 export default function Page() {
   const router = useRouter()
-  const { language, openLanguageModal } = useAppContext()
+  const { openLanguageModal } = useAppContext()
 
   return (
     <HomePage
-      language={language}
-      onLanguageOpen={openLanguageModal}
       onContinue={() => router.push('/restaurant')}
     />
   )

@@ -425,7 +425,6 @@ export default function CapturePage({
   return (
     <div className="page capture-page" onClick={handleBackgroundClick}>
       <CaptureHeader
-        language={activeLanguage}
         restaurant={selectedRestaurant}
         onMenu={
           onOpenMenu ??
