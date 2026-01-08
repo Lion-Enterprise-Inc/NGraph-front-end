@@ -137,17 +137,17 @@ export default function CapturePage({
     if (selectedRestaurant) {
       // Restaurant-specific suggestions
       return {
-        guide: `AI guide for ${selectedRestaurant.name} — Ask me anything about this restaurant!`,
+        guide: copy.restaurant.chatPlaceholder.replace('{name}', selectedRestaurant.name),
         chips: [
-          `What's the signature dish at ${selectedRestaurant.name}?`,
-          `Tell me about ${selectedRestaurant.cuisine} cuisine`,
-          `What's the best time to visit ${selectedRestaurant.name}?`,
-          `Any dietary options available?`
+          copy.restaurant.signatureDish.replace('{name}', selectedRestaurant.name),
+          copy.restaurant.aboutCuisine.replace('{cuisine}', selectedRestaurant.cuisine),
+          copy.restaurant.bestTime.replace('{name}', selectedRestaurant.name),
+          copy.restaurant.dietaryOptions
         ]
       };
     }
     return copy.suggestions;
-  }, [selectedRestaurant, copy.suggestions]);
+  }, [selectedRestaurant, copy.suggestions, copy.restaurant]);
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -559,7 +559,6 @@ export default function CapturePage({
       </div>
 
       <ChatDock
-        language={activeLanguage}
         textareaRef={textareaRef}
         message={message}
         suggestion={currentSuggestions.guide}
