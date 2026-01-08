@@ -12,7 +12,7 @@ export default function Page() {
     <HomePage
       language={language}
       onLanguageOpen={openLanguageModal}
-      onContinue={() => router.push('/capture?from=home')}
+      onContinue={() => router.push('/restaurant')}
     />
   )
 }

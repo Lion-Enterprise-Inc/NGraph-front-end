@@ -129,8 +129,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
       />
       <HistoryDrawer
         open={drawerOpen}
-        language={language}
-        onLanguageChange={(code) => setLanguage(code, "drawer")}
         onClose={() => setDrawerOpen(false)}
         items={historyItems}
       />

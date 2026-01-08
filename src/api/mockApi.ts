@@ -10,6 +10,53 @@ type MockScanResponseOutput = {
   body: string[]
 }
 
+export type Restaurant = {
+  id: string
+  name: string
+  cuisine: string
+  rating: number
+  description: string
+  image?: string
+}
+
+export const mockRestaurants: Restaurant[] = [
+  {
+    id: 'ramen-house',
+    name: 'Ramen House Tokushima',
+    cuisine: 'Japanese Ramen',
+    rating: 4.5,
+    description: 'Authentic Japanese ramen with rich tonkotsu broth',
+  },
+  {
+    id: 'sushi-palace',
+    name: 'Sushi Palace',
+    cuisine: 'Japanese Sushi',
+    rating: 4.8,
+    description: 'Fresh sushi and sashimi daily',
+  },
+  {
+    id: 'izakaya-style',
+    name: 'Izakaya Style',
+    cuisine: 'Japanese Izakaya',
+    rating: 4.3,
+    description: 'Traditional Japanese pub with various dishes',
+  },
+  {
+    id: 'tempura-master',
+    name: 'Tempura Master',
+    cuisine: 'Japanese Tempura',
+    rating: 4.6,
+    description: 'Crispy tempura and seasonal dishes',
+  },
+  {
+    id: 'udon-corner',
+    name: 'Udon Corner',
+    cuisine: 'Japanese Udon',
+    rating: 4.4,
+    description: 'Handmade udon noodles in various broths',
+  },
+]
+
 export async function mockScanResponse({
   text,
   attachmentLabel,

@@ -13,6 +13,7 @@ import CameraIcon from "../assets/624690.png";
 import VectorIcon from "../assets/Vectoricon.png";
 import Vector from "../assets/vectorbtn.png";
 import { getUiCopy } from "../i18n/uiCopy";
+import { useAppContext } from "./AppProvider";
 
 type Attachment = {
   label: string;
@@ -20,7 +21,6 @@ type Attachment = {
 };
 
 type ChatDockProps = {
-  language: string;
   message: string;
   suggestion: string;
   attachment: Attachment | null;
@@ -37,7 +37,6 @@ type ChatDockProps = {
 };
 
 export default function ChatDock({
-  language,
   message,
   suggestion,
   attachment,
@@ -52,6 +51,7 @@ export default function ChatDock({
   onOpenCamera,
   onRemoveAttachment,
 }: ChatDockProps) {
+  const { language } = useAppContext();
   const copy = getUiCopy(language);
   const sendEnabled = message.trim().length > 0 || Boolean(attachment);
   const dockRef = useRef<HTMLDivElement | null>(null);

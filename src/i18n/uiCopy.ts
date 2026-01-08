@@ -135,6 +135,13 @@ const uiCopy = {
       guide: "Your AI guide — Ask me anything.",
       chips: ["How to use it?", "What can it do?", "Dining etiquette"],
     },
+    restaurant: {
+      title: "Select Restaurant",
+      subtitle: "Choose a restaurant to explore",
+      selectPlaceholder: "Select a restaurant...",
+      continue: "Continue",
+      noSelection: "Please select a restaurant",
+    },
   },
   ja: {
     common: {
@@ -227,6 +234,13 @@ const uiCopy = {
     suggestions: {
       guide: "AIガイドです。何でも聞いて下さい。",
       chips: ["どう使うの？", "何ができるの？", "和食のマナー"],
+    },
+    restaurant: {
+      title: "レストランを選択",
+      subtitle: "探索するレストランを選んでください",
+      selectPlaceholder: "レストランを選択...",
+      continue: "続ける",
+      noSelection: "レストランを選択してください",
     },
   },
   ko: {
@@ -321,6 +335,13 @@ const uiCopy = {
       guide: "AI 가이드입니다. 무엇이든 물어보세요.",
       chips: ["어떻게 써요?", "무엇이 가능해요?", "식사 예절"],
     },
+    restaurant: {
+      title: "레스토랑 선택",
+      subtitle: "탐색할 레스토랑을 선택하세요",
+      selectPlaceholder: "레스토랑 선택...",
+      continue: "계속",
+      noSelection: "레스토랑을 선택해주세요",
+    },
   },
   "zh-Hans": {
     common: {
@@ -413,6 +434,13 @@ const uiCopy = {
     suggestions: {
       guide: "你的AI向导，随时提问。",
       chips: ["如何使用？", "能做什么？", "用餐礼仪"],
+    },
+    restaurant: {
+      title: "Select Restaurant",
+      subtitle: "Choose a restaurant to explore",
+      selectPlaceholder: "Select a restaurant...",
+      continue: "Continue",
+      noSelection: "Please select a restaurant",
     },
   },
   "zh-Hant": {
@@ -507,6 +535,13 @@ const uiCopy = {
       guide: "你的 AI 導覽，隨時提問。",
       chips: ["如何使用？", "能做什麼？", "用餐禮儀"],
     },
+    restaurant: {
+      title: "Select Restaurant",
+      subtitle: "Choose a restaurant to explore",
+      selectPlaceholder: "Select a restaurant...",
+      continue: "Continue",
+      noSelection: "Please select a restaurant",
+    },
   },
   es: {
     common: {
@@ -599,6 +634,13 @@ const uiCopy = {
     suggestions: {
       guide: "Tu guía de IA. Pregunta lo que quieras.",
       chips: ["¿Cómo se usa?", "¿Qué puede hacer?", "Etiqueta en la mesa"],
+    },
+    restaurant: {
+      title: "Select Restaurant",
+      subtitle: "Choose a restaurant to explore",
+      selectPlaceholder: "Select a restaurant...",
+      continue: "Continue",
+      noSelection: "Please select a restaurant",
     },
   },
   fr: {
@@ -693,6 +735,13 @@ const uiCopy = {
       guide: "Votre guide IA. Demandez-moi n'importe quoi.",
       chips: ["Comment l'utiliser ?", "Que peut-il faire ?", "Étiquette à table"],
     },
+    restaurant: {
+      title: "Select Restaurant",
+      subtitle: "Choose a restaurant to explore",
+      selectPlaceholder: "Select a restaurant...",
+      continue: "Continue",
+      noSelection: "Please select a restaurant",
+    },
   },
   de: {
     common: {
@@ -785,6 +834,13 @@ const uiCopy = {
     suggestions: {
       guide: "Dein KI-Guide. Frag mich alles.",
       chips: ["Wie nutzt man es?", "Was kann es?", "Tischmanieren"],
+    },
+    restaurant: {
+      title: "Select Restaurant",
+      subtitle: "Choose a restaurant to explore",
+      selectPlaceholder: "Select a restaurant...",
+      continue: "Continue",
+      noSelection: "Please select a restaurant",
     },
   },
   it: {
@@ -879,6 +935,13 @@ const uiCopy = {
       guide: "La tua guida AI. Chiedi qualsiasi cosa.",
       chips: ["Come si usa?", "Cosa può fare?", "Galateo a tavola"],
     },
+    restaurant: {
+      title: "Select Restaurant",
+      subtitle: "Choose a restaurant to explore",
+      selectPlaceholder: "Select a restaurant...",
+      continue: "Continue",
+      noSelection: "Please select a restaurant",
+    },
   },
   pt: {
     common: {
@@ -971,6 +1034,13 @@ const uiCopy = {
     suggestions: {
       guide: "Seu guia de IA. Pergunte qualquer coisa.",
       chips: ["Como usar?", "O que pode fazer?", "Etiqueta à mesa"],
+    },
+    restaurant: {
+      title: "Select Restaurant",
+      subtitle: "Choose a restaurant to explore",
+      selectPlaceholder: "Select a restaurant...",
+      continue: "Continue",
+      noSelection: "Please select a restaurant",
     },
   },
   ru: {
@@ -1065,6 +1135,13 @@ const uiCopy = {
       guide: "Ваш ИИ‑гид. Спрашивайте что угодно.",
       chips: ["Как пользоваться?", "Что умеет?", "Этикет за столом"],
     },
+    restaurant: {
+      title: "Select Restaurant",
+      subtitle: "Choose a restaurant to explore",
+      selectPlaceholder: "Select a restaurant...",
+      continue: "Continue",
+      noSelection: "Please select a restaurant",
+    },
   },
   th: {
     common: {
@@ -1157,6 +1234,13 @@ const uiCopy = {
     suggestions: {
       guide: "ผู้ช่วย AI ของคุณ ถามได้ทุกอย่าง",
       chips: ["ใช้อย่างไร?", "ทำอะไรได้บ้าง?", "มารยาทบนโต๊ะอาหาร"],
+    },
+    restaurant: {
+      title: "Select Restaurant",
+      subtitle: "Choose a restaurant to explore",
+      selectPlaceholder: "Select a restaurant...",
+      continue: "Continue",
+      noSelection: "Please select a restaurant",
     },
   },
   vi: {
@@ -1251,6 +1335,13 @@ const uiCopy = {
       guide: "Hướng dẫn AI của bạn. Hỏi bất cứ điều gì.",
       chips: ["Dùng thế nào?", "Làm được gì?", "Quy tắc bàn ăn"],
     },
+    restaurant: {
+      title: "Select Restaurant",
+      subtitle: "Choose a restaurant to explore",
+      selectPlaceholder: "Select a restaurant...",
+      continue: "Continue",
+      noSelection: "Please select a restaurant",
+    },
   },
   id: {
     common: {
@@ -1343,6 +1434,13 @@ const uiCopy = {
     suggestions: {
       guide: "Panduan AI Anda. Tanyakan apa saja.",
       chips: ["Cara pakai?", "Bisa apa?", "Etiket makan"],
+    },
+    restaurant: {
+      title: "Select Restaurant",
+      subtitle: "Choose a restaurant to explore",
+      selectPlaceholder: "Select a restaurant...",
+      continue: "Continue",
+      noSelection: "Please select a restaurant",
     },
   },
   ms: {
@@ -1437,6 +1535,13 @@ const uiCopy = {
       guide: "Panduan AI anda. Tanya apa sahaja.",
       chips: ["Cara guna?", "Apa boleh buat?", "Etiket makan"],
     },
+    restaurant: {
+      title: "Select Restaurant",
+      subtitle: "Choose a restaurant to explore",
+      selectPlaceholder: "Select a restaurant...",
+      continue: "Continue",
+      noSelection: "Please select a restaurant",
+    },
   },
   ar: {
     common: {
@@ -1529,6 +1634,13 @@ const uiCopy = {
     suggestions: {
       guide: "دليلك الذكي. اسأل أي شيء.",
       chips: ["كيف أستخدمه؟", "ماذا يمكنه أن يفعل؟", "آداب الطعام"],
+    },
+    restaurant: {
+      title: "Select Restaurant",
+      subtitle: "Choose a restaurant to explore",
+      selectPlaceholder: "Select a restaurant...",
+      continue: "Continue",
+      noSelection: "Please select a restaurant",
     },
   },
   hi: {
@@ -1623,6 +1735,13 @@ const uiCopy = {
       guide: "आपका AI गाइड। कुछ भी पूछें।",
       chips: ["कैसे उपयोग करें?", "क्या कर सकता है?", "भोजन शिष्टाचार"],
     },
+    restaurant: {
+      title: "Select Restaurant",
+      subtitle: "Choose a restaurant to explore",
+      selectPlaceholder: "Select a restaurant...",
+      continue: "Continue",
+      noSelection: "Please select a restaurant",
+    },
   },
   tr: {
     common: {
@@ -1715,6 +1834,13 @@ const uiCopy = {
     suggestions: {
       guide: "AI rehberiniz. Her şeyi sorabilirsiniz.",
       chips: ["Nasıl kullanılır?", "Ne yapabilir?", "Yemek adabı"],
+    },
+    restaurant: {
+      title: "Select Restaurant",
+      subtitle: "Choose a restaurant to explore",
+      selectPlaceholder: "Select a restaurant...",
+      continue: "Continue",
+      noSelection: "Please select a restaurant",
     },
   },
   bn: {
@@ -1809,6 +1935,13 @@ const uiCopy = {
       guide: "আপনার AI গাইড। যেকোনো কিছু জিজ্ঞেস করুন।",
       chips: ["কীভাবে ব্যবহার করব?", "কী করতে পারে?", "খাবার শিষ্টাচার"],
     },
+    restaurant: {
+      title: "Select Restaurant",
+      subtitle: "Choose a restaurant to explore",
+      selectPlaceholder: "Select a restaurant...",
+      continue: "Continue",
+      noSelection: "Please select a restaurant",
+    },
   },
   my: {
     common: {
@@ -1901,6 +2034,13 @@ const uiCopy = {
     suggestions: {
       guide: "သင့် AI လမ်းညွှန်။ မေးချင်သမျှမေးပါ။",
       chips: ["ဘယ်လိုသုံးမလဲ?", "ဘာလုပ်နိုင်လဲ?", "စားသောက်မှုယဉ်ကျေးမှု"],
+    },
+    restaurant: {
+      title: "Select Restaurant",
+      subtitle: "Choose a restaurant to explore",
+      selectPlaceholder: "Select a restaurant...",
+      continue: "Continue",
+      noSelection: "Please select a restaurant",
     },
   },
   tl: {
@@ -1995,6 +2135,13 @@ const uiCopy = {
       guide: "Ang iyong AI guide. Magtanong ng kahit ano.",
       chips: ["Paano gamitin?", "Ano ang kaya?", "Etiquette sa pagkain"],
     },
+    restaurant: {
+      title: "Select Restaurant",
+      subtitle: "Choose a restaurant to explore",
+      selectPlaceholder: "Select a restaurant...",
+      continue: "Continue",
+      noSelection: "Please select a restaurant",
+    },
   },
   lo: {
     common: {
@@ -2087,6 +2234,13 @@ const uiCopy = {
     suggestions: {
       guide: "ຜູ້ນໍາທາງ AI ຂອງທ່ານ. ຖາມໄດ້ທຸກຢ່າງ.",
       chips: ["ໃຊ້ແນວໃດ?", "ທຳອະໄດ້ແນວໃດ?", "ມາລະຍາດທາງອາຫານ"],
+    },
+    restaurant: {
+      title: "Select Restaurant",
+      subtitle: "Choose a restaurant to explore",
+      selectPlaceholder: "Select a restaurant...",
+      continue: "Continue",
+      noSelection: "Please select a restaurant",
     },
   },
   km: {
@@ -2181,6 +2335,13 @@ const uiCopy = {
       guide: "មគ្គុទេសក៍ AI របស់អ្នក។ សួរអ្វីក៏បាន។",
       chips: ["ប្រើយ៉ាងដូចម្តេច?", "អាចធ្វើអ្វីបាន?", "សីលធម៌ការញុំា"],
     },
+    restaurant: {
+      title: "Select Restaurant",
+      subtitle: "Choose a restaurant to explore",
+      selectPlaceholder: "Select a restaurant...",
+      continue: "Continue",
+      noSelection: "Please select a restaurant",
+    },
   },
   ne: {
     common: {
@@ -2273,6 +2434,13 @@ const uiCopy = {
     suggestions: {
       guide: "तपाईंको AI मार्गदर्शक। जे पनि सोध्नुहोस्।",
       chips: ["कसरी प्रयोग गर्ने?", "के गर्न सक्छ?", "भोजन शिष्टाचार"],
+    },
+    restaurant: {
+      title: "Select Restaurant",
+      subtitle: "Choose a restaurant to explore",
+      selectPlaceholder: "Select a restaurant...",
+      continue: "Continue",
+      noSelection: "Please select a restaurant",
     },
   },
   mn: {
@@ -2367,6 +2535,13 @@ const uiCopy = {
       guide: "Таны AI гарын авлага. Юу ч асуугаарай.",
       chips: ["Яаж ашиглах вэ?", "Юу хийж чадах вэ?", "Хоолны ёс зүй"],
     },
+    restaurant: {
+      title: "Select Restaurant",
+      subtitle: "Choose a restaurant to explore",
+      selectPlaceholder: "Select a restaurant...",
+      continue: "Continue",
+      noSelection: "Please select a restaurant",
+    },
   },
   fa: {
     common: {
@@ -2459,6 +2634,13 @@ const uiCopy = {
     suggestions: {
       guide: "راهنمای هوش مصنوعی شما. هر چیزی بپرسید.",
       chips: ["چطور استفاده کنم؟", "چه کارهایی می‌تواند انجام دهد؟", "آداب غذاخوری"],
+    },
+    restaurant: {
+      title: "Select Restaurant",
+      subtitle: "Choose a restaurant to explore",
+      selectPlaceholder: "Select a restaurant...",
+      continue: "Continue",
+      noSelection: "Please select a restaurant",
     },
   },
   uk: {
@@ -2553,6 +2735,13 @@ const uiCopy = {
       guide: "Ваш AI-гід. Питайте будь-що.",
       chips: ["Як користуватися?", "Що вміє?", "Етикет за столом"],
     },
+    restaurant: {
+      title: "Select Restaurant",
+      subtitle: "Choose a restaurant to explore",
+      selectPlaceholder: "Select a restaurant...",
+      continue: "Continue",
+      noSelection: "Please select a restaurant",
+    },
   },
   pl: {
     common: {
@@ -2645,6 +2834,13 @@ const uiCopy = {
     suggestions: {
       guide: "Twój przewodnik AI. Pytaj o wszystko.",
       chips: ["Jak używać?", "Co potrafi?", "Etykieta przy stole"],
+    },
+    restaurant: {
+      title: "Select Restaurant",
+      subtitle: "Choose a restaurant to explore",
+      selectPlaceholder: "Select a restaurant...",
+      continue: "Continue",
+      noSelection: "Please select a restaurant",
     },
   },
 } as const;

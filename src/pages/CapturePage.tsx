@@ -9,7 +9,7 @@ import {
   type UIEvent,
 } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { mockScanResponse } from "../api/mockApi";
+import { mockRestaurants, mockScanResponse, type Restaurant } from "../api/mockApi";
 import Tesseract from "tesseract.js";
 import CaptureHeader from "../components/CaptureHeader";
 import CameraPrompt from "../components/CameraPrompt";
@@ -127,9 +127,27 @@ export default function CapturePage({
   >({});
   const sendEnabled = message.trim().length > 0 || Boolean(attachment);
   const fromHome = searchParams?.get("from") === "home" || defaultFromHome;
+  const fromRestaurant = searchParams?.get("from") === "restaurant";
+  const restaurantId = searchParams?.get("restaurantId");
+  const selectedRestaurant = restaurantId ? mockRestaurants.find(r => r.id === restaurantId) : null;
 
   const copy = useMemo(() => getUiCopy(activeLanguage), [activeLanguage]);
-  const currentSuggestions = copy.suggestions;
+  
+  const currentSuggestions = useMemo(() => {
+    if (selectedRestaurant) {
+      // Restaurant-specific suggestions
+      return {
+        guide: `AI guide for ${selectedRestaurant.name} — Ask me anything about this restaurant!`,
+        chips: [
+          `What's the signature dish at ${selectedRestaurant.name}?`,
+          `Tell me about ${selectedRestaurant.cuisine} cuisine`,
+          `What's the best time to visit ${selectedRestaurant.name}?`,
+          `Any dietary options available?`
+        ]
+      };
+    }
+    return copy.suggestions;
+  }, [selectedRestaurant, copy.suggestions]);
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -408,6 +426,7 @@ export default function CapturePage({
     <div className="page capture-page" onClick={handleBackgroundClick}>
       <CaptureHeader
         language={activeLanguage}
+        restaurant={selectedRestaurant}
         onMenu={
           onOpenMenu ??
           openHistoryDrawer ??
@@ -445,7 +464,7 @@ export default function CapturePage({
           />
         </main>
 
-        {fromHome && !hideRecommendations && (
+        {(fromHome || fromRestaurant) && !hideRecommendations && (
           <div
             className={`chip-row scrollable chip-row-floating${
               dockCollapsed ? " elevated" : ""

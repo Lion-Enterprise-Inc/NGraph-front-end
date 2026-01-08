@@ -1,6 +1,7 @@
 import globeImage from '../assets/glob.png'
 import triangleImage from '../assets/tri-angle.png'
 import { getUiCopy, languageOptions } from '../i18n/uiCopy'
+import { useAppContext } from './AppProvider'
 
 type HistoryItem = {
   id: string
@@ -10,19 +11,16 @@ type HistoryItem = {
 
 type HistoryDrawerProps = {
   open: boolean
-  language: string
-  onLanguageChange?: (code: string) => void
   onClose?: () => void
   items?: HistoryItem[]
 }
 
 export default function HistoryDrawer({
   open,
-  language,
-  onLanguageChange,
   onClose,
   items = [],
 }: HistoryDrawerProps) {
+  const { language, setLanguage } = useAppContext()
   const copy = getUiCopy(language)
 
   return (
@@ -39,7 +37,7 @@ export default function HistoryDrawer({
           <select
             className="drawer-language-select"
             value={language}
-            onChange={(event) => onLanguageChange?.(event.target.value)}
+            onChange={(event) => setLanguage(event.target.value)}
             aria-label={copy.language.select}
           >
             {languageOptions.map((lang) => (

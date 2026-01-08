@@ -1,8 +1,10 @@
 import MenuLines from './icons/MenuLines'
 import RefreshIcon from './icons/RefreshIcon'
 import { getUiCopy } from '../i18n/uiCopy'
+import { useAppContext } from './AppProvider'
 
-export default function BrowserBar({ language = 'ja' }: { language?: string }) {
+export default function BrowserBar() {
+  const { language } = useAppContext()
   const copy = getUiCopy(language)
 
   return (
