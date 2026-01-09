@@ -17,16 +17,44 @@ import ChatDock from "../components/ChatDock";
 import { useAppContext } from "../components/AppProvider";
 import { getUiCopy, type LanguageCode } from "../i18n/uiCopy";
 
-// Helper function to render text with bold formatting
+// Helper function to render text with bold formatting and proper structure
 const renderBoldText = (text: string) => {
-  const parts = text.split(/(\*\*.*?\*\*)/g);
-  return parts.map((part, index) => {
-    if (part.startsWith('**') && part.endsWith('**')) {
-      const boldText = part.slice(2, -2);
-      return <strong key={index}>{boldText}</strong>;
-    }
-    return part;
-  });
+  // Split by double newlines to get paragraphs
+  const paragraphs = text.split('\n\n');
+  
+  return paragraphs.map((paragraph, pIndex) => {
+    if (!paragraph.trim()) return null;
+    
+    // Split by single newlines within paragraph
+    const lines = paragraph.split('\n');
+    
+    return (
+      <div key={pIndex} className="mb-4">
+        {lines.map((line, lIndex) => {
+          if (!line.trim()) return null;
+          
+          // Check if this is a muted/indented line (starts with specific keywords)
+          const isMuted = /^(アレルゲン|宗教上の制約|味の特徴|推定カロリー|背景情報|関連提案):/i.test(line.trim());
+          
+          // Parse bold text (**text**)
+          const parts = line.split(/(\*\*.*?\*\*)/g);
+          const content = parts.map((part, index) => {
+            if (part.startsWith('**') && part.endsWith('**')) {
+              const boldText = part.slice(2, -2);
+              return <span key={index} className="font-semibold">{boldText}</span>;
+            }
+            return part;
+          });
+          
+          return (
+            <p key={lIndex} className={isMuted ? "text-muted-foreground pl-4" : ""}>
+              {content}
+            </p>
+          );
+        })}
+      </div>
+    );
+  }).filter(Boolean);
 };
 
 type Attachment = {

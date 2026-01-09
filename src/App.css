@@ -1,8 +1,9 @@
 ﻿:root {
-  font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  font-family: "Segoe UI", "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", YuGothic, Meiryo, "Helvetica Neue", Arial, sans-serif;
   color: #1b1b1b;
   background: #ffffff;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   --page-max-width: 375px;
   --home-main-top: 166px;
   --banner-width: 329px;
@@ -135,6 +136,9 @@ body {
   background: #ffffff;
   display: flex;
   justify-content: center;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 /* Menu grid */
@@ -747,6 +751,18 @@ body {
   white-space: nowrap;
 }
 
+@media (max-width: 768px) {
+  .chat-input,
+  .chat-dock-input,
+  .question-input,
+  .form-input,
+  .form-field input,
+  .source-input,
+  textarea.form-input {
+    font-size: 16px;
+  }
+}
+
 .chat-send,
 .chat-dock-send {
   width: 38px;
@@ -966,6 +982,10 @@ body {
   padding: 12px 14px;
   font-size: 14px;
   line-height: 1.6;
+  word-wrap: break-word;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  white-space: pre-wrap;
 }
 
 .chat-bubble-user {
@@ -978,6 +998,111 @@ body {
   background: #ffffff;
   color: #1f1f1f;
   border-top-left-radius: 6px;
+}
+
+/* Chat bubble formatting styles */
+.chat-bubble-assistant h1,
+.chat-bubble-assistant h2 {
+  font-weight: 700;
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+}
+
+.chat-bubble-assistant h1 {
+  font-size: 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.chat-bubble-assistant h2 {
+  font-size: 1.125rem;
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.chat-bubble-assistant p {
+  margin: 0 0 1rem 0;
+}
+
+.chat-bubble-assistant .font-semibold,
+.chat-bubble-assistant strong {
+  font-weight: 600;
+}
+
+.chat-bubble-assistant .text-muted-foreground {
+  color: #6b7280;
+  padding-left: 1rem;
+}
+
+.chat-bubble-assistant .pl-4 {
+  padding-left: 1rem;
+}
+
+.chat-bubble-assistant .space-y-3 > * + * {
+  margin-top: 0.75rem;
+}
+
+.chat-bubble-assistant .mb-2 {
+  margin-bottom: 0.5rem;
+}
+
+.chat-bubble-assistant .mb-4 {
+  margin-bottom: 1rem;
+}
+
+.chat-bubble-assistant .mb-8 {
+  margin-bottom: 2rem;
+}
+
+.chat-bubble-assistant .mt-12 {
+  margin-top: 3rem;
+}
+
+.chat-bubble-assistant .gap-2 {
+  gap: 0.5rem;
+}
+
+.chat-bubble-assistant article {
+  margin-bottom: 2rem;
+}
+
+.chat-bubble-assistant footer {
+  text-align: center;
+  margin-top: 3rem;
+}
+
+.chat-bubble-assistant .flex {
+  display: flex;
+}
+
+.chat-bubble-assistant .items-center {
+  align-items: center;
+}
+
+.chat-bubble-assistant .justify-center {
+  justify-content: center;
+}
+
+.chat-bubble-assistant .gap-6 {
+  gap: 1.5rem;
+}
+
+.feedback-button {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem;
+  transition: transform 0.2s;
+}
+
+.feedback-button:hover {
+  transform: scale(1.1);
+}
+
+.feedback-button:active {
+  transform: scale(0.95);
 }
 
 .chat-bubble.image {
@@ -994,16 +1119,31 @@ body {
 
 .assistant-title {
   font-weight: 700;
-  margin-bottom: 6px;
+  font-size: 1.25rem;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .assistant-intro {
-  color: #4f4f4f;
-  margin-bottom: 8px;
+  color: #1f1f1f;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  font-size: 1.05rem;
 }
 
 .assistant-line {
-  margin-bottom: 6px;
+  margin-bottom: 0;
+}
+
+.assistant-line .mb-4 {
+  margin-bottom: 1rem;
+}
+
+.assistant-line p {
+  margin: 0 0 0.5rem 0;
+  line-height: 1.6;
 }
 
 .assistant-image {
@@ -1708,6 +1848,34 @@ body {
   padding: 14px 22px calc(22px + env(safe-area-inset-bottom));
   background: #0a0a0a;
   gap: 16px;
+}
+
+/* Additional padding for Android devices */
+@supports (-webkit-appearance: none) and (not (-webkit-border-radius: 0)) {
+  .camera-bottom {
+    padding-bottom: calc(22px + env(safe-area-inset-bottom) + 24px);
+  }
+}
+
+/* Specific fix for Android devices */
+@supports not (padding: max(0px)) {
+  .camera-bottom {
+    padding-bottom: 46px;
+  }
+}
+
+/* Android-specific camera bottom padding */
+@media screen and (max-width: 768px) {
+  .camera-bottom {
+    padding-bottom: calc(32px + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+/* Extra padding for Android devices with navigation bars */
+@supports (-webkit-appearance: none) {
+  .camera-bottom {
+    padding-bottom: calc(28px + env(safe-area-inset-bottom, 0px));
+  }
 }
 
 .icon-button.light {
@@ -2806,7 +2974,7 @@ textarea.form-input {
   padding: 12px;
   line-height: 1.6;
   min-height: 320px;
-  font-family: 'Segoe UI', sans-serif;
+  font-family: "Segoe UI", "Hiragino Sans", "Yu Gothic", YuGothic, Meiryo, sans-serif;
   resize: vertical;
 }
 
