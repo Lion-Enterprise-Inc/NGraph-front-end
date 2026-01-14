@@ -11,11 +11,25 @@ import {
 import { useRouter, useSearchParams } from "next/navigation";
 import { mockRestaurants, mockScanResponse, type Restaurant } from "../api/mockApi";
 import Tesseract from "tesseract.js";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import rehypeHighlight from "rehype-highlight";
+import { User, Bot, ChevronDown, Copy } from "lucide-react";
 import CaptureHeader from "../components/CaptureHeader";
 import CameraPrompt from "../components/CameraPrompt";
 import ChatDock from "../components/ChatDock";
 import { useAppContext } from "../components/AppProvider";
 import { getUiCopy, type LanguageCode } from "../i18n/uiCopy";
+
+type ApiRestaurant = {
+  uid: string
+  name: string
+  description?: string
+  is_active: boolean
+  slug: string
+  created_at: string
+  updated_at: string
+};
 
 // Helper function to render text with bold formatting and proper structure
 const renderBoldText = (text: string) => {
@@ -130,6 +144,63 @@ const logFeedback = (entry: FeedbackEntry) => {
   console.log("feedback_log", entry);
 };
 
+const generateChatResponse = async (message: string, restaurant?: ApiRestaurant | null): Promise<string> => {
+  // This implements intelligent chat responses for restaurant conversations
+  // In production, this would integrate with an AI service like OpenAI
+
+  const lowerMessage = message.toLowerCase()
+  const restaurantName = restaurant?.name || 'FC Restaurant'
+  const restaurantDescription = restaurant?.description || 'a great dining experience'
+
+  // Basic greeting responses
+  if (lowerMessage.includes('hello') || lowerMessage.includes('hi') || lowerMessage.includes('こんにちは')) {
+    return `Hello! Welcome to ${restaurantName}. ${restaurantDescription}. How can I help you today?`
+  }
+
+  // Menu-related queries
+  if (lowerMessage.includes('menu') || lowerMessage.includes('food') || lowerMessage.includes('dish') || lowerMessage.includes('what do you serve')) {
+    return `I'd be happy to help you with our menu at ${restaurantName}! We offer a variety of delicious dishes made with fresh ingredients. What type of cuisine are you interested in or do you have any dietary preferences?`
+  }
+
+  // Hours/location queries
+  if (lowerMessage.includes('hours') || lowerMessage.includes('time') || lowerMessage.includes('open') || lowerMessage.includes('when are you open')) {
+    return `${restaurantName} is open from 11:00 AM to 10:00 PM daily. We're here to serve you during our operating hours!`
+  }
+
+  if (lowerMessage.includes('location') || lowerMessage.includes('address') || lowerMessage.includes('where') || lowerMessage.includes('find you')) {
+    return `You can find ${restaurantName} at our convenient location. We're easily accessible and ready to welcome you for a great dining experience.`
+  }
+
+  // Reservation queries
+  if (lowerMessage.includes('reservation') || lowerMessage.includes('book') || lowerMessage.includes('table') || lowerMessage.includes('reserve')) {
+    return `I'd be happy to help you make a reservation at ${restaurantName}! Please let me know your preferred date, time, and party size, and I'll assist you with booking.`
+  }
+
+  // Dietary queries
+  if (lowerMessage.includes('vegetarian') || lowerMessage.includes('vegan') || lowerMessage.includes('gluten') || lowerMessage.includes('allergy')) {
+    return `At ${restaurantName}, we offer various options for dietary preferences and allergies. We have vegetarian, vegan, and gluten-free options available. Please let me know your specific requirements, and I'll help you find suitable dishes.`
+  }
+
+  // Restaurant-specific information
+  if (restaurant?.description) {
+    if (lowerMessage.includes('about') || lowerMessage.includes('what') || lowerMessage.includes('tell me') || lowerMessage.includes('information')) {
+      return `${restaurant.description} We're excited to serve you at ${restaurantName}!`
+    }
+  }
+
+  // Special requests or questions
+  if (lowerMessage.includes('special') || lowerMessage.includes('event') || lowerMessage.includes('party')) {
+    return `${restaurantName} can accommodate special events and parties. Please contact us for details about private dining options and group reservations.`
+  }
+
+  if (lowerMessage.includes('price') || lowerMessage.includes('cost') || lowerMessage.includes('expensive') || lowerMessage.includes('cheap')) {
+    return `At ${restaurantName}, we offer a range of dishes at various price points to suit different budgets. Our menu features both affordable options and premium selections.`
+  }
+
+  // Default response
+  return `Thank you for your message! I'm here to help with information about ${restaurantName}, our menu, reservations, or any other questions you might have. What would you like to know?`
+};
+
 export default function CapturePage({
   language,
   openLanguageModal,
@@ -140,6 +211,8 @@ export default function CapturePage({
 }: CapturePageProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [restaurantData, setRestaurantData] = useState<ApiRestaurant | null>(null);
+  const [restaurantLoading, setRestaurantLoading] = useState(false);
   const {
     language: contextLanguage,
     openLanguageModal: openLanguageModalFromContext,
@@ -166,27 +239,69 @@ export default function CapturePage({
     Record<string, { title: string; intro: string; body: string[] }>
   >({});
   const [typingComplete, setTypingComplete] = useState<Set<string>>(new Set());
+  const [copiedCode, setCopiedCode] = useState<string | null>(null);
+  const [showScrollButton, setShowScrollButton] = useState(false);
   const [userScrolledUp, setUserScrolledUp] = useState(false);
+
+  const handleCopyCode = async (code: string) => {
+    try {
+      await navigator.clipboard.writeText(code);
+      setCopiedCode(code);
+      setTimeout(() => setCopiedCode(null), 2000);
+    } catch (err) {
+      console.error('Failed to copy code:', err);
+    }
+  };
   const [isTypingActive, setIsTypingActive] = useState(false);
   const sendEnabled = message.trim().length > 0 || Boolean(attachment);
   const fromHome = searchParams?.get("from") === "home" || defaultFromHome;
   const fromRestaurant = searchParams?.get("from") === "restaurant";
-  const restaurantId = searchParams?.get("restaurantId");
-  const selectedRestaurant = restaurantId ? mockRestaurants.find(r => r.id === restaurantId) : null;
+  const restaurantSlug = searchParams?.get("restaurant");
+  
+  const selectedRestaurant = restaurantData;
+
+  // Fetch restaurant data by slug
+  useEffect(() => {
+    if (restaurantSlug) {
+      const fetchRestaurantBySlug = async () => {
+        setRestaurantLoading(true);
+        try {
+          const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://15.207.22.103:8000';
+          const response = await fetch(`${apiBaseUrl}/api/restaurants/?page=1&size=10`);
+          if (response.ok) {
+            const data = await response.json();
+            const restaurant = data.result?.items?.find((r: ApiRestaurant) => r.slug === restaurantSlug && r.is_active);
+            setRestaurantData(restaurant || null);
+          }
+        } catch (error) {
+          console.error('Failed to fetch restaurant:', error);
+        } finally {
+          setRestaurantLoading(false);
+        }
+      };
+      fetchRestaurantBySlug();
+    }
+  }, [restaurantSlug]);
 
   const copy = useMemo(() => getUiCopy(activeLanguage), [activeLanguage]);
   
   const currentSuggestions = useMemo(() => {
     if (selectedRestaurant) {
       // Restaurant-specific suggestions
+      const chips = [
+        copy.restaurant.signatureDish.replace('{name}', selectedRestaurant.name),
+        copy.restaurant.bestTime.replace('{name}', selectedRestaurant.name),
+        copy.restaurant.dietaryOptions
+      ];
+      
+      // Only add cuisine suggestion if restaurant has cuisine property
+      if ('cuisine' in selectedRestaurant) {
+        chips.splice(1, 0, copy.restaurant.aboutCuisine.replace('{cuisine}', (selectedRestaurant as any).cuisine));
+      }
+      
       return {
         guide: copy.restaurant.chatPlaceholder.replace('{name}', selectedRestaurant.name),
-        chips: [
-          copy.restaurant.signatureDish.replace('{name}', selectedRestaurant.name),
-          copy.restaurant.aboutCuisine.replace('{cuisine}', selectedRestaurant.cuisine),
-          copy.restaurant.bestTime.replace('{name}', selectedRestaurant.name),
-          copy.restaurant.dietaryOptions
-        ]
+        chips
       };
     }
     return copy.suggestions;
@@ -250,17 +365,20 @@ export default function CapturePage({
     const scrollToBottom = (smooth = true, force = false) => {
       const container = captureBodyRef.current;
       if (!container) return;
-      
+
       // During typing, always auto-scroll regardless of user position
       // After typing, only scroll if forced or user hasn't scrolled up
       if (!isTypingActive && userScrolledUp && !force) return;
-      
+
       const scrollOptions: ScrollToOptions = {
         top: container.scrollHeight,
         behavior: smooth ? "smooth" : "auto",
       };
-      
-      container.scrollTo(scrollOptions);
+
+      // Use requestAnimationFrame for better reliability
+      requestAnimationFrame(() => {
+        container.scrollTo(scrollOptions);
+      });
     };
 
     const typeText = async (
@@ -403,6 +521,18 @@ export default function CapturePage({
     }
   }, [typingState, isTypingActive]);
 
+  const handleScrollToBottom = () => {
+    const container = captureBodyRef.current;
+    if (container) {
+      container.scrollTo({
+        top: container.scrollHeight,
+        behavior: "smooth",
+      });
+      setUserScrolledUp(false);
+      setShowScrollButton(false);
+    }
+  };
+
   const handleBackgroundClick = () => {
     textareaRef.current?.blur();
   };
@@ -410,8 +540,14 @@ export default function CapturePage({
   const handleContentScroll = (event: UIEvent<HTMLDivElement>) => {
     const container = event.currentTarget;
     const { scrollTop, scrollHeight, clientHeight } = container;
-    const isNearBottom = scrollTop + clientHeight >= scrollHeight - 50; // Reduced threshold for better sensitivity
-    
+    const distanceFromBottom = scrollHeight - scrollTop - clientHeight;
+
+    // Consider user has scrolled up if they're more than 100px from bottom
+    const isNearBottom = distanceFromBottom < 100;
+
+    // Show scroll button if user is scrolled up
+    setShowScrollButton(!isNearBottom);
+
     // Only track user scroll position when typing is not active
     if (!isTypingActive) {
       // If user scrolls up significantly, mark as scrolled up
@@ -421,7 +557,7 @@ export default function CapturePage({
         setUserScrolledUp(false);
       }
     }
-    
+
     if (scrollTop > 8) {
       setDockCollapsed(true);
     }
@@ -503,11 +639,40 @@ export default function CapturePage({
         }
       }
       const requestText = trimmedMessage || ocrText.trim();
-      const output = await mockScanResponse({
-        text: requestText,
-        attachmentLabel: attachmentSnapshot?.label ?? "",
-        language: activeLanguage,
-      });
+
+      // Call the external public chat API
+      let output: MockOutput;
+      try {
+        const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://15.207.22.103:8000';
+        const chatResponse = await fetch(`${apiBaseUrl}/api/public-chat/${selectedRestaurant?.slug || 'fc-restaurant'}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ message: requestText }),
+        });
+
+        if (chatResponse.ok) {
+          const chatData = await chatResponse.json();
+          output = {
+            title: 'Chat Response',
+            intro: chatData.response,
+            body: []
+          };
+        } else {
+          throw new Error(`Chat API failed with status: ${chatResponse.status}`);
+        }
+      } catch (apiError) {
+        console.log("chat_api_error", apiError);
+        // Fallback to local generation if API fails
+        const fallbackResponse = await generateChatResponse(requestText, selectedRestaurant);
+        output = {
+          title: 'Chat Response',
+          intro: fallbackResponse,
+          body: []
+        };
+      }
+
       setResponses((prev) =>
         prev.map((item) =>
           item.id === responseId ? { ...item, output } : item
@@ -606,7 +771,7 @@ export default function CapturePage({
                 onOpenCamera();
                 return;
               }
-              const cameraUrl = restaurantId ? `/camera?restaurantId=${restaurantId}` : "/camera";
+              const cameraUrl = selectedRestaurant ? `/camera?restaurant=${selectedRestaurant.slug}` : "/camera";
               router.push(cameraUrl);
             }}
           />
@@ -636,35 +801,93 @@ export default function CapturePage({
           {responses.map((response) => (
             <div key={response.id} className="chat-thread-item">
               <div className="chat-row chat-row-user">
-                {response.input.text && (
-                  <div className="chat-bubble chat-bubble-user">
-                    {response.input.text}
-                  </div>
-                )}
-                {response.input.imageUrl && (
-                  <div className="chat-bubble chat-bubble-user image">
-                    <img
-                      src={response.input.imageUrl}
-                      alt={copy.chat.uploadPreview}
-                    />
-                  </div>
-                )}
+                <div className="chat-avatar chat-avatar-user">
+                  <User size={20} />
+                </div>
+                <div className="chat-content">
+                  {response.input.text && (
+                    <div className="chat-message-wrapper">
+                      <div className="chat-bubble chat-bubble-user">
+                        {response.input.text}
+                      </div>
+                      <div className="chat-timestamp">
+                        {new Date(response.id).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </div>
+                    </div>
+                  )}
+                  {response.input.imageUrl && (
+                    <div className="chat-message-wrapper">
+                      <div className="chat-bubble chat-bubble-user image">
+                        <img
+                          src={response.input.imageUrl}
+                          alt={copy.chat.uploadPreview}
+                        />
+                      </div>
+                      <div className="chat-timestamp">
+                        {new Date(response.id).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
 
               {response.output && (
                 <div className="chat-row chat-row-assistant">
-                  <div className="chat-bubble chat-bubble-assistant">
-                    <div className="assistant-title">
-                      {typingState[response.id]?.title ?? ""}
-                    </div>
-                    <div className="assistant-intro">
-                      {typingState[response.id]?.intro ?? ""}
-                    </div>
-                    {response.output.body.map((line, index) => (
-                      <div key={`${line}-${index}`} className="assistant-line">
-                        {renderBoldText(typingState[response.id]?.body?.[index] ?? "")}
+                  <div className="chat-avatar chat-avatar-assistant">
+                    <Bot size={20} />
+                  </div>
+                  <div className="chat-content">
+                    <div className="chat-message-wrapper">
+                      <div className="chat-bubble chat-bubble-assistant">
+                        <div className="assistant-title">
+                          {typingState[response.id]?.title ?? ""}
+                        </div>
+                        <div className="assistant-intro">
+                          {typingState[response.id]?.intro ?? ""}
+                        </div>
+                        {response.output.body.map((line, index) => (
+                          <div key={`${line}-${index}`} className="assistant-line">
+                            <ReactMarkdown
+                              remarkPlugins={[remarkGfm]}
+                              rehypePlugins={[rehypeHighlight]}
+                              components={{
+                                p: ({ children }) => <p className="mb-3 last:mb-0">{children}</p>,
+                                strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
+                                ul: ({ children }) => <ul className="list-disc list-inside mb-3 space-y-1">{children}</ul>,
+                                ol: ({ children }) => <ol className="list-decimal list-inside mb-3 space-y-1">{children}</ol>,
+                                li: ({ children }) => <li className="leading-relaxed">{children}</li>,
+                                code: ({ children, className }) => {
+                                  const isInline = !className;
+                                  if (isInline) {
+                                    return <code className="bg-gray-100 px-1 py-0.5 rounded text-sm font-mono">{children}</code>;
+                                  }
+                                  return (
+                                    <div className="relative group">
+                                      <pre className="bg-gray-100 p-4 rounded-md overflow-x-auto mb-3">
+                                        <code className={className}>{children}</code>
+                                      </pre>
+                                      <button
+                                        onClick={() => handleCopyCode(String(children))}
+                                        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-gray-700 text-white px-2 py-1 rounded text-xs flex items-center gap-1"
+                                      >
+                                        <Copy size={12} />
+                                        {copiedCode === String(children) ? 'Copied!' : 'Copy'}
+                                      </button>
+                                    </div>
+                                  );
+                                },
+                                blockquote: ({ children }) => <blockquote className="border-l-4 border-gray-300 pl-4 italic text-gray-700 mb-3">{children}</blockquote>,
+                              }}
+                            >
+                              {typingState[response.id]?.body?.[index] ?? ""}
+                            </ReactMarkdown>
+                          </div>
+                        ))}
                       </div>
-                    ))}
+                      <div className="chat-timestamp">
+                        {new Date(response.id).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}
@@ -696,18 +919,40 @@ export default function CapturePage({
           ))}
           {loading && (
             <div className="chat-row chat-row-assistant">
-              <div className="chat-bubble chat-bubble-assistant">
-                <div className="loader-card" aria-live="polite">
-                  <div className="chopstick-loader" aria-hidden="true">
-                    <span className="chopstick stick-left" />
-                    <span className="chopstick stick-right" />
-                    <span className="grain" />
+              <div className="chat-avatar chat-avatar-assistant">
+                <Bot size={20} />
+              </div>
+              <div className="chat-content">
+                <div className="chat-message-wrapper">
+                  <div className="chat-bubble chat-bubble-assistant">
+                    <div className="loader-card" aria-live="polite">
+                      <div className="typing-indicator">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                      </div>
+                      <div className="loader-text">考え中...</div>
+                    </div>
+                  </div>
+                  <div className="chat-timestamp">
+                    {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </div>
                 </div>
               </div>
             </div>
           )}
         </section>
+
+        {/* Scroll to bottom button */}
+        {showScrollButton && (
+          <button
+            onClick={handleScrollToBottom}
+            className="scroll-to-bottom-btn"
+            aria-label="Scroll to bottom"
+          >
+            <ChevronDown size={20} />
+          </button>
+        )}
       </div>
 
       <ChatDock
@@ -731,7 +976,7 @@ export default function CapturePage({
             onOpenCamera();
             return;
           }
-          const cameraUrl = restaurantId ? `/camera?restaurantId=${restaurantId}` : "/camera";
+          const cameraUrl = selectedRestaurant ? `/camera?restaurant=${selectedRestaurant.slug}` : "/camera";
           router.push(cameraUrl);
         }}
         onRemoveAttachment={() => setAttachment(null)}

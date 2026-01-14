@@ -1,14 +1,23 @@
 'use client'
 
-import { useState } from 'react'
-import { mockRestaurants, type Restaurant } from '../api/mockApi'
+import { useState, useEffect } from 'react'
 import { getUiCopy, type LanguageCode } from '../i18n/uiCopy'
 import LanguageSelect from '../components/LanguageSelect'
+
+type ApiRestaurant = {
+  uid: string
+  name: string
+  description?: string
+  is_active: boolean
+  slug: string
+  created_at: string
+  updated_at: string
+}
 
 type RestaurantSelectionPageProps = {
   language?: LanguageCode
   onLanguageOpen?: () => void
-  onContinue?: (restaurantId: string) => void
+  onContinue?: (restaurant: ApiRestaurant) => void
 }
 
 export default function RestaurantSelectionPage({
@@ -17,11 +26,39 @@ export default function RestaurantSelectionPage({
   onContinue,
 }: RestaurantSelectionPageProps) {
   const [selectedRestaurant, setSelectedRestaurant] = useState<string>('')
+  const [restaurants, setRestaurants] = useState<ApiRestaurant[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const copy = getUiCopy(language)
+
+  useEffect(() => {
+    const fetchRestaurants = async () => {
+      try {
+        const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://15.207.22.103:8000'
+        const response = await fetch(`${apiBaseUrl}/api/restaurants/?page=1&size=10`)
+        if (!response.ok) {
+          throw new Error('Failed to fetch restaurants')
+        }
+        const data = await response.json()
+        // Filter to only show active restaurants
+        const activeRestaurants = data.result?.items?.filter((restaurant: ApiRestaurant) => restaurant.is_active) || []
+        setRestaurants(activeRestaurants)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'An error occurred')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchRestaurants()
+  }, [])
 
   const handleRestaurantClick = () => {
     if (selectedRestaurant && onContinue) {
-      onContinue(selectedRestaurant)
+      const restaurant = restaurants.find(r => r.uid === selectedRestaurant)
+      if (restaurant) {
+        onContinue(restaurant)
+      }
     }
   }
 
@@ -35,22 +72,28 @@ export default function RestaurantSelectionPage({
 
       <main className="restaurant-selection-main">
         <div className="restaurant-dropdown-container">
-          <select
-            className="restaurant-dropdown"
-            value={selectedRestaurant}
-            onChange={(e) => setSelectedRestaurant(e.target.value)}
-            aria-label={copy.restaurant.selectPlaceholder}
-          >
-            <option value="">{copy.restaurant.selectPlaceholder}</option>
-            {mockRestaurants.map((restaurant) => (
-              <option key={restaurant.id} value={restaurant.id}>
-                {restaurant.name} - {restaurant.cuisine} ★ {restaurant.rating}
-              </option>
-            ))}
-          </select>
+          {loading ? (
+            <p>Loading restaurants...</p>
+          ) : error ? (
+            <p>Error: {error}</p>
+          ) : (
+            <select
+              className="restaurant-dropdown"
+              value={selectedRestaurant}
+              onChange={(e) => setSelectedRestaurant(e.target.value)}
+              aria-label={copy.restaurant.selectPlaceholder}
+            >
+              <option value="">{copy.restaurant.selectPlaceholder}</option>
+              {restaurants.map((restaurant) => (
+                <option key={restaurant.uid} value={restaurant.uid}>
+                  {restaurant.name}
+                </option>
+              ))}
+            </select>
+          )}
         </div>
 
-        {selectedRestaurant && (
+        {selectedRestaurant && !loading && !error && (
           <div 
             className="restaurant-card restaurant-card-clickable"
             onClick={handleRestaurantClick}
@@ -63,18 +106,14 @@ export default function RestaurantSelectionPage({
             }}
           >
             {(() => {
-              const restaurant = mockRestaurants.find(r => r.id === selectedRestaurant)
+              const restaurant = restaurants.find(r => r.uid === selectedRestaurant)
               if (!restaurant) return null
               return (
                 <>
                   <div className="restaurant-card-content">
                     <div>
                       <h2 className="restaurant-card-name">{restaurant.name}</h2>
-                      <div className="restaurant-card-info">
-                        <span className="restaurant-card-cuisine">{restaurant.cuisine}</span>
-                        <span className="restaurant-card-rating">★ {restaurant.rating}</span>
-                      </div>
-                      <p className="restaurant-card-description">{restaurant.description}</p>
+                      <p className="restaurant-card-description">{restaurant.description || 'No description available'}</p>
                     </div>
                     <div className="restaurant-card-arrow">→</div>
                   </div>
@@ -84,7 +123,7 @@ export default function RestaurantSelectionPage({
           </div>
         )}
 
-        {!selectedRestaurant && (
+        {!selectedRestaurant && !loading && !error && (
           <p className="restaurant-selection-hint">{copy.restaurant.noSelection}</p>
         )}
       </main>

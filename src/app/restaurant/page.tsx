@@ -8,8 +8,8 @@ export default function Page() {
   const router = useRouter()
   const { language, openLanguageModal } = useAppContext()
 
-  const handleContinue = (restaurantId: string) => {
-    router.push(`/capture?from=restaurant&restaurantId=${restaurantId}`)
+  const handleContinue = (restaurant: { uid: string; name: string; slug: string }) => {
+    router.push(`/capture?restaurant=${restaurant.slug}`)
   }
 
   return (

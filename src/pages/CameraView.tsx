@@ -23,7 +23,7 @@ function CloseIcon() {
 export default function CameraView({ language = 'ja' }: CameraViewProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const restaurantId = searchParams?.get('restaurantId')
+  const restaurantSlug = searchParams?.get('restaurant')
   const { language: contextLanguage, setPendingAttachment } = useAppContext()
   const galleryInputRef = useRef<HTMLInputElement | null>(null)
   const videoRef = useRef<HTMLVideoElement | null>(null)
@@ -42,8 +42,8 @@ export default function CameraView({ language = 'ja' }: CameraViewProps) {
     const file = event.target.files?.[0]
     if (file) {
       setPendingAttachment({ file, source: 'library' })
-      const captureUrl = restaurantId 
-        ? `/capture?from=restaurant&restaurantId=${restaurantId}` 
+      const captureUrl = restaurantSlug 
+        ? `/capture?restaurant=${restaurantSlug}` 
         : '/capture?from=explore'
       router.push(captureUrl)
     }
@@ -67,8 +67,8 @@ export default function CameraView({ language = 'ja' }: CameraViewProps) {
       if (!blob) return
       const file = new File([blob], 'capture.jpg', { type: 'image/jpeg' })
       setPendingAttachment({ file, source: 'camera' })
-      const captureUrl = restaurantId 
-        ? `/capture?from=restaurant&restaurantId=${restaurantId}` 
+      const captureUrl = restaurantSlug 
+        ? `/capture?restaurant=${restaurantSlug}` 
         : '/capture?from=explore'
       router.push(captureUrl)
     }, 'image/jpeg', 0.92)
