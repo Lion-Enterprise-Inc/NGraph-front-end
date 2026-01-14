@@ -14,7 +14,7 @@ import Tesseract from "tesseract.js";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
-import { User, Bot, ChevronDown, Copy } from "lucide-react";
+import { User, Bot, ChevronDown, Copy, Sparkles } from "lucide-react";
 import CaptureHeader from "../components/CaptureHeader";
 import CameraPrompt from "../components/CameraPrompt";
 import ChatDock from "../components/ChatDock";
@@ -149,8 +149,8 @@ const generateChatResponse = async (message: string, restaurant?: ApiRestaurant 
   // In production, this would integrate with an AI service like OpenAI
 
   const lowerMessage = message.toLowerCase()
-  const restaurantName = restaurant?.name || 'FC Restaurant'
-  const restaurantDescription = restaurant?.description || 'a great dining experience'
+  const restaurantName = restaurant?.name || 'the restaurant'
+  const restaurantDescription = restaurant?.description || 'We offer a great dining experience'
 
   // Basic greeting responses
   if (lowerMessage.includes('hello') || lowerMessage.includes('hi') || lowerMessage.includes('こんにちは')) {
@@ -644,7 +644,8 @@ export default function CapturePage({
       let output: MockOutput;
       try {
         const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://15.207.22.103:8000';
-        const chatResponse = await fetch(`${apiBaseUrl}/api/public-chat/${selectedRestaurant?.slug || 'fc-restaurant'}`, {
+        const restaurantSlugForApi = selectedRestaurant?.slug || 'default';
+        const chatResponse = await fetch(`${apiBaseUrl}/api/public-chat/${restaurantSlugForApi}`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -811,7 +812,7 @@ export default function CapturePage({
                         {response.input.text}
                       </div>
                       <div className="chat-timestamp">
-                        {new Date(response.id).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        {new Date(parseInt(response.id)).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </div>
                     </div>
                   )}
@@ -824,7 +825,7 @@ export default function CapturePage({
                         />
                       </div>
                       <div className="chat-timestamp">
-                        {new Date(response.id).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        {new Date(parseInt(response.id)).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </div>
                     </div>
                   )}
@@ -839,12 +840,28 @@ export default function CapturePage({
                   <div className="chat-content">
                     <div className="chat-message-wrapper">
                       <div className="chat-bubble chat-bubble-assistant">
-                        <div className="assistant-title">
-                          {typingState[response.id]?.title ?? ""}
-                        </div>
-                        <div className="assistant-intro">
-                          {typingState[response.id]?.intro ?? ""}
-                        </div>
+                        {typingState[response.id]?.title && (
+                          <div className="assistant-title">
+                            {typingState[response.id]?.title}
+                          </div>
+                        )}
+                        {typingState[response.id]?.intro && (
+                          <div className="assistant-intro">
+                            <ReactMarkdown
+                              remarkPlugins={[remarkGfm]}
+                              rehypePlugins={[rehypeHighlight]}
+                              components={{
+                                p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
+                                strong: ({ children }) => <strong className="font-semibold text-gray-900">{children}</strong>,
+                                ul: ({ children }) => <ul className="menu-list">{children}</ul>,
+                                ol: ({ children }) => <ol className="menu-list numbered">{children}</ol>,
+                                li: ({ children }) => <li className="menu-item">{children}</li>,
+                              }}
+                            >
+                              {typingState[response.id]?.intro ?? ""}
+                            </ReactMarkdown>
+                          </div>
+                        )}
                         {response.output.body.map((line, index) => (
                           <div key={`${line}-${index}`} className="assistant-line">
                             <ReactMarkdown
@@ -853,9 +870,9 @@ export default function CapturePage({
                               components={{
                                 p: ({ children }) => <p className="mb-3 last:mb-0">{children}</p>,
                                 strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
-                                ul: ({ children }) => <ul className="list-disc list-inside mb-3 space-y-1">{children}</ul>,
-                                ol: ({ children }) => <ol className="list-decimal list-inside mb-3 space-y-1">{children}</ol>,
-                                li: ({ children }) => <li className="leading-relaxed">{children}</li>,
+                                ul: ({ children }) => <ul className="menu-list">{children}</ul>,
+                                ol: ({ children }) => <ol className="menu-list numbered">{children}</ol>,
+                                li: ({ children }) => <li className="menu-item">{children}</li>,
                                 code: ({ children, className }) => {
                                   const isInline = !className;
                                   if (isInline) {
@@ -885,7 +902,7 @@ export default function CapturePage({
                         ))}
                       </div>
                       <div className="chat-timestamp">
-                        {new Date(response.id).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        {new Date(parseInt(response.id)).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </div>
                     </div>
                   </div>
@@ -926,12 +943,14 @@ export default function CapturePage({
                 <div className="chat-message-wrapper">
                   <div className="chat-bubble chat-bubble-assistant">
                     <div className="loader-card" aria-live="polite">
+                      <div className="loader-icon">
+                        <Sparkles size={20} className="sparkle-icon" />
+                      </div>
                       <div className="typing-indicator">
                         <span></span>
                         <span></span>
                         <span></span>
                       </div>
-                      <div className="loader-text">考え中...</div>
                     </div>
                   </div>
                   <div className="chat-timestamp">
