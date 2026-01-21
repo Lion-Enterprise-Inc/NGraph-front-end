@@ -109,6 +109,7 @@ const uiCopy = {
       nav: {
         stores: "Stores",
         groups: "Groups",
+        qr: "QR Codes",
         prompt: "Prompt",
         logout: "Logout",
       },
@@ -147,6 +148,22 @@ const uiCopy = {
       aboutCuisine: "Tell me about {cuisine} cuisine",
       bestTime: "What's the best time to visit {name}?",
       dietaryOptions: "Any dietary options available?",
+    },
+    qrScanner: {
+      title: "Scan QR Code",
+      close: "Close",
+      loading: "Starting camera...",
+      cameraError: "Unable to access camera. Please check permissions.",
+      invalidQR: "Invalid QR code. No restaurant found.",
+      retry: "Retry",
+      success: "QR Code detected!",
+      redirecting: "Redirecting...",
+      instructions: "Point your camera at the restaurant QR code",
+      torchOn: "Light On",
+      torchOff: "Light Off",
+      switchCamera: "Switch",
+      scanQR: "Scan QR Code",
+      orScanQR: "Or scan a QR code",
     },
   },
   ja: {
@@ -215,6 +232,7 @@ const uiCopy = {
       nav: {
         stores: "店舗",
         groups: "グループ",
+        qr: "QRコード",
         prompt: "プロンプト",
         logout: "ログアウト",
       },
@@ -253,6 +271,22 @@ const uiCopy = {
       aboutCuisine: "{cuisine}料理について教えてください",
       bestTime: "{name}に行くのに最適な時間は？",
       dietaryOptions: "食事制限に対応していますか？",
+    },
+    qrScanner: {
+      title: "QRコードをスキャン",
+      close: "閉じる",
+      loading: "カメラを起動中...",
+      cameraError: "カメラにアクセスできません。権限を確認してください。",
+      invalidQR: "無効なQRコードです。レストランが見つかりません。",
+      retry: "再試行",
+      success: "QRコードを検出しました！",
+      redirecting: "リダイレクト中...",
+      instructions: "レストランのQRコードにカメラを向けてください",
+      torchOn: "ライトオン",
+      torchOff: "ライトオフ",
+      switchCamera: "切替",
+      scanQR: "QRコードをスキャン",
+      orScanQR: "またはQRコードをスキャン",
     },
   },
   ko: {
@@ -321,6 +355,7 @@ const uiCopy = {
       nav: {
         stores: "매장",
         groups: "그룹",
+        qr: "QR 코드",
         prompt: "프롬프트",
         logout: "로그아웃",
       },
@@ -359,6 +394,22 @@ const uiCopy = {
       aboutCuisine: "{cuisine} 요리에 대해 알려주세요",
       bestTime: "{name}을 방문하기 가장 좋은 시간은?",
       dietaryOptions: "식이 제한 옵션이 있나요?",
+    },
+    qrScanner: {
+      title: "QR 코드 스캔",
+      close: "닫기",
+      loading: "카메라 시작 중...",
+      cameraError: "카메라에 접근할 수 없습니다. 권한을 확인하세요.",
+      invalidQR: "유효하지 않은 QR 코드입니다. 레스토랑을 찾을 수 없습니다.",
+      retry: "재시도",
+      success: "QR 코드 감지됨!",
+      redirecting: "리디렉션 중...",
+      instructions: "레스토랑 QR 코드에 카메라를 향하세요",
+      torchOn: "조명 켜기",
+      torchOff: "조명 끄기",
+      switchCamera: "전환",
+      scanQR: "QR 코드 스캔",
+      orScanQR: "또는 QR 코드 스캔",
     },
   },
   "zh-Hans": {
@@ -427,6 +478,7 @@ const uiCopy = {
       nav: {
         stores: "门店",
         groups: "分组",
+        qr: "二维码",
         prompt: "提示",
         logout: "退出登录",
       },
@@ -465,6 +517,22 @@ const uiCopy = {
       aboutCuisine: "告诉我关于{cuisine}菜的信息",
       bestTime: "访问{name}的最佳时间是？",
       dietaryOptions: "有饮食限制选项吗？",
+    },
+    qrScanner: {
+      title: "扫描二维码",
+      close: "关闭",
+      loading: "正在启动相机...",
+      cameraError: "无法访问相机。请检查权限。",
+      invalidQR: "无效的二维码。未找到餐厅。",
+      retry: "重试",
+      success: "二维码检测到！",
+      redirecting: "正在跳转...",
+      instructions: "将相机对准餐厅二维码",
+      torchOn: "开灯",
+      torchOff: "关灯",
+      switchCamera: "切换",
+      scanQR: "扫描二维码",
+      orScanQR: "或扫描二维码",
     },
   },
   "zh-Hant": {
@@ -533,6 +601,7 @@ const uiCopy = {
       nav: {
         stores: "門市",
         groups: "群組",
+        qr: "QR 碼",
         prompt: "提示",
         logout: "登出",
       },
@@ -571,6 +640,22 @@ const uiCopy = {
       aboutCuisine: "告訴我關於{cuisine}菜的資訊",
       bestTime: "訪問{name}的最佳時間是？",
       dietaryOptions: "有飲食限制選項嗎？",
+    },
+    qrScanner: {
+      title: "掃描QR碼",
+      close: "關閉",
+      loading: "正在啟動相機...",
+      cameraError: "無法訪問相機。請檢查權限。",
+      invalidQR: "無效的QR碼。未找到餐廳。",
+      retry: "重試",
+      success: "QR碼檢測到！",
+      redirecting: "正在跳轉...",
+      instructions: "將相機對準餐廳QR碼",
+      torchOn: "開燈",
+      torchOff: "關燈",
+      switchCamera: "切換",
+      scanQR: "掃描QR碼",
+      orScanQR: "或掃描QR碼",
     },
   },
   es: {
@@ -639,6 +724,7 @@ const uiCopy = {
       nav: {
         stores: "Tiendas",
         groups: "Grupos",
+        qr: "Códigos QR",
         prompt: "Prompt",
         logout: "Cerrar sesión",
       },
@@ -677,6 +763,22 @@ const uiCopy = {
       aboutCuisine: "Cuéntame sobre la cocina {cuisine}",
       bestTime: "¿Cuál es el mejor momento para visitar {name}?",
       dietaryOptions: "¿Hay opciones dietéticas disponibles?",
+    },
+    qrScanner: {
+      title: "Escanear código QR",
+      close: "Cerrar",
+      loading: "Iniciando cámara...",
+      cameraError: "No se puede acceder a la cámara. Verifica los permisos.",
+      invalidQR: "Código QR inválido. No se encontró restaurante.",
+      retry: "Reintentar",
+      success: "¡Código QR detectado!",
+      redirecting: "Redirigiendo...",
+      instructions: "Apunta tu cámara al código QR del restaurante",
+      torchOn: "Luz encendida",
+      torchOff: "Luz apagada",
+      switchCamera: "Cambiar",
+      scanQR: "Escanear código QR",
+      orScanQR: "O escanea un código QR",
     },
   },
   fr: {
@@ -745,6 +847,7 @@ const uiCopy = {
       nav: {
         stores: "Boutiques",
         groups: "Groupes",
+        qr: "Codes QR",
         prompt: "Prompt",
         logout: "Déconnexion",
       },
@@ -783,6 +886,22 @@ const uiCopy = {
       aboutCuisine: "Parlez-moi de la cuisine {cuisine}",
       bestTime: "Quel est le meilleur moment pour visiter {name} ?",
       dietaryOptions: "Des options alimentaires sont-elles disponibles ?",
+    },
+    qrScanner: {
+      title: "Scanner le code QR",
+      close: "Fermer",
+      loading: "Démarrage de la caméra...",
+      cameraError: "Impossible d'accéder à la caméra. Vérifiez les permissions.",
+      invalidQR: "Code QR invalide. Aucun restaurant trouvé.",
+      retry: "Réessayer",
+      success: "Code QR détecté !",
+      redirecting: "Redirection...",
+      instructions: "Pointez votre caméra vers le code QR du restaurant",
+      torchOn: "Lumière allumée",
+      torchOff: "Lumière éteinte",
+      switchCamera: "Changer",
+      scanQR: "Scanner le code QR",
+      orScanQR: "Ou scannez un code QR",
     },
   },
   de: {
@@ -851,6 +970,7 @@ const uiCopy = {
       nav: {
         stores: "Filialen",
         groups: "Gruppen",
+        qr: "QR-Codes",
         prompt: "Prompt",
         logout: "Abmelden",
       },
@@ -889,6 +1009,22 @@ const uiCopy = {
       aboutCuisine: "Erzähl mir über die {cuisine}-Küche",
       bestTime: "Wann ist die beste Zeit, um {name} zu besuchen?",
       dietaryOptions: "Gibt es diätetische Optionen?",
+    },
+    qrScanner: {
+      title: "QR-Code scannen",
+      close: "Schließen",
+      loading: "Kamera wird gestartet...",
+      cameraError: "Kamerazugriff nicht möglich. Bitte Berechtigungen prüfen.",
+      invalidQR: "Ungültiger QR-Code. Kein Restaurant gefunden.",
+      retry: "Erneut versuchen",
+      success: "QR-Code erkannt!",
+      redirecting: "Weiterleitung...",
+      instructions: "Richten Sie Ihre Kamera auf den QR-Code des Restaurants",
+      torchOn: "Licht an",
+      torchOff: "Licht aus",
+      switchCamera: "Wechseln",
+      scanQR: "QR-Code scannen",
+      orScanQR: "Oder QR-Code scannen",
     },
   },
   it: {
@@ -957,6 +1093,7 @@ const uiCopy = {
       nav: {
         stores: "Negozi",
         groups: "Gruppi",
+        qr: "Codici QR",
         prompt: "Prompt",
         logout: "Disconnetti",
       },
@@ -1063,6 +1200,7 @@ const uiCopy = {
       nav: {
         stores: "Lojas",
         groups: "Grupos",
+        qr: "Códigos QR",
         prompt: "Prompt",
         logout: "Sair",
       },
@@ -1381,6 +1519,7 @@ const uiCopy = {
       nav: {
         stores: "Cửa hàng",
         groups: "Nhóm",
+        qr: "Mã QR",
         prompt: "Prompt",
         logout: "Đăng xuất",
       },
@@ -1487,6 +1626,7 @@ const uiCopy = {
       nav: {
         stores: "Toko",
         groups: "Grup",
+        qr: "Kode QR",
         prompt: "Prompt",
         logout: "Keluar",
       },
@@ -1593,6 +1733,7 @@ const uiCopy = {
       nav: {
         stores: "Kedai",
         groups: "Kumpulan",
+        qr: "Kod QR",
         prompt: "Prompt",
         logout: "Log keluar",
       },
@@ -1699,6 +1840,7 @@ const uiCopy = {
       nav: {
         stores: "المتاجر",
         groups: "المجموعات",
+        qr: "رمز الاستجابة السريع",
         prompt: "Prompt",
         logout: "تسجيل الخروج",
       },
@@ -3024,9 +3166,31 @@ const normalizeLanguage = (code?: string) => {
   return "en";
 };
 
+const defaultQrScanner = {
+  title: "Scan QR Code",
+  close: "Close",
+  loading: "Starting camera...",
+  cameraError: "Unable to access camera. Please check permissions.",
+  invalidQR: "Invalid QR code. No restaurant found.",
+  retry: "Retry",
+  success: "QR Code detected!",
+  redirecting: "Redirecting...",
+  instructions: "Point your camera at the restaurant QR code",
+  torchOn: "Light On",
+  torchOff: "Light Off",
+  switchCamera: "Switch",
+  scanQR: "Scan QR Code",
+  orScanQR: "Or scan a QR code",
+};
+
 export const getUiCopy = (language?: string): UiCopy => {
   const normalized = normalizeLanguage(language);
-  return uiCopy[normalized];
+  const copy = uiCopy[normalized];
+  // Provide fallback for qrScanner if not defined in the language
+  if (!('qrScanner' in copy)) {
+    return { ...copy, qrScanner: defaultQrScanner } as UiCopy;
+  }
+  return copy as UiCopy;
 };
 
 export const getLanguageLabel = (code?: string) => {

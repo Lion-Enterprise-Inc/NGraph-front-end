@@ -1,0 +1,1028 @@
+'use client'
+
+import { useState } from 'react'
+import AdminLayout from '../../../components/admin/AdminLayout'
+
+interface MenuItem {
+  id: number
+  name: string
+  category: string
+  price: number
+  status: 'verified' | 'warning'
+  ingredients: string
+  description: string
+}
+
+export default function MenuListPage() {
+  const [searchQuery, setSearchQuery] = useState('')
+  const [filter, setFilter] = useState('all')
+  const [itemsPerPage, setItemsPerPage] = useState(25)
+  const [showAddModal, setShowAddModal] = useState(false)
+  const [showFetchModal, setShowFetchModal] = useState(false)
+  const [showApprovalModal, setShowApprovalModal] = useState(false)
+  const [showPreviewModal, setShowPreviewModal] = useState(false)
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [activeTab, setActiveTab] = useState('basic')
+  const [previewItem, setPreviewItem] = useState<MenuItem | null>(null)
+  const [editItem, setEditItem] = useState<MenuItem | null>(null)
+  const [pendingMenus, setPendingMenus] = useState<{id: number, name: string, price: number, category: string, confidence: number}[]>([])
+  const [newMenu, setNewMenu] = useState({
+    name: '',
+    nameEn: '',
+    price: '',
+    category: '',
+    description: ''
+  })
+
+  const [menuItems, setMenuItems] = useState<MenuItem[]>([
+    { id: 1, name: '紅ズワイ蟹と福井の幸コース', category: 'コース', price: 8800, status: 'verified', ingredients: '紅ズワイ蟹、福井産野菜、地酒', description: '蟹の旨味と地元の食材を組み合わせた特別なコース' },
+    { id: 2, name: '越前蟹刺身', category: '刺身', price: 3500, status: 'verified', ingredients: '越前蟹', description: '新鮮な越前蟹を活き造りで' },
+    { id: 3, name: '蟹味噌甲羅焼き', category: '焼物', price: 1800, status: 'warning', ingredients: '蟹味噌、蟹甲羅', description: '濃厚な蟹味噌を甲羅で焼き上げました' },
+  ])
+
+  const filteredItems = menuItems.filter(item => {
+    const matchesSearch = item.name.includes(searchQuery) || item.category.includes(searchQuery) || item.ingredients.includes(searchQuery)
+    const matchesFilter = filter === 'all' || item.status === filter
+    return matchesSearch && matchesFilter
+  })
+
+  const countAll = menuItems.length
+  const countWarning = menuItems.filter(i => i.status === 'warning').length
+  const countVerified = menuItems.filter(i => i.status === 'verified').length
+
+  const handleAddMenu = () => {
+    if (!newMenu.name || !newMenu.price || !newMenu.category) {
+      alert('料理名、価格、カテゴリーは必須です')
+      return
+    }
+    const newItem: MenuItem = {
+      id: menuItems.length + 1,
+      name: newMenu.name,
+      category: newMenu.category,
+      price: Number(newMenu.price),
+      status: 'warning',
+      ingredients: '',
+      description: newMenu.description
+    }
+    setMenuItems([...menuItems, newItem])
+    setNewMenu({ name: '', nameEn: '', price: '', category: '', description: '' })
+    setShowAddModal(false)
+    setActiveTab('basic')
+    alert('✅ メニューを追加しました！')
+  }
+
+  const handleFetchFromSource = () => {
+    setShowFetchModal(true)
+    setTimeout(() => {
+      // Show approval modal with pending menus
+      setPendingMenus([
+        { id: menuItems.length + 1, name: '特選海鮮丼', price: 1200, category: 'ご飯もの', confidence: 88 },
+        { id: menuItems.length + 2, name: '福井牛ステーキ', price: 3500, category: '焼き物', confidence: 92 },
+      ])
+      setShowFetchModal(false)
+      setShowApprovalModal(true)
+    }, 2000)
+  }
+
+  const handleApproveMenu = (menuId: number) => {
+    const menu = pendingMenus.find(m => m.id === menuId)
+    if (menu) {
+      const newItem: MenuItem = {
+        id: menu.id,
+        name: menu.name,
+        category: menu.category,
+        price: menu.price,
+        status: 'warning',
+        ingredients: '',
+        description: ''
+      }
+      setMenuItems([...menuItems, newItem])
+      setPendingMenus(pendingMenus.filter(m => m.id !== menuId))
+    }
+  }
+
+  const handleDenyMenu = (menuId: number) => {
+    setPendingMenus(pendingMenus.filter(m => m.id !== menuId))
+  }
+
+  const handleApproveAll = () => {
+    const newItems: MenuItem[] = pendingMenus.map(menu => ({
+      id: menu.id,
+      name: menu.name,
+      category: menu.category,
+      price: menu.price,
+      status: 'warning' as const,
+      ingredients: '',
+      description: ''
+    }))
+    setMenuItems([...menuItems, ...newItems])
+    setPendingMenus([])
+    setShowApprovalModal(false)
+    alert('✅ すべてのメニューを承認しました！')
+  }
+
+  const handleDenyAll = () => {
+    setPendingMenus([])
+    setShowApprovalModal(false)
+  }
+
+  const handlePreview = (item: MenuItem) => {
+    setPreviewItem(item)
+    setShowPreviewModal(true)
+  }
+
+  const handleEdit = (item: MenuItem) => {
+    setEditItem(item)
+    setShowEditModal(true)
+    setActiveTab('basic')
+  }
+
+  const handleSaveEdit = () => {
+    if (editItem) {
+      setMenuItems(menuItems.map(m => m.id === editItem.id ? editItem : m))
+      setShowEditModal(false)
+      setEditItem(null)
+      alert('✅ メニューを更新しました！')
+    }
+  }
+
+  const handleDelete = (id: number) => {
+    if (confirm('このメニューを削除しますか？')) {
+      setMenuItems(menuItems.filter(m => m.id !== id))
+    }
+  }
+
+  return (
+    <AdminLayout title="メニュー一覧">
+      {/* メニュー管理カード */}
+      <div className="card">
+        <div className="card-title">📋 メニュー・商品管理</div>
+
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+          <h2 style={{ fontSize: '18px', margin: 0 }}>メニュー一覧</h2>
+          <button className="btn btn-primary" onClick={handleFetchFromSource} style={{ padding: '8px 16px', fontSize: '13px' }}>
+            🤖 基本情報のソースからメニューを取得
+          </button>
+        </div>
+
+        {/* 検索バー */}
+        <div style={{ marginBottom: '12px' }}>
+          <div style={{ position: 'relative', maxWidth: '400px' }}>
+            <input
+              type="text"
+              placeholder="🔍 メニュー名、カテゴリ、原材料で検索..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              style={{ width: '100%', padding: '10px 40px 10px 12px', border: '1px solid #ddd', borderRadius: '6px', fontSize: '14px' }}
+            />
+            <button
+              onClick={() => setSearchQuery('')}
+              style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#999', fontSize: '16px' }}
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+
+        {/* フィルターと表示件数 */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+          <div className="filter-buttons" style={{ display: 'flex', gap: '8px' }}>
+            <button
+              className={`filter-btn ${filter === 'all' ? 'active' : ''}`}
+              onClick={() => setFilter('all')}
+              style={{ padding: '6px 12px', fontSize: '13px' }}
+            >
+              全て ({countAll})
+            </button>
+            <button
+              className={`filter-btn ${filter === 'warning' ? 'active' : ''}`}
+              onClick={() => setFilter('warning')}
+              style={{ padding: '6px 12px', fontSize: '13px' }}
+            >
+              要確認 ({countWarning})
+            </button>
+            <button
+              className={`filter-btn ${filter === 'verified' ? 'active' : ''}`}
+              onClick={() => setFilter('verified')}
+              style={{ padding: '6px 12px', fontSize: '13px' }}
+            >
+              確認済み ({countVerified})
+            </button>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <label style={{ fontSize: '13px', color: '#666' }}>表示件数:</label>
+            <select
+              value={itemsPerPage}
+              onChange={(e) => setItemsPerPage(Number(e.target.value))}
+              style={{ padding: '4px 8px', border: '1px solid #ddd', borderRadius: '4px', fontSize: '13px' }}
+            >
+              <option value={10}>10件</option>
+              <option value={25}>25件</option>
+              <option value={50}>50件</option>
+              <option value={100}>100件</option>
+            </select>
+          </div>
+        </div>
+
+        {/* メニューテーブル */}
+        <div className="menu-table-container">
+          <table className="menu-table">
+            <thead>
+              <tr>
+                <th style={{ width: '35%' }}>メニュー詳細</th>
+                <th style={{ width: '10%', textAlign: 'center' }}>価格</th>
+                <th style={{ width: '12%', textAlign: 'center' }}>信頼度</th>
+                <th style={{ width: '10%', textAlign: 'center' }}>ステータス</th>
+                <th style={{ width: '33%', textAlign: 'center' }}>操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredItems.map(item => {
+                const confidence = item.status === 'verified' ? 95 : 65
+                return (
+                  <tr key={item.id}>
+                    <td>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <div style={{ width: '40px', height: '30px', background: '#f8f9fa', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', color: '#999' }}>📄</div>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontWeight: 600, color: '#212529', marginBottom: '2px', fontSize: '14px' }}>{item.name}</div>
+                          <div style={{ fontSize: '11px', color: '#6c757d', marginBottom: '2px' }}>
+                            📂 {item.category} | 📅 更新: 1/21
+                          </div>
+                          <div style={{ fontSize: '10px', color: '#6c757d', marginBottom: '2px' }}>
+                            🥘 {item.ingredients || '原材料なし'}
+                          </div>
+                          <span style={{ color: item.status === 'verified' ? '#28a745' : '#dc3545', fontSize: '11px' }}>
+                            {item.status === 'verified' ? '✓ アレルゲンなし' : '⚠️ 要確認'}
+                          </span>
+                        </div>
+                      </div>
+                    </td>
+                    <td style={{ textAlign: 'center', fontWeight: 600, color: '#28a745', fontSize: '14px' }}>¥{item.price.toLocaleString()}</td>
+                    <td style={{ textAlign: 'center' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
+                        <div style={{ width: '50px', height: '4px', background: '#e9ecef', borderRadius: '2px', overflow: 'hidden' }}>
+                          <div style={{ width: `${confidence}%`, height: '100%', background: confidence >= 80 ? '#28a745' : confidence >= 60 ? '#ffc107' : '#dc3545' }}></div>
+                        </div>
+                        <span style={{ fontSize: '11px', fontWeight: 600, color: confidence >= 80 ? '#28a745' : confidence >= 60 ? '#ffc107' : '#dc3545' }}>{confidence}%</span>
+                      </div>
+                    </td>
+                    <td style={{ textAlign: 'center' }}>
+                      <span className={`status-badge ${item.status}`}>
+                        {item.status === 'verified' ? '確認済み' : '要確認'}
+                      </span>
+                    </td>
+                    <td style={{ textAlign: 'center' }}>
+                      <div style={{ display: 'flex', gap: '4px', justifyContent: 'center', flexWrap: 'wrap' }}>
+                        <button className="btn-action btn-preview" onClick={() => handlePreview(item)}>👁️ プレビュー</button>
+                        <button className="btn-action btn-edit" onClick={() => handleEdit(item)}>✏️ 編集</button>
+                        <button className="btn-action btn-delete" onClick={() => handleDelete(item.id)}>🗑️ 削除</button>
+                      </div>
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
+
+        <button className="btn btn-primary" onClick={() => setShowAddModal(true)} style={{ width: 'auto', minWidth: '180px', maxWidth: '250px', margin: '8px auto', display: 'block', padding: '10px 20px', fontSize: '14px' }}>
+          ➕ 手動で新規追加
+        </button>
+      </div>
+
+      {/* メニュー編集モーダル */}
+      {showAddModal && (
+        <div className="modal active">
+          <div className="modal-content">
+            <button className="modal-close" onClick={() => { setShowAddModal(false); setActiveTab('basic'); }}>×</button>
+            <div className="modal-title">📝 メニュー編集</div>
+
+            <div className="tab-nav">
+              <button className={`tab-nav-btn ${activeTab === 'basic' ? 'active' : ''}`} onClick={() => setActiveTab('basic')}>📝 基本情報</button>
+              <button className={`tab-nav-btn ${activeTab === 'materials' ? 'active' : ''}`} onClick={() => setActiveTab('materials')}>🥕 原材料</button>
+              <button className={`tab-nav-btn ${activeTab === 'allergens' ? 'active' : ''}`} onClick={() => setActiveTab('allergens')}>⚠️ アレルギー</button>
+            </div>
+
+            {activeTab === 'basic' && (
+              <div className="tab-content">
+                <div className="form-group">
+                  <label className="form-label">料理名（日本語）*</label>
+                  <input type="text" className="form-input" value={newMenu.name} onChange={(e) => setNewMenu({...newMenu, name: e.target.value})} />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">料理名（英語）</label>
+                  <input type="text" className="form-input" value={newMenu.nameEn} onChange={(e) => setNewMenu({...newMenu, nameEn: e.target.value})} />
+                  <button className="btn ai-btn btn-small" style={{ marginTop: '5px' }}>🤖 AI自動翻訳</button>
+                </div>
+                <div className="form-group">
+                  <label className="form-label">価格 *</label>
+                  <input type="number" className="form-input" value={newMenu.price} onChange={(e) => setNewMenu({...newMenu, price: e.target.value})} />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">カテゴリー *</label>
+                  <select className="form-input" value={newMenu.category} onChange={(e) => setNewMenu({...newMenu, category: e.target.value})}>
+                    <option value="">選択してください</option>
+                    <option value="ご飯もの">ご飯もの</option>
+                    <option value="刺身">刺身</option>
+                    <option value="焼き物">焼き物</option>
+                    <option value="揚げ物">揚げ物</option>
+                    <option value="コース">コース</option>
+                    <option value="ドリンク">ドリンク</option>
+                    <option value="そば">そば</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label className="form-label">料理の説明</label>
+                  <textarea className="form-input" value={newMenu.description} onChange={(e) => setNewMenu({...newMenu, description: e.target.value})} />
+                  <button className="btn ai-btn btn-small" style={{ marginTop: '5px' }}>🤖 AI生成</button>
+                </div>
+                <button className="btn btn-primary" onClick={() => setActiveTab('materials')}>次へ: 原材料設定 →</button>
+              </div>
+            )}
+
+            {activeTab === 'materials' && (
+              <div className="tab-content">
+                <div className="alert-info">
+                  現在の信頼度: <strong>65%</strong> → 完了後: <strong>95%</strong>
+                </div>
+                <div className="form-group">
+                  <label className="form-label">原材料</label>
+                  <button className="btn ai-btn btn-small" style={{ marginBottom: '12px' }}>🤖 AI推察</button>
+                  <div style={{ marginBottom: '8px', padding: '10px', background: '#f9fafb', borderRadius: '6px' }}>
+                    <input type="text" className="form-input" placeholder="原材料を入力..." style={{ marginBottom: '8px' }} />
+                  </div>
+                  <button className="btn btn-secondary">➕ 原材料を追加</button>
+                </div>
+                <div style={{ marginTop: '12px', paddingTop: '8px', borderTop: '1px solid #e5e7eb' }}>
+                  <button className="btn btn-primary" onClick={() => setActiveTab('allergens')}>次へ: アレルギー設定 →</button>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'allergens' && (
+              <div className="tab-content">
+                <div className="form-group">
+                  <label className="form-label">⚠️ アレルゲン情報（特定原材料28品目）</label>
+                  <div style={{ marginBottom: '20px' }}>
+                    <strong>特定原材料（表示義務）7品目:</strong>
+                    <div className="checkbox-group">
+                      {['えび', 'かに', '小麦', 'そば', '卵', '乳', '落花生'].map(item => (
+                        <label key={item} className="checkbox-item">
+                          <input type="checkbox" /> {item}
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                  <div style={{ marginBottom: '20px' }}>
+                    <strong>🕌 宗教・文化対応:</strong>
+                    <div className="checkbox-group">
+                      {['ハラール対応', 'ベジタリアン', 'ヴィーガン', 'グルテンフリー'].map(item => (
+                        <label key={item} className="checkbox-item">
+                          <input type="checkbox" /> {item}
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+                  <button className="btn btn-secondary" onClick={() => { setShowAddModal(false); setActiveTab('basic'); }}>キャンセル</button>
+                  <button className="btn btn-primary" onClick={handleAddMenu}>💾 保存</button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* 取得中モーダル */}
+      {showFetchModal && (
+        <div className="modal active">
+          <div className="modal-content" style={{ maxWidth: '400px', textAlign: 'center' }}>
+            <div className="modal-title">🤖 AIが解析中...</div>
+            <div className="progress-bar-container">
+              <div className="progress-bar-fill"></div>
+            </div>
+            <div style={{ marginTop: '10px', color: '#666' }}>基本情報のソースからメニューを取得しています...</div>
+          </div>
+        </div>
+      )}
+
+      {/* AI取得メニューの承認モーダル */}
+      {showApprovalModal && (
+        <div className="modal active">
+          <div className="modal-content" style={{ maxWidth: '600px' }}>
+            <button className="modal-close" onClick={() => setShowApprovalModal(false)}>×</button>
+            <div className="modal-title">🤖 AI取得メニューの承認</div>
+            
+            <div style={{ background: '#f8fafc', padding: '16px', borderRadius: '8px', marginBottom: '20px' }}>
+              <div style={{ fontSize: '14px', color: '#666', marginBottom: '8px' }}>
+                ソース: <strong>https://example.com/menu</strong>
+              </div>
+              <div style={{ display: 'flex', gap: '16px', fontSize: '13px' }}>
+                <span>🆕 新規メニュー: <strong>{pendingMenus.length}</strong></span>
+                <span>🔄 重複メニュー: <strong>0</strong></span>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', flexWrap: 'wrap' }}>
+              <button className="btn btn-success" onClick={handleApproveAll} style={{ background: '#10b981', color: 'white' }}>
+                ✅ すべて承認
+              </button>
+              <button className="btn btn-danger" onClick={handleDenyAll}>
+                ❌ すべて拒否
+              </button>
+              <button className="btn btn-secondary">
+                🔄 重複をすべてマージ
+              </button>
+            </div>
+
+            <div style={{ marginBottom: '16px' }}>
+              <h4 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '12px', color: '#1f2937' }}>
+                🆕 新規メニュー ({pendingMenus.length}件)
+              </h4>
+              
+              {pendingMenus.map(menu => (
+                <div key={menu.id} style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: '8px', padding: '16px', marginBottom: '12px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <div>
+                      <div style={{ fontWeight: 600, fontSize: '16px', marginBottom: '4px' }}>{menu.name}</div>
+                      <div style={{ fontSize: '13px', color: '#666' }}>
+                        ¥{menu.price.toLocaleString()} | {menu.category} | 信頼度: {menu.confidence}%
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <button 
+                        className="btn btn-small" 
+                        onClick={() => handleApproveMenu(menu.id)}
+                        style={{ background: '#d1fae5', color: '#059669' }}
+                      >
+                        ✅ 承認
+                      </button>
+                      <button 
+                        className="btn btn-small btn-danger" 
+                        onClick={() => handleDenyMenu(menu.id)}
+                      >
+                        ❌ 拒否
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+
+              {pendingMenus.length === 0 && (
+                <div style={{ textAlign: 'center', padding: '20px', color: '#999' }}>
+                  すべてのメニューが処理されました
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* プレビューモーダル */}
+      {showPreviewModal && previewItem && (
+        <div className="modal active">
+          <div className="modal-content" style={{ maxWidth: '500px' }}>
+            <button className="modal-close" onClick={() => setShowPreviewModal(false)}>×</button>
+            <div className="modal-title">👁️ ユーザー画面プレビュー</div>
+            
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ fontSize: '13px', color: '#666' }}>言語選択: </label>
+              <select style={{ padding: '5px 10px', marginLeft: '10px', borderRadius: '4px', border: '1px solid #ddd' }}>
+                <option value="jp">🇯🇵 日本語</option>
+                <option value="en">🇬🇧 English</option>
+                <option value="zh">🇨🇳 中文</option>
+              </select>
+            </div>
+
+            <div style={{ border: '1px solid #e0e0e0', borderRadius: '10px', padding: '20px', background: '#f8f9fa' }}>
+              <h3 style={{ fontSize: '20px', fontWeight: 700, marginBottom: '8px' }}>{previewItem.name}</h3>
+              <div style={{ fontSize: '18px', color: '#667eea', fontWeight: 600, marginBottom: '12px' }}>
+                ¥{previewItem.price.toLocaleString()}
+              </div>
+              <p style={{ fontSize: '14px', color: '#666', marginBottom: '12px' }}>{previewItem.description}</p>
+              <div style={{ fontSize: '13px', color: '#888' }}>
+                <strong>カテゴリ:</strong> {previewItem.category}
+              </div>
+              {previewItem.ingredients && (
+                <div style={{ fontSize: '13px', color: '#888', marginTop: '8px' }}>
+                  <strong>原材料:</strong> {previewItem.ingredients}
+                </div>
+              )}
+            </div>
+
+            <div className="alert-info" style={{ marginTop: '20px' }}>
+              <strong>⚠️ 問題点の検出:</strong>
+              <ul style={{ marginTop: '10px', paddingLeft: '20px', fontSize: '13px' }}>
+                {!previewItem.description && <li>説明文が未設定です</li>}
+                {!previewItem.ingredients && <li>原材料が未設定です</li>}
+                {previewItem.status === 'warning' && <li>アレルゲン情報の確認が必要です</li>}
+              </ul>
+            </div>
+
+            <button className="btn btn-primary" style={{ marginTop: '20px' }} onClick={() => { setShowPreviewModal(false); handleEdit(previewItem); }}>
+              ✏️ この内容を編集
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 編集モーダル */}
+      {showEditModal && editItem && (
+        <div className="modal active">
+          <div className="modal-content">
+            <button className="modal-close" onClick={() => { setShowEditModal(false); setEditItem(null); }}>×</button>
+            <div className="modal-title">📝 メニュー編集</div>
+
+            <div className="tab-nav">
+              <button className={`tab-nav-btn ${activeTab === 'basic' ? 'active' : ''}`} onClick={() => setActiveTab('basic')}>📝 基本情報</button>
+              <button className={`tab-nav-btn ${activeTab === 'materials' ? 'active' : ''}`} onClick={() => setActiveTab('materials')}>🥕 原材料</button>
+              <button className={`tab-nav-btn ${activeTab === 'allergens' ? 'active' : ''}`} onClick={() => setActiveTab('allergens')}>⚠️ アレルギー</button>
+            </div>
+
+            {activeTab === 'basic' && (
+              <div className="tab-content">
+                <div className="form-group">
+                  <label className="form-label">料理名（日本語）*</label>
+                  <input type="text" className="form-input" value={editItem.name} onChange={(e) => setEditItem({...editItem, name: e.target.value})} />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">価格 *</label>
+                  <input type="number" className="form-input" value={editItem.price} onChange={(e) => setEditItem({...editItem, price: Number(e.target.value)})} />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">カテゴリー *</label>
+                  <select className="form-input" value={editItem.category} onChange={(e) => setEditItem({...editItem, category: e.target.value})}>
+                    <option value="">選択してください</option>
+                    <option value="ご飯もの">ご飯もの</option>
+                    <option value="刺身">刺身</option>
+                    <option value="焼き物">焼き物</option>
+                    <option value="揚げ物">揚げ物</option>
+                    <option value="コース">コース</option>
+                    <option value="ドリンク">ドリンク</option>
+                    <option value="そば">そば</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label className="form-label">料理の説明</label>
+                  <textarea className="form-input" value={editItem.description} onChange={(e) => setEditItem({...editItem, description: e.target.value})} />
+                  <button className="btn ai-btn btn-small" style={{ marginTop: '5px' }}>🤖 AI生成</button>
+                </div>
+                <button className="btn btn-primary" onClick={() => setActiveTab('materials')}>次へ: 原材料設定 →</button>
+              </div>
+            )}
+
+            {activeTab === 'materials' && (
+              <div className="tab-content">
+                <div className="form-group">
+                  <label className="form-label">原材料</label>
+                  <button className="btn ai-btn btn-small" style={{ marginBottom: '12px' }}>🤖 AI推察</button>
+                  <textarea 
+                    className="form-input" 
+                    value={editItem.ingredients} 
+                    onChange={(e) => setEditItem({...editItem, ingredients: e.target.value})}
+                    placeholder="原材料をカンマ区切りで入力..."
+                    rows={3}
+                  />
+                </div>
+                <div style={{ marginTop: '12px', paddingTop: '8px', borderTop: '1px solid #e5e7eb' }}>
+                  <button className="btn btn-primary" onClick={() => setActiveTab('allergens')}>次へ: アレルギー設定 →</button>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'allergens' && (
+              <div className="tab-content">
+                <div className="form-group">
+                  <label className="form-label">⚠️ アレルゲン情報（特定原材料28品目）</label>
+                  <div style={{ marginBottom: '20px' }}>
+                    <strong>特定原材料（表示義務）7品目:</strong>
+                    <div className="checkbox-group">
+                      {['えび', 'かに', '小麦', 'そば', '卵', '乳', '落花生'].map(item => (
+                        <label key={item} className="checkbox-item">
+                          <input type="checkbox" /> {item}
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+                  <button className="btn btn-secondary" onClick={() => { setShowEditModal(false); setEditItem(null); }}>キャンセル</button>
+                  <button className="btn btn-primary" onClick={handleSaveEdit}>💾 保存</button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* アップロードカード */}
+      <div className="card" style={{ marginTop: '8px' }}>
+        <div className="card-title">📤 メニュー・商品をアップロード</div>
+        <p style={{ marginBottom: '16px', color: '#666', fontSize: '14px' }}>複数の方法から最も簡単な方法を選んでください</p>
+
+        <div className="upload-grid">
+          <button className="upload-btn">
+            <div className="upload-icon">📷</div>
+            カメラ記録
+          </button>
+          <button className="upload-btn">
+            <div className="upload-icon">📄</div>
+            ファイル選択
+          </button>
+          <button className="upload-btn">
+            <div className="upload-icon">📝</div>
+            テキスト貼り付け
+          </button>
+          <button className="upload-btn">
+            <div className="upload-icon">☁️</div>
+            Googleドライブ
+          </button>
+        </div>
+      </div>
+
+      <style jsx>{`
+        .card {
+          background: white;
+          border-radius: 12px;
+          padding: 20px;
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-title {
+          font-size: 16px;
+          font-weight: 600;
+          margin-bottom: 16px;
+          color: #1a1a1a;
+        }
+
+        .btn {
+          border: none;
+          border-radius: 6px;
+          padding: 10px 20px;
+          font-weight: 600;
+          font-size: 14px;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+
+        .btn-primary {
+          background: linear-gradient(135deg, #2563eb, #7c3aed);
+          color: white;
+        }
+
+        .btn-primary:hover {
+          background: linear-gradient(135deg, #1d4ed8, #6d28d9);
+        }
+
+        .btn-small {
+          padding: 4px 8px;
+          font-size: 12px;
+          background: #f3f4f6;
+          color: #374151;
+        }
+
+        .btn-small:hover {
+          background: #e5e7eb;
+        }
+
+        .btn-danger {
+          background: #fee2e2;
+          color: #dc2626;
+        }
+
+        .btn-danger:hover {
+          background: #fecaca;
+        }
+
+        .filter-btn {
+          padding: 6px 12px;
+          font-size: 13px;
+          background: #f3f4f6;
+          border: 1px solid #e5e7eb;
+          border-radius: 6px;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+
+        .filter-btn:hover {
+          background: #e5e7eb;
+        }
+
+        .filter-btn.active {
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          color: white;
+          border-color: transparent;
+        }
+
+        .menu-table-container {
+          overflow-x: auto;
+          margin-bottom: 16px;
+        }
+
+        .menu-table {
+          width: 100%;
+          border-collapse: collapse;
+        }
+
+        .menu-table th,
+        .menu-table td {
+          padding: 12px;
+          text-align: left;
+          border-bottom: 1px solid #e5e7eb;
+        }
+
+        .menu-table th {
+          background: #f9fafb;
+          font-weight: 600;
+          font-size: 13px;
+          color: #374151;
+        }
+
+        .menu-table tr:hover {
+          background: #f9fafb;
+        }
+
+        .btn-action {
+          padding: 3px 6px;
+          font-size: 10px;
+          font-weight: 700;
+          border-radius: 4px;
+          cursor: pointer;
+          transition: all 0.2s;
+          border: 1px solid;
+        }
+
+        .btn-preview {
+          color: white;
+          background: #007bff;
+          border-color: #007bff;
+        }
+
+        .btn-preview:hover {
+          background: #0056b3;
+          border-color: #0056b3;
+        }
+
+        .btn-edit {
+          color: #6c757d;
+          background: white;
+          border-color: #6c757d;
+        }
+
+        .btn-edit:hover {
+          background: #f8f9fa;
+        }
+
+        .btn-delete {
+          color: #dc3545;
+          background: white;
+          border-color: #dc3545;
+        }
+
+        .btn-delete:hover {
+          background: #fff5f5;
+        }
+
+        .status-badge {
+          padding: 3px 6px;
+          border-radius: 3px;
+          font-size: 10px;
+          font-weight: 500;
+          font-size: 12px;
+          font-weight: 500;
+        }
+
+        .status-badge.verified {
+          background: #d1fae5;
+          color: #059669;
+        }
+
+        .status-badge.warning {
+          background: #fef3c7;
+          color: #d97706;
+        }
+
+        .upload-grid {
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+          gap: 12px;
+        }
+
+        .upload-btn {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          padding: 24px 16px;
+          background: #f9fafb;
+          border: 2px dashed #e5e7eb;
+          border-radius: 12px;
+          cursor: pointer;
+          transition: all 0.2s;
+          font-size: 14px;
+          color: #374151;
+        }
+
+        .upload-btn:hover {
+          border-color: #667eea;
+          background: #f0f4ff;
+        }
+
+        .upload-icon {
+          font-size: 32px;
+          margin-bottom: 8px;
+        }
+
+        @media (max-width: 768px) {
+          .upload-grid {
+            grid-template-columns: repeat(2, 1fr);
+          }
+        }
+
+        .modal {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(0, 0, 0, 0.5);
+          display: none;
+          align-items: center;
+          justify-content: center;
+          z-index: 1000;
+          padding: 20px;
+        }
+
+        .modal.active {
+          display: flex;
+        }
+
+        .modal-content {
+          background: white;
+          border-radius: 12px;
+          padding: 24px;
+          max-width: 800px;
+          width: 100%;
+          max-height: 90vh;
+          overflow-y: auto;
+          position: relative;
+        }
+
+        .modal-close {
+          position: absolute;
+          top: 16px;
+          right: 16px;
+          background: none;
+          border: none;
+          font-size: 24px;
+          cursor: pointer;
+          color: #999;
+        }
+
+        .modal-close:hover {
+          color: #333;
+        }
+
+        .modal-title {
+          font-size: 20px;
+          font-weight: 600;
+          margin-bottom: 20px;
+          padding-bottom: 12px;
+          border-bottom: 1px solid #e5e7eb;
+        }
+
+        .tab-nav {
+          display: flex;
+          gap: 8px;
+          margin-bottom: 20px;
+          border-bottom: 1px solid #e5e7eb;
+          padding-bottom: 0;
+        }
+
+        .tab-nav-btn {
+          padding: 10px 16px;
+          border: none;
+          background: none;
+          cursor: pointer;
+          font-size: 14px;
+          color: #666;
+          border-bottom: 2px solid transparent;
+          transition: all 0.2s;
+        }
+
+        .tab-nav-btn:hover {
+          color: #333;
+        }
+
+        .tab-nav-btn.active {
+          color: #667eea;
+          border-bottom-color: #667eea;
+          font-weight: 600;
+        }
+
+        .tab-content {
+          padding: 16px 0;
+        }
+
+        .form-group {
+          margin-bottom: 16px;
+        }
+
+        .form-label {
+          display: block;
+          margin-bottom: 6px;
+          font-weight: 500;
+          color: #555;
+          font-size: 14px;
+        }
+
+        .form-input {
+          width: 100%;
+          padding: 10px;
+          border: 1px solid #e0e0e0;
+          border-radius: 6px;
+          font-size: 14px;
+          transition: border 0.3s;
+        }
+
+        .form-input:focus {
+          outline: none;
+          border-color: #667eea;
+        }
+
+        .btn-secondary {
+          background: white;
+          color: #374151;
+          border: 1px solid #e5e7eb;
+        }
+
+        .btn-secondary:hover {
+          background: #f9fafb;
+        }
+
+        .ai-btn {
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          color: white;
+          border: none;
+          font-weight: 500;
+          text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+          box-shadow: 0 2px 4px rgba(102, 126, 234, 0.3);
+        }
+
+        .ai-btn:hover {
+          background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+        }
+
+        .alert-info {
+          background: #e0f2fe;
+          color: #0369a1;
+          padding: 12px 16px;
+          border-radius: 8px;
+          margin-bottom: 16px;
+          font-size: 14px;
+        }
+
+        .checkbox-group {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+          gap: 8px;
+          margin-top: 12px;
+        }
+
+        .checkbox-item {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          font-size: 14px;
+          cursor: pointer;
+        }
+
+        .checkbox-item input {
+          cursor: pointer;
+        }
+
+        .progress-bar-container {
+          height: 12px;
+          background: #e5e7eb;
+          border-radius: 6px;
+          overflow: hidden;
+          margin-top: 16px;
+        }
+
+        .progress-bar-fill {
+          height: 100%;
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          width: 0%;
+          animation: progress 2s ease-in-out forwards;
+        }
+
+        @keyframes progress {
+          0% { width: 0%; }
+          100% { width: 100%; }
+        }
+      `}</style>
+    </AdminLayout>
+  )
+}
