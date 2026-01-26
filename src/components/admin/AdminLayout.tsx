@@ -2,6 +2,7 @@
 
 import React, { useState, ReactNode, useEffect } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
+import { TokenService, AuthApi, User } from '../../services/api'
 
 type NavItem = { key: string; label: string; icon: string; to: string; locked?: boolean }
 
@@ -11,28 +12,49 @@ export default function AdminLayout({ children, title }: Props) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [userType, setUserType] = useState<'store' | 'admin'>('store')
   const [userEmail, setUserEmail] = useState('')
+  const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [mounted, setMounted] = useState(false)
   const pathname = usePathname()
   const router = useRouter()
 
   useEffect(() => {
-    const isLoggedIn = localStorage.getItem('admin_logged_in')
-    if (!isLoggedIn) {
-      router.push('/admin/login')
-      return
+    // Check for JWT token and user data
+    const token = TokenService.getAccessToken()
+    const storedUser = TokenService.getUser()
+    
+    if (!token || !storedUser) {
+      // Fallback to legacy check for backward compatibility
+      const isLoggedIn = localStorage.getItem('admin_logged_in')
+      if (!isLoggedIn) {
+        router.push('/admin/login')
+        return
+      }
+      
+      // Use legacy data
+      const savedUserType = localStorage.getItem('admin_user_type')
+      if (savedUserType === 'store' || savedUserType === 'admin') {
+        setUserType(savedUserType)
+      }
+      
+      const savedEmail = localStorage.getItem('admin_user_email')
+      if (savedEmail) {
+        setUserEmail(savedEmail)
+      }
+    } else {
+      // Use new auth data
+      setUser(storedUser)
+      setUserEmail(storedUser.email)
+      // Map role to userType for UI
+      setUserType(storedUser.role === 'platform_owner' ? 'admin' : 'store')
     }
     
-    const savedUserType = localStorage.getItem('admin_user_type')
-    if (savedUserType === 'store' || savedUserType === 'admin') {
-      setUserType(savedUserType)
-    }
-    
-    const savedEmail = localStorage.getItem('admin_user_email')
-    if (savedEmail) {
-      setUserEmail(savedEmail)
-    }
     setIsLoading(false)
   }, [router])
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const handleNavClick = (e: React.MouseEvent, item: NavItem) => {
     e.preventDefault()
@@ -64,19 +86,40 @@ export default function AdminLayout({ children, title }: Props) {
   const pageTitle = title ?? (userType === 'store' ? 'レストラン管理システム' : 'プラットフォームオーナー管理システム')
 
   const handleLogout = () => {
-    localStorage.removeItem('admin_logged_in')
-    localStorage.removeItem('admin_user_type')
-    localStorage.removeItem('admin_user_email')
+    // Clear all auth data using the API service
+    AuthApi.logout()
     router.push('/admin/login')
   }
 
-  if (isLoading) {
+  if (!mounted || isLoading) {
     return (
-      <div className="admin-loading">
-        <div className="admin-loading-content">
-          <div className="admin-loading-icon">🔄</div>
-          <div className="admin-loading-text">読み込み中...</div>
-        </div>
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#F8FAFC',
+        zIndex: 9999
+      }}>
+        <div style={{
+          width: '48px',
+          height: '48px',
+          border: '3px solid #E5E7EB',
+          borderTopColor: '#2563EB',
+          borderRadius: '50%',
+          animation: 'spin 1s linear infinite'
+        }} />
+        <div style={{ marginTop: '16px', color: '#64748B', fontSize: '14px' }}>読み込み中...</div>
+        <style>{`
+          @keyframes spin {
+            to { transform: rotate(360deg); }
+          }
+        `}</style>
       </div>
     )
   }

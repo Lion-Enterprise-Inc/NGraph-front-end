@@ -12,16 +12,11 @@ export default function Page() {
     router.push(`/capture?restaurant=${restaurant.slug}`)
   }
 
-  const handleScanQR = () => {
-    router.push('/qr-scanner')
-  }
-
   return (
     <RestaurantSelectionPage
       language={language}
       onLanguageOpen={openLanguageModal}
       onContinue={handleContinue}
-      onScanQR={handleScanQR}
     />
   )
 }

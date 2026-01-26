@@ -778,11 +778,33 @@ export default function AdminDashboardPage() {
 
   if (isLoading) {
     return (
-      <div className="admin-loading">
-        <div className="admin-loading-content">
-          <div className="admin-loading-icon">🔄</div>
-          <div className="admin-loading-text">読み込み中...</div>
-        </div>
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#F8FAFC',
+        zIndex: 9999
+      }}>
+        <div style={{
+          width: '48px',
+          height: '48px',
+          border: '3px solid #E5E7EB',
+          borderTopColor: '#2563EB',
+          borderRadius: '50%',
+          animation: 'spin 1s linear infinite'
+        }} />
+        <div style={{ marginTop: '16px', color: '#64748B', fontSize: '14px' }}>読み込み中...</div>
+        <style>{`
+          @keyframes spin {
+            to { transform: rotate(360deg); }
+          }
+        `}</style>
       </div>
     )
   }

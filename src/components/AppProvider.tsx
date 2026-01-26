@@ -11,6 +11,7 @@ import {
 import LanguageModal from "./LanguageModal";
 import HistoryDrawer from "./HistoryDrawer";
 import { getUiCopy } from "../i18n/uiCopy";
+import { AuthProvider } from "../contexts/AuthContext";
 
 type PendingAttachment = {
   file: File;
@@ -106,33 +107,35 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [language]);
 
   return (
-    <AppContext.Provider
-      value={{
-        language,
-        setLanguage,
-        openLanguageModal: () => setLanguageModalOpen(true),
-        openHistoryDrawer: () => setDrawerOpen(true),
-        closeHistoryDrawer: () => setDrawerOpen(false),
-        pendingAttachment,
-        setPendingAttachment,
-      }}
-    >
-      {children}
-      <LanguageModal
-        open={languageModalOpen}
-        selected={language}
-        onSelect={(code) => {
-          setLanguage(code, "modal");
-          setLanguageModalOpen(false);
+    <AuthProvider>
+      <AppContext.Provider
+        value={{
+          language,
+          setLanguage,
+          openLanguageModal: () => setLanguageModalOpen(true),
+          openHistoryDrawer: () => setDrawerOpen(true),
+          closeHistoryDrawer: () => setDrawerOpen(false),
+          pendingAttachment,
+          setPendingAttachment,
         }}
-        onClose={() => setLanguageModalOpen(false)}
-      />
-      <HistoryDrawer
-        open={drawerOpen}
-        onClose={() => setDrawerOpen(false)}
-        items={historyItems}
-      />
-    </AppContext.Provider>
+      >
+        {children}
+        <LanguageModal
+          open={languageModalOpen}
+          selected={language}
+          onSelect={(code) => {
+            setLanguage(code, "modal");
+            setLanguageModalOpen(false);
+          }}
+          onClose={() => setLanguageModalOpen(false)}
+        />
+        <HistoryDrawer
+          open={drawerOpen}
+          onClose={() => setDrawerOpen(false)}
+          items={historyItems}
+        />
+      </AppContext.Provider>
+    </AuthProvider>
   );
 }
 

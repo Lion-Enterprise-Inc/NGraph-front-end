@@ -1,99 +1,102 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import AdminLayout from '../../../components/admin/AdminLayout'
+import { RestaurantApi, UserApi, UserListItem, CreateRestaurantRequest, Restaurant } from '../../../services/api'
 
-const storesData = [
-  {
-    id: 1,
-    storeCode: 'ST-00001',
-    name: 'ぼんた本店',
-    location: '福井',
-    address: '福井県福井市二の宮2丁目8-75',
-    type: '🍽️ 飲食店 - 居酒屋',
-    plan: 'ビジネスプラン',
-    planId: 'business',
-    planPrice: 3980,
-    menuCount: 47,
-    responses: 342,
-    satisfaction: 4.7,
-    lastUpdate: '2日前',
-    status: 'active'
-  },
-  {
-    id: 2,
-    storeCode: 'ST-00002',
-    name: 'カフェ・ド・金沢',
-    location: '金沢',
-    address: '石川県金沢市香林坊1-2-3',
-    type: '🍽️ 飲食店 - カフェ',
-    plan: 'ライトプラン',
-    planId: 'light',
-    planPrice: 980,
-    menuCount: 23,
-    responses: 187,
-    satisfaction: 4.5,
-    lastUpdate: '1日前',
-    status: 'active'
-  },
-  {
-    id: 3,
-    storeCode: 'ST-00003',
-    name: '福井ラーメン横丁',
-    location: '福井',
-    address: '福井県福井市駅前3-4-5',
-    type: '🍽️ 飲食店 - ラーメン',
-    plan: 'フリープラン',
-    planId: 'free',
-    planPrice: 0,
-    menuCount: 18,
-    responses: 231,
-    satisfaction: 4.6,
-    lastUpdate: '3日前',
-    status: 'active'
-  },
-  {
-    id: 4,
-    storeCode: 'ST-00004',
-    name: '金沢寿司処',
-    location: '金沢',
-    address: '石川県金沢市片町2-1-8',
-    type: '🍽️ 飲食店 - 寿司',
-    plan: 'ビジネスプラン',
-    planId: 'business',
-    planPrice: 3980,
-    menuCount: 56,
-    responses: 412,
-    satisfaction: 4.8,
-    lastUpdate: '1日前',
-    status: 'active'
-  },
-  {
-    id: 5,
-    storeCode: 'ST-00005',
-    name: '北陸アンテナショップ',
-    location: '名古屋',
-    address: '愛知県名古屋市中村区名駅1-1-1',
-    type: '🏪 アンテナショップ',
-    plan: 'ライトプラン',
-    planId: 'light',
-    planPrice: 980,
-    menuCount: 89,
-    responses: 156,
-    satisfaction: 4.4,
-    lastUpdate: '5日前',
-    status: 'active'
-  }
-]
+// Store type for UI display
+interface StoreDisplay {
+  id: number;
+  uid: string;
+  storeCode: string;
+  name: string;
+  location: string;
+  address: string;
+  type: string;
+  plan: string;
+  planId: string;
+  planPrice: number;
+  menuCount: number;
+  responses: number;
+  satisfaction: number;
+  lastUpdate: string;
+  status: string;
+}
 
 export default function StoresPage() {
   const router = useRouter()
   const [filter, setFilter] = useState('all')
-  const [stores, setStores] = useState(storesData)
+  const [stores, setStores] = useState<StoreDisplay[]>([])
+  const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [restaurantOwners, setRestaurantOwners] = useState<UserListItem[]>([])
+  const [loadingOwners, setLoadingOwners] = useState(false)
+  const [totalRestaurants, setTotalRestaurants] = useState(0)
+
+  // Fetch restaurants from API on mount
+  useEffect(() => {
+    fetchRestaurants()
+  }, [])
+
+  const fetchRestaurants = async () => {
+    setLoading(true)
+    try {
+      const response = await RestaurantApi.getAll()
+      if (response.result && response.result.items) {
+        const formattedStores: StoreDisplay[] = response.result.items.map((restaurant: Restaurant, index: number) => ({
+          id: index + 1,
+          uid: restaurant.uid,
+          storeCode: restaurant.uid.substring(0, 8).toUpperCase(),
+          name: restaurant.name,
+          location: restaurant.address ? extractLocation(restaurant.address) : '未設定',
+          address: restaurant.address || '',
+          type: '🍽️ 飲食店',
+          plan: 'フリープラン',
+          planId: 'free',
+          planPrice: 0,
+          menuCount: 0,
+          responses: 0,
+          satisfaction: 0,
+          lastUpdate: formatDate(restaurant.updated_at),
+          status: restaurant.is_active ? 'active' : 'inactive'
+        }))
+        setStores(formattedStores)
+        setTotalRestaurants(response.result.total)
+      }
+    } catch (error) {
+      console.error('Failed to fetch restaurants:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Helper to extract location from address
+  const extractLocation = (address: string): string => {
+    if (address.includes('Dhaka')) return 'Dhaka'
+    if (address.includes('福井')) return '福井'
+    if (address.includes('金沢')) return '金沢'
+    if (address.includes('名古屋')) return '名古屋'
+    if (address.includes('東京')) return '東京'
+    if (address.includes('大阪')) return '大阪'
+    return address.split(',')[0] || '未設定'
+  }
+
+  // Helper to format date
+  const formatDate = (dateStr: string): string => {
+    const date = new Date(dateStr)
+    const now = new Date()
+    const diffMs = now.getTime() - date.getTime()
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
+    if (diffDays === 0) return '今日'
+    if (diffDays === 1) return '1日前'
+    if (diffDays < 7) return `${diffDays}日前`
+    return date.toLocaleDateString('ja-JP')
+  }
   const [newStore, setNewStore] = useState({
     name: '',
+    user_uid: '', // Restaurant owner UID
     type: '',
     location: '',
     address: '',
@@ -108,8 +111,30 @@ export default function StoresPage() {
     budget: '',
     parking: '',
     payment: '',
-    features: ''
+    features: '',
+    otherSources: '',
+    is_active: true
   })
+
+  // Fetch restaurant owners when modal opens
+  useEffect(() => {
+    if (showModal) {
+      fetchRestaurantOwners()
+    }
+  }, [showModal])
+
+  const fetchRestaurantOwners = async () => {
+    setLoadingOwners(true)
+    try {
+      const owners = await UserApi.getRestaurantOwners()
+      console.log('Restaurant owners:', owners)
+      setRestaurantOwners(owners.filter(u => u.is_active))
+    } catch (error) {
+      console.error('Failed to fetch restaurant owners:', error)
+    } finally {
+      setLoadingOwners(false)
+    }
+  }
 
   const filteredStores = filter === 'all' 
     ? stores 
@@ -122,37 +147,71 @@ export default function StoresPage() {
     nagoya: stores.filter(s => s.location === '名古屋').length,
   }
 
-  const handleCreateStore = () => {
-    if (!newStore.name || !newStore.type || !newStore.location) {
-      alert('レストラン名、業種、地域は必須です')
+  const handleCreateStore = async () => {
+    if (!newStore.name || !newStore.user_uid) {
+      alert('レストラン名とレストランオーナーは必須です')
       return
     }
-    
-    const newId = stores.length + 1
-    const newStoreData = {
-      id: newId,
-      storeCode: `ST-${String(newId).padStart(5, '0')}`,
-      name: newStore.name,
-      location: newStore.location,
-      address: newStore.address,
-      type: newStore.type,
-      plan: newStore.planName || 'フリープラン',
-      planId: newStore.planId || 'free',
-      planPrice: newStore.planPrice,
-      menuCount: 0,
-      responses: 0,
-      satisfaction: 0,
-      lastUpdate: '今',
-      status: 'active'
+
+    setIsSubmitting(true)
+    try {
+      const requestData: CreateRestaurantRequest = {
+        name: newStore.name,
+        user_uid: newStore.user_uid,
+        is_active: newStore.is_active,
+        description: newStore.description || undefined,
+        phone_number: newStore.phone || undefined,
+        official_website: newStore.officialWebsite || undefined,
+        google_business_profile: newStore.googleProfile || undefined,
+        address: newStore.address || undefined,
+        store_introduction: newStore.description || undefined,
+        opening_hours: newStore.hours || undefined,
+        budget: newStore.budget || undefined,
+        parking_slot: newStore.parking || undefined,
+        attention_in_detail: newStore.features || undefined,
+        other_sources: newStore.otherSources || undefined
+      }
+
+      const response = await RestaurantApi.create(requestData)
+      
+      if (response.result) {
+        // Add to local state for immediate UI update
+        const newStoreData: StoreDisplay = {
+          id: stores.length + 1,
+          uid: response.result.uid,
+          storeCode: response.result.uid.substring(0, 8).toUpperCase(),
+          name: response.result.name,
+          location: newStore.location || '未設定',
+          address: response.result.address || '',
+          type: newStore.type || '🍽️ 飲食店',
+          plan: newStore.planName || 'フリープラン',
+          planId: newStore.planId || 'free',
+          planPrice: newStore.planPrice,
+          menuCount: 0,
+          responses: 0,
+          satisfaction: 0,
+          lastUpdate: '今',
+          status: response.result.is_active ? 'active' : 'inactive'
+        }
+        
+        setStores([...stores, newStoreData])
+        setShowModal(false)
+        resetNewStore()
+        alert(`✅ ${response.message}\n\nレストラン: ${response.result.name}\nUID: ${response.result.uid}`)
+      }
+    } catch (error) {
+      console.error('Failed to create restaurant:', error)
+      alert(`❌ レストラン作成に失敗しました: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    } finally {
+      setIsSubmitting(false)
     }
-    
-    setStores([...stores, newStoreData])
-    setShowModal(false)
+  }
+
+  const resetNewStore = () => {
     setNewStore({
-      name: '', type: '', location: '', address: '', phone: '', planId: '', planName: '', planPrice: 0,
-      officialWebsite: '', googleProfile: '', description: '', hours: '', budget: '', parking: '', payment: '', features: ''
+      name: '', user_uid: '', type: '', location: '', address: '', phone: '', planId: '', planName: '', planPrice: 0,
+      officialWebsite: '', googleProfile: '', description: '', hours: '', budget: '', parking: '', payment: '', features: '', otherSources: '', is_active: true
     })
-    alert('レストランを登録しました！')
   }
 
   const enterStoreView = (storeId: number) => {
@@ -182,6 +241,25 @@ export default function StoresPage() {
     if (plan === '1') setNewStore({...newStore, planId: 'free', planName: 'フリープラン', planPrice: 0})
     else if (plan === '2') setNewStore({...newStore, planId: 'light', planName: 'ライトプラン', planPrice: 980})
     else if (plan === '3') setNewStore({...newStore, planId: 'business', planName: 'ビジネスプラン', planPrice: 3980})
+  }
+
+  // Show full page loader before data is ready
+  if (loading) {
+    return (
+      <AdminLayout title="導入レストラン一覧">
+        <div style={{ 
+          display: 'flex', 
+          flexDirection: 'column',
+          justifyContent: 'center', 
+          alignItems: 'center', 
+          minHeight: '400px',
+          width: '100%'
+        }}>
+          <div style={{ fontSize: '48px', marginBottom: '16px' }}>⏳</div>
+          <div style={{ color: '#666', fontSize: '16px' }}>レストランを読み込み中...</div>
+        </div>
+      </AdminLayout>
+    )
   }
 
   return (
@@ -231,8 +309,14 @@ export default function StoresPage() {
           </button>
         </div>
 
-        <div id="storeListContainer">
-          {filteredStores.map((store) => (
+        {filteredStores.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '60px 40px', color: '#666', width: '100%' }}>
+            <div style={{ fontSize: '32px', marginBottom: '12px' }}>🍽️</div>
+            <div>レストランが見つかりません</div>
+          </div>
+        ) : (
+          <div id="storeListContainer">
+            {filteredStores.map((store) => (
             <div key={store.id} className="store-card-compact">
               <div className="store-info-compact">
                 <div className="store-main-info">
@@ -275,7 +359,8 @@ export default function StoresPage() {
               </div>
             </div>
           ))}
-        </div>
+          </div>
+        )}
       </div>
 
       {/* 新規店舗登録モーダル */}
@@ -304,7 +389,32 @@ export default function StoresPage() {
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label">業種 *</label>
+                  <label className="form-label">レストランオーナー *</label>
+                  <select 
+                    className="form-input"
+                    id="newStoreOwner"
+                    value={newStore.user_uid}
+                    onChange={(e) => setNewStore({...newStore, user_uid: e.target.value})}
+                    disabled={loadingOwners}
+                  >
+                    <option value="">
+                      {loadingOwners ? '読み込み中...' : 'オーナーを選択してください'}
+                    </option>
+                    {restaurantOwners.map(owner => (
+                      <option key={owner.uid} value={owner.uid}>
+                        {owner.email}
+                      </option>
+                    ))}
+                  </select>
+                  {restaurantOwners.length === 0 && !loadingOwners && (
+                    <div style={{ fontSize: '12px', color: '#E65100', marginTop: '4px' }}>
+                      ⚠️ 利用可能なレストランオーナーがいません
+                    </div>
+                  )}
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">業種</label>
                   <select 
                     className="form-input"
                     id="newStoreType"
@@ -512,10 +622,19 @@ export default function StoresPage() {
             </div>
 
             <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginTop: '20px' }}>
-              <button className="btn btn-primary" onClick={handleCreateStore}>
-                ✅ 登録する
+              <button 
+                className="btn btn-primary" 
+                onClick={handleCreateStore}
+                disabled={isSubmitting}
+                style={{ opacity: isSubmitting ? 0.7 : 1 }}
+              >
+                {isSubmitting ? '⏳ 登録中...' : '✅ 登録する'}
               </button>
-              <button className="btn btn-secondary" onClick={() => setShowModal(false)}>
+              <button 
+                className="btn btn-secondary" 
+                onClick={() => setShowModal(false)}
+                disabled={isSubmitting}
+              >
                 キャンセル
               </button>
             </div>

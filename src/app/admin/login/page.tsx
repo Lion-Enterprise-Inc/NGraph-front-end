@@ -1,34 +1,154 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { AuthApi } from '../../../services/api'
+
+// Validation helpers
+const validateEmail = (email: string): string | null => {
+  if (!email.trim()) {
+    return 'メールアドレスを入力してください'
+  }
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  if (!emailRegex.test(email)) {
+    return '有効なメールアドレスを入力してください'
+  }
+  return null
+}
+
+const validatePassword = (password: string): string | null => {
+  if (!password) {
+    return 'パスワードを入力してください'
+  }
+  if (password.length < 8) {
+    return 'パスワードは8文字以上で入力してください'
+  }
+  return null
+}
+
+interface FieldErrors {
+  email?: string
+  password?: string
+}
 
 export default function AdminLoginPage() {
   const router = useRouter()
+  const [mounted, setMounted] = useState(false)
   const [activeTab, setActiveTab] = useState<'login' | 'register'>('login')
-  const [userType, setUserType] = useState<'store' | 'admin'>('store')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({})
+  const [touched, setTouched] = useState<{ email: boolean; password: boolean }>({ email: false, password: false })
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  // Prevent hydration mismatch - show loading until mounted
+  if (!mounted) {
+    return (
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#F8FAFC',
+        zIndex: 9999
+      }}>
+        <div style={{
+          width: '48px',
+          height: '48px',
+          border: '3px solid #E5E7EB',
+          borderTopColor: '#2563EB',
+          borderRadius: '50%',
+          animation: 'spin 1s linear infinite'
+        }} />
+        <div style={{ marginTop: '16px', color: '#64748B', fontSize: '14px' }}>読み込み中...</div>
+        <style>{`
+          @keyframes spin {
+            to { transform: rotate(360deg); }
+          }
+        `}</style>
+      </div>
+    )
+  }
+
+  const handleEmailChange = (value: string) => {
+    setEmail(value)
+    if (touched.email) {
+      const emailError = validateEmail(value)
+      setFieldErrors(prev => ({ ...prev, email: emailError || undefined }))
+    }
+    setError('')
+  }
+
+  const handlePasswordChange = (value: string) => {
+    setPassword(value)
+    if (touched.password) {
+      const passwordError = validatePassword(value)
+      setFieldErrors(prev => ({ ...prev, password: passwordError || undefined }))
+    }
+    setError('')
+  }
+
+  const handleBlur = (field: 'email' | 'password') => {
+    setTouched(prev => ({ ...prev, [field]: true }))
+    if (field === 'email') {
+      const emailError = validateEmail(email)
+      setFieldErrors(prev => ({ ...prev, email: emailError || undefined }))
+    } else {
+      const passwordError = validatePassword(password)
+      setFieldErrors(prev => ({ ...prev, password: passwordError || undefined }))
+    }
+  }
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    // Validate all fields
+    const emailError = validateEmail(email)
+    const passwordError = validatePassword(password)
+    
+    setFieldErrors({
+      email: emailError || undefined,
+      password: passwordError || undefined
+    })
+    setTouched({ email: true, password: true })
+
+    if (emailError || passwordError) {
+      return
+    }
+
     setIsLoading(true)
     setError('')
 
     try {
-      if (email && password) {
-        // Store login info and user type
-        localStorage.setItem('admin_logged_in', 'true')
-        localStorage.setItem('admin_user_type', userType)
-        localStorage.setItem('admin_user_email', email)
+      const response = await AuthApi.login({ email, password })
+      
+      if (response.result?.user) {
         router.push('/admin')
       } else {
-        setError('メールアドレスとパスワードを入力してください')
+        setError('ログインに失敗しました')
       }
     } catch (err) {
-      setError('ログインに失敗しました')
+      const errorMessage = err instanceof Error ? err.message : 'ログインに失敗しました'
+      // Map common error messages to Japanese
+      if (errorMessage.toLowerCase().includes('invalid') || errorMessage.toLowerCase().includes('incorrect')) {
+        setError('メールアドレスまたはパスワードが正しくありません')
+      } else if (errorMessage.toLowerCase().includes('not found')) {
+        setError('アカウントが見つかりません')
+      } else if (errorMessage.toLowerCase().includes('network') || errorMessage.toLowerCase().includes('fetch')) {
+        setError('ネットワークエラーが発生しました。接続を確認してください')
+      } else {
+        setError(errorMessage)
+      }
     } finally {
       setIsLoading(false)
     }
@@ -70,54 +190,30 @@ export default function AdminLoginPage() {
 
           {activeTab === 'login' ? (
             <form className="login-form" onSubmit={handleLogin}>
-              {/* User Type Toggle */}
-              <div className="user-type-toggle">
-                <button
-                  type="button"
-                  className={`user-type-btn ${userType === 'store' ? 'active' : ''}`}
-                  onClick={() => setUserType('store')}
-                >
-                  🍽️ レストランとしてログイン
-                </button>
-                <button
-                  type="button"
-                  className={`user-type-btn ${userType === 'admin' ? 'active' : ''}`}
-                  onClick={() => setUserType('admin')}
-                >
-                  👑 プラットフォームオーナーとしてログイン
-                </button>
-              </div>
-
-              <div className="user-type-info">
-                {userType === 'store' ? (
-                  <p>🍽️ レストランオーナー向け：レストラン情報、メニュー、AI設定を管理</p>
-                ) : (
-                  <p>👑 プラットフォームオーナー向け：全レストラン管理、システム設定</p>
-                )}
-              </div>
-
               <div className="form-group">
                 <label className="form-label">メールアドレス</label>
                 <input
                   type="email"
-                  className="form-input"
+                  className={`form-input ${fieldErrors.email ? 'input-error' : ''}`}
                   placeholder="owner@example.com"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
+                  onChange={(e) => handleEmailChange(e.target.value)}
+                  onBlur={() => handleBlur('email')}
                 />
+                {fieldErrors.email && <span className="field-error">{fieldErrors.email}</span>}
               </div>
 
               <div className="form-group">
                 <label className="form-label">パスワード</label>
                 <input
                   type="password"
-                  className="form-input"
+                  className={`form-input ${fieldErrors.password ? 'input-error' : ''}`}
                   placeholder="8文字以上"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
+                  onChange={(e) => handlePasswordChange(e.target.value)}
+                  onBlur={() => handleBlur('password')}
                 />
+                {fieldErrors.password && <span className="field-error">{fieldErrors.password}</span>}
               </div>
 
               {error && <div className="error-message">{error}</div>}
@@ -263,46 +359,6 @@ export default function AdminLoginPage() {
           gap: 16px;
         }
 
-        .user-type-toggle {
-          display: grid;
-          grid-template-columns: repeat(2, 1fr);
-          gap: 8px;
-          padding: 4px;
-          background: rgba(148, 163, 184, 0.18);
-          border-radius: 14px;
-        }
-
-        .user-type-btn {
-          border: none;
-          border-radius: 12px;
-          padding: 12px 8px;
-          font-size: 13px;
-          font-weight: 600;
-          background: transparent;
-          color: #475569;
-          cursor: pointer;
-          transition: all 0.2s ease;
-        }
-
-        .user-type-btn.active {
-          background: #fff;
-          color: #2563eb;
-          box-shadow: 0 12px 24px rgba(37, 99, 235, 0.2);
-        }
-
-        .user-type-info {
-          background: #f0f9ff;
-          border: 1px solid #bae6fd;
-          border-radius: 8px;
-          padding: 12px;
-        }
-
-        .user-type-info p {
-          margin: 0;
-          font-size: 13px;
-          color: #0369a1;
-        }
-
         .form-group {
           display: grid;
           gap: 6px;
@@ -328,6 +384,23 @@ export default function AdminLoginPage() {
         .form-input:focus {
           border-color: #2563eb;
           box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .form-input.input-error {
+          border-color: #dc2626;
+          background: #fef2f2;
+        }
+
+        .form-input.input-error:focus {
+          border-color: #dc2626;
+          box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+        }
+
+        .field-error {
+          color: #dc2626;
+          font-size: 12px;
+          margin-top: 4px;
+          display: block;
         }
 
         .error-message {
@@ -413,9 +486,6 @@ export default function AdminLoginPage() {
             font-size: 22px;
           }
 
-          .user-type-toggle {
-            grid-template-columns: 1fr;
-          }
         }
       `}</style>
     </div>
