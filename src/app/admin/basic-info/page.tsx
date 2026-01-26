@@ -1,22 +1,26 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import AdminLayout from '../../../components/admin/AdminLayout'
+import { apiClient } from '../../../services/api'
 
 type TabType = 'basic' | 'source' | 'detail' | 'ai'
 
 export default function BasicInfoPage() {
   const [activeTab, setActiveTab] = useState<TabType>('basic')
+  const [restaurant, setRestaurant] = useState<any>(null)
+  const [restaurantLoading, setRestaurantLoading] = useState(true)
+  const [restaurantError, setRestaurantError] = useState('')
   const [formData, setFormData] = useState({
     storeType: 'restaurant_izakaya',
-    storeName: 'ぼんた本店',
-    phone: '0776-22-2235',
-    address: '福井県福井市二の宮2丁目8-75',
+    storeName: '',
+    phone: '',
+    address: '',
     officialWebsite: '',
     instagramUrl: '',
     description: '',
-    businessHours: '16:00～24:00（お食事LO 23:00 ドリンクLO 23:30）',
-    holidays: '火曜日（祝日、祝前日は営業）',
+    businessHours: '',
+    holidays: '',
     seats: '',
     budget: '',
     parking: '',
@@ -26,13 +30,99 @@ export default function BasicInfoPage() {
 
   const [aiIndustry, setAiIndustry] = useState('restaurant')
   const [aiTone, setAiTone] = useState('polite')
+  const [isSaving, setIsSaving] = useState(false)
+
+  // Fetch restaurant data
+  useEffect(() => {
+    const fetchRestaurant = async () => {
+      try {
+        setRestaurantLoading(true)
+        // Get user data from localStorage
+        const userStr = localStorage.getItem('user')
+        if (!userStr) {
+          setRestaurantError('ユーザーデータが見つかりません')
+          return
+        }
+
+        const user = JSON.parse(userStr)
+        if (!user.uid) {
+          setRestaurantError('ユーザーIDが見つかりません')
+          return
+        }
+
+        // Fetch restaurant details using user UID
+        const response = await apiClient.get(`/restaurants/detail-by-user/${user.uid}`) as { result: any; message: string; status_code: number }
+        const restaurantData = response.result
+
+        setRestaurant(restaurantData)
+
+        // Populate form with restaurant data
+        setFormData({
+          storeType: 'restaurant_izakaya', // Default, could be enhanced later
+          storeName: restaurantData.name || '',
+          phone: restaurantData.phone_number || '',
+          address: restaurantData.address || '',
+          officialWebsite: restaurantData.official_website || '',
+          instagramUrl: restaurantData.other_sources || '', // Using other_sources for Instagram
+          description: restaurantData.store_introduction || '',
+          businessHours: restaurantData.opening_hours || '',
+          holidays: '', // Not in API response
+          seats: '', // Not in API response
+          budget: restaurantData.budget || '',
+          parking: restaurantData.parking_slot || '',
+          payment: '', // Not in API response
+          features: restaurantData.attention_in_detail || ''
+        })
+      } catch (error) {
+        console.error('Failed to fetch restaurant:', error)
+        setRestaurantError('レストラン情報の取得に失敗しました')
+      } finally {
+        setRestaurantLoading(false)
+      }
+    }
+
+    fetchRestaurant()
+  }, [])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value })
   }
 
-  const handleSave = () => {
-    alert('💾 レストラン情報を保存しました！')
+  const handleSave = async () => {
+    if (!restaurant) {
+      alert('❌ レストラン情報が読み込まれていません')
+      return
+    }
+
+    setIsSaving(true)
+    try {
+      const updateData = {
+        name: formData.storeName,
+        description: formData.description,
+        phone_number: formData.phone,
+        official_website: formData.officialWebsite,
+        google_business_profile: restaurant.google_business_profile, // Keep existing
+        address: formData.address,
+        logo_url: restaurant.logo_url, // Keep existing
+        other_sources: formData.instagramUrl,
+        store_introduction: formData.description,
+        opening_hours: formData.businessHours,
+        budget: formData.budget,
+        parking_slot: formData.parking,
+        attention_in_detail: formData.features,
+        is_active: restaurant.is_active // Keep existing
+      }
+
+      // Update restaurant via API
+      await apiClient.put(`/restaurants/${restaurant.uid}`, updateData)
+      
+      alert('✅ レストラン情報を保存しました！')
+    } catch (error) {
+      console.error('Failed to save restaurant:', error)
+      alert(`❌ 保存に失敗しました: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   const handleAIReference = () => {
@@ -62,7 +152,23 @@ export default function BasicInfoPage() {
         </div>
 
         <div className="tab-content">
-          {activeTab === 'basic' && (
+          {restaurantLoading ? (
+            <div className="inner-card" style={{ textAlign: 'center', padding: '40px' }}>
+              <div style={{ fontSize: '18px', marginBottom: '16px' }}>🏪 レストラン情報を読み込み中...</div>
+              <div style={{ color: '#64748b' }}>情報を取得しています</div>
+            </div>
+          ) : restaurantError ? (
+            <div className="inner-card" style={{ textAlign: 'center', padding: '40px' }}>
+              <div style={{ fontSize: '18px', marginBottom: '16px', color: '#dc2626' }}>❌ エラー</div>
+              <div style={{ color: '#64748b', marginBottom: '20px' }}>{restaurantError}</div>
+              <button 
+                className="btn btn-primary" 
+                onClick={() => window.location.reload()}
+              >
+                再読み込み
+              </button>
+            </div>
+          ) : activeTab === 'basic' && (
             <div className="inner-card">
               <div className="card-title">📍 基本情報</div>
               <div className="form-group">
@@ -89,7 +195,9 @@ export default function BasicInfoPage() {
                 <label className="form-label">住所</label>
                 <input type="text" name="address" className="form-input" value={formData.address} onChange={handleChange} />
               </div>
-              <button className="btn btn-primary" onClick={handleSave}>💾 保存</button>
+              <button className="btn btn-primary" onClick={handleSave} disabled={isSaving}>
+                {isSaving ? '⏳ 保存中...' : '💾 保存'}
+              </button>
             </div>
           )}
 

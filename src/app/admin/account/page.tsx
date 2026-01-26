@@ -103,7 +103,7 @@ export default function AccountPage() {
             <span className="plan-period">/ 月</span>
           </div>
           <p className="plan-desc">
-            一般ユーザー向けの機能です。セッション終了後もOmiseAIの撮影・解説機能をご利用いただけます。
+            一般ユーザー向けの機能です。セッション終了後もNGraphの撮影・解説機能をご利用いただけます。
           </p>
           <div className="plan-features">
             <div className="features-label">機能:</div>

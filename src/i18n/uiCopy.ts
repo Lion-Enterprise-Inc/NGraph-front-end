@@ -148,6 +148,19 @@ const uiCopy = {
       bestTime: "What's the best time to visit {name}?",
       dietaryOptions: "Any dietary options available?",
     },
+    qrScanner: {
+      title: "Scan QR Code",
+      close: "Close",
+      loading: "Starting camera...",
+      cameraError: "Unable to access camera. Please check permissions.",
+      invalidQR: "Invalid QR code format.",
+      retry: "Retry",
+      redirecting: "Redirecting to restaurant...",
+      torchOn: "Light On",
+      torchOff: "Light Off",
+      switchCamera: "Switch",
+      instructions: "Point your camera at the restaurant QR code",
+    },
   },
   ja: {
     common: {
@@ -254,6 +267,19 @@ const uiCopy = {
       bestTime: "{name}に行くのに最適な時間は？",
       dietaryOptions: "食事制限に対応していますか？",
     },
+    qrScanner: {
+      title: "QRコードをスキャン",
+      close: "閉じる",
+      loading: "カメラを起動中...",
+      cameraError: "カメラにアクセスできません。権限を確認してください。",
+      invalidQR: "無効なQRコード形式です。",
+      retry: "再試行",
+      redirecting: "レストランにリダイレクト中...",
+      torchOn: "ライトオン",
+      torchOff: "ライトオフ",
+      switchCamera: "切替",
+      instructions: "レストランのQRコードにカメラを向けてください",
+    },
   },
   ko: {
     common: {
@@ -359,6 +385,19 @@ const uiCopy = {
       aboutCuisine: "{cuisine} 요리에 대해 알려주세요",
       bestTime: "{name}을 방문하기 가장 좋은 시간은?",
       dietaryOptions: "식이 제한 옵션이 있나요?",
+    },
+    qrScanner: {
+      title: "QR 코드 스캔",
+      close: "닫기",
+      loading: "카메라 시작 중...",
+      cameraError: "카메라에 접근할 수 없습니다. 권한을 확인하세요.",
+      invalidQR: "잘못된 QR 코드 형식입니다.",
+      retry: "재시도",
+      redirecting: "레스토랑으로 이동 중...",
+      torchOn: "조명 켜기",
+      torchOff: "조명 끄기",
+      switchCamera: "전환",
+      instructions: "레스토랑 QR 코드에 카메라를 향하세요",
     },
   },
   "zh-Hans": {
@@ -3026,7 +3065,15 @@ const normalizeLanguage = (code?: string) => {
 
 export const getUiCopy = (language?: string): UiCopy => {
   const normalized = normalizeLanguage(language);
-  return uiCopy[normalized];
+  const copy = uiCopy[normalized];
+  // Provide fallback for qrScanner if not present in the language
+  if (!('qrScanner' in copy)) {
+    return {
+      ...copy,
+      qrScanner: uiCopy.en.qrScanner,
+    } as UiCopy;
+  }
+  return copy as UiCopy;
 };
 
 export const getLanguageLabel = (code?: string) => {

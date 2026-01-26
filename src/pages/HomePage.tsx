@@ -16,7 +16,7 @@ export default function HomePage({
   return (
     <div className="page home-page">
       <main className="home-main">
-        <h1 className="home-title">Omiseai</h1>
+        <h1 className="home-title">NGraph</h1>
         <LanguageSelect selected={language} onOpen={openLanguageModal} />
         <CTAButton
           label={copy.cta.go}

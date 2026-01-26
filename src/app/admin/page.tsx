@@ -3,13 +3,49 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import AdminLayout from '../../components/admin/AdminLayout'
+import { apiClient } from '../../services/api'
 
 function StoreDashboard() {
   const [expandedConv, setExpandedConv] = useState<string | null>(null)
+  const [restaurant, setRestaurant] = useState<any>(null)
+  const [restaurantLoading, setRestaurantLoading] = useState(true)
+  const [restaurantError, setRestaurantError] = useState('')
 
   const toggleConversation = (id: string) => {
     setExpandedConv(expandedConv === id ? null : id)
   }
+
+  // Fetch restaurant data
+  useEffect(() => {
+    const fetchRestaurant = async () => {
+      try {
+        setRestaurantLoading(true)
+        // Get user data from localStorage
+        const userStr = localStorage.getItem('user')
+        if (!userStr) {
+          setRestaurantError('ユーザーデータが見つかりません')
+          return
+        }
+
+        const user = JSON.parse(userStr)
+        if (!user.restaurant_slug) {
+          setRestaurantError('レストラン情報が見つかりません')
+          return
+        }
+
+        // Fetch restaurant details using user UID
+        const response = await apiClient.get(`/restaurants/detail-by-user/${user.uid}`) as { result: any; message: string; status_code: number }
+        setRestaurant(response.result)
+      } catch (error) {
+        console.error('Failed to fetch restaurant:', error)
+        setRestaurantError('レストラン情報の取得に失敗しました')
+      } finally {
+        setRestaurantLoading(false)
+      }
+    }
+
+    fetchRestaurant()
+  }, [])
 
   return (
     <>
@@ -40,6 +76,51 @@ function StoreDashboard() {
             💎 プランを確認する
           </button>
         </div>
+
+        {/* Restaurant Info */}
+        {restaurantLoading ? (
+          <div className="card" style={{ textAlign: 'center', padding: '40px' }}>
+            <div style={{ fontSize: '18px', marginBottom: '16px' }}>🏪 レストラン情報を読み込み中...</div>
+            <div style={{ color: '#64748b' }}>情報を取得しています</div>
+          </div>
+        ) : restaurantError ? (
+          <div className="card" style={{ textAlign: 'center', padding: '40px' }}>
+            <div style={{ fontSize: '18px', marginBottom: '16px', color: '#dc2626' }}>❌ エラー</div>
+            <div style={{ color: '#64748b', marginBottom: '20px' }}>{restaurantError}</div>
+          </div>
+        ) : restaurant ? (
+          <div className="card" style={{ marginBottom: '16px' }}>
+            <div className="card-title">🏪 レストラン情報</div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '16px' }}>
+              <div style={{ padding: '16px', background: '#f8f9fa', borderRadius: '8px' }}>
+                <div style={{ fontSize: '14px', color: '#666', marginBottom: '4px' }}>レストラン名</div>
+                <div style={{ fontSize: '18px', fontWeight: 600, color: '#333' }}>{restaurant.name || '未設定'}</div>
+              </div>
+              <div style={{ padding: '16px', background: '#f8f9fa', borderRadius: '8px' }}>
+                <div style={{ fontSize: '14px', color: '#666', marginBottom: '4px' }}>電話番号</div>
+                <div style={{ fontSize: '16px', fontWeight: 600, color: '#333' }}>{restaurant.phone_number || '未設定'}</div>
+              </div>
+              <div style={{ padding: '16px', background: '#f8f9fa', borderRadius: '8px' }}>
+                <div style={{ fontSize: '14px', color: '#666', marginBottom: '4px' }}>住所</div>
+                <div style={{ fontSize: '14px', fontWeight: 600, color: '#333', lineHeight: 1.4 }}>{restaurant.address || '未設定'}</div>
+              </div>
+              <div style={{ padding: '16px', background: '#f8f9fa', borderRadius: '8px' }}>
+                <div style={{ fontSize: '14px', color: '#666', marginBottom: '4px' }}>ステータス</div>
+                <div style={{ fontSize: '16px', fontWeight: 600 }}>
+                  <span style={{ 
+                    background: restaurant.is_active ? '#E8F5E9' : '#FFEBEE', 
+                    color: restaurant.is_active ? '#2E7D32' : '#C62828', 
+                    padding: '4px 8px', 
+                    borderRadius: '12px', 
+                    fontSize: '12px' 
+                  }}>
+                    {restaurant.is_active ? '✅ 有効' : '⛔ 無効'}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : null}
 
         {/* 集客効果 */}
         <div className="card" style={{ width: '100%', maxWidth: 'none' }}>

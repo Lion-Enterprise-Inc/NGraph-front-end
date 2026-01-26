@@ -29,39 +29,48 @@ export default function UsersPage() {
   const [filter, setFilter] = useState<'all' | 'restaurant_owner' | 'platform_owner' | 'consumer' | 'superadmin'>('all')
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all')
   const [searchTerm, setSearchTerm] = useState('')
+  const [showCreateModal, setShowCreateModal] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [createUser, setCreateUser] = useState({
+    email: '',
+    password: '',
+    role: 'consumer' as 'consumer' | 'restaurant_owner' | 'platform_owner' | 'superadmin'
+  })
+  const [createErrors, setCreateErrors] = useState<{ email?: string; password?: string }>({})
+
+  // Fetch users from API
+  const fetchUsers = async () => {
+    try {
+      setLoading(true)
+      const token = TokenService.getAccessToken()
+      if (!token) {
+        setError('認証が必要です')
+        return
+      }
+
+      const response = await apiClient.get<ApiUser[]>('/auth/userlist?role=all')
+      
+      // Convert API response to component format
+      const formattedUsers: User[] = response.map((apiUser: ApiUser) => ({
+        id: apiUser.uid,
+        email: apiUser.email,
+        role: apiUser.role,
+        status: apiUser.is_active ? 'active' : 'inactive',
+        createdAt: new Date(apiUser.created_at).toLocaleDateString('ja-JP'),
+        lastLogin: apiUser.updated_at ? new Date(apiUser.updated_at).toLocaleString('ja-JP') : '-'
+      }))
+      
+      setUsers(formattedUsers)
+    } catch (err) {
+      console.error('Error fetching users:', err)
+      setError('ユーザーの取得に失敗しました')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   // Fetch users from API
   useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        setLoading(true)
-        const token = TokenService.getAccessToken()
-        if (!token) {
-          setError('認証が必要です')
-          return
-        }
-
-        const response = await apiClient.get<ApiUser[]>('/auth/userlist?role=all')
-        
-        // Convert API response to component format
-        const formattedUsers: User[] = response.map((apiUser: ApiUser) => ({
-          id: apiUser.uid,
-          email: apiUser.email,
-          role: apiUser.role,
-          status: apiUser.is_active ? 'active' : 'inactive',
-          createdAt: new Date(apiUser.created_at).toLocaleDateString('ja-JP'),
-          lastLogin: apiUser.updated_at ? new Date(apiUser.updated_at).toLocaleString('ja-JP') : '-'
-        }))
-        
-        setUsers(formattedUsers)
-      } catch (err) {
-        console.error('Error fetching users:', err)
-        setError('ユーザーの取得に失敗しました')
-      } finally {
-        setLoading(false)
-      }
-    }
-
     fetchUsers()
   }, [])
 
@@ -90,6 +99,61 @@ export default function UsersPage() {
   const handleDeleteUser = (userId: string) => {
     // Note: This would need a backend API endpoint to delete user
     alert('ユーザー削除機能は現在開発中です')
+  }
+
+  // User registration functions
+  const validateCreateUser = () => {
+    const errors: { email?: string; password?: string } = {}
+
+    if (!createUser.email.trim()) {
+      errors.email = 'メールアドレスを入力してください'
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(createUser.email)) {
+      errors.email = '有効なメールアドレスを入力してください'
+    }
+
+    if (!createUser.password) {
+      errors.password = 'パスワードを入力してください'
+    } else if (createUser.password.length < 8) {
+      errors.password = 'パスワードは8文字以上で入力してください'
+    }
+
+    setCreateErrors(errors)
+    return Object.keys(errors).length === 0
+  }
+
+  const handleCreateUser = async () => {
+    if (!validateCreateUser()) return
+
+    setIsSubmitting(true)
+    try {
+      const response = await apiClient.post('/auth/register', {
+        email: createUser.email,
+        password: createUser.password,
+        role: createUser.role
+      }) as { status_code: number; message: string; result: { email: string; role: string; is_validated: boolean } }
+
+      if (response.status_code === 201) {
+        alert(`✅ ${response.message}\n\nユーザー: ${response.result.email}\n役割: ${response.result.role}`)
+        setShowCreateModal(false)
+        resetCreateForm()
+        // Refresh user list
+        fetchUsers()
+      }
+    } catch (error) {
+      console.error('Failed to create user:', error)
+      alert(`❌ ユーザー作成に失敗しました: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const resetCreateForm = () => {
+    setCreateUser({
+      email: '',
+      password: '',
+      role: 'consumer'
+    })
+    setCreateErrors({})
   }
 
   const getStatusBadge = (status: string) => {
@@ -162,6 +226,13 @@ export default function UsersPage() {
             <h2 className="card-title" style={{ margin: 0 }}>👥 ユーザー管理</h2>
             <p style={{ margin: '8px 0 0', color: '#64748b', fontSize: '14px' }}>プラットフォームの全ユーザーを管理します</p>
           </div>
+          <button 
+            className="btn btn-primary" 
+            onClick={() => setShowCreateModal(true)}
+            style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+          >
+            ➕ 新規ユーザー作成
+          </button>
         </div>
 
         {/* Stats */}
@@ -306,6 +377,110 @@ export default function UsersPage() {
           </div>
         )}
       </div>
+
+      {/* User Creation Modal */}
+      {showCreateModal && (
+        <div 
+          className="modal active" 
+          onClick={(e) => { if (e.target === e.currentTarget) setShowCreateModal(false) }}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 1000
+          }}
+        >
+          <div 
+            className="modal-content"
+            style={{
+              background: 'white',
+              borderRadius: '12px',
+              padding: '24px',
+              maxWidth: '500px',
+              width: '90%',
+              maxHeight: '90vh',
+              overflowY: 'auto'
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <h2 style={{ margin: 0, fontSize: '20px', fontWeight: 600 }}>➕ 新規ユーザー作成</h2>
+              <button 
+                onClick={() => setShowCreateModal(false)}
+                style={{ background: 'none', border: 'none', fontSize: '24px', cursor: 'pointer', color: '#666' }}
+              >
+                ×
+              </button>
+            </div>
+
+            <div style={{ marginBottom: '20px' }}>
+              <div className="form-group">
+                <label className="form-label">メールアドレス *</label>
+                <input
+                  type="email"
+                  className="form-input"
+                  value={createUser.email}
+                  onChange={(e) => setCreateUser({...createUser, email: e.target.value})}
+                  placeholder="user@example.com"
+                  disabled={isSubmitting}
+                />
+                {createErrors.email && <div style={{ color: '#dc2626', fontSize: '12px', marginTop: '4px' }}>{createErrors.email}</div>}
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">パスワード *</label>
+                <input
+                  type="password"
+                  className="form-input"
+                  value={createUser.password}
+                  onChange={(e) => setCreateUser({...createUser, password: e.target.value})}
+                  placeholder="8文字以上のパスワード"
+                  disabled={isSubmitting}
+                />
+                {createErrors.password && <div style={{ color: '#dc2626', fontSize: '12px', marginTop: '4px' }}>{createErrors.password}</div>}
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">役割 *</label>
+                <select
+                  className="form-input"
+                  value={createUser.role}
+                  onChange={(e) => setCreateUser({...createUser, role: e.target.value as typeof createUser.role})}
+                  disabled={isSubmitting}
+                >
+                  <option value="consumer">👤 コンシューマー</option>
+                  <option value="restaurant_owner">🍽️ レストランオーナー</option>
+                  <option value="platform_owner">👑 プラットフォームオーナー</option>
+                  <option value="superadmin">👑 スーパー管理者</option>
+                </select>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+              <button 
+                className="btn btn-secondary" 
+                onClick={() => setShowCreateModal(false)}
+                disabled={isSubmitting}
+              >
+                キャンセル
+              </button>
+              <button 
+                className="btn btn-primary" 
+                onClick={handleCreateUser}
+                disabled={isSubmitting}
+                style={{ opacity: isSubmitting ? 0.7 : 1 }}
+              >
+                {isSubmitting ? '⏳ 作成中...' : '✅ 作成する'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <style jsx>{`
         .card {

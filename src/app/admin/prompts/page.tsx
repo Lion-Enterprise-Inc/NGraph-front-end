@@ -126,7 +126,7 @@ export default function PromptsPage() {
                 </span>
               </div>
               <div style={{ background: '#fff3cd', borderLeft: '4px solid #ffc107', padding: '12px', marginBottom: '10px', borderRadius: '4px' }}>
-                <strong>⚠️ OmiseAIの基本動作ルール</strong> - 慎重に編集してください
+                <strong>⚠️ NGraphの基本動作ルール</strong> - 慎重に編集してください
               </div>
               <textarea 
                 id="template-base-prompt" 

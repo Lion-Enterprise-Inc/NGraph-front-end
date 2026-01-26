@@ -10,6 +10,7 @@ export interface User {
   email: string;
   role: 'platform_owner' | 'restaurant_owner';
   uid: string;
+  restaurant_slug?: string;
 }
 
 export interface LoginResponse {
@@ -267,6 +268,23 @@ export const RestaurantApi = {
 };
 
 // Auth API
+export interface RegisterUserRequest {
+  email: string;
+  password: string;
+  role: 'consumer' | 'restaurant_owner' | 'platform_owner' | 'superadmin';
+}
+
+export interface RegisterUserResponse {
+  result: {
+    email: string;
+    role: string;
+    is_validated: boolean;
+  };
+  message: string;
+  status_code: number;
+}
+
+// Auth API
 export const AuthApi = {
   login: async (credentials: LoginRequest): Promise<LoginResponse> => {
     const response = await apiClient.post<LoginResponse>('/auth/login', credentials);
@@ -287,6 +305,10 @@ export const AuthApi = {
     }
 
     return response;
+  },
+
+  register: async (userData: RegisterUserRequest): Promise<RegisterUserResponse> => {
+    return apiClient.post<RegisterUserResponse>('/auth/register', userData);
   },
 
   logout: (): void => {

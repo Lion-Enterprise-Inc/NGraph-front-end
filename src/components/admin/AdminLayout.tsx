@@ -172,7 +172,7 @@ export default function AdminLayout({ children, title }: Props) {
         <aside className={`app-sidebar${sidebarOpen ? ' open' : ''}`}>
           {/* Brand Logo */}
           <a href="/admin" className="brand" onClick={(e) => { e.preventDefault(); router.push('/admin'); }}>
-            <strong className="brand-text">OMISEAI</strong>
+            <strong className="brand-text">NGraph</strong>
           </a>
 
           {/* User Type Badge */}

@@ -12,7 +12,7 @@ export default function AIEditorPage() {
   const [recommendTab, setRecommendTab] = useState('existing')
   const [popularTab, setPopularTab] = useState('existing')
   const [recommendTextTab, setRecommendTextTab] = useState('template')
-  const [prompt, setPrompt] = useState(`あなたはOmiseAIの飲食店向けアシスタントです。
+  const [prompt, setPrompt] = useState(`あなたはNGraphの飲食店向けアシスタントです。
 
 【基本姿勢】
 - ユーザーの端末言語で応答する（最優先）
@@ -160,7 +160,7 @@ export default function AIEditorPage() {
           <div className="card-title">🌟 おすすめメニューの設定</div>
           <label className="checkbox-label">
             <input type="checkbox" checked={autoRecommend} onChange={() => setAutoRecommend(!autoRecommend)} />
-            <span>OmiseAIにおすすめを任せる（自動選定）</span>
+            <span>NGraphにおすすめを任せる（自動選定）</span>
           </label>
           
           {!autoRecommend && (
@@ -218,7 +218,7 @@ export default function AIEditorPage() {
           <div className="card-title">🔥 人気メニューの設定</div>
           <label className="checkbox-label">
             <input type="checkbox" checked={autoPopular} onChange={() => setAutoPopular(!autoPopular)} />
-            <span>OmiseAIにおすすめを任せる（自動選定）</span>
+            <span>NGraphにおすすめを任せる（自動選定）</span>
           </label>
           
           {!autoPopular && (
@@ -276,7 +276,7 @@ export default function AIEditorPage() {
           <div className="card-title">💬 レコメンドテキスト</div>
           <label className="checkbox-label">
             <input type="checkbox" checked={autoRecommendText} onChange={() => setAutoRecommendText(!autoRecommendText)} />
-            <span>OmiseAIにおすすめを任せる（自動選定）</span>
+            <span>NGraphにおすすめを任せる（自動選定）</span>
           </label>
           
           {!autoRecommendText && (

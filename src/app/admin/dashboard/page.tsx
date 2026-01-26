@@ -11,7 +11,7 @@ export default function StoreDashboardPage() {
   }
 
   return (
-    <AdminLayout title="OmiseAI 店舗管理システム">
+    <AdminLayout title="NGraph 店舗管理システム">
       <section className="section">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
           <div>

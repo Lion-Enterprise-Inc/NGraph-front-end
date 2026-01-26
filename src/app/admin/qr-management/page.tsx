@@ -1,14 +1,16 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import QRCode from 'qrcode'
 import { Download, Copy, QrCode, Check } from 'lucide-react'
 import AdminLayout from '../../../components/admin/AdminLayout'
 import { useAppContext } from '../../../components/AppProvider'
+import { useAuth } from '../../../contexts/AuthContext'
 import { getUiCopy } from '../../../i18n/uiCopy'
 
 export default function QRManagementPage() {
   const { language } = useAppContext()
+  const { user, isRestaurantOwner } = useAuth()
   const copy = getUiCopy(language)
   const [restaurantSlug, setRestaurantSlug] = useState('')
   const [bulkSlugs, setBulkSlugs] = useState('')
@@ -20,6 +22,13 @@ export default function QRManagementPage() {
   const [copied, setCopied] = useState(false)
   const [activeTab, setActiveTab] = useState<'single' | 'bulk'>('single')
   const canvasRef = useRef<HTMLCanvasElement>(null)
+
+  // Pre-fill restaurant slug for restaurant owners
+  useEffect(() => {
+    if (isRestaurantOwner && user?.restaurant_slug && !restaurantSlug) {
+      setRestaurantSlug(user.restaurant_slug)
+    }
+  }, [isRestaurantOwner, user?.restaurant_slug, restaurantSlug])
 
   const generateQRCode = async () => {
     if (!restaurantSlug.trim()) {
@@ -35,7 +44,7 @@ export default function QRManagementPage() {
     }
 
     setIsGenerating(true)
-    const url = `http://localhost:3000/capture?restaurant=${restaurantSlug.trim()}`
+    const url = `http://localhost:3000/?restaurant=${restaurantSlug.trim()}`
     setQrCodeUrl(url)
 
     try {
@@ -105,7 +114,7 @@ export default function QRManagementPage() {
 
     try {
       for (const slug of slugs) {
-        const url = `http://localhost:3000/capture?restaurant=${slug}`
+        const url = `http://localhost:3000/?restaurant=${slug}`
         const dataUrl = await QRCode.toDataURL(url, {
           width: 300,
           margin: 2,
@@ -145,21 +154,23 @@ export default function QRManagementPage() {
           <p>Generate QR codes for your restaurants</p>
         </div>
 
-        {/* Tabs */}
-        <div className="qr-tabs">
-          <button
-            className={`qr-tab ${activeTab === 'single' ? 'active' : ''}`}
-            onClick={() => setActiveTab('single')}
-          >
-            Single QR Code
-          </button>
-          <button
-            className={`qr-tab ${activeTab === 'bulk' ? 'active' : ''}`}
-            onClick={() => setActiveTab('bulk')}
-          >
-            Bulk Generation
-          </button>
-        </div>
+        {/* Tabs - Hide bulk generation for restaurant owners */}
+        {!isRestaurantOwner && (
+          <div className="qr-tabs">
+            <button
+              className={`qr-tab ${activeTab === 'single' ? 'active' : ''}`}
+              onClick={() => setActiveTab('single')}
+            >
+              Single QR Code
+            </button>
+            <button
+              className={`qr-tab ${activeTab === 'bulk' ? 'active' : ''}`}
+              onClick={() => setActiveTab('bulk')}
+            >
+              Bulk Generation
+            </button>
+          </div>
+        )}
 
         <div className="qr-generator-section">
           {activeTab === 'single' ? (
@@ -176,6 +187,8 @@ export default function QRManagementPage() {
                     onChange={(e) => setRestaurantSlug(e.target.value)}
                     placeholder="e.g., fc-restaurant"
                     className="qr-input"
+                    readOnly={isRestaurantOwner}
+                    style={isRestaurantOwner ? { backgroundColor: '#f8f9fa', cursor: 'not-allowed' } : {}}
                   />
                   <button
                     onClick={generateQRCode}
@@ -186,7 +199,10 @@ export default function QRManagementPage() {
                   </button>
                 </div>
                 <p className="qr-input-help">
-                  Enter the restaurant slug (e.g., fc-restaurant) to generate a QR code
+                  {isRestaurantOwner 
+                    ? `Your restaurant slug "${restaurantSlug}" is automatically set. Click Generate to create your QR code.`
+                    : 'Enter the restaurant slug (e.g., fc-restaurant) to generate a QR code'
+                  }
                 </p>
               </div>
 
@@ -228,7 +244,7 @@ export default function QRManagementPage() {
                 </div>
               )}
             </>
-          ) : (
+          ) : !isRestaurantOwner && (
             <>
               <div className="qr-input-section">
                 <label htmlFor="bulk-slugs" className="qr-input-label">

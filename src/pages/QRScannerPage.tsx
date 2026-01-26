@@ -73,10 +73,10 @@ export default function QRScannerPage({ language = 'ja', onClose }: QRScannerPag
       console.log('All search params:', url.searchParams.toString())
       
       if (restaurantSlug) {
-        // Redirect to capture page with restaurant parameter
-        console.log('Redirecting to:', `/capture?restaurant=${restaurantSlug}`)
+        // Redirect to Go page (home) with restaurant parameter, then user clicks Go to chat
+        console.log('Redirecting to:', `/?restaurant=${restaurantSlug}`)
         setTimeout(() => {
-          router.push(`/capture?restaurant=${restaurantSlug}`)
+          router.push(`/?restaurant=${restaurantSlug}`)
         }, 500)
       } else {
         console.log('No restaurant parameter found')
@@ -91,9 +91,9 @@ export default function QRScannerPage({ language = 'ja', onClose }: QRScannerPag
         const match = cleanText.match(/restaurant=([^&\s]+)/)
         console.log('Regex match result:', match)
         if (match && match[1]) {
-          console.log('Redirecting via regex to:', `/capture?restaurant=${match[1]}`)
+          console.log('Redirecting via regex to:', `/?restaurant=${match[1]}`)
           setTimeout(() => {
-            router.push(`/capture?restaurant=${match[1]}`)
+            router.push(`/?restaurant=${match[1]}`)
           }, 500)
           return
         }
@@ -284,8 +284,8 @@ export default function QRScannerPage({ language = 'ja', onClose }: QRScannerPag
         <button
           className="qr-scanner-control-btn"
           onClick={() => {
-            console.log('Testing with URL: http://localhost:3000/capture?restaurant=fc-restaurant')
-            handleQRCodeSuccess('http://localhost:3000/capture?restaurant=fc-restaurant')
+            console.log('Testing with URL: http://localhost:3000/?restaurant=fc-restaurant')
+            handleQRCodeSuccess('http://localhost:3000/?restaurant=fc-restaurant')
           }}
           aria-label="Test QR scan"
         >

@@ -43,7 +43,7 @@ export default function CaptureHeader({ restaurant, onMenu, onLanguage }: Captur
             </div>
           </div>
         ) : (
-          'Omiseai'
+          'NGraph'
         )}
       </div>
       <button className="icon-button" type="button" aria-label={copy.captureHeader.scan} onClick={onLanguage}>
