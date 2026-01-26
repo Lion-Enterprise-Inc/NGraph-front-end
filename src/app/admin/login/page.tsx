@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { AuthApi } from '../../../services/api'
+import { useAuth } from '../../../contexts/AuthContext'
 
 // Validation helpers
 const validateEmail = (email: string): string | null => {
@@ -33,6 +33,7 @@ interface FieldErrors {
 
 export default function AdminLoginPage() {
   const router = useRouter()
+  const { login } = useAuth()
   const [mounted, setMounted] = useState(false)
   const [activeTab, setActiveTab] = useState<'login' | 'register'>('login')
   const [email, setEmail] = useState('')
@@ -130,12 +131,12 @@ export default function AdminLoginPage() {
     setError('')
 
     try {
-      const response = await AuthApi.login({ email, password })
+      const result = await login(email, password)
       
-      if (response.result?.user) {
+      if (result.success) {
         router.push('/admin')
       } else {
-        setError('ログインに失敗しました')
+        setError(result.error || 'ログインに失敗しました')
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'ログインに失敗しました'

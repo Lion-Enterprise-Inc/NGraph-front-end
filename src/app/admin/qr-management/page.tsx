@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import QRCode from 'qrcode'
-import { Download, Copy, QrCode, Check } from 'lucide-react'
+import { Download, Copy, Check } from 'lucide-react'
 import AdminLayout from '../../../components/admin/AdminLayout'
 import { useAppContext } from '../../../components/AppProvider'
 import { useAuth } from '../../../contexts/AuthContext'
@@ -10,25 +10,25 @@ import { getUiCopy } from '../../../i18n/uiCopy'
 
 export default function QRManagementPage() {
   const { language } = useAppContext()
-  const { user, isRestaurantOwner } = useAuth()
+  const { user, isLoading: authLoading } = useAuth()
   const copy = getUiCopy(language)
   const [restaurantSlug, setRestaurantSlug] = useState('')
-  const [bulkSlugs, setBulkSlugs] = useState('')
   const [qrCodeUrl, setQrCodeUrl] = useState('')
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState('')
-  const [bulkQRCodes, setBulkQRCodes] = useState<Array<{slug: string, url: string, dataUrl: string}>>([])
   const [isGenerating, setIsGenerating] = useState(false)
-  const [isBulkGenerating, setIsBulkGenerating] = useState(false)
   const [copied, setCopied] = useState(false)
-  const [activeTab, setActiveTab] = useState<'single' | 'bulk'>('single')
+  const [slugInitialized, setSlugInitialized] = useState(false)
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
-  // Pre-fill restaurant slug for restaurant owners
+  // Pre-fill restaurant slug for restaurant owners - only run once when auth is loaded
   useEffect(() => {
-    if (isRestaurantOwner && user?.restaurant_slug && !restaurantSlug) {
-      setRestaurantSlug(user.restaurant_slug)
+    if (!authLoading && !slugInitialized) {
+      if (user?.restaurant_slug) {
+        setRestaurantSlug(user.restaurant_slug)
+      }
+      setSlugInitialized(true)
     }
-  }, [isRestaurantOwner, user?.restaurant_slug, restaurantSlug])
+  }, [authLoading, user?.restaurant_slug, slugInitialized])
 
   const generateQRCode = async () => {
     if (!restaurantSlug.trim()) {
@@ -67,15 +67,12 @@ export default function QRManagementPage() {
     }
   }
 
-  const downloadQRCode = (dataUrl?: string, slug?: string) => {
-    const urlToDownload = dataUrl || qrCodeDataUrl
-    const slugToUse = slug || restaurantSlug
-    
-    if (!urlToDownload) return
+  const downloadQRCode = () => {
+    if (!qrCodeDataUrl) return
 
     const link = document.createElement('a')
-    link.href = urlToDownload
-    link.download = `qr-code-${slugToUse}.png`
+    link.href = qrCodeDataUrl
+    link.download = `qr-code-${restaurantSlug}.png`
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
@@ -93,57 +90,27 @@ export default function QRManagementPage() {
     }
   }
 
-  const generateBulkQRCodes = async () => {
-    if (!bulkSlugs.trim()) {
-      alert('Please enter restaurant slugs (one per line)')
-      return
-    }
-
-    const slugs = bulkSlugs.split('\n').map(slug => slug.trim()).filter(slug => slug)
-    
-    // Validate all slugs
-    const slugPattern = /^[a-zA-Z0-9-]+$/
-    const invalidSlugs = slugs.filter(slug => !slugPattern.test(slug))
-    if (invalidSlugs.length > 0) {
-      alert(`Invalid slugs found: ${invalidSlugs.join(', ')}. Only letters, numbers, and hyphens are allowed.`)
-      return
-    }
-
-    setIsBulkGenerating(true)
-    const newQRCodes: Array<{slug: string, url: string, dataUrl: string}> = []
-
-    try {
-      for (const slug of slugs) {
-        const url = `https://15.207.22.103/?restaurant=${slug}`
-        const dataUrl = await QRCode.toDataURL(url, {
-          width: 300,
-          margin: 2,
-          color: {
-            dark: '#000000',
-            light: '#FFFFFF'
-          },
-          errorCorrectionLevel: 'M'
-        })
-        newQRCodes.push({ slug, url, dataUrl })
-      }
-      setBulkQRCodes(newQRCodes)
-    } catch (error) {
-      console.error('Error generating bulk QR codes:', error)
-      alert('Failed to generate some QR codes')
-    } finally {
-      setIsBulkGenerating(false)
-    }
-  }
-
-  const downloadAllQRCodes = () => {
-    bulkQRCodes.forEach((qr, index) => {
-      const link = document.createElement('a')
-      link.href = qr.dataUrl
-      link.download = `qr-code-${qr.slug}.png`
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-    })
+  // Show loading while auth is initializing
+  if (authLoading) {
+    return (
+      <AdminLayout title="QR Code Management">
+        <div className="qr-management-container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '300px' }}>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ 
+              width: '40px', 
+              height: '40px', 
+              border: '3px solid #e1e5e9', 
+              borderTopColor: '#10a37f', 
+              borderRadius: '50%', 
+              animation: 'spin 1s linear infinite',
+              margin: '0 auto 16px'
+            }} />
+            <p style={{ color: '#666' }}>Loading...</p>
+            <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+          </div>
+        </div>
+      </AdminLayout>
+    )
   }
 
   return (
@@ -151,155 +118,77 @@ export default function QRManagementPage() {
       <div className="qr-management-container">
         <div className="qr-management-header">
           <h1>QR Code Generator</h1>
-          <p>Generate QR codes for your restaurants</p>
+          <p>Generate QR code for your restaurant</p>
         </div>
 
-        {/* Tabs - Hide bulk generation for restaurant owners */}
-        {!isRestaurantOwner && (
-          <div className="qr-tabs">
-            <button
-              className={`qr-tab ${activeTab === 'single' ? 'active' : ''}`}
-              onClick={() => setActiveTab('single')}
-            >
-              Single QR Code
-            </button>
-            <button
-              className={`qr-tab ${activeTab === 'bulk' ? 'active' : ''}`}
-              onClick={() => setActiveTab('bulk')}
-            >
-              Bulk Generation
-            </button>
-          </div>
-        )}
-
         <div className="qr-generator-section">
-          {activeTab === 'single' ? (
-            <>
-              <div className="qr-input-section">
-                <label htmlFor="restaurant-slug" className="qr-input-label">
-                  Restaurant Slug
-                </label>
-                <div className="qr-input-group">
-                  <input
-                    id="restaurant-slug"
-                    type="text"
-                    value={restaurantSlug}
-                    onChange={(e) => setRestaurantSlug(e.target.value)}
-                    placeholder="e.g., fc-restaurant"
-                    className="qr-input"
-                    readOnly={isRestaurantOwner}
-                    style={isRestaurantOwner ? { backgroundColor: '#f8f9fa', cursor: 'not-allowed' } : {}}
-                  />
-                  <button
-                    onClick={generateQRCode}
-                    disabled={isGenerating || !restaurantSlug.trim()}
-                    className="qr-generate-btn"
-                  >
-                    {isGenerating ? 'Generating...' : 'Generate QR Code'}
-                  </button>
-                </div>
-                <p className="qr-input-help">
-                  {isRestaurantOwner 
-                    ? `Your restaurant slug "${restaurantSlug}" is automatically set. Click Generate to create your QR code.`
-                    : 'Enter the restaurant slug (e.g., fc-restaurant) to generate a QR code'
-                  }
-                </p>
-              </div>
+          <div className="qr-input-section">
+            <label htmlFor="restaurant-slug" className="qr-input-label">
+              Restaurant Slug
+            </label>
+            <div className="qr-input-group">
+              <input
+                id="restaurant-slug"
+                type="text"
+                value={restaurantSlug}
+                onChange={(e) => setRestaurantSlug(e.target.value)}
+                placeholder="e.g., fc-restaurant"
+                className="qr-input"
+                readOnly={!!user?.restaurant_slug}
+                style={user?.restaurant_slug ? { backgroundColor: '#f8f9fa', cursor: 'not-allowed' } : {}}
+              />
+              <button
+                onClick={generateQRCode}
+                disabled={isGenerating || !restaurantSlug.trim()}
+                className="qr-generate-btn"
+              >
+                {isGenerating ? 'Generating...' : 'Generate QR Code'}
+              </button>
+            </div>
+            <p className="qr-input-help">
+              {user?.restaurant_slug
+                ? `Your restaurant slug "${restaurantSlug}" is automatically set. Click Generate to create your QR code.`
+                : 'Enter the restaurant slug (e.g., fc-restaurant) to generate a QR code'
+              }
+            </p>
+          </div>
 
-              {qrCodeDataUrl && (
-                <div className="qr-result-section">
-                  <div className="qr-code-display">
-                    <div className="qr-code-image">
-                      <img src={qrCodeDataUrl} alt="Restaurant QR Code" />
-                    </div>
-                    <div className="qr-code-info">
-                      <h3>QR Code Generated!</h3>
-                      <p>Restaurant: <strong>{restaurantSlug}</strong></p>
-                      <div className="qr-url-section">
-                        <label>URL:</label>
-                        <div className="qr-url-group">
-                          <input
-                            type="text"
-                            value={qrCodeUrl}
-                            readOnly
-                            className="qr-url-input"
-                          />
-                          <button
-                            onClick={copyUrl}
-                            className="qr-copy-btn"
-                            title="Copy URL"
-                          >
-                            {copied ? <Check size={16} /> : <Copy size={16} />}
-                          </button>
-                        </div>
-                      </div>
-                      <div className="qr-actions">
-                        <button onClick={() => downloadQRCode()} className="qr-download-btn">
-                          <Download size={16} />
-                          Download QR Code
-                        </button>
-                      </div>
+          {qrCodeDataUrl && (
+            <div className="qr-result-section">
+              <div className="qr-code-display">
+                <div className="qr-code-image">
+                  <img src={qrCodeDataUrl} alt="Restaurant QR Code" />
+                </div>
+                <div className="qr-code-info">
+                  <h3>QR Code Generated!</h3>
+                  <p>Restaurant: <strong>{restaurantSlug}</strong></p>
+                  <div className="qr-url-section">
+                    <label>URL:</label>
+                    <div className="qr-url-group">
+                      <input
+                        type="text"
+                        value={qrCodeUrl}
+                        readOnly
+                        className="qr-url-input"
+                      />
+                      <button
+                        onClick={copyUrl}
+                        className="qr-copy-btn"
+                        title="Copy URL"
+                      >
+                        {copied ? <Check size={16} /> : <Copy size={16} />}
+                      </button>
                     </div>
                   </div>
-                </div>
-              )}
-            </>
-          ) : !isRestaurantOwner && (
-            <>
-              <div className="qr-input-section">
-                <label htmlFor="bulk-slugs" className="qr-input-label">
-                  Restaurant Slugs (one per line)
-                </label>
-                <textarea
-                  id="bulk-slugs"
-                  value={bulkSlugs}
-                  onChange={(e) => setBulkSlugs(e.target.value)}
-                  placeholder="fc-restaurant&#10;restaurant-b&#10;tokyo-sushi&#10;osaka-ramen"
-                  className="qr-textarea"
-                  rows={6}
-                />
-                <div className="qr-input-group">
-                  <button
-                    onClick={generateBulkQRCodes}
-                    disabled={isBulkGenerating || !bulkSlugs.trim()}
-                    className="qr-generate-btn"
-                  >
-                    {isBulkGenerating ? 'Generating...' : `Generate ${bulkSlugs.split('\n').filter(s => s.trim()).length} QR Codes`}
-                  </button>
-                </div>
-                <p className="qr-input-help">
-                  Enter multiple restaurant slugs (one per line) to generate QR codes in bulk
-                </p>
-              </div>
-
-              {bulkQRCodes.length > 0 && (
-                <div className="qr-bulk-result-section">
-                  <div className="qr-bulk-header">
-                    <h3>Generated {bulkQRCodes.length} QR Codes</h3>
-                    <button onClick={downloadAllQRCodes} className="qr-download-all-btn">
+                  <div className="qr-actions">
+                    <button onClick={downloadQRCode} className="qr-download-btn">
                       <Download size={16} />
-                      Download All
+                      Download QR Code
                     </button>
                   </div>
-                  <div className="qr-bulk-grid">
-                    {bulkQRCodes.map((qr) => (
-                      <div key={qr.slug} className="qr-bulk-item">
-                        <div className="qr-bulk-image">
-                          <img src={qr.dataUrl} alt={`QR Code for ${qr.slug}`} />
-                        </div>
-                        <div className="qr-bulk-info">
-                          <h4>{qr.slug}</h4>
-                          <button onClick={() => downloadQRCode(qr.dataUrl, qr.slug)} className="qr-download-btn">
-                            <Download size={14} />
-                            Download
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
                 </div>
-              )}
-            </>
+              </div>
+            </div>
           )}
         </div>
 
