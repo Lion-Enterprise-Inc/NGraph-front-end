@@ -44,7 +44,7 @@ export default function QRManagementPage() {
     }
 
     setIsGenerating(true)
-    const url = `http://localhost:3000/?restaurant=${restaurantSlug.trim()}`
+    const url = `https://15.207.22.103/?restaurant=${restaurantSlug.trim()}`
     setQrCodeUrl(url)
 
     try {
@@ -114,7 +114,7 @@ export default function QRManagementPage() {
 
     try {
       for (const slug of slugs) {
-        const url = `http://localhost:3000/?restaurant=${slug}`
+        const url = `https://15.207.22.103/?restaurant=${slug}`
         const dataUrl = await QRCode.toDataURL(url, {
           width: 300,
           margin: 2,
