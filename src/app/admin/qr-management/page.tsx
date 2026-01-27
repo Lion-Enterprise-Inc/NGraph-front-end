@@ -36,15 +36,16 @@ export default function QRManagementPage() {
       return
     }
 
-    // Validate slug format (alphanumeric with hyphens only)
-    const slugPattern = /^[a-zA-Z0-9-]+$/
+    // Validate slug format (letters, numbers, hyphens, and Unicode characters)
+    const slugPattern = /^[\w\u3000-\u303f\u3040-\u309f\u30a0-\u30ff\uff00-\uff9f\u4e00-\u9faf\u3400-\u4dbf-]+$/
     if (!slugPattern.test(restaurantSlug.trim())) {
-      alert('Restaurant slug can only contain letters, numbers, and hyphens')
+      alert('Restaurant slug can only contain letters, numbers, hyphens, and Unicode characters')
       return
     }
 
     setIsGenerating(true)
-    const url = `https://15.207.22.103/?restaurant=${restaurantSlug.trim()}`
+    const encodedSlug = encodeURIComponent(restaurantSlug.trim())
+    const url = `https://15.207.22.103/?restaurant=${encodedSlug}`
     setQrCodeUrl(url)
 
     try {
