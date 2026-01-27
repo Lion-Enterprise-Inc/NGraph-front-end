@@ -126,11 +126,11 @@ export default function StoresPage() {
   const fetchRestaurantOwners = async () => {
     setLoadingOwners(true)
     try {
-      const owners = await UserApi.getRestaurantOwners()
-      console.log('Restaurant owners:', owners)
+      const owners = await UserApi.getUnassociatedRestaurantOwners()
+      console.log('Unassociated restaurant owners:', owners)
       setRestaurantOwners(owners.filter(u => u.is_active))
     } catch (error) {
-      console.error('Failed to fetch restaurant owners:', error)
+      console.error('Failed to fetch unassociated restaurant owners:', error)
     } finally {
       setLoadingOwners(false)
     }
@@ -229,10 +229,18 @@ export default function StoresPage() {
     }
   }
 
-  const showStoreDetail = (storeId: number) => {
-    const store = stores.find(s => s.id === storeId)
-    if (store) {
-      alert(`${store.name}の詳細統計\n\n応答数: ${store.responses}件\n満足度: ${store.satisfaction}/5.0\nプラン: ${store.plan}\n最終更新: ${store.lastUpdate}`)
+  const handleDeleteStore = async (storeUid: string, storeName: string) => {
+    if (!confirm(`レストラン "${storeName}" を削除しますか？\n\nこの操作は元に戻すことができません。`)) return
+
+    try {
+      await RestaurantApi.delete(storeUid)
+      // Remove from local state
+      setStores(stores.filter(s => s.uid !== storeUid))
+      setTotalRestaurants(prev => prev - 1)
+      alert(`✅ レストラン "${storeName}" を削除しました`)
+    } catch (error) {
+      console.error('Failed to delete restaurant:', error)
+      alert(`❌ レストランの削除に失敗しました: ${error instanceof Error ? error.message : 'Unknown error'}`)
     }
   }
 
@@ -355,6 +363,14 @@ export default function StoresPage() {
                 </button>
                 <button className="btn btn-secondary btn-small" onClick={() => showStoreDetail(store.id)} title="レストランの現状把握（統計・分析・パフォーマンス）">
                   📊 詳細
+                </button>
+                <button 
+                  className="btn btn-danger btn-small" 
+                  onClick={() => handleDeleteStore(store.uid, store.name)} 
+                  title="レストランを削除（元に戻せません）"
+                  style={{ background: '#dc3545', color: 'white' }}
+                >
+                  🗑️ 削除
                 </button>
               </div>
             </div>

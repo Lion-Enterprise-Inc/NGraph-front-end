@@ -3,11 +3,13 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import AdminLayout from '../../../components/admin/AdminLayout'
+import { useAuth } from '../../../contexts/AuthContext'
 
 type PlanType = 'free' | 'light' | 'business' | 'pro'
 
 export default function AccountPage() {
   const router = useRouter()
+  const { user, isRestaurantOwner } = useAuth()
   const [email, setEmail] = useState('demo@example.com')
   const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
@@ -18,8 +20,9 @@ export default function AccountPage() {
   useEffect(() => {
     const savedEmail = localStorage.getItem('admin_user_email')
     if (savedEmail) setEmail(savedEmail)
+    if (user?.email) setEmail(user.email)
     setIsLoading(false)
-  }, [])
+  }, [user])
 
   const handleUpdateEmail = () => {
     localStorage.setItem('admin_user_email', email)
@@ -80,8 +83,8 @@ export default function AccountPage() {
     )
   }
 
-  // Plan Management View
-  if (showPlanManagement) {
+  // Plan Management View - Only for Restaurant Owners
+  if (showPlanManagement && isRestaurantOwner) {
     return (
       <AdminLayout title="プラン・契約管理">
         {/* Breadcrumb */}
@@ -539,33 +542,35 @@ export default function AccountPage() {
           </div>
         </div>
 
-        {/* Plan Info Section */}
-        <div className="form-section plan-section">
-          <div className="plan-header-row">
-            <label className="form-label">プラン情報</label>
-            <button className="btn-secondary btn-small" onClick={() => setShowPlanManagement(true)}>
-              プランの詳細変更
-            </button>
+        {/* Plan Info Section - Only for Restaurant Owners */}
+        {isRestaurantOwner && (
+          <div className="form-section plan-section">
+            <div className="plan-header-row">
+              <label className="form-label">プラン情報</label>
+              <button className="btn-secondary btn-small" onClick={() => setShowPlanManagement(true)}>
+                プランの詳細変更
+              </button>
+            </div>
+            <div className="plan-info-grid">
+              <div className="plan-info-item">
+                <div className="info-label">プラン名</div>
+                <div className="info-value">{getPlanName(currentPlan)}</div>
+              </div>
+              <div className="plan-info-item">
+                <div className="info-label">月額費用</div>
+                <div className="info-value">{getPlanPrice(currentPlan)}</div>
+              </div>
+              <div className="plan-info-item">
+                <div className="info-label">契約開始日</div>
+                <div className="info-value">2024-10-01</div>
+              </div>
+              <div className="plan-info-item">
+                <div className="info-label">次回更新日</div>
+                <div className="info-value">2024-11-01</div>
+              </div>
+            </div>
           </div>
-          <div className="plan-info-grid">
-            <div className="plan-info-item">
-              <div className="info-label">プラン名</div>
-              <div className="info-value">{getPlanName(currentPlan)}</div>
-            </div>
-            <div className="plan-info-item">
-              <div className="info-label">月額費用</div>
-              <div className="info-value">{getPlanPrice(currentPlan)}</div>
-            </div>
-            <div className="plan-info-item">
-              <div className="info-label">契約開始日</div>
-              <div className="info-value">2024-10-01</div>
-            </div>
-            <div className="plan-info-item">
-              <div className="info-label">次回更新日</div>
-              <div className="info-value">2024-11-01</div>
-            </div>
-          </div>
-        </div>
+        )}
 
         {/* QR Code Management Link */}
         <div className="qr-section">

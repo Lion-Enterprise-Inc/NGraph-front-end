@@ -891,7 +891,7 @@ export default function AdminDashboardPage() {
   }
 
   return (
-    <AdminLayout title={userType === 'store' ? 'OmiseAI レストラン管理システム' : 'OmiseAI プラットフォームオーナー管理システム'}>
+    <AdminLayout title={userType === 'store' ? 'NGraph レストラン管理システム' : 'NGraph プラットフォームオーナー管理システム'}>
       <div className="dashboard">
         {userType === 'store' ? <StoreDashboard /> : <AdminDashboard />}
       </div>

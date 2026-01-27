@@ -209,6 +209,11 @@ class ApiClient {
       throw new Error(errorMessage);
     }
 
+    // Handle 204 No Content responses (successful deletion)
+    if (response.status === 204) {
+      return { message: 'Success', status_code: 204 } as T;
+    }
+
     return response.json();
   }
 
@@ -249,6 +254,10 @@ export const UserApi = {
 
   getRestaurantOwners: async (): Promise<UserListItem[]> => {
     return apiClient.get<UserListItem[]>('/auth/userlist?role=restaurant_owner');
+  },
+
+  getUnassociatedRestaurantOwners: async (): Promise<UserListItem[]> => {
+    return apiClient.get<UserListItem[]>('/auth/unassociated_res_owners-list');
   }
 };
 
@@ -264,6 +273,14 @@ export const RestaurantApi = {
 
   getById: async (uid: string): Promise<{ result: Restaurant; message: string; status_code: number }> => {
     return apiClient.get(`/restaurants/${uid}`);
+  },
+
+  getBySlug: async (slug: string): Promise<{ result: Restaurant; message: string; status_code: number }> => {
+    return apiClient.get(`/restaurants/by-slug/${slug}`);
+  },
+
+  delete: async (uid: string): Promise<{ message: string; status_code: number }> => {
+    return apiClient.delete(`/restaurants/${uid}`);
   }
 };
 

@@ -27,6 +27,7 @@ type ApiRestaurant = {
   description?: string
   is_active: boolean
   slug: string
+  logo_url?: string | null
   created_at: string
   updated_at: string
 };
@@ -134,10 +135,10 @@ const logConversation = (entry: {
 
 const logFeedback = (entry: FeedbackEntry) => {
   try {
-    const raw = localStorage.getItem("omiseaiFeedbackLog");
+    const raw = localStorage.getItem("ngraphFeedbackLog");
     const existing = raw ? JSON.parse(raw) : [];
     existing.push(entry);
-    localStorage.setItem("omiseaiFeedbackLog", JSON.stringify(existing));
+    localStorage.setItem("ngraphFeedbackLog", JSON.stringify(existing));
   } catch (error) {
     console.log("feedback_log_error", error);
   }
@@ -260,21 +261,53 @@ export default function CapturePage({
   
   const selectedRestaurant = restaurantData;
 
-  // Fetch restaurant data by slug
+  // Fetch restaurant data from public API endpoint
   useEffect(() => {
     if (restaurantSlug) {
       const fetchRestaurantBySlug = async () => {
         setRestaurantLoading(true);
         try {
           const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://15.207.22.103:8000';
-          const response = await fetch(`${apiBaseUrl}/api/restaurants/?page=1&size=10`);
+          const response = await fetch(`${apiBaseUrl}/api/restaurants/public/${restaurantSlug}`);
+          
           if (response.ok) {
             const data = await response.json();
-            const restaurant = data.result?.items?.find((r: ApiRestaurant) => r.slug === restaurantSlug && r.is_active);
-            setRestaurantData(restaurant || null);
+            if (data.result && data.result.is_active) {
+              console.log('Restaurant data from public API:', data.result);
+              setRestaurantData({
+                uid: data.result.uid,
+                name: data.result.name,
+                slug: data.result.slug,
+                is_active: data.result.is_active,
+                logo_url: data.result.logo_url,
+                created_at: '',
+                updated_at: ''
+              });
+              return;
+            }
           }
+          // Fallback if API fails
+          console.log('Public API failed, using slug as fallback');
+          setRestaurantData({
+            uid: '',
+            name: restaurantSlug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' '),
+            slug: restaurantSlug,
+            is_active: true,
+            logo_url: null,
+            created_at: '',
+            updated_at: ''
+          });
         } catch (error) {
           console.error('Failed to fetch restaurant:', error);
+          setRestaurantData({
+            uid: '',
+            name: restaurantSlug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' '),
+            slug: restaurantSlug,
+            is_active: true,
+            logo_url: null,
+            created_at: '',
+            updated_at: ''
+          });
         } finally {
           setRestaurantLoading(false);
         }
@@ -505,21 +538,45 @@ export default function CapturePage({
     });
   }, [responses]);
 
-  // Auto-scroll when typing state changes during active typing
+  // Auto-scroll when typing state changes during active typing - ChatGPT style
   useEffect(() => {
     if (isTypingActive) {
       const container = captureBodyRef.current;
       if (container) {
-        // Use a slight delay to ensure DOM has updated
-        setTimeout(() => {
-          container.scrollTo({
-            top: container.scrollHeight,
-            behavior: "smooth",
-          });
-        }, 10);
+        // Immediate scroll without smooth behavior for real-time following
+        // This creates the ChatGPT-like effect where content is always visible
+        requestAnimationFrame(() => {
+          container.scrollTop = container.scrollHeight;
+        });
       }
     }
   }, [typingState, isTypingActive]);
+
+  // Continuous auto-scroll interval during typing or loading for smoother experience
+  useEffect(() => {
+    let scrollInterval: NodeJS.Timeout | null = null;
+    
+    if (isTypingActive || loading) {
+      scrollInterval = setInterval(() => {
+        const container = captureBodyRef.current;
+        if (container) {
+          const { scrollTop, scrollHeight, clientHeight } = container;
+          const distanceFromBottom = scrollHeight - scrollTop - clientHeight;
+          
+          // Only auto-scroll if we're within 150px of bottom (user hasn't scrolled up much)
+          if (distanceFromBottom < 150) {
+            container.scrollTop = container.scrollHeight;
+          }
+        }
+      }, 50); // Check every 50ms for smooth scrolling
+    }
+    
+    return () => {
+      if (scrollInterval) {
+        clearInterval(scrollInterval);
+      }
+    };
+  }, [isTypingActive, loading]);
 
   const handleScrollToBottom = () => {
     const container = captureBodyRef.current;
@@ -598,26 +655,20 @@ export default function CapturePage({
     setUserScrolledUp(false); // Reset scroll state for new message
     setIsTypingActive(false); // Ensure typing state is reset
 
-    // Scroll to show the user's message immediately with multiple attempts
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        const container = captureBodyRef.current;
-        if (container) {
-          container.scrollTo({
-            top: container.scrollHeight,
-            behavior: "smooth",
-          });
-          
-          // Additional scroll after a short delay to ensure it works
-          setTimeout(() => {
-            container.scrollTo({
-              top: container.scrollHeight,
-              behavior: "smooth",
-            });
-          }, 100);
-        }
-      });
-    });
+    // Immediate scroll to bottom - ChatGPT style
+    const scrollToBottomImmediate = () => {
+      const container = captureBodyRef.current;
+      if (container) {
+        container.scrollTop = container.scrollHeight;
+      }
+    };
+
+    // Scroll immediately and then keep scrolling as content loads
+    scrollToBottomImmediate();
+    requestAnimationFrame(scrollToBottomImmediate);
+    setTimeout(scrollToBottomImmediate, 50);
+    setTimeout(scrollToBottomImmediate, 150);
+    setTimeout(scrollToBottomImmediate, 300);
 
     try {
       let ocrText = "";
@@ -775,6 +826,8 @@ export default function CapturePage({
               const cameraUrl = selectedRestaurant ? `/camera?restaurant=${selectedRestaurant.slug}` : "/camera";
               router.push(cameraUrl);
             }}
+            restaurantLogo={selectedRestaurant?.logo_url}
+            restaurantName={selectedRestaurant?.name}
           />
         </main>
 

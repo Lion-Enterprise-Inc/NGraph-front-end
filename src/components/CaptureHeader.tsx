@@ -10,6 +10,7 @@ type ApiRestaurant = {
   slug: string
   description?: string
   is_active: boolean
+  logo_url?: string | null
   created_at: string
   updated_at: string
 }
@@ -30,21 +31,7 @@ export default function CaptureHeader({ restaurant, onMenu, onLanguage }: Captur
         <MenuSimpleIcon />
       </button>
       <div className="brand-title nav-brand">
-        {restaurant ? (
-          <div className="restaurant-header-info">
-            <div className="restaurant-header-name">{restaurant.name}</div>
-            <div className="restaurant-header-meta">
-              {'cuisine' in restaurant && 'rating' in restaurant ? (
-                <>
-                  <span className="restaurant-header-cuisine">{restaurant.cuisine}</span>
-                  <span className="restaurant-header-rating">★ {restaurant.rating}</span>
-                </>
-              ) : null}
-            </div>
-          </div>
-        ) : (
-          'NGraph'
-        )}
+        NGraph
       </div>
       <button className="icon-button" type="button" aria-label={copy.captureHeader.scan} onClick={onLanguage}>
         <img src={vector.src} alt="" />

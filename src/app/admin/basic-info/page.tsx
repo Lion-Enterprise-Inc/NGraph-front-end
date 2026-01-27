@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import AdminLayout from '../../../components/admin/AdminLayout'
 import { apiClient } from '../../../services/api'
 import { useAuth } from '../../../contexts/AuthContext'
@@ -27,12 +27,45 @@ export default function BasicInfoPage() {
     budget: '',
     parking: '',
     payment: '',
-    features: ''
+    features: '',
+    logoUrl: ''
   })
 
   const [aiIndustry, setAiIndustry] = useState('restaurant')
   const [aiTone, setAiTone] = useState('polite')
   const [isSaving, setIsSaving] = useState(false)
+  const [logoFile, setLogoFile] = useState<File | null>(null)
+  const [logoPreview, setLogoPreview] = useState<string>('')
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const handleLogoFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        alert('画像ファイルを選択してください')
+        return
+      }
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        alert('ファイルサイズは5MB以下にしてください')
+        return
+      }
+      setLogoFile(file)
+      // Create preview URL
+      const previewUrl = URL.createObjectURL(file)
+      setLogoPreview(previewUrl)
+    }
+  }
+
+  const handleRemoveLogo = () => {
+    setLogoFile(null)
+    setLogoPreview('')
+    setFormData({ ...formData, logoUrl: '' })
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
+    }
+  }
 
   const fetchRestaurantData = async (userUid: string) => {
     try {
@@ -62,7 +95,8 @@ export default function BasicInfoPage() {
         budget: restaurantData.budget || '',
         parking: restaurantData.parking_slot || '',
         payment: '',
-        features: restaurantData.attention_in_detail || ''
+        features: restaurantData.attention_in_detail || '',
+        logoUrl: restaurantData.logo_url || ''
       })
     } catch (error) {
       console.error('Failed to fetch restaurant:', error)
@@ -96,27 +130,57 @@ export default function BasicInfoPage() {
 
     setIsSaving(true)
     try {
-      const updateData = {
-        name: formData.storeName,
-        description: formData.description,
-        phone_number: formData.phone,
-        official_website: formData.officialWebsite,
-        google_business_profile: restaurant.google_business_profile,
-        address: formData.address,
-        logo_url: restaurant.logo_url,
-        other_sources: formData.instagramUrl,
-        store_introduction: formData.description,
-        opening_hours: formData.businessHours,
-        budget: formData.budget,
-        parking_slot: formData.parking,
-        attention_in_detail: formData.features,
-        is_active: restaurant.is_active
+      // Use FormData for multipart upload
+      const formDataToSend = new FormData()
+      formDataToSend.append('name', formData.storeName)
+      formDataToSend.append('description', formData.description)
+      formDataToSend.append('phone_number', formData.phone)
+      formDataToSend.append('official_website', formData.officialWebsite)
+      formDataToSend.append('address', formData.address)
+      formDataToSend.append('other_sources', formData.instagramUrl)
+      formDataToSend.append('store_introduction', formData.description)
+      formDataToSend.append('opening_hours', formData.businessHours)
+      formDataToSend.append('budget', formData.budget)
+      formDataToSend.append('parking_slot', formData.parking)
+      formDataToSend.append('attention_in_detail', formData.features)
+      formDataToSend.append('is_active', String(restaurant.is_active))
+      
+      // Add logo file if selected
+      if (logoFile) {
+        formDataToSend.append('logo', logoFile)
       }
 
-      console.log('Update data:', updateData)
+      console.log('Sending multipart form data')
 
-      const response = await apiClient.put(`/restaurants/${restaurant.uid}`, updateData)
-      console.log('Update response:', response)
+      const token = localStorage.getItem('access_token')
+      const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://15.207.22.103:8000'
+      
+      const response = await fetch(`${apiBaseUrl}/api/restaurants/${restaurant.uid}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+        body: formDataToSend
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      const result = await response.json()
+      console.log('Update response:', result)
+      
+      // Clear logo file state after successful upload
+      setLogoFile(null)
+      setLogoPreview('')
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ''
+      }
+      
+      // Update formData with new logo_url from response
+      if (result.result?.logo_url) {
+        setFormData(prev => ({ ...prev, logoUrl: result.result.logo_url }))
+      }
       
       // Re-fetch restaurant data to ensure we have the latest
       if (user?.uid) {
@@ -178,6 +242,58 @@ export default function BasicInfoPage() {
           ) : activeTab === 'basic' && (
             <div className="inner-card">
               <div className="card-title">📍 基本情報</div>
+              
+              {/* Logo Upload Section */}
+              <div className="form-group">
+                <label className="form-label">🖼️ レストランロゴ</label>
+                <div className="logo-upload-section">
+                  {(logoPreview || formData.logoUrl) ? (
+                    <div className="logo-preview-container">
+                      <img src={logoPreview || formData.logoUrl} alt="Restaurant logo" className="logo-preview" />
+                      <button 
+                        type="button" 
+                        className="logo-remove-btn"
+                        onClick={handleRemoveLogo}
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="logo-placeholder">
+                      <span>🏪</span>
+                      <span>ロゴなし</span>
+                    </div>
+                  )}
+                  <div className="logo-input-group">
+                    <input 
+                      ref={fileInputRef}
+                      type="file" 
+                      accept="image/*"
+                      onChange={handleLogoFileChange}
+                      style={{ display: 'none' }}
+                      id="logo-file-input"
+                    />
+                    <button 
+                      type="button"
+                      className="btn btn-secondary"
+                      onClick={() => {
+                        if (fileInputRef.current) {
+                          fileInputRef.current.value = ''
+                          fileInputRef.current.click()
+                        }
+                      }}
+                      style={{ marginBottom: '8px' }}
+                    >
+                      {(logoPreview || formData.logoUrl) ? '🔄 ロゴを変更' : '📁 ロゴ画像を選択'}
+                    </button>
+                    {logoFile && (
+                      <p className="logo-file-name">選択中: {logoFile.name}</p>
+                    )}
+                    <p className="logo-hint">※ 画像ファイルをアップロードしてください（最大5MB）。エンドユーザーのチャット画面に表示されます。</p>
+                  </div>
+                </div>
+              </div>
+
               <div className="form-group">
                 <label className="form-label">業種 *</label>
                 <select name="storeType" className="form-input" value={formData.storeType} onChange={handleChange}>
@@ -545,6 +661,78 @@ export default function BasicInfoPage() {
           .upgrade-features {
             grid-template-columns: 1fr;
           }
+        }
+        .logo-upload-section {
+          display: flex;
+          gap: 20px;
+          align-items: flex-start;
+          flex-wrap: wrap;
+        }
+        .logo-preview-container {
+          position: relative;
+          width: 120px;
+          height: 120px;
+          flex-shrink: 0;
+        }
+        .logo-preview {
+          width: 120px;
+          height: 120px;
+          object-fit: cover;
+          border-radius: 12px;
+          border: 2px solid #e5e7eb;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .logo-remove-btn {
+          position: absolute;
+          top: -8px;
+          right: -8px;
+          width: 24px;
+          height: 24px;
+          border-radius: 50%;
+          background: #ef4444;
+          color: white;
+          border: none;
+          cursor: pointer;
+          font-size: 12px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .logo-remove-btn:hover {
+          background: #dc2626;
+        }
+        .logo-placeholder {
+          width: 120px;
+          height: 120px;
+          border: 2px dashed #d1d5db;
+          border-radius: 12px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          color: #9ca3af;
+          font-size: 14px;
+          flex-shrink: 0;
+        }
+        .logo-placeholder span:first-child {
+          font-size: 32px;
+        }
+        .logo-input-group {
+          flex: 1;
+          min-width: 250px;
+        }
+        .logo-hint {
+          margin-top: 8px;
+          font-size: 12px;
+          color: #6b7280;
+        }
+        .logo-file-name {
+          font-size: 13px;
+          color: #10a37f;
+          margin: 4px 0;
+          font-weight: 500;
         }
       `}</style>
     </AdminLayout>
