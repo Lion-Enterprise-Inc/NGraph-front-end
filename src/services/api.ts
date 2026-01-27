@@ -267,6 +267,88 @@ export const RestaurantApi = {
   }
 };
 
+// Ingredient type (returned from API)
+export interface Ingredient {
+  uid: string;
+  name: string;
+  slug: string;
+}
+
+// Menu types
+export interface Menu {
+  uid: string;
+  name_en: string | null;
+  name_jp: string;
+  description: string | null;
+  category: string;
+  status: boolean;
+  price: number;
+  restaurant_uid: string;
+  ingredients: Ingredient[] | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface MenuCreate {
+  name_en?: string | null;
+  name_jp: string;
+  description?: string | null;
+  category: string;
+  status?: boolean;
+  price: number;
+  restaurant_uid: string;
+  ingredients?: string[] | null;
+}
+
+export interface MenuUpdate {
+  name_en?: string | null;
+  name_jp?: string | null;
+  description?: string | null;
+  category?: string | null;
+  status?: boolean | null;
+  price?: number | null;
+  ingredients?: string[] | null;  // API accepts ingredient names as strings for update
+}
+
+export interface MenuListResponse {
+  result: PaginatedResult<Menu>;
+  message: string;
+  status_code: number;
+}
+
+export interface MenuResponse {
+  result: Menu;
+  message: string;
+  status_code: number;
+}
+
+// Menu API
+export const MenuApi = {
+  create: async (data: MenuCreate): Promise<MenuResponse> => {
+    return apiClient.post<MenuResponse>('/menus/', data);
+  },
+
+  getAll: async (restaurantUid?: string, page: number = 1, size: number = 100): Promise<MenuListResponse> => {
+    const params = new URLSearchParams();
+    if (restaurantUid) params.append('restaurant_uid', restaurantUid);
+    params.append('page', page.toString());
+    params.append('size', size.toString());
+    return apiClient.get<MenuListResponse>(`/menus/?${params.toString()}`);
+  },
+
+  getById: async (menuUid: string): Promise<MenuResponse> => {
+    return apiClient.get<MenuResponse>(`/menus/${menuUid}`);
+  },
+
+  update: async (menuUid: string, data: MenuUpdate): Promise<MenuResponse> => {
+    return apiClient.put<MenuResponse>(`/menus/${menuUid}`, data);
+  },
+
+  delete: async (menuUid: string): Promise<{ message: string; status_code: number }> => {
+    return apiClient.delete(`/menus/${menuUid}`);
+  }
+};
+
 // Auth API
 export interface RegisterUserRequest {
   email: string;

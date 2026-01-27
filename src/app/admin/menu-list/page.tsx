@@ -1,19 +1,23 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import AdminLayout from '../../../components/admin/AdminLayout'
+import { MenuApi, Menu, MenuCreate, MenuUpdate, Ingredient, apiClient } from '../../../services/api'
+import { useAuth } from '../../../contexts/AuthContext'
 
 interface MenuItem {
-  id: number
+  uid: string
   name: string
+  nameEn: string | null
   category: string
   price: number
-  status: 'verified' | 'warning'
-  ingredients: string
-  description: string
+  status: boolean
+  ingredients: Ingredient[]
+  description: string | null
 }
 
 export default function MenuListPage() {
+  const { user, isLoading: authLoading } = useAuth()
   const [searchQuery, setSearchQuery] = useState('')
   const [filter, setFilter] = useState('all')
   const [itemsPerPage, setItemsPerPage] = useState(25)
@@ -31,73 +35,174 @@ export default function MenuListPage() {
     nameEn: '',
     price: '',
     category: '',
-    description: ''
+    description: '',
+    ingredients: ''
   })
 
-  const [menuItems, setMenuItems] = useState<MenuItem[]>([
-    { id: 1, name: '紅ズワイ蟹と福井の幸コース', category: 'コース', price: 8800, status: 'verified', ingredients: '紅ズワイ蟹、福井産野菜、地酒', description: '蟹の旨味と地元の食材を組み合わせた特別なコース' },
-    { id: 2, name: '越前蟹刺身', category: '刺身', price: 3500, status: 'verified', ingredients: '越前蟹', description: '新鮮な越前蟹を活き造りで' },
-    { id: 3, name: '蟹味噌甲羅焼き', category: '焼物', price: 1800, status: 'warning', ingredients: '蟹味噌、蟹甲羅', description: '濃厚な蟹味噌を甲羅で焼き上げました' },
-  ])
+  const [menuItems, setMenuItems] = useState<MenuItem[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState('')
+  const [restaurant, setRestaurant] = useState<any>(null)
+  const [isSaving, setIsSaving] = useState(false)
+  const [editIngredientsText, setEditIngredientsText] = useState('')
+
+  // Fetch restaurant and menus
+  useEffect(() => {
+    const fetchData = async () => {
+      if (authLoading || !user?.uid) return
+
+      try {
+        setIsLoading(true)
+        setError('')
+
+        // First get the restaurant for this user
+        const restaurantResponse = await apiClient.get(`/restaurants/detail-by-user/${user.uid}`) as { result: any }
+        const restaurantData = restaurantResponse.result
+        setRestaurant(restaurantData)
+
+        if (restaurantData?.uid) {
+          // Fetch menus for this restaurant
+          try {
+            const menusResponse = await MenuApi.getAll(restaurantData.uid)
+            const items = menusResponse.result?.items || []
+            const menus = items.map((menu: Menu) => ({
+              uid: menu.uid,
+              name: menu.name_jp,
+              nameEn: menu.name_en,
+              category: menu.category,
+              price: menu.price,
+              status: menu.status,
+              ingredients: menu.ingredients || [],
+              description: menu.description
+            }))
+            setMenuItems(menus)
+          } catch (menuErr) {
+            // No menus found - this is OK, just show empty list
+            console.log('No menus found for restaurant')
+            setMenuItems([])
+          }
+        }
+      } catch (err: any) {
+        console.error('Failed to fetch restaurant data:', err)
+        setError('レストラン情報の取得に失敗しました。')
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchData()
+  }, [authLoading, user?.uid])
 
   const filteredItems = menuItems.filter(item => {
-    const matchesSearch = item.name.includes(searchQuery) || item.category.includes(searchQuery) || item.ingredients.includes(searchQuery)
-    const matchesFilter = filter === 'all' || item.status === filter
+    const ingredientsStr = item.ingredients?.map(ing => ing.name).join(' ') || ''
+    const matchesSearch = item.name.includes(searchQuery) || item.category.includes(searchQuery) || ingredientsStr.includes(searchQuery)
+    const matchesFilter = filter === 'all' || 
+      (filter === 'verified' && item.status === true) || 
+      (filter === 'warning' && item.status === false)
     return matchesSearch && matchesFilter
   })
 
   const countAll = menuItems.length
-  const countWarning = menuItems.filter(i => i.status === 'warning').length
-  const countVerified = menuItems.filter(i => i.status === 'verified').length
+  const countVerified = menuItems.filter(i => i.status === true).length
+  const countWarning = menuItems.filter(i => i.status === false).length
 
-  const handleAddMenu = () => {
+  // Refresh menu list
+  const refreshMenus = async () => {
+    if (!restaurant?.uid) return
+    try {
+      const menusResponse = await MenuApi.getAll(restaurant.uid)
+      const items = menusResponse.result?.items || []
+      const menus = items.map((menu: Menu) => ({
+        uid: menu.uid,
+        name: menu.name_jp,
+        nameEn: menu.name_en,
+        category: menu.category,
+        price: menu.price,
+        status: menu.status,
+        ingredients: menu.ingredients || [],
+        description: menu.description
+      }))
+      setMenuItems(menus)
+    } catch (err) {
+      console.error('Failed to refresh menus:', err)
+      // On error, set empty array instead of keeping stale data
+      setMenuItems([])
+    }
+  }
+
+  const handleAddMenu = async () => {
     if (!newMenu.name || !newMenu.price || !newMenu.category) {
       alert('料理名、価格、カテゴリーは必須です')
       return
     }
-    const newItem: MenuItem = {
-      id: menuItems.length + 1,
-      name: newMenu.name,
-      category: newMenu.category,
-      price: Number(newMenu.price),
-      status: 'warning',
-      ingredients: '',
-      description: newMenu.description
+    if (!restaurant?.uid) {
+      alert('レストラン情報が見つかりません')
+      return
     }
-    setMenuItems([...menuItems, newItem])
-    setNewMenu({ name: '', nameEn: '', price: '', category: '', description: '' })
-    setShowAddModal(false)
-    setActiveTab('basic')
-    alert('✅ メニューを追加しました！')
+
+    setIsSaving(true)
+    try {
+      // Parse ingredients from comma-separated string to array
+      const ingredientsArray = newMenu.ingredients 
+        ? newMenu.ingredients.split(',').map(s => s.trim()).filter(Boolean) 
+        : []
+
+      const menuData: MenuCreate = {
+        name_jp: newMenu.name,
+        name_en: newMenu.nameEn || null,
+        category: newMenu.category,
+        price: Number(newMenu.price),
+        description: newMenu.description || null,
+        restaurant_uid: restaurant.uid,
+        ingredients: ingredientsArray,
+        status: false
+      }
+
+      await MenuApi.create(menuData)
+      await refreshMenus()
+      
+      setNewMenu({ name: '', nameEn: '', price: '', category: '', description: '', ingredients: '' })
+      setShowAddModal(false)
+      setActiveTab('basic')
+      alert('✅ メニューを追加しました！')
+    } catch (err) {
+      console.error('Failed to add menu:', err)
+      alert(`❌ メニューの追加に失敗しました: ${err instanceof Error ? err.message : 'Unknown error'}`)
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   const handleFetchFromSource = () => {
     setShowFetchModal(true)
     setTimeout(() => {
-      // Show approval modal with pending menus
       setPendingMenus([
-        { id: menuItems.length + 1, name: '特選海鮮丼', price: 1200, category: 'ご飯もの', confidence: 88 },
-        { id: menuItems.length + 2, name: '福井牛ステーキ', price: 3500, category: '焼き物', confidence: 92 },
+        { id: 1, name: '特選海鮮丼', price: 1200, category: 'ご飯もの', confidence: 88 },
+        { id: 2, name: '福井牛ステーキ', price: 3500, category: '焼き物', confidence: 92 },
       ])
       setShowFetchModal(false)
       setShowApprovalModal(true)
     }, 2000)
   }
 
-  const handleApproveMenu = (menuId: number) => {
+  const handleApproveMenu = async (menuId: number) => {
     const menu = pendingMenus.find(m => m.id === menuId)
-    if (menu) {
-      const newItem: MenuItem = {
-        id: menu.id,
-        name: menu.name,
-        category: menu.category,
-        price: menu.price,
-        status: 'warning',
-        ingredients: '',
-        description: ''
+    if (menu && restaurant?.uid) {
+      try {
+        const menuData: MenuCreate = {
+          name_jp: menu.name,
+          category: menu.category,
+          price: menu.price,
+          restaurant_uid: restaurant.uid,
+          status: false
+        }
+        await MenuApi.create(menuData)
+        await refreshMenus()
+        setPendingMenus(pendingMenus.filter(m => m.id !== menuId))
+      } catch (err) {
+        console.error('Failed to approve menu:', err)
+        alert('メニューの承認に失敗しました')
       }
-      setMenuItems([...menuItems, newItem])
-      setPendingMenus(pendingMenus.filter(m => m.id !== menuId))
     }
   }
 
@@ -105,20 +210,28 @@ export default function MenuListPage() {
     setPendingMenus(pendingMenus.filter(m => m.id !== menuId))
   }
 
-  const handleApproveAll = () => {
-    const newItems: MenuItem[] = pendingMenus.map(menu => ({
-      id: menu.id,
-      name: menu.name,
-      category: menu.category,
-      price: menu.price,
-      status: 'warning' as const,
-      ingredients: '',
-      description: ''
-    }))
-    setMenuItems([...menuItems, ...newItems])
-    setPendingMenus([])
-    setShowApprovalModal(false)
-    alert('✅ すべてのメニューを承認しました！')
+  const handleApproveAll = async () => {
+    if (!restaurant?.uid) return
+    
+    try {
+      for (const menu of pendingMenus) {
+        const menuData: MenuCreate = {
+          name_jp: menu.name,
+          category: menu.category,
+          price: menu.price,
+          restaurant_uid: restaurant.uid,
+          status: false
+        }
+        await MenuApi.create(menuData)
+      }
+      await refreshMenus()
+      setPendingMenus([])
+      setShowApprovalModal(false)
+      alert('✅ すべてのメニューを承認しました！')
+    } catch (err) {
+      console.error('Failed to approve all menus:', err)
+      alert('メニューの承認に失敗しました')
+    }
   }
 
   const handleDenyAll = () => {
@@ -132,23 +245,58 @@ export default function MenuListPage() {
   }
 
   const handleEdit = (item: MenuItem) => {
-    setEditItem(item)
+    setEditItem({...item})
+    // Initialize edit ingredients text from item's ingredients
+    setEditIngredientsText(item.ingredients?.map(ing => ing.name).join(', ') || '')
     setShowEditModal(true)
     setActiveTab('basic')
   }
 
-  const handleSaveEdit = () => {
-    if (editItem) {
-      setMenuItems(menuItems.map(m => m.id === editItem.id ? editItem : m))
+  const handleSaveEdit = async () => {
+    if (!editItem) return
+
+    setIsSaving(true)
+    try {
+      // Parse ingredients from the text input
+      const ingredientNames = editIngredientsText
+        ? editIngredientsText.split(',').map(s => s.trim()).filter(Boolean)
+        : []
+      
+      const updateData: MenuUpdate = {
+        name_jp: editItem.name,
+        name_en: editItem.nameEn,
+        category: editItem.category,
+        price: editItem.price,
+        description: editItem.description,
+        ingredients: ingredientNames,
+        status: editItem.status
+      }
+
+      await MenuApi.update(editItem.uid, updateData)
+      await refreshMenus()
+      
       setShowEditModal(false)
       setEditItem(null)
+      setEditIngredientsText('')
       alert('✅ メニューを更新しました！')
+    } catch (err) {
+      console.error('Failed to update menu:', err)
+      alert(`❌ メニューの更新に失敗しました: ${err instanceof Error ? err.message : 'Unknown error'}`)
+    } finally {
+      setIsSaving(false)
     }
   }
 
-  const handleDelete = (id: number) => {
-    if (confirm('このメニューを削除しますか？')) {
-      setMenuItems(menuItems.filter(m => m.id !== id))
+  const handleDelete = async (uid: string) => {
+    if (!confirm('このメニューを削除しますか？')) return
+
+    try {
+      await MenuApi.delete(uid)
+      await refreshMenus()
+      alert('✅ メニューを削除しました')
+    } catch (err) {
+      console.error('Failed to delete menu:', err)
+      alert(`❌ メニューの削除に失敗しました: ${err instanceof Error ? err.message : 'Unknown error'}`)
     }
   }
 
@@ -224,7 +372,22 @@ export default function MenuListPage() {
           </div>
         </div>
 
+        {/* Loading/Error states */}
+        {isLoading && (
+          <div style={{ textAlign: 'center', padding: '40px' }}>
+            <div style={{ fontSize: '18px', marginBottom: '16px' }}>📋 メニューを読み込み中...</div>
+          </div>
+        )}
+
+        {error && (
+          <div style={{ textAlign: 'center', padding: '40px', color: '#dc2626' }}>
+            <div style={{ fontSize: '18px', marginBottom: '16px' }}>❌ {error}</div>
+            <button className="btn btn-primary" onClick={() => window.location.reload()}>再読み込み</button>
+          </div>
+        )}
+
         {/* メニューテーブル */}
+        {!isLoading && !error && (
         <div className="menu-table-container">
           <table className="menu-table">
             <thead>
@@ -237,23 +400,29 @@ export default function MenuListPage() {
               </tr>
             </thead>
             <tbody>
-              {filteredItems.map(item => {
-                const confidence = item.status === 'verified' ? 95 : 65
+              {filteredItems.length === 0 ? (
+                <tr>
+                  <td colSpan={5} style={{ textAlign: 'center', padding: '40px', color: '#666' }}>
+                    メニューがありません。「手動で新規追加」ボタンからメニューを追加してください。
+                  </td>
+                </tr>
+              ) : filteredItems.map(item => {
+                const confidence = item.status ? 95 : 65
                 return (
-                  <tr key={item.id}>
+                  <tr key={item.uid}>
                     <td>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <div style={{ width: '40px', height: '30px', background: '#f8f9fa', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', color: '#999' }}>📄</div>
                         <div style={{ flex: 1 }}>
                           <div style={{ fontWeight: 600, color: '#212529', marginBottom: '2px', fontSize: '14px' }}>{item.name}</div>
                           <div style={{ fontSize: '11px', color: '#6c757d', marginBottom: '2px' }}>
-                            📂 {item.category} | 📅 更新: 1/21
+                            📂 {item.category}
                           </div>
                           <div style={{ fontSize: '10px', color: '#6c757d', marginBottom: '2px' }}>
-                            🥘 {item.ingredients || '原材料なし'}
+                            🥘 {item.ingredients?.length > 0 ? item.ingredients.map(ing => ing.name).join(', ') : '原材料なし'}
                           </div>
-                          <span style={{ color: item.status === 'verified' ? '#28a745' : '#dc3545', fontSize: '11px' }}>
-                            {item.status === 'verified' ? '✓ アレルゲンなし' : '⚠️ 要確認'}
+                          <span style={{ color: item.status ? '#28a745' : '#dc3545', fontSize: '11px' }}>
+                            {item.status ? '✓ 確認済み' : '⚠️ 要確認'}
                           </span>
                         </div>
                       </div>
@@ -268,15 +437,15 @@ export default function MenuListPage() {
                       </div>
                     </td>
                     <td style={{ textAlign: 'center' }}>
-                      <span className={`status-badge ${item.status}`}>
-                        {item.status === 'verified' ? '確認済み' : '要確認'}
+                      <span className={`status-badge ${item.status ? 'verified' : 'warning'}`}>
+                        {item.status ? '確認済み' : '要確認'}
                       </span>
                     </td>
                     <td style={{ textAlign: 'center' }}>
                       <div style={{ display: 'flex', gap: '4px', justifyContent: 'center', flexWrap: 'wrap' }}>
                         <button className="btn-action btn-preview" onClick={() => handlePreview(item)}>👁️ プレビュー</button>
                         <button className="btn-action btn-edit" onClick={() => handleEdit(item)}>✏️ 編集</button>
-                        <button className="btn-action btn-delete" onClick={() => handleDelete(item.id)}>🗑️ 削除</button>
+                        <button className="btn-action btn-delete" onClick={() => handleDelete(item.uid)}>🗑️ 削除</button>
                       </div>
                     </td>
                   </tr>
@@ -285,6 +454,7 @@ export default function MenuListPage() {
             </tbody>
           </table>
         </div>
+        )}
 
         <button className="btn btn-primary" onClick={() => setShowAddModal(true)} style={{ width: 'auto', minWidth: '180px', maxWidth: '250px', margin: '8px auto', display: 'block', padding: '10px 20px', fontSize: '14px' }}>
           ➕ 手動で新規追加
@@ -347,12 +517,19 @@ export default function MenuListPage() {
                   現在の信頼度: <strong>65%</strong> → 完了後: <strong>95%</strong>
                 </div>
                 <div className="form-group">
-                  <label className="form-label">原材料</label>
+                  <label className="form-label">原材料（カンマ区切りで入力）</label>
                   <button className="btn ai-btn btn-small" style={{ marginBottom: '12px' }}>🤖 AI推察</button>
-                  <div style={{ marginBottom: '8px', padding: '10px', background: '#f9fafb', borderRadius: '6px' }}>
-                    <input type="text" className="form-input" placeholder="原材料を入力..." style={{ marginBottom: '8px' }} />
+                  <textarea 
+                    className="form-input" 
+                    value={newMenu.ingredients}
+                    onChange={(e) => setNewMenu({...newMenu, ingredients: e.target.value})}
+                    placeholder="例: 鶏肉, 玉ねぎ, にんじん, 醤油, みりん"
+                    rows={3}
+                    style={{ marginBottom: '8px' }}
+                  />
+                  <div style={{ fontSize: '12px', color: '#666' }}>
+                    ※ 複数の原材料はカンマ（,）で区切って入力してください
                   </div>
-                  <button className="btn btn-secondary">➕ 原材料を追加</button>
                 </div>
                 <div style={{ marginTop: '12px', paddingTop: '8px', borderTop: '1px solid #e5e7eb' }}>
                   <button className="btn btn-primary" onClick={() => setActiveTab('allergens')}>次へ: アレルギー設定 →</button>
@@ -505,9 +682,9 @@ export default function MenuListPage() {
               <div style={{ fontSize: '13px', color: '#888' }}>
                 <strong>カテゴリ:</strong> {previewItem.category}
               </div>
-              {previewItem.ingredients && (
+              {previewItem.ingredients && previewItem.ingredients.length > 0 && (
                 <div style={{ fontSize: '13px', color: '#888', marginTop: '8px' }}>
-                  <strong>原材料:</strong> {previewItem.ingredients}
+                  <strong>原材料:</strong> {previewItem.ingredients.map(ing => ing.name).join(', ')}
                 </div>
               )}
             </div>
@@ -516,8 +693,8 @@ export default function MenuListPage() {
               <strong>⚠️ 問題点の検出:</strong>
               <ul style={{ marginTop: '10px', paddingLeft: '20px', fontSize: '13px' }}>
                 {!previewItem.description && <li>説明文が未設定です</li>}
-                {!previewItem.ingredients && <li>原材料が未設定です</li>}
-                {previewItem.status === 'warning' && <li>アレルゲン情報の確認が必要です</li>}
+                {(!previewItem.ingredients || previewItem.ingredients.length === 0) && <li>原材料が未設定です</li>}
+                {!previewItem.status && <li>アレルゲン情報の確認が必要です</li>}
               </ul>
             </div>
 
@@ -532,7 +709,7 @@ export default function MenuListPage() {
       {showEditModal && editItem && (
         <div className="modal active">
           <div className="modal-content">
-            <button className="modal-close" onClick={() => { setShowEditModal(false); setEditItem(null); }}>×</button>
+            <button className="modal-close" onClick={() => { setShowEditModal(false); setEditItem(null); setEditIngredientsText(''); }}>×</button>
             <div className="modal-title">📝 メニュー編集</div>
 
             <div className="tab-nav">
@@ -566,7 +743,7 @@ export default function MenuListPage() {
                 </div>
                 <div className="form-group">
                   <label className="form-label">料理の説明</label>
-                  <textarea className="form-input" value={editItem.description} onChange={(e) => setEditItem({...editItem, description: e.target.value})} />
+                  <textarea className="form-input" value={editItem.description || ''} onChange={(e) => setEditItem({...editItem, description: e.target.value})} />
                   <button className="btn ai-btn btn-small" style={{ marginTop: '5px' }}>🤖 AI生成</button>
                 </div>
                 <button className="btn btn-primary" onClick={() => setActiveTab('materials')}>次へ: 原材料設定 →</button>
@@ -576,15 +753,18 @@ export default function MenuListPage() {
             {activeTab === 'materials' && (
               <div className="tab-content">
                 <div className="form-group">
-                  <label className="form-label">原材料</label>
+                  <label className="form-label">原材料（カンマ区切りで入力）</label>
                   <button className="btn ai-btn btn-small" style={{ marginBottom: '12px' }}>🤖 AI推察</button>
                   <textarea 
                     className="form-input" 
-                    value={editItem.ingredients} 
-                    onChange={(e) => setEditItem({...editItem, ingredients: e.target.value})}
-                    placeholder="原材料をカンマ区切りで入力..."
+                    value={editIngredientsText} 
+                    onChange={(e) => setEditIngredientsText(e.target.value)}
+                    placeholder="例: 鶏肉, 玉ねぎ, にんじん"
                     rows={3}
                   />
+                  <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
+                    ※ 複数の原材料はカンマ（,）で区切って入力してください
+                  </div>
                 </div>
                 <div style={{ marginTop: '12px', paddingTop: '8px', borderTop: '1px solid #e5e7eb' }}>
                   <button className="btn btn-primary" onClick={() => setActiveTab('allergens')}>次へ: アレルギー設定 →</button>
@@ -607,8 +787,55 @@ export default function MenuListPage() {
                     </div>
                   </div>
                 </div>
-                <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
-                  <button className="btn btn-secondary" onClick={() => { setShowEditModal(false); setEditItem(null); }}>キャンセル</button>
+
+                {/* Status toggle */}
+                <div className="form-group" style={{ marginTop: '20px', padding: '16px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                  <label className="form-label" style={{ marginBottom: '12px', display: 'block' }}>📋 確認ステータス</label>
+                  <div style={{ display: 'flex', gap: '12px' }}>
+                    <button 
+                      type="button"
+                      onClick={() => setEditItem({...editItem, status: true})}
+                      style={{ 
+                        padding: '10px 20px', 
+                        borderRadius: '6px', 
+                        border: editItem.status ? '2px solid #10b981' : '1px solid #d1d5db',
+                        background: editItem.status ? '#d1fae5' : 'white',
+                        color: editItem.status ? '#059669' : '#6b7280',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px'
+                      }}
+                    >
+                      ✓ 確認済み
+                    </button>
+                    <button 
+                      type="button"
+                      onClick={() => setEditItem({...editItem, status: false})}
+                      style={{ 
+                        padding: '10px 20px', 
+                        borderRadius: '6px', 
+                        border: !editItem.status ? '2px solid #f59e0b' : '1px solid #d1d5db',
+                        background: !editItem.status ? '#fef3c7' : 'white',
+                        color: !editItem.status ? '#d97706' : '#6b7280',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px'
+                      }}
+                    >
+                      ⚠️ 要確認
+                    </button>
+                  </div>
+                  <div style={{ fontSize: '12px', color: '#666', marginTop: '8px' }}>
+                    ※ 「確認済み」に設定すると、メニューが検証済みとしてマークされます
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '20px' }}>
+                  <button className="btn btn-secondary" onClick={() => { setShowEditModal(false); setEditItem(null); setEditIngredientsText(''); }}>キャンセル</button>
                   <button className="btn btn-primary" onClick={handleSaveEdit}>💾 保存</button>
                 </div>
               </div>
