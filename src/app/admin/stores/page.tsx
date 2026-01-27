@@ -229,6 +229,13 @@ export default function StoresPage() {
     }
   }
 
+  const showStoreDetail = (storeId: number) => {
+    const store = stores.find(s => s.id === storeId)
+    if (store) {
+      alert(`${store.name}の詳細情報\n\nレストランコード: ${store.storeCode}\n住所: ${store.address}\nプラン: ${store.plan}\nメニュー数: ${store.menuCount}件`)
+    }
+  }
+
   const handleDeleteStore = async (storeUid: string, storeName: string) => {
     if (!confirm(`レストラン "${storeName}" を削除しますか？\n\nこの操作は元に戻すことができません。`)) return
 
