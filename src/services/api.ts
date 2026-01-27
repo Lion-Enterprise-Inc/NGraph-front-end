@@ -186,6 +186,13 @@ class ApiClient {
       (headers as Record<string, string>)['Authorization'] = `Bearer ${token}`;
     }
 
+    console.log('=== API Request ===');
+    console.log('URL:', url);
+    console.log('Method:', options.method);
+    console.log('Headers:', headers);
+    console.log('Body:', options.body);
+    console.log('==================');
+
     const response = await fetch(url, {
       ...options,
       headers,
@@ -218,6 +225,8 @@ class ApiClient {
   }
 
   async post<T>(endpoint: string, data?: unknown): Promise<T> {
+    console.log('POST request to:', endpoint);
+    console.log('POST body:', JSON.stringify(data, null, 2));
     return this.request<T>(endpoint, {
       method: 'POST',
       body: data ? JSON.stringify(data) : undefined,
@@ -264,7 +273,40 @@ export const UserApi = {
 // Restaurant API
 export const RestaurantApi = {
   create: async (data: CreateRestaurantRequest): Promise<CreateRestaurantResponse> => {
-    return apiClient.post<CreateRestaurantResponse>('/restaurants/', data);
+    // API requires multipart/form-data
+    const formData = new FormData();
+    formData.append('name', data.name);
+    formData.append('user_uid', data.user_uid);
+    if (data.phone_number) formData.append('phone_number', data.phone_number);
+    if (data.address) formData.append('address', data.address);
+    if (data.is_active !== undefined) formData.append('is_active', String(data.is_active));
+    if (data.description) formData.append('description', data.description);
+    if (data.official_website) formData.append('official_website', data.official_website);
+    if (data.google_business_profile) formData.append('google_business_profile', data.google_business_profile);
+    if (data.logo_url) formData.append('logo', data.logo_url);
+    if (data.other_sources) formData.append('other_sources', data.other_sources);
+    if (data.store_introduction) formData.append('store_introduction', data.store_introduction);
+    if (data.opening_hours) formData.append('opening_hours', data.opening_hours);
+    if (data.budget) formData.append('budget', data.budget);
+    if (data.parking_slot) formData.append('parking_slot', data.parking_slot);
+    if (data.attention_in_detail) formData.append('attention_in_detail', data.attention_in_detail);
+
+    const token = TokenService.getAccessToken();
+    const response = await fetch(`${API_BASE_URL}/restaurants/`, {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+      },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Failed to create restaurant');
+    }
+
+    return response.json();
   },
 
   getAll: async (page: number = 1, size: number = 50): Promise<RestaurantListResponse> => {

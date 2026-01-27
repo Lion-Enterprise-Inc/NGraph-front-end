@@ -153,24 +153,38 @@ export default function StoresPage() {
       return
     }
 
+    // Validate required fields based on API requirements
+    if (!newStore.phone) {
+      alert('電話番号は必須です')
+      return
+    }
+    if (!newStore.address) {
+      alert('住所は必須です')
+      return
+    }
+
     setIsSubmitting(true)
     try {
       const requestData: CreateRestaurantRequest = {
         name: newStore.name,
         user_uid: newStore.user_uid,
         is_active: newStore.is_active,
-        description: newStore.description || undefined,
-        phone_number: newStore.phone || undefined,
-        official_website: newStore.officialWebsite || undefined,
-        google_business_profile: newStore.googleProfile || undefined,
-        address: newStore.address || undefined,
-        store_introduction: newStore.description || undefined,
-        opening_hours: newStore.hours || undefined,
-        budget: newStore.budget || undefined,
-        parking_slot: newStore.parking || undefined,
-        attention_in_detail: newStore.features || undefined,
-        other_sources: newStore.otherSources || undefined
+        phone_number: newStore.phone,
+        address: newStore.address,
       }
+
+      // Only add optional fields if they have values
+      if (newStore.description) requestData.description = newStore.description
+      if (newStore.officialWebsite) requestData.official_website = newStore.officialWebsite
+      if (newStore.googleProfile) requestData.google_business_profile = newStore.googleProfile
+      if (newStore.description) requestData.store_introduction = newStore.description
+      if (newStore.hours) requestData.opening_hours = newStore.hours
+      if (newStore.budget) requestData.budget = newStore.budget
+      if (newStore.parking) requestData.parking_slot = newStore.parking
+      if (newStore.features) requestData.attention_in_detail = newStore.features
+      if (newStore.otherSources) requestData.other_sources = newStore.otherSources
+
+      console.log('Creating restaurant with data:', JSON.stringify(requestData, null, 2))
 
       const response = await RestaurantApi.create(requestData)
       
@@ -480,7 +494,7 @@ export default function StoresPage() {
               {/* 右列 */}
               <div>
                 <div className="form-group">
-                  <label className="form-label">住所</label>
+                  <label className="form-label">住所 *</label>
                   <input 
                     type="text" 
                     className="form-input" 
@@ -492,7 +506,7 @@ export default function StoresPage() {
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label">電話番号</label>
+                  <label className="form-label">電話番号 *</label>
                   <input 
                     type="tel" 
                     className="form-input" 
