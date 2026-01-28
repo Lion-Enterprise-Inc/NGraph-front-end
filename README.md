@@ -18,4 +18,4 @@ If you are developing a production application, we recommend using TypeScript wi
 
 
 
-https://www.figma.com/design/y2xZzL3LUN8hi7lGBYyUjA/OMISEAI?node-id=1-3&p=f&t=l6cHycTfyW1rSFbM-0
+https://www.figma.com/design/y2xZzL3LUN8hi7lGBYyUjA/NGraph?node-id=1-3&p=f&t=l6cHycTfyW1rSFbM-0

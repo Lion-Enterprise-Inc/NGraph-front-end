@@ -102,7 +102,7 @@ const uiCopy = {
       flipCamera: "Flip camera",
     },
     admin: {
-      brand: "HashiGo Admin",
+      brand: "NGraph Admin",
       back: "Back",
       closeMenu: "Close menu",
       toggleMenu: "Toggle menu",
@@ -127,8 +127,8 @@ const uiCopy = {
       sub: "Tap the camera to start",
     },
     explore: {
-      title: "Explore HashiGo",
-      subtitle: "Explore with HashiGo",
+      title: "Explore ",
+      subtitle: "Explore with ",
       placeholder: "Ask about the area...",
     },
     suggestions: {
@@ -221,7 +221,7 @@ const uiCopy = {
       flipCamera: "カメラ切替",
     },
     admin: {
-      brand: "HashiGo Admin",
+      brand: "NGraph Admin",
       back: "戻る",
       closeMenu: "メニューを閉じる",
       toggleMenu: "メニュー切替",
@@ -246,8 +246,8 @@ const uiCopy = {
       sub: "カメラタップでスタート",
     },
     explore: {
-      title: "HashiGo を探索",
-      subtitle: "HashiGo と一緒に探索",
+      title: " を探索",
+      subtitle: " と一緒に探索",
       placeholder: "周辺について質問...",
     },
     suggestions: {
@@ -340,7 +340,7 @@ const uiCopy = {
       flipCamera: "카메라 전환",
     },
     admin: {
-      brand: "HashiGo Admin",
+      brand: "NGraph Admin",
       back: "뒤로",
       closeMenu: "메뉴 닫기",
       toggleMenu: "메뉴 토글",
@@ -365,8 +365,8 @@ const uiCopy = {
       sub: "카메라를 눌러 시작",
     },
     explore: {
-      title: "HashiGo 탐색",
-      subtitle: "HashiGo와 함께 탐색",
+      title: " 탐색",
+      subtitle: "와 함께 탐색",
       placeholder: "주변에 대해 물어보세요...",
     },
     suggestions: {
@@ -459,7 +459,7 @@ const uiCopy = {
       flipCamera: "切换相机",
     },
     admin: {
-      brand: "HashiGo Admin",
+      brand: "NGraph Admin",
       back: "返回",
       closeMenu: "关闭菜单",
       toggleMenu: "切换菜单",
@@ -484,8 +484,8 @@ const uiCopy = {
       sub: "点击相机开始",
     },
     explore: {
-      title: "探索 HashiGo",
-      subtitle: "与 HashiGo 一起探索",
+      title: "探索 ",
+      subtitle: "与  一起探索",
       placeholder: "询问附近...",
     },
     suggestions: {
@@ -565,7 +565,7 @@ const uiCopy = {
       flipCamera: "切換相機",
     },
     admin: {
-      brand: "HashiGo Admin",
+      brand: "NGraph Admin",
       back: "返回",
       closeMenu: "關閉選單",
       toggleMenu: "切換選單",
@@ -590,8 +590,8 @@ const uiCopy = {
       sub: "點擊相機開始",
     },
     explore: {
-      title: "探索 HashiGo",
-      subtitle: "與 HashiGo 一起探索",
+      title: "探索 ",
+      subtitle: "與  一起探索",
       placeholder: "詢問附近...",
     },
     suggestions: {
@@ -671,7 +671,7 @@ const uiCopy = {
       flipCamera: "Cambiar cámara",
     },
     admin: {
-      brand: "HashiGo Admin",
+      brand: "NGraph Admin",
       back: "Atrás",
       closeMenu: "Cerrar menú",
       toggleMenu: "Alternar menú",
@@ -696,8 +696,8 @@ const uiCopy = {
       sub: "Toca la cámara para empezar",
     },
     explore: {
-      title: "Explora HashiGo",
-      subtitle: "Explora con HashiGo",
+      title: "Explora ",
+      subtitle: "Explora con ",
       placeholder: "Pregunta sobre la zona...",
     },
     suggestions: {
@@ -777,7 +777,7 @@ const uiCopy = {
       flipCamera: "Changer de caméra",
     },
     admin: {
-      brand: "HashiGo Admin",
+      brand: "NGraph Admin",
       back: "Retour",
       closeMenu: "Fermer le menu",
       toggleMenu: "Basculer le menu",
@@ -802,8 +802,8 @@ const uiCopy = {
       sub: "Touchez la caméra pour commencer",
     },
     explore: {
-      title: "Explorer HashiGo",
-      subtitle: "Explorez avec HashiGo",
+      title: "Explorer ",
+      subtitle: "Explorez avec ",
       placeholder: "Demandez à propos des environs...",
     },
     suggestions: {
@@ -883,7 +883,7 @@ const uiCopy = {
       flipCamera: "Kamera wechseln",
     },
     admin: {
-      brand: "HashiGo Admin",
+      brand: "NGraph Admin",
       back: "Zurück",
       closeMenu: "Menü schließen",
       toggleMenu: "Menü umschalten",
@@ -908,8 +908,8 @@ const uiCopy = {
       sub: "Tippe auf die Kamera, um zu starten",
     },
     explore: {
-      title: "HashiGo entdecken",
-      subtitle: "Entdecke mit HashiGo",
+      title: " entdecken",
+      subtitle: "Entdecke mit ",
       placeholder: "Frag nach der Umgebung...",
     },
     suggestions: {
@@ -989,7 +989,7 @@ const uiCopy = {
       flipCamera: "Cambia fotocamera",
     },
     admin: {
-      brand: "HashiGo Admin",
+      brand: "NGraph Admin",
       back: "Indietro",
       closeMenu: "Chiudi menu",
       toggleMenu: "Alterna menu",
@@ -1014,8 +1014,8 @@ const uiCopy = {
       sub: "Tocca la fotocamera per iniziare",
     },
     explore: {
-      title: "Esplora HashiGo",
-      subtitle: "Esplora con HashiGo",
+      title: "Esplora ",
+      subtitle: "Esplora con ",
       placeholder: "Chiedi della zona...",
     },
     suggestions: {
@@ -1095,7 +1095,7 @@ const uiCopy = {
       flipCamera: "Alternar câmera",
     },
     admin: {
-      brand: "HashiGo Admin",
+      brand: "NGraph Admin",
       back: "Voltar",
       closeMenu: "Fechar menu",
       toggleMenu: "Alternar menu",
@@ -1120,8 +1120,8 @@ const uiCopy = {
       sub: "Toque na câmera para começar",
     },
     explore: {
-      title: "Explorar HashiGo",
-      subtitle: "Explore com HashiGo",
+      title: "Explorar ",
+      subtitle: "Explore com ",
       placeholder: "Pergunte sobre a área...",
     },
     suggestions: {
@@ -1201,7 +1201,7 @@ const uiCopy = {
       flipCamera: "Переключить камеру",
     },
     admin: {
-      brand: "HashiGo Admin",
+      brand: "NGraph Admin",
       back: "Назад",
       closeMenu: "Закрыть меню",
       toggleMenu: "Переключить меню",
@@ -1226,8 +1226,8 @@ const uiCopy = {
       sub: "Нажмите на камеру, чтобы начать",
     },
     explore: {
-      title: "Исследуйте HashiGo",
-      subtitle: "Исследуйте с HashiGo",
+      title: "Исследуйте ",
+      subtitle: "Исследуйте с ",
       placeholder: "Спросите о месте...",
     },
     suggestions: {
@@ -1307,7 +1307,7 @@ const uiCopy = {
       flipCamera: "สลับกล้อง",
     },
     admin: {
-      brand: "HashiGo Admin",
+      brand: "NGraph Admin",
       back: "กลับ",
       closeMenu: "ปิดเมนู",
       toggleMenu: "สลับเมนู",
@@ -1332,8 +1332,8 @@ const uiCopy = {
       sub: "แตะกล้องเพื่อเริ่ม",
     },
     explore: {
-      title: "สำรวจ HashiGo",
-      subtitle: "สำรวจกับ HashiGo",
+      title: "สำรวจ ",
+      subtitle: "สำรวจกับ ",
       placeholder: "ถามเกี่ยวกับบริเวณนี้...",
     },
     suggestions: {
@@ -1413,7 +1413,7 @@ const uiCopy = {
       flipCamera: "Chuyển camera",
     },
     admin: {
-      brand: "HashiGo Admin",
+      brand: "NGraph Admin",
       back: "Quay lại",
       closeMenu: "Đóng menu",
       toggleMenu: "Chuyển menu",
@@ -1438,8 +1438,8 @@ const uiCopy = {
       sub: "Chạm camera để bắt đầu",
     },
     explore: {
-      title: "Khám phá HashiGo",
-      subtitle: "Khám phá cùng HashiGo",
+      title: "Khám phá ",
+      subtitle: "Khám phá cùng ",
       placeholder: "Hỏi về khu vực...",
     },
     suggestions: {
@@ -1519,7 +1519,7 @@ const uiCopy = {
       flipCamera: "Ganti kamera",
     },
     admin: {
-      brand: "HashiGo Admin",
+      brand: "NGraph Admin",
       back: "Kembali",
       closeMenu: "Tutup menu",
       toggleMenu: "Ganti menu",
@@ -1544,8 +1544,8 @@ const uiCopy = {
       sub: "Ketuk kamera untuk mulai",
     },
     explore: {
-      title: "Jelajahi HashiGo",
-      subtitle: "Jelajahi bersama HashiGo",
+      title: "Jelajahi ",
+      subtitle: "Jelajahi bersama ",
       placeholder: "Tanyakan tentang sekitar...",
     },
     suggestions: {
@@ -1625,7 +1625,7 @@ const uiCopy = {
       flipCamera: "Tukar kamera",
     },
     admin: {
-      brand: "HashiGo Admin",
+      brand: "NGraph Admin",
       back: "Kembali",
       closeMenu: "Tutup menu",
       toggleMenu: "Tukar menu",
@@ -1650,8 +1650,8 @@ const uiCopy = {
       sub: "Ketik kamera untuk mula",
     },
     explore: {
-      title: "Terokai HashiGo",
-      subtitle: "Terokai bersama HashiGo",
+      title: "Terokai ",
+      subtitle: "Terokai bersama ",
       placeholder: "Tanya tentang kawasan...",
     },
     suggestions: {
@@ -1731,7 +1731,7 @@ const uiCopy = {
       flipCamera: "تبديل الكاميرا",
     },
     admin: {
-      brand: "HashiGo Admin",
+      brand: "NGraph Admin",
       back: "رجوع",
       closeMenu: "إغلاق القائمة",
       toggleMenu: "تبديل القائمة",
@@ -1756,8 +1756,8 @@ const uiCopy = {
       sub: "اضغط على الكاميرا للبدء",
     },
     explore: {
-      title: "استكشف HashiGo",
-      subtitle: "استكشف مع HashiGo",
+      title: "استكشف ",
+      subtitle: "استكشف مع ",
       placeholder: "اسأل عن المنطقة...",
     },
     suggestions: {
@@ -1837,7 +1837,7 @@ const uiCopy = {
       flipCamera: "कैमरा बदलें",
     },
     admin: {
-      brand: "HashiGo Admin",
+      brand: "NGraph Admin",
       back: "वापस",
       closeMenu: "मेनू बंद करें",
       toggleMenu: "मेनू बदलें",
@@ -1862,8 +1862,8 @@ const uiCopy = {
       sub: "शुरू करने के लिए कैमरा टैप करें",
     },
     explore: {
-      title: "HashiGo खोजें",
-      subtitle: "HashiGo के साथ खोजें",
+      title: " खोजें",
+      subtitle: " के साथ खोजें",
       placeholder: "आसपास के बारे में पूछें...",
     },
     suggestions: {
@@ -1943,7 +1943,7 @@ const uiCopy = {
       flipCamera: "Kamerayı değiştir",
     },
     admin: {
-      brand: "HashiGo Admin",
+      brand: "NGraph Admin",
       back: "Geri",
       closeMenu: "Menüyü kapat",
       toggleMenu: "Menüyü değiştir",
@@ -1968,8 +1968,8 @@ const uiCopy = {
       sub: "Başlamak için kameraya dokun",
     },
     explore: {
-      title: "HashiGo'yu keşfet",
-      subtitle: "HashiGo ile keşfet",
+      title: "'yu keşfet",
+      subtitle: " ile keşfet",
       placeholder: "Bölge hakkında sor...",
     },
     suggestions: {
@@ -2049,7 +2049,7 @@ const uiCopy = {
       flipCamera: "ক্যামেরা বদলান",
     },
     admin: {
-      brand: "HashiGo Admin",
+      brand: "NGraph Admin",
       back: "ফিরে",
       closeMenu: "মেনু বন্ধ করুন",
       toggleMenu: "মেনু বদলান",
@@ -2074,8 +2074,8 @@ const uiCopy = {
       sub: "শুরু করতে ক্যামেরা ট্যাপ করুন",
     },
     explore: {
-      title: "HashiGo অন্বেষণ করুন",
-      subtitle: "HashiGo এর সাথে অন্বেষণ",
+      title: " অন্বেষণ করুন",
+      subtitle: " এর সাথে অন্বেষণ",
       placeholder: "আশেপাশে সম্পর্কে জিজ্ঞেস করুন...",
     },
     suggestions: {
@@ -2155,7 +2155,7 @@ const uiCopy = {
       flipCamera: "ကင်မရာပြောင်း",
     },
     admin: {
-      brand: "HashiGo Admin",
+      brand: "NGraph Admin",
       back: "နောက်သို့",
       closeMenu: "မီနူးပိတ်",
       toggleMenu: "မီနူးပြောင်း",
@@ -2180,8 +2180,8 @@ const uiCopy = {
       sub: "ကင်မရာကိုနှိပ်၍စတင်",
     },
     explore: {
-      title: "HashiGo ကိုလေ့လာ",
-      subtitle: "HashiGo နဲ့လေ့လာ",
+      title: " ကိုလေ့လာ",
+      subtitle: " နဲ့လေ့လာ",
       placeholder: "ပတ်ဝန်းကျင်မေးပါ...",
     },
     suggestions: {
@@ -2261,7 +2261,7 @@ const uiCopy = {
       flipCamera: "Palitan ang camera",
     },
     admin: {
-      brand: "HashiGo Admin",
+      brand: "NGraph Admin",
       back: "Bumalik",
       closeMenu: "Isara ang menu",
       toggleMenu: "Palitan ang menu",
@@ -2286,8 +2286,8 @@ const uiCopy = {
       sub: "I-tap ang camera para magsimula",
     },
     explore: {
-      title: "Tuklasin ang HashiGo",
-      subtitle: "Tuklasin kasama ang HashiGo",
+      title: "Tuklasin ang ",
+      subtitle: "Tuklasin kasama ang ",
       placeholder: "Magtanong tungkol sa lugar...",
     },
     suggestions: {
@@ -2367,7 +2367,7 @@ const uiCopy = {
       flipCamera: "ສະຫຼັບກ້ອງ",
     },
     admin: {
-      brand: "HashiGo Admin",
+      brand: "NGraph Admin",
       back: "ກັບ",
       closeMenu: "ປິດເມນູ",
       toggleMenu: "ສະຫຼັບເມນູ",
@@ -2392,8 +2392,8 @@ const uiCopy = {
       sub: "ແຕະກ້ອງເພື່ອເລີ່ມ",
     },
     explore: {
-      title: "ສຳຫຼວດ HashiGo",
-      subtitle: "ສຳຫຼວດກັບ HashiGo",
+      title: "ສຳຫຼວດ ",
+      subtitle: "ສຳຫຼວດກັບ ",
       placeholder: "ຖາມກ່ຽວກັບບໍລິເວນ...",
     },
     suggestions: {
@@ -2473,7 +2473,7 @@ const uiCopy = {
       flipCamera: "ប្តូរកាមេរ៉ា",
     },
     admin: {
-      brand: "HashiGo Admin",
+      brand: "NGraph Admin",
       back: "ថយក្រោយ",
       closeMenu: "បិទម៉ឺនុយ",
       toggleMenu: "ប្តូរម៉ឺនុយ",
@@ -2498,8 +2498,8 @@ const uiCopy = {
       sub: "ប៉ះកាមេរ៉ាដើម្បីចាប់ផ្តើម",
     },
     explore: {
-      title: "ស្វែងយល់ HashiGo",
-      subtitle: "ស្វែងយល់ជាមួយ HashiGo",
+      title: "ស្វែងយល់ ",
+      subtitle: "ស្វែងយល់ជាមួយ ",
       placeholder: "សួរអំពីតំបន់...",
     },
     suggestions: {
@@ -2579,7 +2579,7 @@ const uiCopy = {
       flipCamera: "क्यामेरा परिवर्तन",
     },
     admin: {
-      brand: "HashiGo Admin",
+      brand: "NGraph Admin",
       back: "पछाडि",
       closeMenu: "मेनु बन्द गर्नुहोस्",
       toggleMenu: "मेनु परिवर्तन",
@@ -2604,8 +2604,8 @@ const uiCopy = {
       sub: "सुरु गर्न क्यामेरा ट्याप गर्नुहोस्",
     },
     explore: {
-      title: "HashiGo अन्वेषण",
-      subtitle: "HashiGo सँग अन्वेषण",
+      title: " अन्वेषण",
+      subtitle: " सँग अन्वेषण",
       placeholder: "वरपरको बारे सोध्नुहोस्...",
     },
     suggestions: {
@@ -2685,7 +2685,7 @@ const uiCopy = {
       flipCamera: "Камер солих",
     },
     admin: {
-      brand: "HashiGo Admin",
+      brand: "NGraph Admin",
       back: "Буцах",
       closeMenu: "Цэс хаах",
       toggleMenu: "Цэс солих",
@@ -2710,8 +2710,8 @@ const uiCopy = {
       sub: "Эхлэхийн тулд камерыг товшино уу",
     },
     explore: {
-      title: "HashiGo-г судлах",
-      subtitle: "HashiGo-тай судлах",
+      title: "-г судлах",
+      subtitle: "-тай судлах",
       placeholder: "Ойр орчмын талаар асуугаарай...",
     },
     suggestions: {
@@ -2791,7 +2791,7 @@ const uiCopy = {
       flipCamera: "تعویض دوربین",
     },
     admin: {
-      brand: "HashiGo Admin",
+      brand: "NGraph Admin",
       back: "بازگشت",
       closeMenu: "بستن منو",
       toggleMenu: "تعویض منو",
@@ -2816,8 +2816,8 @@ const uiCopy = {
       sub: "برای شروع روی دوربین ضربه بزنید",
     },
     explore: {
-      title: "کاوش HashiGo",
-      subtitle: "با HashiGo کاوش کنید",
+      title: "کاوش ",
+      subtitle: "با  کاوش کنید",
       placeholder: "درباره اطراف بپرسید...",
     },
     suggestions: {
@@ -2897,7 +2897,7 @@ const uiCopy = {
       flipCamera: "Перемкнути камеру",
     },
     admin: {
-      brand: "HashiGo Admin",
+      brand: "NGraph Admin",
       back: "Назад",
       closeMenu: "Закрити меню",
       toggleMenu: "Перемкнути меню",
@@ -2922,8 +2922,8 @@ const uiCopy = {
       sub: "Натисніть камеру, щоб почати",
     },
     explore: {
-      title: "Досліджуйте HashiGo",
-      subtitle: "Досліджуйте з HashiGo",
+      title: "Досліджуйте ",
+      subtitle: "Досліджуйте з ",
       placeholder: "Питайте про місцевість...",
     },
     suggestions: {
@@ -3003,7 +3003,7 @@ const uiCopy = {
       flipCamera: "Przełącz aparat",
     },
     admin: {
-      brand: "HashiGo Admin",
+      brand: "NGraph Admin",
       back: "Wstecz",
       closeMenu: "Zamknij menu",
       toggleMenu: "Przełącz menu",
@@ -3028,8 +3028,8 @@ const uiCopy = {
       sub: "Dotknij aparatu, aby zacząć",
     },
     explore: {
-      title: "Odkrywaj HashiGo",
-      subtitle: "Odkrywaj z HashiGo",
+      title: "Odkrywaj ",
+      subtitle: "Odkrywaj z ",
       placeholder: "Zapytaj o okolicę...",
     },
     suggestions: {

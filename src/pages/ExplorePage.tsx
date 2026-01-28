@@ -29,7 +29,7 @@ export default function ExplorePage() {
         </button>
         <div className="browser-pill">
           <span className="browser-dot" />
-          <span className="browser-address">hashigo.me</span>
+          <span className="browser-address">ngraph.me</span>
         </div>
         <button className="icon-button ghost" type="button" aria-label={copy.common.reload}>
           <RefreshIcon />

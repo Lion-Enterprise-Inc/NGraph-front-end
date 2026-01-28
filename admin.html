@@ -3091,7 +3091,7 @@
         }
     </style>
 </head>
-<body class="omiseai-modern">
+<body class="NGraph-modern">
 
     <!-- ログイン画面 -->
     <div class="login-container" id="loginScreen">
@@ -3287,7 +3287,7 @@
             <aside class="app-sidebar" role="navigation" aria-label="メイン">
                 <a class="brand" href="#" onclick="event.preventDefault(); app.showScreen('dashboard', this)" style="display: flex; align-items: center; justify-content: center; padding: 16px 0; text-decoration: none;">
                     <!-- OmiseAIロゴ -->
-                    <img src="omiseai-logo.png" alt="OmiseAI" style="width: 180px; height: 50px; object-fit: contain; max-width: 100%;" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                    <img src="NGraph-logo.png" alt="OmiseAI" style="width: 180px; height: 50px; object-fit: contain; max-width: 100%;" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
                     <!-- ロゴ画像が読み込めない場合のフォールバック -->
                     <strong style="display: none; font-size: 20px; color: var(--color-gray-900);">OMISEAI</strong>
                 </a>
@@ -6346,7 +6346,7 @@
                     initialView = urlView;
                 } else {
                     try {
-                        const storedView = window.localStorage.getItem('omiseai-view-mode') || window.sessionStorage.getItem('omiseai-view-mode');
+                        const storedView = window.localStorage.getItem('NGraph-view-mode') || window.sessionStorage.getItem('NGraph-view-mode');
                         if (storedView === 'store' || storedView === 'admin') {
                             initialView = storedView;
                         }
@@ -6555,7 +6555,7 @@
                         icon: "🍽️",
                         version: "1.0.0",
                         updatedAt: "2024-11-06T10:00:00Z",
-                        updatedBy: "admin@omiseai.com",
+                        updatedBy: "admin@NGraph.com",
                         
                         basePrompt: `あなたはOmiseAIの飲食店向けアシスタントです。
 
@@ -6634,7 +6634,7 @@
                         icon: "🏪",
                         version: "1.0.0",
                         updatedAt: "2024-11-06T10:00:00Z",
-                        updatedBy: "admin@omiseai.com",
+                        updatedBy: "admin@NGraph.com",
                         
                         basePrompt: `あなたはOmiseAIの商品・サービス説明アシスタントです。
 
@@ -6673,7 +6673,7 @@
                         icon: "🛍️",
                         version: "1.0.0",
                         updatedAt: "2024-11-06T10:00:00Z",
-                        updatedBy: "admin@omiseai.com",
+                        updatedBy: "admin@NGraph.com",
                         basePrompt: `あなたはOmiseAIの商品説明アシスタントです。
 【基本姿勢】
 - ユーザーの端末言語で応答する（最優先）
@@ -6710,7 +6710,7 @@
                         icon: "💇",
                         version: "1.0.0",
                         updatedAt: "2024-11-06T10:00:00Z",
-                        updatedBy: "admin@omiseai.com",
+                        updatedBy: "admin@NGraph.com",
                         basePrompt: `あなたはOmiseAIの理美容・サービス案内アシスタントです。
 【基本姿勢】
 - ユーザーの端末言語で応答する（最優先）
@@ -6748,7 +6748,7 @@
                         icon: "🏞️",
                         version: "1.0.0",
                         updatedAt: "2024-11-06T10:00:00Z",
-                        updatedBy: "admin@omiseai.com",
+                        updatedBy: "admin@NGraph.com",
                         basePrompt: `あなたはOmiseAIの複合型店舗案内アシスタントです。
 【基本姿勢】
 - ユーザーの端末言語で応答する（最優先）
@@ -7672,8 +7672,8 @@
                 
                 // ストレージに保存
                 try {
-                    window.localStorage.setItem('omiseai-view-mode', mode);
-                    window.sessionStorage.setItem('omiseai-view-mode', mode);
+                    window.localStorage.setItem('NGraph-view-mode', mode);
+                    window.sessionStorage.setItem('NGraph-view-mode', mode);
                 } catch (e) {
                     console.warn('Failed to save view mode to storage:', e);
                 }
@@ -9163,7 +9163,7 @@
                 this.templatePromptsEdited[key] = editedContent;
                 
                 // ローカルストレージに保存
-                localStorage.setItem('omiseai_template_prompts_edited', JSON.stringify(this.templatePromptsEdited));
+                localStorage.setItem('NGraph_template_prompts_edited', JSON.stringify(this.templatePromptsEdited));
                 
                 // 成功メッセージ
                 alert('✅ プロンプトを保存しました！');
@@ -9188,7 +9188,7 @@
                 delete this.templatePromptsEdited[key];
                 
                 // ローカルストレージを更新
-                localStorage.setItem('omiseai_template_prompts_edited', JSON.stringify(this.templatePromptsEdited));
+                localStorage.setItem('NGraph_template_prompts_edited', JSON.stringify(this.templatePromptsEdited));
                 
                 // デフォルトテンプレートを表示
                 this.changeTemplate(templateValue, false);
@@ -9208,7 +9208,7 @@
 
             // 編集済みテンプレートを読み込み
             loadEditedTemplates() {
-                const saved = localStorage.getItem('omiseai_template_prompts_edited');
+                const saved = localStorage.getItem('NGraph_template_prompts_edited');
                 if (saved) {
                     try {
                         this.templatePromptsEdited = JSON.parse(saved);
@@ -9660,7 +9660,7 @@
                     
                     // ローカルストレージに保存（Base64形式）
                     const logoData = e.target.result;
-                    localStorage.setItem('omiseai_ai_logo', logoData);
+                    localStorage.setItem('NGraph_ai_logo', logoData);
                     
                     this.showPromptSuccess('ロゴをアップロードしました');
                 };
@@ -9701,14 +9701,14 @@
                 }
                 
                 // ローカルストレージから削除
-                localStorage.removeItem('omiseai_ai_logo');
+                localStorage.removeItem('NGraph_ai_logo');
                 
                 this.showPromptSuccess('ロゴを削除しました');
             },
 
             // 保存されたAIロゴを読み込む
             loadAILogo() {
-                const logoData = localStorage.getItem('omiseai_ai_logo');
+                const logoData = localStorage.getItem('NGraph_ai_logo');
                 if (logoData) {
                     const logoImage = document.getElementById('ai-logo-image');
                     const logoPlaceholder = document.getElementById('ai-logo-placeholder');
@@ -10206,8 +10206,8 @@
             },
 
             loadPrompts() {
-                const basePrompt = localStorage.getItem('omiseai_base_prompt') || this.data.basePromptDefault;
-                const customPrompt = localStorage.getItem('omiseai_custom_prompt') || this.data.customPromptDefault;
+                const basePrompt = localStorage.getItem('NGraph_base_prompt') || this.data.basePromptDefault;
+                const customPrompt = localStorage.getItem('NGraph_custom_prompt') || this.data.customPromptDefault;
                 
                 const baseText = document.getElementById('basePromptText');
                 const customText = document.getElementById('customPromptText');
@@ -10254,13 +10254,13 @@
                     return;
                 }
 
-                localStorage.setItem('omiseai_base_prompt', basePrompt);
+                localStorage.setItem('NGraph_base_prompt', basePrompt);
                 this.showPromptSuccess('✅ 基礎システムプロンプトを保存しました！');
             },
 
             saveCustomPrompt() {
                 const customPrompt = document.getElementById('customPromptText').value.trim();
-                localStorage.setItem('omiseai_custom_prompt', customPrompt);
+                localStorage.setItem('NGraph_custom_prompt', customPrompt);
                 this.showPromptSuccess('✅ カスタマイズプロンプトを保存しました！');
             },
 
@@ -11091,7 +11091,7 @@
             // ローカルストレージに保存
             saveToLocalStorage() {
                 try {
-                    localStorage.setItem('omiseai_stores_data', JSON.stringify(this.data.stores));
+                    localStorage.setItem('NGraph_stores_data', JSON.stringify(this.data.stores));
                     console.log('データを保存しました');
                 } catch (e) {
                     console.error('保存に失敗しました:', e);
@@ -11101,7 +11101,7 @@
             // ローカルストレージから読み込み
             loadFromLocalStorage() {
                 try {
-                    const saved = localStorage.getItem('omiseai_stores_data');
+                    const saved = localStorage.getItem('NGraph_stores_data');
                     if (saved) {
                         this.data.stores = JSON.parse(saved);
                         console.log('データを読み込みました');
@@ -11395,7 +11395,7 @@
             getStoreQrTargetUrl(store) {
                 const origin = (window.location && window.location.origin && window.location.origin !== 'null')
                     ? window.location.origin
-                    : 'https://omiseai.example.com';
+                    : 'https://NGraph.example.com';
                 const identifier = store.storeCode || `store-${store.id}`;
                 return `${origin}/stores/${identifier}`;
             },
@@ -14375,7 +14375,7 @@
             if (!t) return;
 
             // Save language preference
-            localStorage.setItem('omiseai_language', lang);
+            localStorage.setItem('NGraph_language', lang);
 
             // Update view button texts
             document.getElementById('viewStore').innerHTML = `🏪 ${t.storeView}`;
@@ -14443,7 +14443,7 @@
             });
 
             // Save language preference
-            localStorage.setItem('omiseai_language', lang);
+            localStorage.setItem('NGraph_language', lang);
             
             // Update dashboard content
             app.updateDashboardLanguage(lang);
@@ -16379,7 +16379,7 @@
             document.getElementById('mainContainer').classList.add('hidden');
             
             // Load saved language preference
-            const savedLanguage = localStorage.getItem('omiseai_language');
+            const savedLanguage = localStorage.getItem('NGraph_language');
             if (savedLanguage) {
                 // 旧ヘッダーの言語選択（存在する場合）
                 const oldLanguageSelect = document.getElementById('languageSelect');
@@ -16949,42 +16949,42 @@
            ======================================= */
 
         /* ── 固定幅解除 ───────────────────── */
-        .omiseai-modern .page,
-        .omiseai-modern .container,
-        .omiseai-modern .content,
-        .omiseai-modern .main,
-        .omiseai-modern .main-inner,
-        .omiseai-modern .wrapper,
-        .omiseai-modern .page-wrapper,
-        .omiseai-modern .app-container,
-        .omiseai-modern .screen,
-        .omiseai-modern .card,
-        .omiseai-modern .dashboard,
-        .omiseai-modern .stats-grid,
-        .omiseai-modern .upload-grid {
+        .NGraph-modern .page,
+        .NGraph-modern .container,
+        .NGraph-modern .content,
+        .NGraph-modern .main,
+        .NGraph-modern .main-inner,
+        .NGraph-modern .wrapper,
+        .NGraph-modern .page-wrapper,
+        .NGraph-modern .app-container,
+        .NGraph-modern .screen,
+        .NGraph-modern .card,
+        .NGraph-modern .dashboard,
+        .NGraph-modern .stats-grid,
+        .NGraph-modern .upload-grid {
             max-width: none !important;
             width: 100% !important;
             margin: 0 !important;
         }
 
         /* ── レイアウト骨組み ─────────────── */
-        .omiseai-modern .app-shell {
+        .NGraph-modern .app-shell {
             display: grid;
             grid-template-columns: var(--sidebar-w, 260px) minmax(0, 1fr);
             min-height: 100dvh;
         }
 
-        .omiseai-modern .app-main,
-        .omiseai-modern .app-header,
-        .omiseai-modern .app-container {
+        .NGraph-modern .app-main,
+        .NGraph-modern .app-header,
+        .NGraph-modern .app-container {
             min-width: 0;
         }
 
         /* ── ヘッダーを幅広く ─────────────── */
-        .omiseai-modern .app-header,
-        .omiseai-modern .header,
-        .omiseai-modern .page-header,
-        .omiseai-modern .breadcrumb-nav {
+        .NGraph-modern .app-header,
+        .NGraph-modern .header,
+        .NGraph-modern .page-header,
+        .NGraph-modern .breadcrumb-nav {
             max-width: none !important;
             width: 100% !important;
             margin: 0 !important;
@@ -16992,9 +16992,9 @@
         }
 
         /* ── カード・パネルのベース ───────────── */
-        .omiseai-modern .card,
-        .omiseai-modern .panel,
-        .omiseai-modern .widget {
+        .NGraph-modern .card,
+        .NGraph-modern .panel,
+        .NGraph-modern .widget {
             background: var(--bg-surface, #fff);
             border: 1px solid var(--border, #E5E7EB);
             border-radius: var(--radius, 12px);
@@ -17003,37 +17003,37 @@
         }
 
         /* ── 背景/テーマカラー ───────────────── */
-        html.omiseai-modern,
-        body.omiseai-modern {
+        html.NGraph-modern,
+        body.NGraph-modern {
             background: var(--bg-page, #F8FAFC);
             color: var(--text, #0F172A);
         }
 
         /* ── ダッシュボードカードのレスポンシブ列 ─────── */
-        .omiseai-modern .dashboard-metrics {
+        .NGraph-modern .dashboard-metrics {
             display: grid;
             grid-template-columns: repeat(12, minmax(0, 1fr));
             gap: 24px;
         }
 
-        .omiseai-modern .dashboard-metrics > .card {
+        .NGraph-modern .dashboard-metrics > .card {
             grid-column: span 12;
         }
 
         @media (min-width: 768px) {
-            .omiseai-modern .dashboard-metrics > .card {
+            .NGraph-modern .dashboard-metrics > .card {
                 grid-column: span 6;
             }
         }
 
         @media (min-width: 1200px) {
-            .omiseai-modern .dashboard-metrics > .card {
+            .NGraph-modern .dashboard-metrics > .card {
                 grid-column: span 4;
             }
         }
 
         /* ── サイドメニューを左固定化（例）──────────── */
-        .omiseai-modern .app-sidebar {
+        .NGraph-modern .app-sidebar {
             position: sticky;
             top: 0;
             height: 100dvh;
@@ -17043,13 +17043,13 @@
             overflow-y: auto;
         }
 
-        .omiseai-modern .nav {
+        .NGraph-modern .nav {
             display: flex;
             flex-direction: column;
             gap: 6px;
         }
 
-        .omiseai-modern .nav a {
+        .NGraph-modern .nav a {
             display: flex;
             align-items: center;
             gap: 12px;
@@ -17059,11 +17059,11 @@
             text-decoration: none;
         }
 
-        .omiseai-modern .nav a:hover {
+        .NGraph-modern .nav a:hover {
             background: #F1F5F9;
         }
 
-        .omiseai-modern .nav a[aria-current="page"] {
+        .NGraph-modern .nav a[aria-current="page"] {
             background: #E8F0FF;
             color: #1E40AF;
             font-weight: 600;
@@ -17072,31 +17072,31 @@
 
         /* ── モバイル時は折りたたみ表示 ─────────── */
         @media (max-width: 1024px) {
-            .omiseai-modern .app-shell {
+            .NGraph-modern .app-shell {
                 grid-template-columns: var(--sidebar-w-compact, 72px) minmax(0, 1fr);
             }
 
-            .omiseai-modern .app-sidebar {
+            .NGraph-modern .app-sidebar {
                 padding: 12px 8px;
             }
 
-            .omiseai-modern .nav a {
+            .NGraph-modern .nav a {
                 justify-content: center;
             }
 
-            .omiseai-modern .nav a .label {
+            .NGraph-modern .nav a .label {
                 display: none;
             }
         }
 
         /* ── フォーカス可視化 ───────────── */
-        .omiseai-modern :focus-visible {
+        .NGraph-modern :focus-visible {
             outline: 2px solid #93C5FD;
             outline-offset: 2px;
         }
 
         /* セクションだけ"フル幅"にするユーティリティ */
-        .omiseai-modern .is-wide {
+        .NGraph-modern .is-wide {
             max-width: none !important;
             width: 100%;
             margin: 0 auto;
@@ -17105,11 +17105,11 @@
         }
 
         /* よくある固定幅ラッパの解除（このセクション配下限定） */
-        .omiseai-modern .is-wide .content,
-        .omiseai-modern .is-wide .container,
-        .omiseai-modern .is-wide .section,
-        .omiseai-modern .is-wide .inner,
-        .omiseai-modern .is-wide .wrapper {
+        .NGraph-modern .is-wide .content,
+        .NGraph-modern .is-wide .container,
+        .NGraph-modern .is-wide .section,
+        .NGraph-modern .is-wide .inner,
+        .NGraph-modern .is-wide .wrapper {
             max-width: none !important;
             width: auto !important;
             min-width: 0;
@@ -17251,8 +17251,8 @@
         /* メニュー一覧画面全体の高さ制御 - 自然なスクロールに変更 */
 
         /* "アップロードの4カード"を幅に合わせて可変列に */
-        .omiseai-modern .is-wide .cards,
-        .omiseai-modern .is-wide .upload-options {
+        .NGraph-modern .is-wide .cards,
+        .NGraph-modern .is-wide .upload-options {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 20px;
@@ -17260,7 +17260,7 @@
         }
         
         /* メニューテーブル表示は幅100%で固定 */
-        .omiseai-modern .is-wide .menu-table-container {
+        .NGraph-modern .is-wide .menu-table-container {
             width: 100%;
             max-width: none;
         }

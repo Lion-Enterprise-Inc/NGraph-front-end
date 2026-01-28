@@ -12,7 +12,7 @@ export default function BrowserBar() {
       <div className="browser-icon" aria-hidden="true">
         <MenuLines />
       </div>
-      {/* <div className="browser-address">beta.hashigo.me</div> */}
+      {/* <div className="browser-address">beta.ngraph.me</div> */}
       <div className="browser-actions" aria-hidden="true">
         <RefreshIcon />
       </div>
