@@ -7,7 +7,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
       <head>
-        <link rel="icon" href="/src/assets/[logo]NGraph (1920 x 1006 px) .png" />
+        <link rel="icon" href="/favicon.png" />
       </head>
       <body>
         <div id="root">
