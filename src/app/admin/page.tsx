@@ -139,7 +139,7 @@ function StoreDashboard() {
               border: '1px solid #f0f0f0'
             }}>
               <div className="stat-label" style={{ fontSize: '18px', fontWeight: 600, color: '#1f2937', marginBottom: '16px' }}>📱 QRスキャン数</div>
-              <div className="stat-value" style={{ fontSize: '42px', fontWeight: 700, color: '#667eea', margin: '12px 0' }}>1,500</div>
+              <div className="stat-value" style={{ fontSize: '42px', fontWeight: 700, color: '#667eea', margin: '12px 0' }}>0</div>
             </div>
             <div className="stat-card" style={{ 
               boxShadow: '0 2px 8px rgba(0,0,0,0.08)', 
@@ -154,7 +154,7 @@ function StoreDashboard() {
               border: '1px solid #f0f0f0'
             }}>
               <div className="stat-label" style={{ fontSize: '18px', fontWeight: 600, color: '#1f2937', marginBottom: '16px' }}>💬 質問数</div>
-              <div className="stat-value" style={{ fontSize: '42px', fontWeight: 700, color: '#667eea', margin: '12px 0' }}>1,247</div>
+              <div className="stat-value" style={{ fontSize: '42px', fontWeight: 700, color: '#667eea', margin: '12px 0' }}>0</div>
             </div>
           </div>
         </div>
