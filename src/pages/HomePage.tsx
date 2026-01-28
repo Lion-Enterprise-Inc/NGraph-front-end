@@ -25,10 +25,6 @@ export default function HomePage({
         />
       </main>
 
-      <div className="home-banner" aria-label={copy.home.bannerLabel}>
-        <img src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800&auto=format&fit=crop&q=80" alt={copy.home.bannerAlt} />
-      </div>
-
       <footer className="bottom-bar" />
     </div>
   )
