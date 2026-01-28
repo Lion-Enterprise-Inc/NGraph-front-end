@@ -35,7 +35,7 @@ export default function CaptureHeader({ restaurant, onMenu, onLanguage }: Captur
       <div className="brand-title nav-brand" style={{
         fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
         fontWeight: 800,
-        fontSize: '24px',
+        fontSize: '20px',
         letterSpacing: '-0.02em',
         color: '#1f2937',
         fontStretch: 'expanded'
