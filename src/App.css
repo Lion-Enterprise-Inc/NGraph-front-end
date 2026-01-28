@@ -648,22 +648,20 @@ body {
 }
 
 .restaurant-logo-container {
-  width: 160px;
-  height: 160px;
   border-radius: 20px;
   overflow: hidden;
   cursor: pointer;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  background: #fff;
+  transition: transform 0.2s ease;
   display: flex;
   align-items: center;
   justify-content: center;
+  max-width: 220px;
+  max-height: 220px;
+  border: none;
 }
 
 .restaurant-logo-container:hover {
   transform: scale(1.05);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
 }
 
 .restaurant-logo-container:active {
@@ -673,11 +671,11 @@ body {
 .restaurant-logo-image {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
 }
 
 .restaurant-name-display {
-  font-size: 24px;
+  font-size: 18px;
   font-weight: 600;
   color: #1a1a1a;
   margin: 0;
@@ -4715,3 +4713,17 @@ textarea.form-input {
   }
 }
 
+/* Mobile responsive logo sizing */
+@media (max-width: 768px) {
+  .restaurant-logo-container {
+    max-width: 160px;
+    max-height: 160px;
+  }
+}
+
+@media (max-width: 480px) {
+  .restaurant-logo-container {
+    max-width: 130px;
+    max-height: 130px;
+  }
+}

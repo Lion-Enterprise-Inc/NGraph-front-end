@@ -39,11 +39,6 @@ export default function CameraPrompt({ heading, sub, buttonLabel, onCamera, rest
 
         <div 
           className="restaurant-logo-container"
-          onClick={onCamera}
-          role="button"
-          tabIndex={0}
-          aria-label={buttonLabel}
-          onKeyDown={(e) => e.key === 'Enter' && onCamera?.()}
         >
           <img 
             src={restaurantLogo} 

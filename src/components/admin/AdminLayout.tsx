@@ -110,7 +110,7 @@ export default function AdminLayout({ children, title }: Props) {
           width: '48px',
           height: '48px',
           border: '3px solid #E5E7EB',
-          borderTopColor: '#2563EB',
+          borderTopColor: '#1f2937',
           borderRadius: '50%',
           animation: 'spin 1s linear infinite'
         }} />

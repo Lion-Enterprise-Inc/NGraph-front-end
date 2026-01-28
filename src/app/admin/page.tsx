@@ -136,13 +136,10 @@ function StoreDashboard() {
               justifyContent: 'flex-start',
               alignItems: 'center',
               borderRadius: '12px',
-              background: 'white',
               border: '1px solid #f0f0f0'
             }}>
               <div className="stat-label" style={{ fontSize: '18px', fontWeight: 600, color: '#1f2937', marginBottom: '16px' }}>📱 QRスキャン数</div>
               <div className="stat-value" style={{ fontSize: '42px', fontWeight: 700, color: '#667eea', margin: '12px 0' }}>1,500</div>
-              <div style={{ fontSize: '14px', color: '#10b981' }}>+12% vs 先月 ↗</div>
-              <div style={{ fontSize: '12px', marginTop: '8px', opacity: 0.8, lineHeight: 1.4 }}>💡 看板やテーブルのQRが活用されています</div>
             </div>
             <div className="stat-card" style={{ 
               boxShadow: '0 2px 8px rgba(0,0,0,0.08)', 
@@ -154,18 +151,16 @@ function StoreDashboard() {
               justifyContent: 'flex-start',
               alignItems: 'center',
               borderRadius: '12px',
-              background: 'white',
               border: '1px solid #f0f0f0'
             }}>
               <div className="stat-label" style={{ fontSize: '18px', fontWeight: 600, color: '#1f2937', marginBottom: '16px' }}>💬 質問数</div>
               <div className="stat-value" style={{ fontSize: '42px', fontWeight: 700, color: '#667eea', margin: '12px 0' }}>1,247</div>
-              <div style={{ fontSize: '14px', color: '#10b981' }}>+8% vs 先月 ↗</div>
-              <div style={{ fontSize: '12px', marginTop: '8px', opacity: 0.8, lineHeight: 1.4 }}>💡 お客様の関心が高まっています</div>
             </div>
           </div>
         </div>
 
         {/* レストランパフォーマンス */}
+        {false && (
         <div className="card" style={{ marginTop: '16px' }}>
           <div className="card-title">📊 レストランパフォーマンス</div>
           <div className="stats-grid">
@@ -234,8 +229,10 @@ function StoreDashboard() {
             </div>
           </div>
         </div>
+        )}
 
         {/* 最近の質問・回答 */}
+        {false && (
         <div className="card" style={{ marginTop: '16px' }}>
           <div className="card-title">💬 最近の質問・回答</div>
           <p style={{ color: '#666', fontSize: '14px', marginBottom: '15px' }}>お客様とAIのやり取りを確認できます（個人情報は非表示）</p>
@@ -365,8 +362,10 @@ function StoreDashboard() {
 
           <button className="btn btn-secondary" style={{ width: '100%', marginTop: '15px' }}>すべての会話を見る</button>
         </div>
+        )}
 
         {/* お客様の満足度 */}
+        {false && (
         <div className="card" style={{ marginTop: '16px' }}>
           <div className="card-title">⭐ お客様の満足度</div>
           <div style={{ fontSize: '48px', fontWeight: 700, color: '#667eea', margin: '12px 0' }}>4.5 / 5.0</div>
@@ -375,8 +374,10 @@ function StoreDashboard() {
             💡 お客様の反応は良好です
           </div>
         </div>
+        )}
 
         {/* 今月のおすすめアクション */}
+        {false && (
         <div className="card" style={{ marginTop: '16px', background: '#FFF3E0' }}>
           <div className="card-title">💡 今月のおすすめアクション</div>
           <div style={{ marginBottom: '15px', padding: '15px', background: 'white', borderRadius: '8px' }}>
@@ -394,6 +395,7 @@ function StoreDashboard() {
             <div style={{ color: '#666' }}>→ 18:00にSNS投稿すると効果的</div>
           </div>
         </div>
+        )}
       </section>
 
       <style jsx>{`

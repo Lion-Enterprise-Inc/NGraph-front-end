@@ -192,7 +192,6 @@ export default function ChatDock({
             className="chat-icon"
             type="button"
             aria-label={copy.chat.camera}
-            disabled={true}
             onClick={(e) => {
               e.stopPropagation();
               if (onOpenCamera) {
