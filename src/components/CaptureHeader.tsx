@@ -17,13 +17,14 @@ type ApiRestaurant = {
   updated_at: string
 }
 
-type CaptureHeaderProps = {
+interface CaptureHeaderProps {
   restaurant?: Restaurant | ApiRestaurant | null
-  onMenu?: () => void
-  onLanguage?: () => void
+  onMenu: () => void
+  onLanguage: () => void
+  onNewChat: () => void
 }
 
-export default function CaptureHeader({ restaurant, onMenu, onLanguage }: CaptureHeaderProps) {
+export default function CaptureHeader({ restaurant, onMenu, onLanguage, onNewChat }: CaptureHeaderProps) {
   const { language } = useAppContext()
   const copy = getUiCopy(language)
 
@@ -42,7 +43,7 @@ export default function CaptureHeader({ restaurant, onMenu, onLanguage }: Captur
       }}>
         NGraph
       </div>
-      <button className="icon-button" type="button" aria-label={copy.captureHeader.scan} onClick={onLanguage}>
+      <button className="icon-button" type="button" aria-label="New Chat" onClick={onNewChat}>
         <img src={newTabIcon.src} alt="" />
       </button>
     </header>

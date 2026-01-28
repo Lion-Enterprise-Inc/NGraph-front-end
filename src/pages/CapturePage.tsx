@@ -827,6 +827,7 @@ export default function CapturePage({
           })
         }
         onLanguage={openLanguageModal ?? openLanguageModalFromContext}
+        onNewChat={handleNewChat}
       />
 
       <div
