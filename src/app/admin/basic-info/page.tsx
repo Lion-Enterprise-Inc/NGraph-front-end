@@ -677,7 +677,7 @@ export default function BasicInfoPage() {
         .logo-preview {
           width: 120px;
           height: 120px;
-          object-fit: cover;
+          object-fit: contain;
           border-radius: 12px;
           border: 2px solid #e5e7eb;
           box-shadow: 0 2px 8px rgba(0,0,0,0.1);
