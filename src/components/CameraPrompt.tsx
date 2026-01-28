@@ -14,6 +14,29 @@ export default function CameraPrompt({ heading, sub, buttonLabel, onCamera, rest
   if (restaurantLogo) {
     return (
       <div className="camera-prompt restaurant-logo-prompt">
+        {/* Japanese welcome texts above restaurant logo */}
+        <div style={{
+          textAlign: 'center',
+          marginBottom: '20px',
+          fontFamily: 'Poppins, sans-serif'
+        }}>
+          <div style={{
+            fontSize: '28px',
+            fontWeight: 700,
+            color: '#1f2937',
+            marginBottom: '8px'
+          }}>
+            いらっしゃいませ！
+          </div>
+          <div style={{
+            fontSize: '20px',
+            fontWeight: 500,
+            color: '#6b7280'
+          }}>
+            なんでも聞いてください
+          </div>
+        </div>
+
         <div 
           className="restaurant-logo-container"
           onClick={onCamera}

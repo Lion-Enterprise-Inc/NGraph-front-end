@@ -787,6 +787,33 @@ export default function CapturePage({
     });
   };
 
+  const handleNewChat = () => {
+    // Clear all chat responses
+    setResponses([]);
+    // Clear message input
+    setMessage("");
+    // Clear attachment
+    setAttachment(null);
+    // Reset loading state
+    setLoading(false);
+    // Clear hide recommendations
+    setHideRecommendations(false);
+    // Reset scroll states
+    setUserScrolledUp(false);
+    setShowScrollButton(false);
+    // Reset typing state
+    setIsTypingActive(false);
+    setTypingComplete(new Set());
+    // Clear feedback states
+    responses.forEach(response => {
+      if (response.feedback) {
+        setResponses(prev => prev.map(item => 
+          item.id === response.id ? { ...item, feedback: null } : item
+        ));
+      }
+    });
+  };
+
   return (
     <div className="page capture-page" onClick={handleBackgroundClick}>
       <CaptureHeader

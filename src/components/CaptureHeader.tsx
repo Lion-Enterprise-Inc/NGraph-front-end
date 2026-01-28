@@ -1,5 +1,7 @@
 import MenuSimpleIcon from './icons/MenuSimpleIcon'
 import vector from '../assets/vector.png'
+import newTabIcon from './new_tab.svg'
+import hamburgerIcon from './ham.png'
 import { getUiCopy } from '../i18n/uiCopy'
 import { type Restaurant } from '../api/mockApi'
 import { useAppContext } from './AppProvider'
@@ -28,13 +30,20 @@ export default function CaptureHeader({ restaurant, onMenu, onLanguage }: Captur
   return (
     <header className="capture-header sticky">
       <button className="icon-button" type="button" aria-label={copy.captureHeader.menu} onClick={onMenu}>
-        <MenuSimpleIcon />
+        <img src={hamburgerIcon.src} alt="" style={{ width: '20px', height: '20px' }} />
       </button>
-      <div className="brand-title nav-brand">
+      <div className="brand-title nav-brand" style={{
+        fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+        fontWeight: 800,
+        fontSize: '24px',
+        letterSpacing: '-0.02em',
+        color: '#1f2937',
+        fontStretch: 'expanded'
+      }}>
         NGraph
       </div>
       <button className="icon-button" type="button" aria-label={copy.captureHeader.scan} onClick={onLanguage}>
-        <img src={vector.src} alt="" />
+        <img src={newTabIcon.src} alt="" />
       </button>
     </header>
   )

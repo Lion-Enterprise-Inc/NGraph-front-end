@@ -8,9 +8,9 @@ import {
   type RefObject,
   type SyntheticEvent,
 } from "react";
-import GalleryIcon from "../assets/624689.png";
-import CameraIcon from "../assets/624690.png";
-import VectorIcon from "../assets/Vectoricon.png";
+import GalleryIcon from "../assets/Group 624689.svg";
+import CameraIcon from "../assets/Group 624690.svg";
+import VectorIcon from "../assets/Vector.svg";
 import Vector from "../assets/vectorbtn.png";
 import { getUiCopy } from "../i18n/uiCopy";
 import { useAppContext } from "./AppProvider";
