@@ -268,7 +268,7 @@ export default function CapturePage({
         setRestaurantLoading(true);
         try {
           const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://15.207.22.103:8000';
-          const response = await fetch(`${apiBaseUrl}/api/restaurants/public/${restaurantSlug}`);
+          const response = await fetch(`${apiBaseUrl}/restaurants/public/${restaurantSlug}`);
           
           if (response.ok) {
             const data = await response.json();
@@ -696,7 +696,7 @@ export default function CapturePage({
       try {
         const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://15.207.22.103:8000';
         const restaurantSlugForApi = selectedRestaurant?.slug || 'default';
-        const chatResponse = await fetch(`${apiBaseUrl}/api/public-chat/${restaurantSlugForApi}`, {
+        const chatResponse = await fetch(`${apiBaseUrl}/public-chat/${restaurantSlugForApi}`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
