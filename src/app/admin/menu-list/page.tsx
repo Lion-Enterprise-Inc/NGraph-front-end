@@ -415,6 +415,11 @@ export default function MenuListPage() {
                         <div style={{ width: '40px', height: '30px', background: '#f8f9fa', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', color: '#999' }}>📄</div>
                         <div style={{ flex: 1 }}>
                           <div style={{ fontWeight: 600, color: '#212529', marginBottom: '2px', fontSize: '14px' }}>{item.name}</div>
+                          {item.nameEn && (
+                            <div style={{ fontSize: '12px', color: '#6c757d', marginBottom: '2px', fontStyle: 'italic' }}>
+                              🇬🇧 {item.nameEn}
+                            </div>
+                          )}
                           <div style={{ fontSize: '11px', color: '#6c757d', marginBottom: '2px' }}>
                             📂 {item.category}
                           </div>
