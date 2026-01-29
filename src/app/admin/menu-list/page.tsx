@@ -725,6 +725,11 @@ export default function MenuListPage() {
                   <input type="text" className="form-input" value={editItem.name} onChange={(e) => setEditItem({...editItem, name: e.target.value})} />
                 </div>
                 <div className="form-group">
+                  <label className="form-label">料理名（英語）</label>
+                  <input type="text" className="form-input" value={editItem.nameEn || ''} onChange={(e) => setEditItem({...editItem, nameEn: e.target.value})} />
+                  <button className="btn ai-btn btn-small" style={{ marginTop: '5px' }}>🤖 AI自動翻訳</button>
+                </div>
+                <div className="form-group">
                   <label className="form-label">価格 *</label>
                   <input type="number" className="form-input" value={editItem.price} onChange={(e) => setEditItem({...editItem, price: Number(e.target.value)})} />
                 </div>
