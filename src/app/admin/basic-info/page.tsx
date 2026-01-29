@@ -155,7 +155,7 @@ export default function BasicInfoPage() {
       const token = localStorage.getItem('access_token')
       const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://15.207.22.103:8000'
       
-      const response = await fetch(`${apiBaseUrl}/api/restaurants/${restaurant.uid}`, {
+      const response = await fetch(`${apiBaseUrl}/restaurants/${restaurant.uid}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
