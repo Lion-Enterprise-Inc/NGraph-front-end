@@ -1,4 +1,4 @@
-const API_BASE_URL = 'https://15.207.22.103:8000/api';
+const API_BASE_URL = 'https://dev-backend.ngraph.jp/api';
 
 // Types
 export interface LoginRequest {
