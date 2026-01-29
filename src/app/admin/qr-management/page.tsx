@@ -45,7 +45,7 @@ export default function QRManagementPage() {
 
     setIsGenerating(true)
     const encodedSlug = encodeURIComponent(restaurantSlug.trim())
-    const url = `https://15.207.22.103/?restaurant=${encodedSlug}`
+    const url = `https://app.ngraph.jp/?restaurant=${encodedSlug}`
     setQrCodeUrl(url)
 
     try {
