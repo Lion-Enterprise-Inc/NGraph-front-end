@@ -1,4 +1,4 @@
-const API_BASE_URL = 'https://dev-backend.ngraph.jp/api';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://dev-backend.ngraph.jp/api';
 
 // Types
 export interface LoginRequest {
