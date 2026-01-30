@@ -842,21 +842,46 @@ export default function CapturePage({
               : ""
           }`}
         >
-          <CameraPrompt
-            heading={copy.hero.heading}
-            sub={copy.hero.sub}
-            buttonLabel={copy.cameraPrompt.openCamera}
-            onCamera={() => {
-              if (onOpenCamera) {
-                onOpenCamera();
-                return;
-              }
-              const cameraUrl = selectedRestaurant ? `/camera?restaurant=${selectedRestaurant.slug}` : "/camera";
-              router.push(cameraUrl);
-            }}
-            restaurantLogo={selectedRestaurant?.logo_url}
-            restaurantName={selectedRestaurant?.name}
-          />
+          {restaurantLoading || !selectedRestaurant?.name ? (
+            <div style={{ 
+              display: 'flex', 
+              flexDirection: 'column', 
+              alignItems: 'center', 
+              justifyContent: 'center', 
+              height: '300px',
+              fontFamily: 'Poppins, sans-serif'
+            }}>
+              <div style={{ 
+                width: '40px', 
+                height: '40px', 
+                border: '3px solid #e1e5e9', 
+                borderTopColor: '#10a37f', 
+                borderRadius: '50%', 
+                animation: 'spin 1s linear infinite',
+                marginBottom: '16px'
+              }} />
+              <div style={{ fontSize: '16px', color: '#6b7280', textAlign: 'center' }}>
+                レストラン情報を読み込み中...
+              </div>
+              <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+            </div>
+          ) : (
+            <CameraPrompt
+              heading={copy.hero.heading}
+              sub={copy.hero.sub}
+              buttonLabel={copy.cameraPrompt.openCamera}
+              onCamera={() => {
+                if (onOpenCamera) {
+                  onOpenCamera();
+                  return;
+                }
+                const cameraUrl = selectedRestaurant ? `/camera?restaurant=${selectedRestaurant.slug}` : "/camera";
+                router.push(cameraUrl);
+              }}
+              restaurantLogo={selectedRestaurant?.logo_url}
+              restaurantName={selectedRestaurant?.name}
+            />
+          )}
         </main>
 
         {(fromHome || fromRestaurant) && !hideRecommendations && (
