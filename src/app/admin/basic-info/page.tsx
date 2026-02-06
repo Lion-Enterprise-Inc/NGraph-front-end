@@ -399,18 +399,15 @@ export default function BasicInfoPage() {
               </div>
 
               <div style={{ background: '#f8fafc', padding: '24px', borderRadius: '12px', marginBottom: '20px', border: '1px solid #e2e8f0' }}>
-                <h4 style={{ fontSize: '15px', fontWeight: 600, margin: '0 0 8px 0', color: '#1a202c' }}>業種カテゴリ</h4>
-                <p style={{ fontSize: '12px', color: '#64748b', marginBottom: '16px' }}>選択した業種に最適なAI応答テンプレートが自動適用されます</p>
+                <h4 style={{ fontSize: '15px', fontWeight: 600, margin: '0 0 8px 0', color: '#1a202c' }}>システムプロンプト</h4>
+                <p style={{ fontSize: '12px', color: '#64748b', marginBottom: '16px' }}>選択したAI応答テンプレートが自動適用されます</p>
                 <select value={aiIndustry} onChange={(e) => setAiIndustry(e.target.value)} style={{ width: '100%', padding: '10px 12px', border: '1px solid #cbd5e0', borderRadius: '6px', fontSize: '14px', background: 'white' }}>
-                  <option value="">業種を選択してください</option>
-                  <option value="restaurant">① 飲食店（寿司、和食、居酒屋、カフェ、バーなど）</option>
-                  <option value="retail">② 小売店（アパレル、雑貨、書店など）</option>
-                  <option value="service">③ サービス業（美容室、サロン、クリーニングなど）</option>
-                  <option value="hotel">④ 宿泊施設（ホテル、旅館、民泊など）</option>
-                  <option value="medical">⑤ 医療・健康（クリニック、整体、薬局など）</option>
-                  <option value="education">⑥ 教育・スクール（塾、教室、スクールなど）</option>
-                  <option value="entertainment">⑦ エンターテイメント（劇場、カラオケ、ゲームセンターなど）</option>
-                  <option value="other">⑧ その他</option>
+                  <option value="">テンプレートを選択してください</option>
+                  <option value="template1">テンプレート1</option>
+                  <option value="template2">テンプレート2</option>
+                  <option value="template3">テンプレート3</option>
+                  <option value="template4">テンプレート4</option>
+                  <option value="template5">テンプレート5</option>
                 </select>
               </div>
 
@@ -450,7 +447,8 @@ export default function BasicInfoPage() {
           )}
         </div>
 
-        {/* Business Plan Upgrade - Always Visible */}
+        {/* Business Plan Upgrade - Always Visible - Commented out to hide */}
+        {/*
         <div className="upgrade-card">
           <div className="upgrade-header">
             <div className="upgrade-icon">✨</div>
@@ -479,6 +477,7 @@ export default function BasicInfoPage() {
             プラン詳細を確認 →
           </button>
         </div>
+        */}
       </div>
 
       <style jsx>{`

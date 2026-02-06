@@ -70,7 +70,7 @@ export default function AdminLayout({ children, title }: Props) {
     { key: 'dashboard', label: 'ダッシュボード', icon: '🏠', to: '/admin' },
     { key: 'basic-info', label: '基本情報', icon: '🧾', to: '/admin/basic-info' },
     { key: 'menu-list', label: 'メニュー一覧', icon: '📋', to: '/admin/menu-list' },
-    { key: 'ai-editor', label: 'AIエディタ', icon: '✨', to: '/admin/ai-editor' },
+    // { key: 'ai-editor', label: 'AIエディタ', icon: '✨', to: '/admin/ai-editor' },
     { key: 'qr', label: 'QRコード', icon: '📱', to: '/admin/qr-management' },
   ]
 
