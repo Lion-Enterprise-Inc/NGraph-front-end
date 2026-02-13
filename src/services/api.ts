@@ -27,6 +27,40 @@ export interface ApiError {
   status_code: number;
 }
 
+// Menu Scraping types
+export interface MenuScrapingRequest {
+  url: string;
+}
+
+export interface MenuScrapingResponse {
+  result: {
+    task_id: string;
+  };
+  message: string;
+  status_code: number;
+}
+
+export interface ScrapingTaskStatus {
+  task_id: string;
+  status: 'pending' | 'processing' | 'completed' | 'failed';
+  result?: {
+    menus: Array<{
+      name: string;
+      price: number;
+      category: string;
+      description?: string;
+      confidence: number;
+    }>;
+  };
+  error?: string;
+}
+
+export interface TaskStatusResponse {
+  result: ScrapingTaskStatus;
+  message: string;
+  status_code: number;
+}
+
 // Restaurant types
 export interface CreateRestaurantRequest {
   name: string;
@@ -470,6 +504,17 @@ export const AllergenApi = {
 
   delete: async (uid: string): Promise<{ message: string; status_code: number }> => {
     return apiClient.delete(`/allergens/${uid}`);
+  }
+};
+
+// Scraping API
+export const ScrapingApi = {
+  scrapeMenu: async (restaurantSlug: string, data: MenuScrapingRequest): Promise<MenuScrapingResponse> => {
+    return apiClient.post<MenuScrapingResponse>(`/menus/${restaurantSlug}/scrape`, data);
+  },
+
+  getTaskStatus: async (taskId: string): Promise<TaskStatusResponse> => {
+    return apiClient.get<TaskStatusResponse>(`/tasks/${taskId}`);
   }
 };
 

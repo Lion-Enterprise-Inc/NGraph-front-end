@@ -20,6 +20,7 @@ export default function BasicInfoPage() {
     address: '',
     officialWebsite: '',
     instagramUrl: '',
+    menuScrapingUrl: '',
     description: '',
     businessHours: '',
     holidays: '',
@@ -88,6 +89,7 @@ export default function BasicInfoPage() {
         address: restaurantData.address || '',
         officialWebsite: restaurantData.official_website || '',
         instagramUrl: restaurantData.other_sources || '',
+        menuScrapingUrl: localStorage.getItem(`menu_scraping_url_${restaurantData.uid}`) || restaurantData.menu_scraping_url || '',
         description: restaurantData.store_introduction || '',
         businessHours: restaurantData.opening_hours || '',
         holidays: '',
@@ -138,6 +140,7 @@ export default function BasicInfoPage() {
       formDataToSend.append('official_website', formData.officialWebsite)
       formDataToSend.append('address', formData.address)
       formDataToSend.append('other_sources', formData.instagramUrl)
+      formDataToSend.append('menu_scraping_url', formData.menuScrapingUrl)
       formDataToSend.append('store_introduction', formData.description)
       formDataToSend.append('opening_hours', formData.businessHours)
       formDataToSend.append('budget', formData.budget)
@@ -180,6 +183,11 @@ export default function BasicInfoPage() {
       // Update formData with new logo_url from response
       if (result.result?.logo_url) {
         setFormData(prev => ({ ...prev, logoUrl: result.result.logo_url }))
+      }
+      
+      // Save menu scraping URL to localStorage (temporary until backend supports it)
+      if (formData.menuScrapingUrl) {
+        localStorage.setItem(`menu_scraping_url_${restaurant.uid}`, formData.menuScrapingUrl)
       }
       
       // Re-fetch restaurant data to ensure we have the latest
@@ -318,9 +326,6 @@ export default function BasicInfoPage() {
                 <label className="form-label">住所</label>
                 <input type="text" name="address" className="form-input" value={formData.address} onChange={handleChange} />
               </div>
-              <button className="btn btn-primary" onClick={handleSave} disabled={isSaving}>
-                {isSaving ? '⏳ 保存中...' : '💾 保存'}
-              </button>
             </div>
           )}
 
@@ -337,6 +342,11 @@ export default function BasicInfoPage() {
               <div className="form-group">
                 <label className="form-label">📸 Instagram</label>
                 <input type="url" name="instagramUrl" className="form-input" placeholder="https://instagram.com/yourstore" value={formData.instagramUrl} onChange={handleChange} />
+              </div>
+              <div className="form-group">
+                <label className="form-label">🍽️ メニュー情報ソースURL</label>
+                <input type="url" name="menuScrapingUrl" className="form-input" placeholder="https://tabelog.com/en/fukui/A1801/A180101/18007249/dtlmenu/" value={formData.menuScrapingUrl} onChange={handleChange} />
+                <small style={{ color: '#666', fontSize: '12px' }}>メニュー情報を自動取得するためのURLを入力してください</small>
               </div>
               <div style={{ display: 'flex', gap: '10px', marginTop: '15px', flexWrap: 'wrap' }}>
                 <button className="btn btn-secondary">➕ その他のソースを追加</button>
@@ -383,7 +393,6 @@ export default function BasicInfoPage() {
                 <label className="form-label">特徴・こだわり</label>
                 <textarea name="features" className="form-input" placeholder="例: 地元食材使用、個室あり、英語メニューあり" value={formData.features} onChange={handleChange} rows={3} />
               </div>
-              <button className="btn btn-primary" onClick={handleSave}>💾 保存</button>
             </div>
           )}
 
@@ -445,6 +454,13 @@ export default function BasicInfoPage() {
               </div>
             </div>
           )}
+        </div>
+
+        {/* Global Save Button - Visible on all tabs */}
+        <div style={{ display: 'flex', justifyContent: 'center', marginTop: '20px', paddingTop: '20px', borderTop: '1px solid #e5e7eb' }}>
+          <button className="btn btn-primary" onClick={handleSave} disabled={isSaving} style={{ padding: '12px 24px', fontSize: '16px' }}>
+            {isSaving ? '⏳ 保存中...' : '💾 すべての変更を保存'}
+          </button>
         </div>
 
         {/* Business Plan Upgrade - Always Visible - Commented out to hide */}
