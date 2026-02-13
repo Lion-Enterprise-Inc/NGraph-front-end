@@ -8,7 +8,7 @@ export interface LoginRequest {
 
 export interface User {
   email: string;
-  role: 'platform_owner' | 'restaurant_owner';
+  role: 'platform_owner' | 'restaurant_owner' | 'consumer' | 'superadmin';
   uid: string;
   restaurant_slug?: string;
 }
@@ -333,6 +333,45 @@ export interface Ingredient {
   slug: string;
 }
 
+// Allergen types
+export type AllergenType = 'mandatory' | 'recommended';
+
+export interface Allergen {
+  uid: string;
+  name_en: string;
+  name_jp: string;
+  allergen_type: AllergenType;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AllergenCreate {
+  name_en: string;
+  name_jp: string;
+  allergen_type: AllergenType;
+}
+
+export interface AllergenUpdate {
+  name_en?: string | null;
+  name_jp?: string | null;
+  allergen_type?: AllergenType | null;
+}
+
+export interface AllergenListResponse {
+  result: Array<{
+    mandatory?: Allergen[];
+    recommended?: Allergen[];
+  }>;
+  message: string;
+  status_code: number;
+}
+
+export interface AllergenResponse {
+  result: Allergen;
+  message: string;
+  status_code: number;
+}
+
 // Menu types
 export interface Menu {
   uid: string;
@@ -344,6 +383,7 @@ export interface Menu {
   price: number;
   restaurant_uid: string;
   ingredients: Ingredient[] | null;
+  allergens: Allergen[] | null;
   created_at: string;
   updated_at: string;
 }
@@ -357,6 +397,7 @@ export interface MenuCreate {
   price: number;
   restaurant_uid: string;
   ingredients?: string[] | null;
+  allergen_uids?: string[] | null;
 }
 
 export interface MenuUpdate {
@@ -367,6 +408,7 @@ export interface MenuUpdate {
   status?: boolean | null;
   price?: number | null;
   ingredients?: string[] | null;  // API accepts ingredient names as strings for update
+  allergen_uids?: string[] | null;
 }
 
 export interface MenuListResponse {
@@ -405,6 +447,29 @@ export const MenuApi = {
 
   delete: async (menuUid: string): Promise<{ message: string; status_code: number }> => {
     return apiClient.delete(`/menus/${menuUid}`);
+  }
+};
+
+// Allergen API
+export const AllergenApi = {
+  getAll: async (): Promise<AllergenListResponse> => {
+    return apiClient.get<AllergenListResponse>('/allergens/');
+  },
+
+  getById: async (uid: string): Promise<AllergenResponse> => {
+    return apiClient.get<AllergenResponse>(`/allergens/${uid}`);
+  },
+
+  create: async (data: AllergenCreate): Promise<AllergenResponse> => {
+    return apiClient.post<AllergenResponse>('/allergens/', data);
+  },
+
+  update: async (uid: string, data: AllergenUpdate): Promise<AllergenResponse> => {
+    return apiClient.put<AllergenResponse>(`/allergens/${uid}`, data);
+  },
+
+  delete: async (uid: string): Promise<{ message: string; status_code: number }> => {
+    return apiClient.delete(`/allergens/${uid}`);
   }
 };
 

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import AdminLayout from '../../../components/admin/AdminLayout'
-import { MenuApi, Menu, MenuCreate, MenuUpdate, Ingredient, apiClient } from '../../../services/api'
+import { MenuApi, Menu, MenuCreate, MenuUpdate, Ingredient, AllergenApi, Allergen, AllergenListResponse, apiClient } from '../../../services/api'
 import { useAuth } from '../../../contexts/AuthContext'
 
 interface MenuItem {
@@ -14,6 +14,7 @@ interface MenuItem {
   status: boolean
   ingredients: Ingredient[]
   description: string | null
+  allergens: Allergen[]
 }
 
 export default function MenuListPage() {
@@ -45,6 +46,9 @@ export default function MenuListPage() {
   const [restaurant, setRestaurant] = useState<any>(null)
   const [isSaving, setIsSaving] = useState(false)
   const [editIngredientsText, setEditIngredientsText] = useState('')
+  const [allergens, setAllergens] = useState<{ mandatory: Allergen[]; recommended: Allergen[] }>({ mandatory: [], recommended: [] })
+  const [selectedAllergenUids, setSelectedAllergenUids] = useState<string[]>([])
+  const [editSelectedAllergenUids, setEditSelectedAllergenUids] = useState<string[]>([])
 
   // Fetch restaurant and menus
   useEffect(() => {
@@ -73,13 +77,50 @@ export default function MenuListPage() {
               price: menu.price,
               status: menu.status,
               ingredients: menu.ingredients || [],
-              description: menu.description
+              description: menu.description,
+              allergens: menu.allergens || []
             }))
             setMenuItems(menus)
           } catch (menuErr) {
             // No menus found - this is OK, just show empty list
             console.log('No menus found for restaurant')
             setMenuItems([])
+          }
+
+          // Fetch allergens
+          try {
+            const allergensResponse = await AllergenApi.getAll()
+            console.log('Allergen API response:', allergensResponse)
+            // Transform array response to object format
+            // The API returns an array of objects, each containing either mandatory or recommended allergens
+            let allMandatory: Allergen[] = []
+            let allRecommended: Allergen[] = []
+
+            if (Array.isArray(allergensResponse.result)) {
+              allergensResponse.result.forEach((item, index) => {
+                console.log(`Processing item ${index}:`, item)
+                if (item.mandatory) {
+                  console.log(`Found mandatory allergens:`, item.mandatory.length)
+                  allMandatory = [...allMandatory, ...item.mandatory]
+                }
+                if (item.recommended) {
+                  console.log(`Found recommended allergens:`, item.recommended.length)
+                  allRecommended = [...allRecommended, ...item.recommended]
+                }
+              })
+            }
+
+            const transformedAllergens = {
+              mandatory: allMandatory,
+              recommended: allRecommended
+            }
+            console.log('Final transformed allergens:', transformedAllergens)
+            setAllergens(transformedAllergens)
+            console.log('Allergens state set successfully')
+          } catch (allergenErr) {
+            console.log('Failed to fetch allergens:', allergenErr)
+            // Set empty allergens if fetch fails
+            setAllergens({ mandatory: [], recommended: [] })
           }
         }
       } catch (err: any) {
@@ -120,7 +161,8 @@ export default function MenuListPage() {
         price: menu.price,
         status: menu.status,
         ingredients: menu.ingredients || [],
-        description: menu.description
+        description: menu.description,
+        allergens: menu.allergens || []
       }))
       setMenuItems(menus)
     } catch (err) {
@@ -155,6 +197,7 @@ export default function MenuListPage() {
         description: newMenu.description || null,
         restaurant_uid: restaurant.uid,
         ingredients: ingredientsArray,
+        allergen_uids: selectedAllergenUids.length > 0 ? selectedAllergenUids : null,
         status: false
       }
 
@@ -162,6 +205,7 @@ export default function MenuListPage() {
       await refreshMenus()
       
       setNewMenu({ name: '', nameEn: '', price: '', category: '', description: '', ingredients: '' })
+      setSelectedAllergenUids([])
       setShowAddModal(false)
       setActiveTab('basic')
       alert('✅ メニューを追加しました！')
@@ -248,6 +292,7 @@ export default function MenuListPage() {
     setEditItem({...item})
     // Initialize edit ingredients text from item's ingredients
     setEditIngredientsText(item.ingredients?.map(ing => ing.name).join(', ') || '')
+    setEditSelectedAllergenUids(item.allergens?.map(allergen => allergen.uid) || [])
     setShowEditModal(true)
     setActiveTab('basic')
   }
@@ -269,6 +314,7 @@ export default function MenuListPage() {
         price: editItem.price,
         description: editItem.description,
         ingredients: ingredientNames,
+        allergen_uids: editSelectedAllergenUids.length > 0 ? editSelectedAllergenUids : null,
         status: editItem.status
       }
 
@@ -278,6 +324,7 @@ export default function MenuListPage() {
       setShowEditModal(false)
       setEditItem(null)
       setEditIngredientsText('')
+      setEditSelectedAllergenUids([])
       alert('✅ メニューを更新しました！')
     } catch (err) {
       console.error('Failed to update menu:', err)
@@ -545,27 +592,85 @@ export default function MenuListPage() {
             {activeTab === 'allergens' && (
               <div className="tab-content">
                 <div className="form-group">
-                  <label className="form-label">⚠️ アレルゲン情報（特定原材料28品目）</label>
-                  <div style={{ marginBottom: '20px' }}>
-                    <strong>特定原材料（表示義務）7品目:</strong>
-                    <div className="checkbox-group">
-                      {['えび', 'かに', '小麦', 'そば', '卵', '乳', '落花生'].map(item => (
-                        <label key={item} className="checkbox-item">
-                          <input type="checkbox" /> {item}
-                        </label>
-                      ))}
+                  <label className="form-label">⚠️ アレルゲン情報</label>
+                  {allergens && allergens.mandatory && allergens.mandatory.length > 0 && (
+                    <div style={{ marginBottom: '20px' }}>
+                      <strong>特定原材料（表示義務）:</strong>
+                      <div className="checkbox-group">
+                        {allergens.mandatory.map(allergen => (
+                          <label key={allergen.uid} className="checkbox-item">
+                            <input
+                              type="checkbox"
+                              checked={selectedAllergenUids.includes(allergen.uid)}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setSelectedAllergenUids([...selectedAllergenUids, allergen.uid])
+                                } else {
+                                  setSelectedAllergenUids(selectedAllergenUids.filter(uid => uid !== allergen.uid))
+                                }
+                              }}
+                            /> {allergen.name_jp} ({allergen.name_en})
+                          </label>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                  <div style={{ marginBottom: '20px' }}>
-                    <strong>🕌 宗教・文化対応:</strong>
-                    <div className="checkbox-group">
-                      {['ハラール対応', 'ベジタリアン', 'ヴィーガン', 'グルテンフリー'].map(item => (
-                        <label key={item} className="checkbox-item">
-                          <input type="checkbox" /> {item}
-                        </label>
-                      ))}
+                  )}
+                  {allergens && allergens.recommended && allergens.recommended.length > 0 && (
+                    <div style={{ marginBottom: '20px' }}>
+                      <strong>推奨表示アレルゲン:</strong>
+                      <div className="checkbox-group">
+                        {allergens.recommended.map(allergen => (
+                          <label key={allergen.uid} className="checkbox-item">
+                            <input
+                              type="checkbox"
+                              checked={selectedAllergenUids.includes(allergen.uid)}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setSelectedAllergenUids([...selectedAllergenUids, allergen.uid])
+                                } else {
+                                  setSelectedAllergenUids(selectedAllergenUids.filter(uid => uid !== allergen.uid))
+                                }
+                              }}
+                            /> {allergen.name_jp} ({allergen.name_en})
+                          </label>
+                        ))}
+                      </div>
                     </div>
-                  </div>
+                  )}
+                  {/* DEBUG: Always show recommended section */}
+                  {allergens && (
+                    <div style={{ marginBottom: '20px', border: '2px solid red', padding: '10px' }}>
+                      <strong>DEBUG - Recommended Allergens (always shown):</strong>
+                      <div>Has allergens object: {allergens ? 'YES' : 'NO'}</div>
+                      <div>Has recommended property: {allergens.recommended ? 'YES' : 'NO'}</div>
+                      <div>Recommended length: {allergens.recommended ? allergens.recommended.length : 'N/A'}</div>
+                      {allergens.recommended && allergens.recommended.length > 0 && (
+                        <div className="checkbox-group">
+                          {allergens.recommended.slice(0, 3).map(allergen => (
+                            <label key={allergen.uid} className="checkbox-item">
+                              <input
+                                type="checkbox"
+                                checked={selectedAllergenUids.includes(allergen.uid)}
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    setSelectedAllergenUids([...selectedAllergenUids, allergen.uid])
+                                  } else {
+                                    setSelectedAllergenUids(selectedAllergenUids.filter(uid => uid !== allergen.uid))
+                                  }
+                                }}
+                              /> {allergen.name_jp} ({allergen.name_en})
+                            </label>
+                          ))}
+                          {allergens.recommended.length > 3 && <div>... and {allergens.recommended.length - 3} more</div>}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  {(!allergens || (!allergens.mandatory?.length && !allergens.recommended?.length)) && (
+                    <div style={{ color: '#666', fontStyle: 'italic' }}>
+                      アレルゲン情報が読み込めませんでした。後で再試行してください。
+                    </div>
+                  )}
                 </div>
                 <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
                   <button className="btn btn-secondary" onClick={() => { setShowAddModal(false); setActiveTab('basic'); }}>キャンセル</button>
@@ -785,17 +890,65 @@ export default function MenuListPage() {
             {activeTab === 'allergens' && (
               <div className="tab-content">
                 <div className="form-group">
-                  <label className="form-label">⚠️ アレルゲン情報（特定原材料28品目）</label>
-                  <div style={{ marginBottom: '20px' }}>
-                    <strong>特定原材料（表示義務）7品目:</strong>
-                    <div className="checkbox-group">
-                      {['えび', 'かに', '小麦', 'そば', '卵', '乳', '落花生'].map(item => (
-                        <label key={item} className="checkbox-item">
-                          <input type="checkbox" /> {item}
-                        </label>
-                      ))}
+                  <label className="form-label">⚠️ アレルゲン情報</label>
+                  {allergens && allergens.mandatory && allergens.mandatory.length > 0 && (
+                    <div style={{ marginBottom: '20px' }}>
+                      <strong>特定原材料（表示義務）:</strong>
+                      <div className="checkbox-group">
+                        {allergens.mandatory.map(allergen => (
+                          <label key={allergen.uid} className="checkbox-item">
+                            <input
+                              type="checkbox"
+                              checked={editSelectedAllergenUids.includes(allergen.uid)}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setEditSelectedAllergenUids([...editSelectedAllergenUids, allergen.uid])
+                                } else {
+                                  setEditSelectedAllergenUids(editSelectedAllergenUids.filter(uid => uid !== allergen.uid))
+                                }
+                              }}
+                            /> {allergen.name_jp} ({allergen.name_en})
+                          </label>
+                        ))}
+                      </div>
                     </div>
-                  </div>
+                  )}
+                  {allergens && allergens.recommended && allergens.recommended.length > 0 && (
+                    <div style={{ marginBottom: '20px' }}>
+                      <strong>推奨表示アレルゲン:</strong>
+                      <div className="checkbox-group">
+                        {allergens.recommended.map(allergen => (
+                          <label key={allergen.uid} className="checkbox-item">
+                            <input
+                              type="checkbox"
+                              checked={editSelectedAllergenUids.includes(allergen.uid)}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setEditSelectedAllergenUids([...editSelectedAllergenUids, allergen.uid])
+                                } else {
+                                  setEditSelectedAllergenUids(editSelectedAllergenUids.filter(uid => uid !== allergen.uid))
+                                }
+                              }}
+                            /> {allergen.name_jp} ({allergen.name_en})
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {/* DEBUG: Always show recommended section in edit modal */}
+                  {allergens && (
+                    <div style={{ marginBottom: '20px', border: '2px solid blue', padding: '10px' }}>
+                      <strong>DEBUG - Edit Modal Recommended Allergens:</strong>
+                      <div>Has allergens object: {allergens ? 'YES' : 'NO'}</div>
+                      <div>Has recommended property: {allergens.recommended ? 'YES' : 'NO'}</div>
+                      <div>Recommended length: {allergens.recommended ? allergens.recommended.length : 'N/A'}</div>
+                    </div>
+                  )}
+                  {(!allergens || (!allergens.mandatory?.length && !allergens.recommended?.length)) && (
+                    <div style={{ color: '#666', fontStyle: 'italic' }}>
+                      アレルゲン情報が読み込めませんでした。後で再試行してください。
+                    </div>
+                  )}
                 </div>
 
                 {/* Status toggle */}

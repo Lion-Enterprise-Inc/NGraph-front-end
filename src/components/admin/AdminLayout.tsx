@@ -78,6 +78,7 @@ export default function AdminLayout({ children, title }: Props) {
     { key: 'dashboard', label: 'ダッシュボード', icon: '🏠', to: '/admin' },
     { key: 'users', label: 'ユーザー管理', icon: '👥', to: '/admin/users' },
     { key: 'restaurant-list', label: '導入レストラン', icon: '🍽️', to: '/admin/stores' },
+    { key: 'allergens', label: 'アレルゲン管理', icon: '⚠️', to: '/admin/allergens' },
     { key: 'ai-management', label: 'AI管理', icon: '🤖', to: '/admin/ai-management' },
     { key: 'system-prompt', label: 'システムプロンプト', icon: '📝', to: '/admin/prompts' },
   ]
