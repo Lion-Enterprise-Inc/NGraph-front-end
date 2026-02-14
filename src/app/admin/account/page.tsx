@@ -542,35 +542,6 @@ export default function AccountPage() {
           </div>
         </div>
 
-        {/* Plan Info Section - Only for Restaurant Owners */}
-        {isRestaurantOwner && (
-          <div className="form-section plan-section">
-            <div className="plan-header-row">
-              <label className="form-label">プラン情報</label>
-              <button className="btn-secondary btn-small" onClick={() => setShowPlanManagement(true)}>
-                プランの詳細変更
-              </button>
-            </div>
-            <div className="plan-info-grid">
-              <div className="plan-info-item">
-                <div className="info-label">プラン名</div>
-                <div className="info-value">{getPlanName(currentPlan)}</div>
-              </div>
-              <div className="plan-info-item">
-                <div className="info-label">月額費用</div>
-                <div className="info-value">{getPlanPrice(currentPlan)}</div>
-              </div>
-              <div className="plan-info-item">
-                <div className="info-label">契約開始日</div>
-                <div className="info-value">2024-10-01</div>
-              </div>
-              <div className="plan-info-item">
-                <div className="info-label">次回更新日</div>
-                <div className="info-value">2024-11-01</div>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* QR Code Management Link */}
         <div className="qr-section">
