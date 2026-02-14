@@ -684,7 +684,7 @@ export default function CapturePage({
             formData.append('restaurant_slug', selectedRestaurant.slug);
           }
 
-          const visionResponse = await fetch(`${apiBaseUrl}/api/menus/analyze-image`, {
+          const visionResponse = await fetch(`${apiBaseUrl}/menus/analyze-image`, {
             method: 'POST',
             body: formData,
           });
@@ -744,7 +744,7 @@ export default function CapturePage({
 
           if (chatResponse.ok) {
             const chatData = await chatResponse.json();
-            output = { title: 'Chat Response', intro: chatData.response, body: [] };
+            output = { title: 'Chat Response', intro: chatData.ai_response, body: [] };
           } else {
             throw new Error(`Chat API failed with status: ${chatResponse.status}`);
           }
