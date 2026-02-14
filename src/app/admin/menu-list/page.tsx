@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import AdminLayout from '../../../components/admin/AdminLayout'
-import { MenuApi, Menu, MenuCreate, MenuUpdate, Ingredient, AllergenApi, Allergen, AllergenListResponse, ScrapingApi, apiClient } from '../../../services/api'
+import { MenuApi, Menu, MenuCreate, MenuUpdate, Ingredient, AllergenApi, Allergen, AllergenListResponse, ScrapingApi, apiClient, CookingMethodApi, RestrictionApi, CookingMethod, Restriction } from '../../../services/api'
 import { useAuth } from '../../../contexts/AuthContext'
 
 interface MenuItem {
@@ -15,6 +15,8 @@ interface MenuItem {
   ingredients: Ingredient[]
   description: string | null
   allergens: Allergen[]
+  cookingMethods: CookingMethod[]
+  restrictions: Restriction[]
 }
 
 export default function MenuListPage() {
@@ -54,6 +56,12 @@ export default function MenuListPage() {
   const [totalPages, setTotalPages] = useState(1)
   const [totalItems, setTotalItems] = useState(0)
   const [editSelectedAllergenUids, setEditSelectedAllergenUids] = useState<string[]>([])
+  const [cookingMethods, setCookingMethods] = useState<CookingMethod[]>([])
+  const [restrictions, setRestrictions] = useState<Restriction[]>([])
+  const [selectedCookingMethodUids, setSelectedCookingMethodUids] = useState<string[]>([])
+  const [selectedRestrictionUids, setSelectedRestrictionUids] = useState<string[]>([])
+  const [editSelectedCookingMethodUids, setEditSelectedCookingMethodUids] = useState<string[]>([])
+  const [editSelectedRestrictionUids, setEditSelectedRestrictionUids] = useState<string[]>([])
 
   // Fetch restaurant and menus
   const fetchData = useCallback(async (page: number = 1) => {
@@ -94,7 +102,9 @@ export default function MenuListPage() {
             status: menu.status,
             ingredients: menu.ingredients || [],
             description: menu.description,
-            allergens: menu.allergens || []
+            allergens: menu.allergens || [],
+            cookingMethods: menu.cooking_methods || [],
+            restrictions: menu.restrictions || []
           }))
           setMenuItems(menus)
         } catch (menuErr) {
@@ -139,6 +149,22 @@ export default function MenuListPage() {
           console.log('Failed to fetch allergens:', allergenErr)
           // Set empty allergens if fetch fails
           setAllergens({ mandatory: [], recommended: [] })
+        }
+
+        // Fetch cooking methods
+        try {
+          const cmResponse = await CookingMethodApi.getAll()
+          setCookingMethods(cmResponse.result || [])
+        } catch (e) {
+          console.log('Failed to fetch cooking methods:', e)
+        }
+
+        // Fetch restrictions
+        try {
+          const rResponse = await RestrictionApi.getAll()
+          setRestrictions(rResponse.result || [])
+        } catch (e) {
+          console.log('Failed to fetch restrictions:', e)
         }
       }
     } catch (err: any) {
@@ -222,14 +248,18 @@ export default function MenuListPage() {
         restaurant_uid: restaurant.uid,
         ingredients: ingredientsArray,
         allergen_uids: selectedAllergenUids.length > 0 ? selectedAllergenUids : null,
+        cooking_method_uids: selectedCookingMethodUids.length > 0 ? selectedCookingMethodUids : null,
+        restriction_uids: selectedRestrictionUids.length > 0 ? selectedRestrictionUids : null,
         status: false
       }
 
       await MenuApi.create(menuData)
       await refreshMenus()
-      
+
       setNewMenu({ name: '', nameEn: '', price: '', category: '', description: '', ingredients: '' })
       setSelectedAllergenUids([])
+      setSelectedCookingMethodUids([])
+      setSelectedRestrictionUids([])
       setShowAddModal(false)
       setActiveTab('basic')
       alert('✅ メニューを追加しました！')
@@ -392,6 +422,8 @@ export default function MenuListPage() {
     // Initialize edit ingredients text from item's ingredients
     setEditIngredientsText(item.ingredients?.map(ing => ing.name).join(', ') || '')
     setEditSelectedAllergenUids(item.allergens?.map(allergen => allergen.uid) || [])
+    setEditSelectedCookingMethodUids(item.cookingMethods?.map(cm => cm.uid) || [])
+    setEditSelectedRestrictionUids(item.restrictions?.map(r => r.uid) || [])
     setShowEditModal(true)
     setActiveTab('basic')
   }
@@ -414,16 +446,20 @@ export default function MenuListPage() {
         description: editItem.description,
         ingredients: ingredientNames,
         allergen_uids: editSelectedAllergenUids.length > 0 ? editSelectedAllergenUids : null,
+        cooking_method_uids: editSelectedCookingMethodUids.length > 0 ? editSelectedCookingMethodUids : null,
+        restriction_uids: editSelectedRestrictionUids.length > 0 ? editSelectedRestrictionUids : null,
         status: editItem.status
       }
 
       await MenuApi.update(editItem.uid, updateData)
       await refreshMenus()
-      
+
       setShowEditModal(false)
       setEditItem(null)
       setEditIngredientsText('')
       setEditSelectedAllergenUids([])
+      setEditSelectedCookingMethodUids([])
+      setEditSelectedRestrictionUids([])
       alert('✅ メニューを更新しました！')
     } catch (err) {
       console.error('Failed to update menu:', err)
@@ -732,6 +768,32 @@ export default function MenuListPage() {
                     ※ 複数の原材料はカンマ（,）で区切って入力してください
                   </div>
                 </div>
+                {/* Cooking Methods Section */}
+                <div className="form-group" style={{ marginTop: '20px' }}>
+                  <label className="form-label">調理法</label>
+                  {cookingMethods.length > 0 ? (
+                    <div className="checkbox-group">
+                      {cookingMethods.map(cm => (
+                        <label key={cm.uid} className="checkbox-item">
+                          <input
+                            type="checkbox"
+                            checked={selectedCookingMethodUids.includes(cm.uid)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedCookingMethodUids([...selectedCookingMethodUids, cm.uid])
+                              } else {
+                                setSelectedCookingMethodUids(selectedCookingMethodUids.filter(uid => uid !== cm.uid))
+                              }
+                            }}
+                          />
+                          {cm.name_jp}
+                        </label>
+                      ))}
+                    </div>
+                  ) : (
+                    <div style={{ color: '#666', fontStyle: 'italic', fontSize: '13px' }}>調理法マスタデータなし</div>
+                  )}
+                </div>
                 <div style={{ marginTop: '12px', paddingTop: '8px', borderTop: '1px solid #e5e7eb' }}>
                   <button className="btn btn-primary" onClick={() => setActiveTab('allergens')}>次へ: アレルギー設定 →</button>
                 </div>
@@ -786,39 +848,36 @@ export default function MenuListPage() {
                       </div>
                     </div>
                   )}
-                  {/* DEBUG: Always show recommended section */}
-                  {allergens && (
-                    <div style={{ marginBottom: '20px', border: '2px solid red', padding: '10px' }}>
-                      <strong>DEBUG - Recommended Allergens (always shown):</strong>
-                      <div>Has allergens object: {allergens ? 'YES' : 'NO'}</div>
-                      <div>Has recommended property: {allergens.recommended ? 'YES' : 'NO'}</div>
-                      <div>Recommended length: {allergens.recommended ? allergens.recommended.length : 'N/A'}</div>
-                      {allergens.recommended && allergens.recommended.length > 0 && (
-                        <div className="checkbox-group">
-                          {allergens.recommended.slice(0, 3).map(allergen => (
-                            <label key={allergen.uid} className="checkbox-item">
-                              <input
-                                type="checkbox"
-                                checked={selectedAllergenUids.includes(allergen.uid)}
-                                onChange={(e) => {
-                                  if (e.target.checked) {
-                                    setSelectedAllergenUids([...selectedAllergenUids, allergen.uid])
-                                  } else {
-                                    setSelectedAllergenUids(selectedAllergenUids.filter(uid => uid !== allergen.uid))
-                                  }
-                                }}
-                              /> {allergen.name_jp} ({allergen.name_en})
-                            </label>
-                          ))}
-                          {allergens.recommended.length > 3 && <div>... and {allergens.recommended.length - 3} more</div>}
-                        </div>
-                      )}
-                    </div>
-                  )}
                   {(!allergens || (!allergens.mandatory?.length && !allergens.recommended?.length)) && (
                     <div style={{ color: '#666', fontStyle: 'italic' }}>
                       アレルゲン情報が読み込めませんでした。後で再試行してください。
                     </div>
+                  )}
+                </div>
+                {/* Restrictions Section */}
+                <div className="form-group" style={{ marginTop: '20px' }}>
+                  <label className="form-label">食事制約</label>
+                  {restrictions.length > 0 ? (
+                    <div className="checkbox-group">
+                      {restrictions.map(r => (
+                        <label key={r.uid} className="checkbox-item">
+                          <input
+                            type="checkbox"
+                            checked={selectedRestrictionUids.includes(r.uid)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedRestrictionUids([...selectedRestrictionUids, r.uid])
+                              } else {
+                                setSelectedRestrictionUids(selectedRestrictionUids.filter(uid => uid !== r.uid))
+                              }
+                            }}
+                          />
+                          {r.name_jp} {r.name_en && <span style={{ fontSize: '11px', color: '#999' }}>({r.name_en})</span>}
+                        </label>
+                      ))}
+                    </div>
+                  ) : (
+                    <div style={{ color: '#666', fontStyle: 'italic', fontSize: '13px' }}>制約マスタデータなし</div>
                   )}
                 </div>
                 <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
@@ -1030,6 +1089,32 @@ export default function MenuListPage() {
                     ※ 複数の原材料はカンマ（,）で区切って入力してください
                   </div>
                 </div>
+                {/* Cooking Methods Section */}
+                <div className="form-group" style={{ marginTop: '20px' }}>
+                  <label className="form-label">調理法</label>
+                  {cookingMethods.length > 0 ? (
+                    <div className="checkbox-group">
+                      {cookingMethods.map(cm => (
+                        <label key={cm.uid} className="checkbox-item">
+                          <input
+                            type="checkbox"
+                            checked={editSelectedCookingMethodUids.includes(cm.uid)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setEditSelectedCookingMethodUids([...editSelectedCookingMethodUids, cm.uid])
+                              } else {
+                                setEditSelectedCookingMethodUids(editSelectedCookingMethodUids.filter(uid => uid !== cm.uid))
+                              }
+                            }}
+                          />
+                          {cm.name_jp}
+                        </label>
+                      ))}
+                    </div>
+                  ) : (
+                    <div style={{ color: '#666', fontStyle: 'italic', fontSize: '13px' }}>調理法マスタデータなし</div>
+                  )}
+                </div>
                 <div style={{ marginTop: '12px', paddingTop: '8px', borderTop: '1px solid #e5e7eb' }}>
                   <button className="btn btn-primary" onClick={() => setActiveTab('allergens')}>次へ: アレルギー設定 →</button>
                 </div>
@@ -1084,19 +1169,36 @@ export default function MenuListPage() {
                       </div>
                     </div>
                   )}
-                  {/* DEBUG: Always show recommended section in edit modal */}
-                  {allergens && (
-                    <div style={{ marginBottom: '20px', border: '2px solid blue', padding: '10px' }}>
-                      <strong>DEBUG - Edit Modal Recommended Allergens:</strong>
-                      <div>Has allergens object: {allergens ? 'YES' : 'NO'}</div>
-                      <div>Has recommended property: {allergens.recommended ? 'YES' : 'NO'}</div>
-                      <div>Recommended length: {allergens.recommended ? allergens.recommended.length : 'N/A'}</div>
-                    </div>
-                  )}
                   {(!allergens || (!allergens.mandatory?.length && !allergens.recommended?.length)) && (
                     <div style={{ color: '#666', fontStyle: 'italic' }}>
                       アレルゲン情報が読み込めませんでした。後で再試行してください。
                     </div>
+                  )}
+                </div>
+                {/* Restrictions Section */}
+                <div className="form-group" style={{ marginTop: '20px' }}>
+                  <label className="form-label">食事制約</label>
+                  {restrictions.length > 0 ? (
+                    <div className="checkbox-group">
+                      {restrictions.map(r => (
+                        <label key={r.uid} className="checkbox-item">
+                          <input
+                            type="checkbox"
+                            checked={editSelectedRestrictionUids.includes(r.uid)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setEditSelectedRestrictionUids([...editSelectedRestrictionUids, r.uid])
+                              } else {
+                                setEditSelectedRestrictionUids(editSelectedRestrictionUids.filter(uid => uid !== r.uid))
+                              }
+                            }}
+                          />
+                          {r.name_jp} {r.name_en && <span style={{ fontSize: '11px', color: '#999' }}>({r.name_en})</span>}
+                        </label>
+                      ))}
+                    </div>
+                  ) : (
+                    <div style={{ color: '#666', fontStyle: 'italic', fontSize: '13px' }}>制約マスタデータなし</div>
                   )}
                 </div>
 

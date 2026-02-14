@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '../../../contexts/AuthContext'
+import { AuthApi } from '../../../services/api'
 
 // Validation helpers
 const validateEmail = (email: string): string | null => {
@@ -31,6 +32,14 @@ interface FieldErrors {
   password?: string
 }
 
+interface RegisterFieldErrors {
+  email?: string
+  password?: string
+  passwordConfirm?: string
+  restaurantName?: string
+  terms?: string
+}
+
 export default function AdminLoginPage() {
   const router = useRouter()
   const { login } = useAuth()
@@ -42,6 +51,17 @@ export default function AdminLoginPage() {
   const [error, setError] = useState('')
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({})
   const [touched, setTouched] = useState<{ email: boolean; password: boolean }>({ email: false, password: false })
+
+  // Register state
+  const [registerEmail, setRegisterEmail] = useState('')
+  const [registerPassword, setRegisterPassword] = useState('')
+  const [registerPasswordConfirm, setRegisterPasswordConfirm] = useState('')
+  const [restaurantName, setRestaurantName] = useState('')
+  const [termsAgreed, setTermsAgreed] = useState(false)
+  const [registerError, setRegisterError] = useState('')
+  const [registerSuccess, setRegisterSuccess] = useState('')
+  const [registerLoading, setRegisterLoading] = useState(false)
+  const [registerFieldErrors, setRegisterFieldErrors] = useState<RegisterFieldErrors>({})
 
   useEffect(() => {
     setMounted(true)
@@ -155,6 +175,58 @@ export default function AdminLoginPage() {
     }
   }
 
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault()
+
+    const errors: RegisterFieldErrors = {}
+    const emailErr = validateEmail(registerEmail)
+    if (emailErr) errors.email = emailErr
+    const passErr = validatePassword(registerPassword)
+    if (passErr) errors.password = passErr
+    if (registerPassword !== registerPasswordConfirm) {
+      errors.passwordConfirm = 'パスワードが一致しません'
+    }
+    if (!restaurantName.trim()) {
+      errors.restaurantName = 'レストラン名を入力してください'
+    }
+    if (!termsAgreed) {
+      errors.terms = '利用規約に同意してください'
+    }
+
+    setRegisterFieldErrors(errors)
+    if (Object.keys(errors).length > 0) return
+
+    setRegisterLoading(true)
+    setRegisterError('')
+    setRegisterSuccess('')
+
+    try {
+      await AuthApi.register({
+        email: registerEmail,
+        password: registerPassword,
+        role: 'restaurant_owner',
+        restaurant_name: restaurantName,
+      })
+      setRegisterSuccess('登録が完了しました。ログインしてください。')
+      setActiveTab('login')
+      setEmail(registerEmail)
+      setRegisterEmail('')
+      setRegisterPassword('')
+      setRegisterPasswordConfirm('')
+      setRestaurantName('')
+      setTermsAgreed(false)
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : '登録に失敗しました'
+      if (msg.toLowerCase().includes('already registered')) {
+        setRegisterError('このメールアドレスは既に登録されています')
+      } else {
+        setRegisterError(msg)
+      }
+    } finally {
+      setRegisterLoading(false)
+    }
+  }
+
   return (
     <div className="login-container">
       <div className="login-card">
@@ -217,6 +289,7 @@ export default function AdminLoginPage() {
                 {fieldErrors.password && <span className="field-error">{fieldErrors.password}</span>}
               </div>
 
+              {registerSuccess && <div className="success-message">{registerSuccess}</div>}
               {error && <div className="error-message">{error}</div>}
 
               <button type="submit" className="submit-btn" disabled={isLoading}>
@@ -229,33 +302,70 @@ export default function AdminLoginPage() {
               </div>
             </form>
           ) : (
-            <form className="login-form" onSubmit={(e) => { e.preventDefault(); alert('新規登録機能は準備中です'); }}>
+            <form className="login-form" onSubmit={handleRegister}>
               <div className="form-group">
                 <label className="form-label">メールアドレス</label>
-                <input type="email" className="form-input" placeholder="owner@example.com" required />
+                <input
+                  type="email"
+                  className={`form-input ${registerFieldErrors.email ? 'input-error' : ''}`}
+                  placeholder="owner@example.com"
+                  value={registerEmail}
+                  onChange={(e) => { setRegisterEmail(e.target.value); setRegisterError('') }}
+                />
+                {registerFieldErrors.email && <span className="field-error">{registerFieldErrors.email}</span>}
               </div>
 
               <div className="form-group">
                 <label className="form-label">パスワード</label>
-                <input type="password" className="form-input" placeholder="8文字以上" required />
+                <input
+                  type="password"
+                  className={`form-input ${registerFieldErrors.password ? 'input-error' : ''}`}
+                  placeholder="8文字以上"
+                  value={registerPassword}
+                  onChange={(e) => { setRegisterPassword(e.target.value); setRegisterError('') }}
+                />
+                {registerFieldErrors.password && <span className="field-error">{registerFieldErrors.password}</span>}
               </div>
 
               <div className="form-group">
                 <label className="form-label">パスワード（確認）</label>
-                <input type="password" className="form-input" placeholder="もう一度入力" required />
+                <input
+                  type="password"
+                  className={`form-input ${registerFieldErrors.passwordConfirm ? 'input-error' : ''}`}
+                  placeholder="もう一度入力"
+                  value={registerPasswordConfirm}
+                  onChange={(e) => { setRegisterPasswordConfirm(e.target.value); setRegisterError('') }}
+                />
+                {registerFieldErrors.passwordConfirm && <span className="field-error">{registerFieldErrors.passwordConfirm}</span>}
               </div>
 
               <div className="form-group">
                 <label className="form-label">レストラン名</label>
-                <input type="text" className="form-input" placeholder="例: ぼんた本店" required />
+                <input
+                  type="text"
+                  className={`form-input ${registerFieldErrors.restaurantName ? 'input-error' : ''}`}
+                  placeholder="例: ぼんた本店"
+                  value={restaurantName}
+                  onChange={(e) => { setRestaurantName(e.target.value); setRegisterError('') }}
+                />
+                {registerFieldErrors.restaurantName && <span className="field-error">{registerFieldErrors.restaurantName}</span>}
               </div>
 
               <label className="checkbox-label">
-                <input type="checkbox" required />
+                <input
+                  type="checkbox"
+                  checked={termsAgreed}
+                  onChange={(e) => setTermsAgreed(e.target.checked)}
+                />
                 <span>利用規約に同意します（<span className="link">内容を確認</span>）</span>
               </label>
+              {registerFieldErrors.terms && <span className="field-error">{registerFieldErrors.terms}</span>}
 
-              <button type="submit" className="submit-btn">無料で始める</button>
+              {registerError && <div className="error-message">{registerError}</div>}
+
+              <button type="submit" className="submit-btn" disabled={registerLoading}>
+                {registerLoading ? '登録中...' : '無料で始める'}
+              </button>
 
               <div className="form-footer">
                 <span className="link">パスワードをお忘れですか？</span>
@@ -402,6 +512,15 @@ export default function AdminLoginPage() {
           font-size: 12px;
           margin-top: 4px;
           display: block;
+        }
+
+        .success-message {
+          background: #f0fdf4;
+          color: #16a34a;
+          padding: 12px;
+          border-radius: 8px;
+          font-size: 13px;
+          text-align: center;
         }
 
         .error-message {
