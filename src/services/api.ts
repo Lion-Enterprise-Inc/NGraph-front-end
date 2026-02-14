@@ -418,6 +418,12 @@ export interface Menu {
   restaurant_uid: string;
   ingredients: Ingredient[] | null;
   allergens: Allergen[] | null;
+  cooking_methods: CookingMethod[] | null;
+  restrictions: Restriction[] | null;
+  taste_profiles: TasteProfile[] | null;
+  calorie_range: CalorieRange | null;
+  verified: boolean;
+  image_url: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -432,6 +438,10 @@ export interface MenuCreate {
   restaurant_uid: string;
   ingredients?: string[] | null;
   allergen_uids?: string[] | null;
+  cooking_method_uids?: string[] | null;
+  restriction_uids?: string[] | null;
+  taste_profile_uids?: string[] | null;
+  calorie_range_uid?: string | null;
 }
 
 export interface MenuUpdate {
@@ -441,8 +451,12 @@ export interface MenuUpdate {
   category?: string | null;
   status?: boolean | null;
   price?: number | null;
-  ingredients?: string[] | null;  // API accepts ingredient names as strings for update
+  ingredients?: string[] | null;
   allergen_uids?: string[] | null;
+  cooking_method_uids?: string[] | null;
+  restriction_uids?: string[] | null;
+  taste_profile_uids?: string[] | null;
+  calorie_range_uid?: string | null;
 }
 
 export interface MenuListResponse {
@@ -581,6 +595,7 @@ export interface RegisterUserRequest {
   email: string;
   password: string;
   role: 'consumer' | 'restaurant_owner' | 'platform_owner' | 'superadmin';
+  restaurant_name?: string;
 }
 
 export interface RegisterUserResponse {
@@ -630,6 +645,70 @@ export const AuthApi = {
 
   isAuthenticated: (): boolean => {
     return TokenService.isAuthenticated();
+  }
+};
+
+// Master data types
+export interface CookingMethod {
+  uid: string;
+  name_jp: string;
+  name_en: string | null;
+  method_category: string | null;
+  slug: string;
+}
+
+export interface Restriction {
+  uid: string;
+  name_jp: string;
+  name_en: string | null;
+  restriction_category: string | null;
+  description: string | null;
+  slug: string;
+}
+
+export interface TasteProfile {
+  uid: string;
+  name_jp: string;
+  name_en: string | null;
+  taste_category: string | null;
+  description_jp: string | null;
+  description_en: string | null;
+  slug: string;
+}
+
+export interface CalorieRange {
+  uid: string;
+  name_jp: string;
+  name_en: string | null;
+  min_kcal: number | null;
+  max_kcal: number | null;
+  description_jp: string | null;
+  description_en: string | null;
+  slug: string;
+}
+
+// Master data API
+export const CookingMethodApi = {
+  getAll: async (): Promise<{ result: CookingMethod[]; message: string }> => {
+    return apiClient.get('/cooking-methods/');
+  }
+};
+
+export const RestrictionApi = {
+  getAll: async (): Promise<{ result: Restriction[]; message: string }> => {
+    return apiClient.get('/restrictions/');
+  }
+};
+
+export const TasteProfileApi = {
+  getAll: async (): Promise<{ result: TasteProfile[]; message: string }> => {
+    return apiClient.get('/taste-profiles/');
+  }
+};
+
+export const CalorieRangeApi = {
+  getAll: async (): Promise<{ result: CalorieRange[]; message: string }> => {
+    return apiClient.get('/calorie-ranges/');
   }
 };
 
