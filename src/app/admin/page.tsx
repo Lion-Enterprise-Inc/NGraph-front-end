@@ -55,26 +55,6 @@ function StoreDashboard() {
             <h2 className="section-title" style={{ margin: 0, textAlign: 'left' }}>📊 レストランダッシュボード</h2>
             <p style={{ margin: '8px 0 0', color: '#64748b', fontSize: '14px', textAlign: 'left' }}>AIスタッフの稼働状況や改善アクションを一目で把握できます。</p>
           </div>
-          <button 
-            type="button" 
-            style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'center', 
-              gap: '8px', 
-              border: 'none', 
-              borderRadius: '999px', 
-              padding: '12px 20px', 
-              background: 'rgba(255, 255, 255, 0.16)', 
-              color: '#0f172a', 
-              fontWeight: 600, 
-              fontSize: '14px', 
-              cursor: 'pointer', 
-              boxShadow: '0 12px 24px rgba(15, 23, 42, 0.18)'
-            }}
-          >
-            💎 プランを確認する
-          </button>
         </div>
 
         {/* Restaurant Info */}
