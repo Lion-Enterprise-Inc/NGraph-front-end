@@ -11,6 +11,7 @@ import {
 import { useRouter, useSearchParams } from "next/navigation";
 import { mockRestaurants, mockScanResponse, type Restaurant } from "../api/mockApi";
 import Tesseract from "tesseract.js";
+import type { VisionMenuItem } from "../services/api";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
@@ -671,58 +672,87 @@ export default function CapturePage({
     setTimeout(scrollToBottomImmediate, 300);
 
     try {
-      let ocrText = "";
-      if (attachmentSnapshot?.file) {
-        const langCode =
-          activeLanguage === "ja"
-            ? "jpn"
-            : activeLanguage === "ko"
-            ? "kor"
-            : "eng";
-        try {
-          const result = await Tesseract.recognize(
-            attachmentSnapshot.file,
-            langCode
-          );
-          ocrText = result?.data?.text ?? "";
-        } catch (error) {
-          console.log("ocr_error", error);
-        }
-      }
-      const requestText = trimmedMessage || ocrText.trim();
-
-      // Call the external public chat API
       let output: MockOutput;
-      try {
-        const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://15.207.22.103:8000';
-        const restaurantSlugForApi = selectedRestaurant?.slug || 'default';
-        const chatResponse = await fetch(`${apiBaseUrl}/public-chat/${restaurantSlugForApi}`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ message: requestText }),
-        });
+      const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://15.207.22.103:8000';
 
-        if (chatResponse.ok) {
-          const chatData = await chatResponse.json();
-          output = {
-            title: 'Chat Response',
-            intro: chatData.response,
-            body: []
-          };
-        } else {
-          throw new Error(`Chat API failed with status: ${chatResponse.status}`);
+      if (attachmentSnapshot?.file) {
+        // Image attached → use Vision API for menu analysis
+        try {
+          const formData = new FormData();
+          formData.append('image', attachmentSnapshot.file);
+          if (selectedRestaurant?.slug) {
+            formData.append('restaurant_slug', selectedRestaurant.slug);
+          }
+
+          const visionResponse = await fetch(`${apiBaseUrl}/api/menus/analyze-image`, {
+            method: 'POST',
+            body: formData,
+          });
+
+          if (visionResponse.ok) {
+            const visionData = await visionResponse.json();
+            const items: VisionMenuItem[] = visionData.result?.items || [];
+
+            const formatItem = (item: VisionMenuItem): string => {
+              const parts: string[] = [];
+              const name = item.name_en
+                ? `**${item.name_jp}** (${item.name_en})`
+                : `**${item.name_jp}**`;
+              const price = item.price > 0 ? ` — ¥${item.price.toLocaleString()}` : '';
+              parts.push(`${name}${price}`);
+              if (item.description) parts.push(item.description);
+              if (item.ingredients?.length) parts.push(`🥬 ${item.ingredients.join(', ')}`);
+              if (item.allergens?.length) parts.push(`⚠️ ${item.allergens.join(', ')}`);
+              return parts.join('\n');
+            };
+
+            output = {
+              title: `📋 メニュー解析結果（${items.length}品）`,
+              intro: trimmedMessage
+                ? `「${trimmedMessage}」の画像を解析しました。`
+                : 'メニュー画像を解析しました。',
+              body: items.map(formatItem),
+            };
+          } else {
+            throw new Error(`Vision API failed: ${visionResponse.status}`);
+          }
+        } catch (visionError) {
+          console.log("vision_api_error", visionError);
+          // Fallback: OCR → chat
+          let ocrText = "";
+          try {
+            const langCode = activeLanguage === "ja" ? "jpn" : activeLanguage === "ko" ? "kor" : "eng";
+            const result = await Tesseract.recognize(attachmentSnapshot.file, langCode);
+            ocrText = result?.data?.text ?? "";
+          } catch (e) {
+            console.log("ocr_error", e);
+          }
+          const requestText = trimmedMessage || ocrText.trim() || "メニュー画像を送信しました";
+          const fallbackResponse = await generateChatResponse(requestText, selectedRestaurant);
+          output = { title: 'Chat Response', intro: fallbackResponse, body: [] };
         }
-      } catch (apiError) {
-        console.log("chat_api_error", apiError);
-        // Fallback to local generation if API fails
-        const fallbackResponse = await generateChatResponse(requestText, selectedRestaurant);
-        output = {
-          title: 'Chat Response',
-          intro: fallbackResponse,
-          body: []
-        };
+      } else {
+        // Text only → use existing chat API
+        const requestText = trimmedMessage;
+        try {
+          const restaurantSlugForApi = selectedRestaurant?.slug || 'default';
+          const chatResponse = await fetch(`${apiBaseUrl}/public-chat/${restaurantSlugForApi}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: requestText }),
+          });
+
+          if (chatResponse.ok) {
+            const chatData = await chatResponse.json();
+            output = { title: 'Chat Response', intro: chatData.response, body: [] };
+          } else {
+            throw new Error(`Chat API failed with status: ${chatResponse.status}`);
+          }
+        } catch (apiError) {
+          console.log("chat_api_error", apiError);
+          const fallbackResponse = await generateChatResponse(requestText, selectedRestaurant);
+          output = { title: 'Chat Response', intro: fallbackResponse, body: [] };
+        }
       }
 
       setResponses((prev) =>

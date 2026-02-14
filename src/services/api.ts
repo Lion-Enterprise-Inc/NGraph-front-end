@@ -518,6 +518,64 @@ export const ScrapingApi = {
   }
 };
 
+// Vision Analysis types
+export interface VisionMenuItem {
+  name_jp: string;
+  name_en: string;
+  price: number;
+  description: string;
+  category: string;
+  ingredients: string[];
+  allergens: string[];
+}
+
+export interface VisionAnalysisResult {
+  items: VisionMenuItem[];
+  items_count: number;
+  saved_count?: number;
+}
+
+export interface VisionAnalysisResponse {
+  result: VisionAnalysisResult;
+  message: string;
+  status_code: number;
+}
+
+// Vision API
+export const VisionApi = {
+  analyzeImage: async (
+    image: File,
+    restaurantSlug?: string,
+    save: boolean = false
+  ): Promise<VisionAnalysisResponse> => {
+    const formData = new FormData();
+    formData.append('image', image);
+    if (restaurantSlug) formData.append('restaurant_slug', restaurantSlug);
+    if (save) formData.append('save', 'true');
+
+    const token = TokenService.getAccessToken();
+    const response = await fetch(`${API_BASE_URL}/menus/analyze-image`, {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+      },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      let errorMessage = 'Failed to analyze image';
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.detail || errorMessage;
+      } catch {}
+      throw new Error(errorMessage);
+    }
+
+    return response.json();
+  }
+};
+
 // Auth API
 export interface RegisterUserRequest {
   email: string;
