@@ -872,7 +872,7 @@ export default function CapturePage({
               : ""
           }`}
         >
-          {restaurantLoading || !selectedRestaurant?.name ? (
+          {restaurantLoading ? (
             <div style={{ 
               display: 'flex', 
               flexDirection: 'column', 
