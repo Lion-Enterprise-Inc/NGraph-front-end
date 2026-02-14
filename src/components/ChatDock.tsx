@@ -187,7 +187,7 @@ export default function ChatDock({
       )}
 
       <div className="chat-dock-row">
-        {/* <div className="chat-dock-icons" aria-hidden="true">
+        <div className="chat-dock-icons" aria-hidden="true">
           <button
             className="chat-icon"
             type="button"
@@ -214,7 +214,7 @@ export default function ChatDock({
           >
             <img src={GalleryIcon.src} alt="" />
           </button>
-        </div> */}
+        </div>
         <div className={`chat-dock-area${multiline ? " multiline" : ""}`}>
           <textarea
             ref={textareaRef}
