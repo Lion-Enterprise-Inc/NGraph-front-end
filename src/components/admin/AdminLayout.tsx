@@ -179,7 +179,7 @@ export default function AdminLayout({ children, title }: Props) {
           {/* User Type Badge */}
           <div className="user-type-badge">
             {userType === 'store' ? (
-              <>🍽️ レストランビュー</>
+              <>🍽️ {user?.restaurant_slug || 'レストランビュー'}</>
             ) : (
               <>👑 プラットフォームオーナービュー</>
             )}
