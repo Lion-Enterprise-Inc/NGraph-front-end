@@ -593,6 +593,30 @@ export default function MenuListPage() {
     }
   }
 
+  const calcConfidence = (item: MenuItem): number => {
+    let score = 20 // name_jp + price は必ずある
+    if (item.nameEn) score += 10
+    if (item.category) score += 10
+    if (item.description) score += 15
+    if (item.ingredients && item.ingredients.length > 0) score += 15
+    if (item.ingredients && item.ingredients.length >= 3) score += 5
+    if (item.allergens && item.allergens.length > 0) score += 10
+    if (item.cookingMethods && item.cookingMethods.length > 0) score += 5
+    if (item.restrictions && item.restrictions.length > 0) score += 5
+    if (item.status) score += 5 // 人間が確認済み
+    return Math.min(score, 100)
+  }
+
+  const handleApprove = async (item: MenuItem) => {
+    try {
+      await MenuApi.update(item.uid, { status: true })
+      await refreshMenus()
+    } catch (err) {
+      console.error('Failed to approve menu:', err)
+      alert('承認に失敗しました')
+    }
+  }
+
   const handleDelete = async (uid: string) => {
     if (!confirm('このメニューを削除しますか？')) return
 
@@ -719,7 +743,7 @@ export default function MenuListPage() {
                   </td>
                 </tr>
               ) : filteredItems.map((item, index) => {
-                const confidence = item.status ? 95 : 65
+                const confidence = calcConfidence(item)
                 const rowNum = (currentPage - 1) * itemsPerPage + index + 1
                 return (
                   <tr key={item.uid}>
@@ -740,9 +764,6 @@ export default function MenuListPage() {
                           <div style={{ fontSize: '10px', color: '#6c757d', marginBottom: '2px' }}>
                             🥘 {item.ingredients?.length > 0 ? item.ingredients.map(ing => ing.name).join(', ') : '原材料なし'}
                           </div>
-                          <span style={{ color: item.status ? '#28a745' : '#dc3545', fontSize: '11px' }}>
-                            {item.status ? '✓ 確認済み' : '⚠️ 要確認'}
-                          </span>
                         </div>
                       </div>
                     </td>
@@ -756,9 +777,11 @@ export default function MenuListPage() {
                       </div>
                     </td>
                     <td style={{ textAlign: 'center' }}>
-                      <span className={`status-badge ${item.status ? 'verified' : 'warning'}`}>
-                        {item.status ? '確認済み' : '要確認'}
-                      </span>
+                      {item.status ? (
+                        <span className="status-badge verified">確認済み</span>
+                      ) : (
+                        <button className="btn-action btn-approve" onClick={() => handleApprove(item)}>✓ 承認</button>
+                      )}
                     </td>
                     <td style={{ textAlign: 'center' }}>
                       <div style={{ display: 'flex', gap: '4px', justifyContent: 'center', flexWrap: 'wrap' }}>
@@ -1655,6 +1678,19 @@ export default function MenuListPage() {
           cursor: pointer;
           transition: all 0.2s;
           border: 1px solid;
+        }
+
+        .btn-approve {
+          color: white;
+          background: #10b981;
+          border-color: #10b981;
+          padding: 5px 12px;
+          font-size: 12px;
+        }
+
+        .btn-approve:hover {
+          background: #059669;
+          border-color: #059669;
         }
 
         .btn-preview {
