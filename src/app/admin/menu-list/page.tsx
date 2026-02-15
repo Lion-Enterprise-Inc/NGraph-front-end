@@ -594,19 +594,33 @@ export default function MenuListPage() {
   }
 
   const calcConfidence = (item: MenuItem): number => {
-    // データ充実度 (最大75%)
-    let dataScore = 15 // name_jp + price は必ずある
-    if (item.nameEn) dataScore += 8
-    if (item.category) dataScore += 8
-    if (item.description) dataScore += 12
-    if (item.ingredients && item.ingredients.length > 0) dataScore += 12
-    if (item.ingredients && item.ingredients.length >= 3) dataScore += 5
-    if (item.allergens && item.allergens.length > 0) dataScore += 10
-    if (item.cookingMethods && item.cookingMethods.length > 0) dataScore += 3
-    if (item.restrictions && item.restrictions.length > 0) dataScore += 2
-    // 店主承認 (+25%) — これがないと80%超えない
-    if (item.status) dataScore += 25
-    return Math.min(dataScore, 100)
+    // 各フィールドのスコア
+    let score = 10 // name_jp + price は必ずある
+    const hasNameEn = !!item.nameEn
+    const hasCategory = !!item.category
+    const hasDescription = !!item.description
+    const hasIngredients = item.ingredients && item.ingredients.length > 0
+    const hasIngredients3 = item.ingredients && item.ingredients.length >= 3
+    const hasAllergens = item.allergens && item.allergens.length > 0
+
+    if (hasNameEn) score += 8
+    if (hasCategory) score += 8
+    if (hasDescription) score += 10
+    if (hasIngredients) score += 10
+    if (hasIngredients3) score += 6
+    if (hasAllergens) score += 10
+    if (item.cookingMethods && item.cookingMethods.length > 0) score += 3
+
+    // 全主要フィールド完備ボーナス（秋刀魚の塩焼きみたいに明らかなもの）
+    // → AIが全部埋められた = 信頼できるデータ → 自動で緑
+    if (hasNameEn && hasCategory && hasDescription && hasIngredients3 && hasAllergens) {
+      score += 20
+    }
+
+    // 店主承認ボーナス（+15%）→ 完璧に近づける
+    if (item.status) score += 15
+
+    return Math.min(score, 100)
   }
 
   const handleApprove = async (item: MenuItem) => {
