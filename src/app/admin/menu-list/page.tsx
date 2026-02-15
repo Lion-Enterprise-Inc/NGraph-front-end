@@ -23,7 +23,7 @@ export default function MenuListPage() {
   const { user, isLoading: authLoading } = useAuth()
   const [searchQuery, setSearchQuery] = useState('')
   const [filter, setFilter] = useState('all')
-  const [itemsPerPage, setItemsPerPage] = useState(5)
+  const [itemsPerPage, setItemsPerPage] = useState(30)
   const [showAddModal, setShowAddModal] = useState(false)
   const [showFetchModal, setShowFetchModal] = useState(false)
   const [showApprovalModal, setShowApprovalModal] = useState(false)
@@ -297,7 +297,7 @@ export default function MenuListPage() {
     } finally {
       setIsLoading(false)
     }
-  }, [authLoading, user])
+  }, [authLoading, user, itemsPerPage])
 
   // Initial data fetch
   useEffect(() => {
@@ -613,7 +613,12 @@ export default function MenuListPage() {
         <div className="card-title">📋 メニュー・商品管理</div>
 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-          <h2 style={{ fontSize: '18px', margin: 0 }}>メニュー一覧</h2>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <h2 style={{ fontSize: '18px', margin: 0 }}>メニュー一覧</h2>
+            <span style={{ fontSize: '14px', color: '#666', background: '#f0f4ff', padding: '4px 10px', borderRadius: '12px', fontWeight: 600 }}>
+              登録数: {totalItems}件
+            </span>
+          </div>
           <button className="btn btn-primary" onClick={handleFetchFromSource} style={{ padding: '8px 16px', fontSize: '13px' }}>
             🤖 基本情報のソースからメニューを取得
           </button>
@@ -667,12 +672,11 @@ export default function MenuListPage() {
             <label style={{ fontSize: '13px', color: '#666' }}>表示件数:</label>
             <select
               value={itemsPerPage}
-              onChange={(e) => setItemsPerPage(Number(e.target.value))}
+              onChange={(e) => { setItemsPerPage(Number(e.target.value)); setCurrentPage(1); }}
               style={{ padding: '4px 8px', border: '1px solid #ddd', borderRadius: '4px', fontSize: '13px' }}
             >
-              <option value={5}>5件</option>
               <option value={10}>10件</option>
-              <option value={25}>25件</option>
+              <option value={30}>30件</option>
               <option value={50}>50件</option>
               <option value={100}>100件</option>
             </select>
@@ -699,9 +703,10 @@ export default function MenuListPage() {
           <table className="menu-table">
             <thead>
               <tr>
-                <th style={{ width: '35%' }}>メニュー詳細</th>
+                <th style={{ width: '4%', textAlign: 'center' }}>No.</th>
+                <th style={{ width: '33%' }}>メニュー詳細</th>
                 <th style={{ width: '10%', textAlign: 'center' }}>価格</th>
-                <th style={{ width: '12%', textAlign: 'center' }}>信頼度</th>
+                <th style={{ width: '10%', textAlign: 'center' }}>信頼度</th>
                 <th style={{ width: '10%', textAlign: 'center' }}>ステータス</th>
                 <th style={{ width: '33%', textAlign: 'center' }}>操作</th>
               </tr>
@@ -709,14 +714,16 @@ export default function MenuListPage() {
             <tbody>
               {filteredItems.length === 0 ? (
                 <tr>
-                  <td colSpan={5} style={{ textAlign: 'center', padding: '40px', color: '#666' }}>
+                  <td colSpan={6} style={{ textAlign: 'center', padding: '40px', color: '#666' }}>
                     メニューがありません。「手動で新規追加」ボタンからメニューを追加してください。
                   </td>
                 </tr>
-              ) : filteredItems.map(item => {
+              ) : filteredItems.map((item, index) => {
                 const confidence = item.status ? 95 : 65
+                const rowNum = (currentPage - 1) * itemsPerPage + index + 1
                 return (
                   <tr key={item.uid}>
+                    <td style={{ textAlign: 'center', fontWeight: 600, color: '#999', fontSize: '13px' }}>{rowNum}</td>
                     <td>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <div style={{ width: '40px', height: '30px', background: '#f8f9fa', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', color: '#999' }}>📄</div>
