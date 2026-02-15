@@ -693,14 +693,14 @@ export default function MenuListPage() {
               onClick={() => setFilter('warning')}
               style={{ padding: '6px 12px', fontSize: '13px' }}
             >
-              要確認 ({countWarning})
+              未承認 ({countWarning})
             </button>
             <button
               className={`filter-btn ${filter === 'verified' ? 'active' : ''}`}
               onClick={() => setFilter('verified')}
               style={{ padding: '6px 12px', fontSize: '13px' }}
             >
-              確認済み ({countVerified})
+              承認済み ({countVerified})
             </button>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -807,7 +807,7 @@ export default function MenuListPage() {
                     </td>
                     <td style={{ textAlign: 'center' }}>
                       {item.status ? (
-                        <span className="status-badge verified">確認済み</span>
+                        <span className="status-badge verified">承認済み</span>
                       ) : (
                         <button className="btn-action btn-approve" onClick={() => handleApprove(item)}>✓ 承認</button>
                       )}
@@ -1405,7 +1405,7 @@ export default function MenuListPage() {
                         gap: '6px'
                       }}
                     >
-                      ✓ 確認済み
+                      ✓ 承認済み
                     </button>
                     <button 
                       type="button"
@@ -1423,11 +1423,11 @@ export default function MenuListPage() {
                         gap: '6px'
                       }}
                     >
-                      ⚠️ 要確認
+                      ⚠️ 未承認
                     </button>
                   </div>
                   <div style={{ fontSize: '12px', color: '#666', marginTop: '8px' }}>
-                    ※ 「確認済み」に設定すると、メニューが検証済みとしてマークされます
+                    ※ 「承認済み」に設定すると、メニューが検証済みとしてマークされます
                   </div>
                 </div>
 
