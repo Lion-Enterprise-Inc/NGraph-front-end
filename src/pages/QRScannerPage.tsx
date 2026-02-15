@@ -31,16 +31,12 @@ export default function QRScannerPage({ language = 'ja', onClose }: QRScannerPag
           await scannerRef.current.stop()
         }
       } catch (err) {
-        console.log('Error stopping scanner:', err)
+        // ignore stop errors
       }
     }
   }, [])
 
   const handleQRCodeSuccess = useCallback(async (decodedText: string) => {
-    console.log('QR Code scanned:', decodedText)
-    console.log('QR Code length:', decodedText.length)
-    console.log('QR Code trimmed:', decodedText.trim())
-    
     if (isProcessing) return
     setIsProcessing(true)
     setScanResult(decodedText)
@@ -49,7 +45,6 @@ export default function QRScannerPage({ language = 'ja', onClose }: QRScannerPag
     
     // Clean up the decoded text - remove any whitespace or newlines
     const cleanText = decodedText.trim()
-    console.log('Clean text:', cleanText)
     
     // Parse the URL to extract restaurant parameter
     try {
@@ -58,40 +53,33 @@ export default function QRScannerPage({ language = 'ja', onClose }: QRScannerPag
       try {
         url = new URL(cleanText)
       } catch (urlError) {
-        // If it's not a full URL, try adding http://localhost:3000
+        // If it's not a full URL, try adding the base URL
         if (cleanText.startsWith('/')) {
-          url = new URL(`http://localhost:3000${cleanText}`)
+          url = new URL(`https://app.ngraph.jp${cleanText}`)
         } else if (cleanText.includes('restaurant=')) {
-          url = new URL(`http://localhost:3000/${cleanText}`)
+          url = new URL(`https://app.ngraph.jp/${cleanText}`)
         } else {
           throw urlError
         }
       }
       
       const restaurantSlug = url.searchParams.get('restaurant')
-      console.log('Parsed restaurant slug:', restaurantSlug)
-      console.log('All search params:', url.searchParams.toString())
       
       if (restaurantSlug) {
         // Redirect to Go page (home) with restaurant parameter, then user clicks Go to chat
-        console.log('Redirecting to:', `/?restaurant=${restaurantSlug}`)
         setTimeout(() => {
           router.push(`/?restaurant=${restaurantSlug}`)
         }, 500)
       } else {
-        console.log('No restaurant parameter found')
         setError(copy.qrScanner?.invalidQR || 'Invalid QR code. No restaurant found.')
         setIsProcessing(false)
         setScanResult(null)
       }
     } catch (err) {
-      console.log('URL parsing error:', err)
       // If URL parsing fails, check if it contains restaurant info in a different format
       if (cleanText.includes('restaurant=')) {
         const match = cleanText.match(/restaurant=([^&\s]+)/)
-        console.log('Regex match result:', match)
         if (match && match[1]) {
-          console.log('Redirecting via regex to:', `/?restaurant=${match[1]}`)
           setTimeout(() => {
             router.push(`/?restaurant=${match[1]}`)
           }, 500)
@@ -130,14 +118,11 @@ export default function QRScannerPage({ language = 'ja', onClose }: QRScannerPag
         { facingMode },
         config,
         handleQRCodeSuccess,
-        (errorMessage) => {
-          console.log('QR scan error:', errorMessage)
-        }
+        () => {}
       )
       
       setIsScanning(true)
     } catch (err) {
-      console.error('QR Scanner error:', err)
       setError(copy.qrScanner?.cameraError || 'Unable to access camera. Please check permissions.')
       setIsScanning(false)
     }
@@ -156,7 +141,7 @@ export default function QRScannerPage({ language = 'ja', onClose }: QRScannerPag
         setTorchOn(newTorchState)
       }
     } catch (err) {
-      console.log('Torch not supported:', err)
+      // torch not supported
     }
   }
 
@@ -279,18 +264,6 @@ export default function QRScannerPage({ language = 'ja', onClose }: QRScannerPag
         >
           <SwitchCamera size={24} />
           <span>{copy.qrScanner?.switchCamera || 'Switch'}</span>
-        </button>
-        {/* Test button for development */}
-        <button
-          className="qr-scanner-control-btn"
-          onClick={() => {
-            console.log('Testing with URL: http://localhost:3000/?restaurant=fc-restaurant')
-            handleQRCodeSuccess('http://localhost:3000/?restaurant=fc-restaurant')
-          }}
-          aria-label="Test QR scan"
-        >
-          <QrCode size={24} />
-          <span>Test</span>
         </button>
       </div>
     </div>

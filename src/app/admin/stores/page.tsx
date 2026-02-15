@@ -127,7 +127,6 @@ export default function StoresPage() {
     setLoadingOwners(true)
     try {
       const owners = await UserApi.getUnassociatedRestaurantOwners()
-      console.log('Unassociated restaurant owners:', owners)
       setRestaurantOwners(owners.filter(u => u.is_active))
     } catch (error) {
       console.error('Failed to fetch unassociated restaurant owners:', error)
@@ -183,8 +182,6 @@ export default function StoresPage() {
       if (newStore.parking) requestData.parking_slot = newStore.parking
       if (newStore.features) requestData.attention_in_detail = newStore.features
       if (newStore.otherSources) requestData.other_sources = newStore.otherSources
-
-      console.log('Creating restaurant with data:', JSON.stringify(requestData, null, 2))
 
       const response = await RestaurantApi.create(requestData)
       

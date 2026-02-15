@@ -73,12 +73,8 @@ export default function BasicInfoPage() {
       setRestaurantLoading(true)
       setRestaurantError('')
 
-      console.log('Fetching restaurant for user UID:', userUid)
-
       const response = await apiClient.get(`/restaurants/detail-by-user/${userUid}`) as { result: any; message: string; status_code: number }
       const restaurantData = response.result
-
-      console.log('Fetched restaurant:', restaurantData?.name, 'UID:', restaurantData?.uid, 'user_uid:', restaurantData?.user_uid)
 
       setRestaurant(restaurantData)
 
@@ -89,7 +85,7 @@ export default function BasicInfoPage() {
         address: restaurantData.address || '',
         officialWebsite: restaurantData.official_website || '',
         instagramUrl: restaurantData.other_sources || '',
-        menuScrapingUrl: localStorage.getItem(`menu_scraping_url_${restaurantData.uid}`) || restaurantData.menu_scraping_url || '',
+        menuScrapingUrl: restaurantData.menu_scraping_url || '',
         description: restaurantData.store_introduction || '',
         businessHours: restaurantData.opening_hours || '',
         holidays: '',
@@ -128,8 +124,6 @@ export default function BasicInfoPage() {
       return
     }
 
-    console.log('Saving restaurant with UID:', restaurant.uid)
-
     setIsSaving(true)
     try {
       // Use FormData for multipart upload
@@ -153,8 +147,6 @@ export default function BasicInfoPage() {
         formDataToSend.append('logo', logoFile)
       }
 
-      console.log('Sending multipart form data')
-
       const token = localStorage.getItem('access_token')
       const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://15.207.22.103:8000'
       
@@ -171,8 +163,6 @@ export default function BasicInfoPage() {
       }
 
       const result = await response.json()
-      console.log('Update response:', result)
-      
       // Clear logo file state after successful upload
       setLogoFile(null)
       setLogoPreview('')
@@ -183,11 +173,6 @@ export default function BasicInfoPage() {
       // Update formData with new logo_url from response
       if (result.result?.logo_url) {
         setFormData(prev => ({ ...prev, logoUrl: result.result.logo_url }))
-      }
-      
-      // Save menu scraping URL to localStorage (temporary until backend supports it)
-      if (formData.menuScrapingUrl) {
-        localStorage.setItem(`menu_scraping_url_${restaurant.uid}`, formData.menuScrapingUrl)
       }
       
       // Re-fetch restaurant data to ensure we have the latest
