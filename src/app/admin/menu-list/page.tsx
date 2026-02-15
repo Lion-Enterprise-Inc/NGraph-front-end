@@ -65,20 +65,20 @@ export default function MenuListPage() {
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [visionResults, setVisionResults] = useState<VisionMenuItem[]>([])
   const [showVisionApproval, setShowVisionApproval] = useState(false)
+  const [showTextModal, setShowTextModal] = useState(false)
+  const [pasteText, setPasteText] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
   const cameraInputRef = useRef<HTMLInputElement>(null)
 
   const handleFileSelect = () => {
-    console.log('handleFileSelect called, ref:', fileInputRef.current)
     fileInputRef.current?.click()
   }
 
   const handleCameraCapture = () => {
-    console.log('handleCameraCapture called, ref:', cameraInputRef.current)
     cameraInputRef.current?.click()
   }
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
 
@@ -89,18 +89,43 @@ export default function MenuListPage() {
       const response = await VisionApi.analyzeImage(file, restaurantSlug, false)
       const items = response.result?.items || []
       if (items.length === 0) {
-        alert('メニューを検出できませんでした。別の画像を試してください。')
+        alert('メニューを検出できませんでした。別のファイルを試してください。')
         return
       }
       setVisionResults(items)
       setShowVisionApproval(true)
     } catch (err) {
-      console.error('Vision analysis failed:', err)
-      alert(`画像解析に失敗しました: ${err instanceof Error ? err.message : 'Unknown error'}`)
+      console.error('File analysis failed:', err)
+      alert(`ファイル解析に失敗しました: ${err instanceof Error ? err.message : 'Unknown error'}`)
     } finally {
       setIsAnalyzing(false)
-      // reset input so same file can be selected again
       e.target.value = ''
+    }
+  }
+
+  const handleTextAnalyze = async () => {
+    if (!pasteText.trim()) {
+      alert('テキストを入力してください')
+      return
+    }
+
+    setShowTextModal(false)
+    setIsAnalyzing(true)
+    try {
+      const response = await VisionApi.analyzeText(pasteText.trim())
+      const items = response.result?.items || []
+      if (items.length === 0) {
+        alert('メニューを検出できませんでした。別のテキストを試してください。')
+        return
+      }
+      setVisionResults(items)
+      setShowVisionApproval(true)
+      setPasteText('')
+    } catch (err) {
+      console.error('Text analysis failed:', err)
+      alert(`テキスト解析に失敗しました: ${err instanceof Error ? err.message : 'Unknown error'}`)
+    } finally {
+      setIsAnalyzing(false)
     }
   }
 
@@ -1353,13 +1378,13 @@ export default function MenuListPage() {
       {/* アップロードカード */}
       <div className="card" style={{ marginTop: '8px' }}>
         <div className="card-title">📤 メニュー・商品をアップロード</div>
-        <p style={{ marginBottom: '16px', color: '#666', fontSize: '14px' }}>メニュー表の画像をアップロードすると、AIが自動で構造化します</p>
+        <p style={{ marginBottom: '16px', color: '#666', fontSize: '14px' }}>メニュー情報をアップロードすると、AIが自動で構造化します</p>
 
         <input
           ref={fileInputRef}
           type="file"
-          accept="image/*"
-          onChange={handleImageUpload}
+          accept="image/*,.pdf,.xlsx,.xls,.csv"
+          onChange={handleFileUpload}
           style={{ display: 'none' }}
         />
         <input
@@ -1367,7 +1392,7 @@ export default function MenuListPage() {
           type="file"
           accept="image/*"
           capture="environment"
-          onChange={handleImageUpload}
+          onChange={handleFileUpload}
           style={{ display: 'none' }}
         />
 
@@ -1379,11 +1404,11 @@ export default function MenuListPage() {
           <button className="upload-btn" onClick={handleFileSelect}>
             <div className="upload-icon">📄</div>
             ファイル選択
+            <span style={{ fontSize: '10px', color: '#999' }}>画像/PDF/Excel/CSV</span>
           </button>
-          <button className="upload-btn" style={{ opacity: 0.4, cursor: 'not-allowed' }} disabled>
+          <button className="upload-btn" onClick={() => setShowTextModal(true)}>
             <div className="upload-icon">📝</div>
             テキスト貼り付け
-            <span style={{ fontSize: '10px', color: '#999' }}>準備中</span>
           </button>
           <button className="upload-btn" style={{ opacity: 0.4, cursor: 'not-allowed' }} disabled>
             <div className="upload-icon">☁️</div>
@@ -1393,7 +1418,34 @@ export default function MenuListPage() {
         </div>
       </div>
 
-      {/* 画像解析中モーダル */}
+      {/* テキスト貼り付けモーダル */}
+      {showTextModal && (
+        <div className="modal active">
+          <div className="modal-content" style={{ maxWidth: '600px' }}>
+            <button className="modal-close" onClick={() => { setShowTextModal(false); setPasteText(''); }}>×</button>
+            <div className="modal-title">📝 メニューテキストを貼り付け</div>
+            <p style={{ marginBottom: '12px', color: '#666', fontSize: '14px' }}>
+              メニューの情報をテキストで貼り付けてください。料理名・価格・説明などが含まれていればAIが自動で構造化します。
+            </p>
+            <textarea
+              className="form-input"
+              value={pasteText}
+              onChange={(e) => setPasteText(e.target.value)}
+              placeholder={"例:\n唐揚げ定食 850円\n鶏もも肉のから揚げ5個、ご飯、味噌汁付き\n\n刺身盛り合わせ 1,500円\nマグロ、サーモン、ブリ、甘エビの4点盛り"}
+              rows={10}
+              style={{ marginBottom: '16px', fontSize: '14px' }}
+            />
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+              <button className="btn btn-secondary" onClick={() => { setShowTextModal(false); setPasteText(''); }}>キャンセル</button>
+              <button className="btn btn-primary" onClick={handleTextAnalyze} disabled={!pasteText.trim()}>
+                🤖 AI解析する
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 解析中モーダル */}
       {isAnalyzing && (
         <div className="modal active">
           <div className="modal-content" style={{ maxWidth: '400px', textAlign: 'center' }}>
@@ -1402,7 +1454,7 @@ export default function MenuListPage() {
               <div className="progress-bar-fill" style={{ animation: 'progress 8s ease-in-out forwards' }}></div>
             </div>
             <div style={{ marginTop: '10px', color: '#666', fontSize: '14px' }}>
-              メニュー画像からデータを抽出しています
+              メニューデータを抽出しています
             </div>
           </div>
         </div>
