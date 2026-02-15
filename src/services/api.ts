@@ -569,7 +569,7 @@ export const VisionApi = {
 
     const token = TokenService.getAccessToken();
     const url = `${API_BASE_URL}/menus/analyze-image`;
-    console.log('VisionApi.analyzeImage URL:', url, 'API_BASE_URL:', API_BASE_URL);
+    console.log('VisionApi upload:', { url, fileName: image.name, fileType: image.type, fileSize: image.size });
     const response = await fetch(url, {
       method: 'POST',
       headers: {
@@ -580,10 +580,13 @@ export const VisionApi = {
     });
 
     if (!response.ok) {
-      let errorMessage = 'Failed to analyze image';
+      const responseText = await response.text();
+      console.error('Upload failed:', response.status, responseText);
+      let errorMessage = `Server error ${response.status}`;
       try {
-        const errorData = await response.json();
-        errorMessage = errorData.detail || errorMessage;
+        const errorData = JSON.parse(responseText);
+        errorMessage = errorData.detail || errorData.message || errorMessage;
+        if (Array.isArray(errorMessage)) errorMessage = JSON.stringify(errorMessage);
       } catch {}
       throw new Error(errorMessage);
     }
