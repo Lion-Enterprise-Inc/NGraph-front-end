@@ -5,7 +5,7 @@ import AdminLayout from '../../../components/admin/AdminLayout'
 import { apiClient } from '../../../services/api'
 import { useAuth } from '../../../contexts/AuthContext'
 
-type TabType = 'basic' | 'source' | 'detail' | 'ai'
+type TabType = 'basic' | 'ai'
 
 export default function BasicInfoPage() {
   const { user, isLoading: authLoading } = useAuth()
@@ -39,23 +39,25 @@ export default function BasicInfoPage() {
   const [logoPreview, setLogoPreview] = useState<string>('')
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+  const ALLOWED_LOGO_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml', 'application/pdf']
+
   const handleLogoFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
-      // Validate file type
-      if (!file.type.startsWith('image/')) {
-        alert('画像ファイルを選択してください')
+      if (!ALLOWED_LOGO_TYPES.includes(file.type)) {
+        alert('対応形式: JPG, PNG, GIF, WebP, SVG, PDF')
         return
       }
-      // Validate file size (max 5MB)
       if (file.size > 5 * 1024 * 1024) {
         alert('ファイルサイズは5MB以下にしてください')
         return
       }
       setLogoFile(file)
-      // Create preview URL
-      const previewUrl = URL.createObjectURL(file)
-      setLogoPreview(previewUrl)
+      if (file.type.startsWith('image/')) {
+        setLogoPreview(URL.createObjectURL(file))
+      } else {
+        setLogoPreview('')
+      }
     }
   }
 
@@ -195,8 +197,6 @@ export default function BasicInfoPage() {
 
   const tabs = [
     { key: 'basic', label: '📍 基本情報' },
-    { key: 'source', label: '🔗 情報ソース' },
-    { key: 'detail', label: '📝 詳細情報' },
     { key: 'ai', label: '🤖 AI設定' },
   ]
 
@@ -235,16 +235,39 @@ export default function BasicInfoPage() {
           ) : activeTab === 'basic' && (
             <div className="inner-card">
               <div className="card-title">📍 基本情報</div>
-              
+
               {/* Logo Upload Section */}
               <div className="form-group">
-                <label className="form-label">🖼️ レストランロゴ</label>
+                <label className="form-label">ロゴ</label>
                 <div className="logo-upload-section">
-                  {(logoPreview || formData.logoUrl) ? (
+                  {(logoPreview || (formData.logoUrl && !logoFile)) ? (
                     <div className="logo-preview-container">
-                      <img src={logoPreview || formData.logoUrl} alt="Restaurant logo" className="logo-preview" />
-                      <button 
-                        type="button" 
+                      {logoPreview ? (
+                        <img src={logoPreview} alt="Restaurant logo" className="logo-preview" />
+                      ) : formData.logoUrl?.toLowerCase().endsWith('.pdf') ? (
+                        <div className="logo-placeholder" style={{ border: '2px solid #e5e7eb', background: '#fef2f2' }}>
+                          <span style={{ fontSize: '32px' }}>📄</span>
+                          <span style={{ fontSize: '11px' }}>PDF</span>
+                        </div>
+                      ) : (
+                        <img src={formData.logoUrl} alt="Restaurant logo" className="logo-preview" />
+                      )}
+                      <button
+                        type="button"
+                        className="logo-remove-btn"
+                        onClick={handleRemoveLogo}
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ) : logoFile && !logoPreview ? (
+                    <div className="logo-preview-container">
+                      <div className="logo-placeholder" style={{ border: '2px solid #e5e7eb', background: '#fef2f2' }}>
+                        <span style={{ fontSize: '32px' }}>📄</span>
+                        <span style={{ fontSize: '11px' }}>PDF</span>
+                      </div>
+                      <button
+                        type="button"
                         className="logo-remove-btn"
                         onClick={handleRemoveLogo}
                       >
@@ -258,15 +281,15 @@ export default function BasicInfoPage() {
                     </div>
                   )}
                   <div className="logo-input-group">
-                    <input 
+                    <input
                       ref={fileInputRef}
-                      type="file" 
-                      accept="image/*"
+                      type="file"
+                      accept="image/*,.pdf"
                       onChange={handleLogoFileChange}
                       style={{ display: 'none' }}
                       id="logo-file-input"
                     />
-                    <button 
+                    <button
                       type="button"
                       className="btn btn-secondary"
                       onClick={() => {
@@ -277,12 +300,12 @@ export default function BasicInfoPage() {
                       }}
                       style={{ marginBottom: '8px' }}
                     >
-                      {(logoPreview || formData.logoUrl) ? '🔄 ロゴを変更' : '📁 ロゴ画像を選択'}
+                      {(logoPreview || formData.logoUrl || logoFile) ? '🔄 ロゴを変更' : '📁 ロゴを選択'}
                     </button>
                     {logoFile && (
                       <p className="logo-file-name">選択中: {logoFile.name}</p>
                     )}
-                    <p className="logo-hint">※ 画像ファイルをアップロードしてください（最大5MB）。エンドユーザーのチャット画面に表示されます。</p>
+                    <p className="logo-hint">※ 画像またはPDFをアップロード（最大5MB）</p>
                   </div>
                 </div>
               </div>
@@ -291,12 +314,12 @@ export default function BasicInfoPage() {
                 <label className="form-label">業種 *</label>
                 <select name="storeType" className="form-input" value={formData.storeType} onChange={handleChange}>
                   <option value="">選択してください</option>
-                  <option value="restaurant_izakaya">🍽️ 飲食店 - 居酒屋</option>
-                  <option value="restaurant_cafe">🍽️ 飲食店 - カフェ</option>
-                  <option value="restaurant_ramen">🍽️ 飲食店 - ラーメン店</option>
-                  <option value="retail_apparel">🛍️ 小売店 - アパレル</option>
-                  <option value="retail_goods">🛍️ 小売店 - 雑貨店</option>
-                  <option value="hotel">🏨 宿泊施設</option>
+                  <option value="restaurant_izakaya">飲食店 - 居酒屋</option>
+                  <option value="restaurant_cafe">飲食店 - カフェ</option>
+                  <option value="restaurant_ramen">飲食店 - ラーメン店</option>
+                  <option value="retail_apparel">小売店 - アパレル</option>
+                  <option value="retail_goods">小売店 - 雑貨店</option>
+                  <option value="hotel">宿泊施設</option>
                 </select>
               </div>
               <div className="form-group">
@@ -311,41 +334,26 @@ export default function BasicInfoPage() {
                 <label className="form-label">住所</label>
                 <input type="text" name="address" className="form-input" value={formData.address} onChange={handleChange} />
               </div>
-            </div>
-          )}
 
-          {activeTab === 'source' && (
-            <div className="inner-card">
+              <div className="section-divider" />
+
               <div className="card-title">🔗 情報ソース</div>
-              <p style={{ color: '#666', marginBottom: '20px', fontSize: '14px' }}>
-                レストランの公式サイトやSNSのURLを入力すると、AIが情報を参考にレストランデータを構築できます
-              </p>
               <div className="form-group">
-                <label className="form-label">🌐 公式HP</label>
+                <label className="form-label">公式HP</label>
                 <input type="url" name="officialWebsite" className="form-input" placeholder="https://example.com" value={formData.officialWebsite} onChange={handleChange} />
               </div>
               <div className="form-group">
-                <label className="form-label">📸 Instagram</label>
+                <label className="form-label">Instagram</label>
                 <input type="url" name="instagramUrl" className="form-input" placeholder="https://instagram.com/yourstore" value={formData.instagramUrl} onChange={handleChange} />
               </div>
               <div className="form-group">
-                <label className="form-label">🍽️ メニュー情報ソースURL</label>
-                <input type="url" name="menuScrapingUrl" className="form-input" placeholder="https://tabelog.com/en/fukui/A1801/A180101/18007249/dtlmenu/" value={formData.menuScrapingUrl} onChange={handleChange} />
-                <small style={{ color: '#666', fontSize: '12px' }}>メニュー情報を自動取得するためのURLを入力してください</small>
+                <label className="form-label">メニュー情報ソースURL</label>
+                <input type="url" name="menuScrapingUrl" className="form-input" placeholder="https://tabelog.com/..." value={formData.menuScrapingUrl} onChange={handleChange} />
               </div>
-              <div style={{ display: 'flex', gap: '10px', marginTop: '15px', flexWrap: 'wrap' }}>
-                <button className="btn btn-secondary">➕ その他のソースを追加</button>
-                <button className="btn btn-primary" onClick={handleAIReference}>🤖 AI参照で情報取得</button>
-              </div>
-              <div style={{ marginTop: '15px', padding: '10px', background: '#FFF3E0', borderRadius: '6px', fontSize: '13px', color: '#E65100' }}>
-                <strong>⚠️ 注意:</strong> 外部サイトの情報は参考情報として取得されます。必ず内容を確認してから反映してください。
-              </div>
-            </div>
-          )}
 
-          {activeTab === 'detail' && (
-            <div className="inner-card">
-              <div className="card-title">📝 レストラン詳細</div>
+              <div className="section-divider" />
+
+              <div className="card-title">📝 詳細情報</div>
               <div className="form-group">
                 <label className="form-label">レストラン紹介</label>
                 <textarea name="description" className="form-input" placeholder="レストランの特徴や魅力を入力してください" value={formData.description} onChange={handleChange} rows={4} />
@@ -360,23 +368,23 @@ export default function BasicInfoPage() {
               </div>
               <div className="form-group">
                 <label className="form-label">座席数</label>
-                <input type="text" name="seats" className="form-input" placeholder="例: 50席（カウンター10席、テーブル40席）" value={formData.seats} onChange={handleChange} />
+                <input type="text" name="seats" className="form-input" placeholder="例: 50席" value={formData.seats} onChange={handleChange} />
               </div>
               <div className="form-group">
                 <label className="form-label">予算</label>
-                <input type="text" name="budget" className="form-input" placeholder="例: ディナー ¥3,000～¥4,000" value={formData.budget} onChange={handleChange} />
+                <input type="text" name="budget" className="form-input" placeholder="例: ¥3,000～¥4,000" value={formData.budget} onChange={handleChange} />
               </div>
               <div className="form-group">
                 <label className="form-label">駐車場</label>
-                <input type="text" name="parking" className="form-input" placeholder="例: 有（10台）、無" value={formData.parking} onChange={handleChange} />
+                <input type="text" name="parking" className="form-input" placeholder="例: 有（10台）" value={formData.parking} onChange={handleChange} />
               </div>
               <div className="form-group">
                 <label className="form-label">支払い方法</label>
-                <input type="text" name="payment" className="form-input" placeholder="例: カード可、電子マネー可、現金のみ" value={formData.payment} onChange={handleChange} />
+                <input type="text" name="payment" className="form-input" placeholder="例: カード可、電子マネー可" value={formData.payment} onChange={handleChange} />
               </div>
               <div className="form-group">
                 <label className="form-label">特徴・こだわり</label>
-                <textarea name="features" className="form-input" placeholder="例: 地元食材使用、個室あり、英語メニューあり" value={formData.features} onChange={handleChange} rows={3} />
+                <textarea name="features" className="form-input" placeholder="例: 地元食材使用、個室あり" value={formData.features} onChange={handleChange} rows={3} />
               </div>
             </div>
           )}
@@ -661,6 +669,10 @@ export default function BasicInfoPage() {
           .upgrade-features {
             grid-template-columns: 1fr;
           }
+        }
+        .section-divider {
+          border-top: 1px solid #e5e7eb;
+          margin: 24px 0;
         }
         .logo-upload-section {
           display: flex;
