@@ -13,6 +13,7 @@ export default function QRManagementPage() {
   const { user, isLoading: authLoading } = useAuth()
   const copy = getUiCopy(language)
   const [restaurantSlug, setRestaurantSlug] = useState('')
+  const [shortCode, setShortCode] = useState('')
   const [qrCodeUrl, setQrCodeUrl] = useState('')
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState('')
   const [isGenerating, setIsGenerating] = useState(false)
@@ -26,9 +27,12 @@ export default function QRManagementPage() {
       if (user?.restaurant_slug) {
         setRestaurantSlug(user.restaurant_slug)
       }
+      if (user?.restaurant_short_code) {
+        setShortCode(user.restaurant_short_code)
+      }
       setSlugInitialized(true)
     }
-  }, [authLoading, user?.restaurant_slug, slugInitialized])
+  }, [authLoading, user?.restaurant_slug, user?.restaurant_short_code, slugInitialized])
 
   const generateQRCode = async () => {
     if (!restaurantSlug.trim()) {
@@ -44,8 +48,10 @@ export default function QRManagementPage() {
     }
 
     setIsGenerating(true)
-    const encodedSlug = encodeURIComponent(restaurantSlug.trim())
-    const url = `https://app.ngraph.jp/?restaurant=${encodedSlug}`
+    // Use short_code URL if available, otherwise fall back to slug
+    const url = shortCode
+      ? `https://app.ngraph.jp/r/${shortCode}`
+      : `https://app.ngraph.jp/capture?restaurant=${encodeURIComponent(restaurantSlug.trim())}`
     setQrCodeUrl(url)
 
     try {

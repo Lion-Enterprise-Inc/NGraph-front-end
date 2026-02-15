@@ -11,6 +11,7 @@ export interface User {
   role: 'platform_owner' | 'restaurant_owner' | 'consumer' | 'superadmin';
   uid: string;
   restaurant_slug?: string;
+  restaurant_short_code?: string;
 }
 
 export interface LoginResponse {
