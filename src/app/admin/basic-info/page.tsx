@@ -35,6 +35,7 @@ export default function BasicInfoPage() {
   const [aiIndustry, setAiIndustry] = useState('restaurant')
   const [aiTone, setAiTone] = useState('polite')
   const [isSaving, setIsSaving] = useState(false)
+  const [isScraping, setIsScraping] = useState(false)
   const [logoFile, setLogoFile] = useState<File | null>(null)
   const [logoPreview, setLogoPreview] = useState<string>('')
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -191,8 +192,58 @@ export default function BasicInfoPage() {
     }
   }
 
-  const handleAIReference = () => {
-    alert('🤖 AI参照で情報取得中...\n\n登録されたソースから情報を自動取得します。')
+  const handleScrapeInfo = async (withMenus: boolean = false) => {
+    if (!restaurant) return
+
+    const urls = [formData.officialWebsite, formData.instagramUrl, formData.menuScrapingUrl].filter(u => u.trim())
+    if (urls.length === 0) {
+      alert('URLを1つ以上入力してください')
+      return
+    }
+
+    setIsScraping(true)
+    try {
+      const token = localStorage.getItem('access_token')
+      const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://15.207.22.103:8000'
+
+      const res = await fetch(`${apiBaseUrl}/restaurants/${restaurant.uid}/scrape-info`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ urls, scrape_menus: withMenus })
+      })
+
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+
+      const data = await res.json()
+      const info = data.result?.store_info
+
+      if (info) {
+        setFormData(prev => ({
+          ...prev,
+          storeName: info.name || prev.storeName,
+          phone: info.phone || prev.phone,
+          address: info.address || prev.address,
+          description: info.description || prev.description,
+          businessHours: info.business_hours || prev.businessHours,
+          holidays: info.holidays || prev.holidays,
+          seats: info.seats || prev.seats,
+          budget: info.budget || prev.budget,
+          parking: info.parking || prev.parking,
+          payment: info.payment || prev.payment,
+          features: info.features || prev.features,
+        }))
+
+        alert(`情報を取得しました。内容を確認して保存してください。${withMenus && data.result?.menu_scrape ? `\nメニュー: ${data.result.menu_scrape.items_saved || 0}件登録` : ''}`)
+      }
+    } catch (error) {
+      console.error('Scrape failed:', error)
+      alert(`情報の取得に失敗しました: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    } finally {
+      setIsScraping(false)
+    }
   }
 
   const tabs = [
@@ -338,17 +389,36 @@ export default function BasicInfoPage() {
               <div className="section-divider" />
 
               <div className="card-title">🔗 情報ソース</div>
+              <p style={{ color: '#666', marginBottom: '16px', fontSize: '13px' }}>
+                URLを入力して「情報を取得」を押すと、AIが店舗情報を自動で読み取ります
+              </p>
               <div className="form-group">
-                <label className="form-label">公式HP</label>
-                <input type="url" name="officialWebsite" className="form-input" placeholder="https://example.com" value={formData.officialWebsite} onChange={handleChange} />
+                <label className="form-label">公式HP / 食べログ / Googleマイビジネス等</label>
+                <input type="url" name="officialWebsite" className="form-input" placeholder="https://tabelog.com/..." value={formData.officialWebsite} onChange={handleChange} />
               </div>
               <div className="form-group">
-                <label className="form-label">Instagram</label>
+                <label className="form-label">その他の情報ソース</label>
                 <input type="url" name="instagramUrl" className="form-input" placeholder="https://instagram.com/yourstore" value={formData.instagramUrl} onChange={handleChange} />
               </div>
               <div className="form-group">
-                <label className="form-label">メニュー情報ソースURL</label>
-                <input type="url" name="menuScrapingUrl" className="form-input" placeholder="https://tabelog.com/..." value={formData.menuScrapingUrl} onChange={handleChange} />
+                <label className="form-label">メニュー情報URL</label>
+                <input type="url" name="menuScrapingUrl" className="form-input" placeholder="https://tabelog.com/.../dtlmenu/" value={formData.menuScrapingUrl} onChange={handleChange} />
+              </div>
+              <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                <button
+                  className="btn btn-primary"
+                  onClick={() => handleScrapeInfo(false)}
+                  disabled={isScraping}
+                >
+                  {isScraping ? '⏳ 取得中...' : '🤖 店舗情報を取得'}
+                </button>
+                <button
+                  className="btn btn-secondary"
+                  onClick={() => handleScrapeInfo(true)}
+                  disabled={isScraping}
+                >
+                  {isScraping ? '⏳ 取得中...' : '🍽️ メニューも一緒に取得'}
+                </button>
               </div>
 
               <div className="section-divider" />
