@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import AdminLayout from '../../../components/admin/AdminLayout'
-import { MenuApi, Menu, MenuCreate, MenuUpdate, Ingredient, AllergenApi, Allergen, AllergenListResponse, ScrapingApi, apiClient, CookingMethodApi, RestrictionApi, CookingMethod, Restriction } from '../../../services/api'
+import { MenuApi, Menu, MenuCreate, MenuUpdate, Ingredient, AllergenApi, Allergen, AllergenListResponse, ScrapingApi, apiClient, CookingMethodApi, RestrictionApi, CookingMethod, Restriction, VisionApi, VisionMenuItem } from '../../../services/api'
 import { useAuth } from '../../../contexts/AuthContext'
 
 interface MenuItem {
@@ -62,6 +62,98 @@ export default function MenuListPage() {
   const [selectedRestrictionUids, setSelectedRestrictionUids] = useState<string[]>([])
   const [editSelectedCookingMethodUids, setEditSelectedCookingMethodUids] = useState<string[]>([])
   const [editSelectedRestrictionUids, setEditSelectedRestrictionUids] = useState<string[]>([])
+  const [isAnalyzing, setIsAnalyzing] = useState(false)
+  const [visionResults, setVisionResults] = useState<VisionMenuItem[]>([])
+  const [showVisionApproval, setShowVisionApproval] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const cameraInputRef = useRef<HTMLInputElement>(null)
+
+  const handleFileSelect = () => {
+    console.log('handleFileSelect called, ref:', fileInputRef.current)
+    fileInputRef.current?.click()
+  }
+
+  const handleCameraCapture = () => {
+    console.log('handleCameraCapture called, ref:', cameraInputRef.current)
+    cameraInputRef.current?.click()
+  }
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    const restaurantSlug = restaurant?.slug || restaurant?.name?.toLowerCase().replace(/\s+/g, '-') || ''
+
+    setIsAnalyzing(true)
+    try {
+      const response = await VisionApi.analyzeImage(file, restaurantSlug, false)
+      const items = response.result?.items || []
+      if (items.length === 0) {
+        alert('メニューを検出できませんでした。別の画像を試してください。')
+        return
+      }
+      setVisionResults(items)
+      setShowVisionApproval(true)
+    } catch (err) {
+      console.error('Vision analysis failed:', err)
+      alert(`画像解析に失敗しました: ${err instanceof Error ? err.message : 'Unknown error'}`)
+    } finally {
+      setIsAnalyzing(false)
+      // reset input so same file can be selected again
+      e.target.value = ''
+    }
+  }
+
+  const handleApproveVisionItem = async (index: number) => {
+    const item = visionResults[index]
+    if (!item || !restaurant?.uid) return
+
+    try {
+      const menuData: MenuCreate = {
+        name_jp: item.name_jp,
+        name_en: item.name_en || null,
+        category: item.category || '未分類',
+        price: item.price || 0,
+        description: item.description || null,
+        restaurant_uid: restaurant.uid,
+        ingredients: item.ingredients || [],
+        status: false
+      }
+      await MenuApi.create(menuData)
+      await refreshMenus()
+      setVisionResults(visionResults.filter((_, i) => i !== index))
+    } catch (err) {
+      console.error('Failed to save menu:', err)
+      alert('メニューの保存に失敗しました')
+    }
+  }
+
+  const handleApproveAllVision = async () => {
+    if (!restaurant?.uid) return
+
+    try {
+      for (const item of visionResults) {
+        const menuData: MenuCreate = {
+          name_jp: item.name_jp,
+          name_en: item.name_en || null,
+          category: item.category || '未分類',
+          price: item.price || 0,
+          description: item.description || null,
+          restaurant_uid: restaurant.uid,
+          ingredients: item.ingredients || [],
+          status: false
+        }
+        await MenuApi.create(menuData)
+      }
+      await refreshMenus()
+      setVisionResults([])
+      setShowVisionApproval(false)
+      alert(`✅ ${visionResults.length}件のメニューを追加しました！`)
+    } catch (err) {
+      console.error('Failed to save menus:', err)
+      alert('メニューの保存に失敗しました')
+    }
+  }
 
   // Fetch restaurant and menus
   const fetchData = useCallback(async (page: number = 1) => {
@@ -1261,27 +1353,131 @@ export default function MenuListPage() {
       {/* アップロードカード */}
       <div className="card" style={{ marginTop: '8px' }}>
         <div className="card-title">📤 メニュー・商品をアップロード</div>
-        <p style={{ marginBottom: '16px', color: '#666', fontSize: '14px' }}>複数の方法から最も簡単な方法を選んでください</p>
+        <p style={{ marginBottom: '16px', color: '#666', fontSize: '14px' }}>メニュー表の画像をアップロードすると、AIが自動で構造化します</p>
+
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          onChange={handleImageUpload}
+          style={{ display: 'none' }}
+        />
+        <input
+          ref={cameraInputRef}
+          type="file"
+          accept="image/*"
+          capture="environment"
+          onChange={handleImageUpload}
+          style={{ display: 'none' }}
+        />
 
         <div className="upload-grid">
-          <button className="upload-btn">
+          <button className="upload-btn" onClick={handleCameraCapture}>
             <div className="upload-icon">📷</div>
-            カメラ記録
+            カメラで撮影
           </button>
-          <button className="upload-btn">
+          <button className="upload-btn" onClick={handleFileSelect}>
             <div className="upload-icon">📄</div>
             ファイル選択
           </button>
-          <button className="upload-btn">
+          <button className="upload-btn" style={{ opacity: 0.4, cursor: 'not-allowed' }} disabled>
             <div className="upload-icon">📝</div>
             テキスト貼り付け
+            <span style={{ fontSize: '10px', color: '#999' }}>準備中</span>
           </button>
-          <button className="upload-btn">
+          <button className="upload-btn" style={{ opacity: 0.4, cursor: 'not-allowed' }} disabled>
             <div className="upload-icon">☁️</div>
             Googleドライブ
+            <span style={{ fontSize: '10px', color: '#999' }}>準備中</span>
           </button>
         </div>
       </div>
+
+      {/* 画像解析中モーダル */}
+      {isAnalyzing && (
+        <div className="modal active">
+          <div className="modal-content" style={{ maxWidth: '400px', textAlign: 'center' }}>
+            <div className="modal-title">🤖 AIがメニューを解析中...</div>
+            <div className="progress-bar-container">
+              <div className="progress-bar-fill" style={{ animation: 'progress 8s ease-in-out forwards' }}></div>
+            </div>
+            <div style={{ marginTop: '10px', color: '#666', fontSize: '14px' }}>
+              メニュー画像からデータを抽出しています
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Vision解析結果の承認モーダル */}
+      {showVisionApproval && (
+        <div className="modal active">
+          <div className="modal-content" style={{ maxWidth: '700px' }}>
+            <button className="modal-close" onClick={() => { setShowVisionApproval(false); setVisionResults([]); }}>×</button>
+            <div className="modal-title">🤖 AI解析結果の確認</div>
+
+            <div style={{ background: '#f0fdf4', padding: '12px 16px', borderRadius: '8px', marginBottom: '16px', fontSize: '14px', color: '#166534' }}>
+              📸 画像から <strong>{visionResults.length}件</strong> のメニューを検出しました。内容を確認して承認してください。
+            </div>
+
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
+              <button className="btn" onClick={handleApproveAllVision} style={{ background: '#10b981', color: 'white' }}>
+                ✅ すべて承認 ({visionResults.length}件)
+              </button>
+              <button className="btn btn-danger" onClick={() => { setShowVisionApproval(false); setVisionResults([]); }}>
+                ❌ すべて破棄
+              </button>
+            </div>
+
+            <div>
+              {visionResults.map((item, index) => (
+                <div key={index} style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: '8px', padding: '16px', marginBottom: '12px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontWeight: 600, fontSize: '16px', marginBottom: '4px' }}>
+                        {item.name_jp}
+                        {item.name_en && <span style={{ fontSize: '13px', color: '#888', marginLeft: '8px' }}>{item.name_en}</span>}
+                      </div>
+                      <div style={{ fontSize: '13px', color: '#666', marginBottom: '4px' }}>
+                        💰 ¥{(item.price || 0).toLocaleString()} | 📂 {item.category || '未分類'}
+                      </div>
+                      {item.description && (
+                        <div style={{ fontSize: '12px', color: '#888', marginBottom: '4px' }}>{item.description}</div>
+                      )}
+                      {item.ingredients && item.ingredients.length > 0 && (
+                        <div style={{ fontSize: '11px', color: '#999' }}>🥘 {item.ingredients.join(', ')}</div>
+                      )}
+                      {item.allergens && item.allergens.length > 0 && (
+                        <div style={{ fontSize: '11px', color: '#dc2626', marginTop: '2px' }}>⚠️ {item.allergens.join(', ')}</div>
+                      )}
+                    </div>
+                    <div style={{ display: 'flex', gap: '8px', marginLeft: '12px' }}>
+                      <button
+                        className="btn btn-small"
+                        onClick={() => handleApproveVisionItem(index)}
+                        style={{ background: '#d1fae5', color: '#059669' }}
+                      >
+                        ✅ 承認
+                      </button>
+                      <button
+                        className="btn btn-small btn-danger"
+                        onClick={() => setVisionResults(visionResults.filter((_, i) => i !== index))}
+                      >
+                        ❌
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+
+              {visionResults.length === 0 && (
+                <div style={{ textAlign: 'center', padding: '20px', color: '#999' }}>
+                  すべてのメニューが処理されました
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       <style jsx>{`
         .card {
