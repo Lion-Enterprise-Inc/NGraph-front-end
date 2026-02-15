@@ -456,6 +456,9 @@ export interface Menu {
   nfg_version: string | null;
   valid_from: string | null;
   valid_until: string | null;
+  narrative: Record<string, any> | null;
+  serving: Record<string, any> | null;
+  price_detail: Record<string, any> | null;
   created_at: string;
   updated_at: string;
 }
@@ -476,6 +479,9 @@ export interface MenuCreate {
   taste_profile_uids?: string[] | null;
   calorie_range_uid?: string | null;
   data_source?: string;
+  narrative?: Record<string, any> | null;
+  serving?: Record<string, any> | null;
+  price_detail?: Record<string, any> | null;
 }
 
 export interface MenuUpdate {
@@ -493,6 +499,9 @@ export interface MenuUpdate {
   taste_profile_uids?: string[] | null;
   calorie_range_uid?: string | null;
   data_source?: string;
+  narrative?: Record<string, any> | null;
+  serving?: Record<string, any> | null;
+  price_detail?: Record<string, any> | null;
 }
 
 export interface MenuListResponse {

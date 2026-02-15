@@ -20,6 +20,9 @@ interface MenuItem {
   restrictions: Restriction[]
   confidenceScore: number
   dataSource: string | null
+  narrative: Record<string, any> | null
+  serving: Record<string, any> | null
+  priceDetail: Record<string, any> | null
 }
 
 export default function MenuListPage() {
@@ -43,7 +46,10 @@ export default function MenuListPage() {
     category: '',
     description: '',
     descriptionEn: '',
-    ingredients: ''
+    ingredients: '',
+    narrative: { story: '', chef_note: '', tasting_note: '', pairing_suggestion: '', seasonal_note: '' } as Record<string, string>,
+    serving: { size: '', availability: '' } as Record<string, string>,
+    priceDetail: { currency: 'JPY', tax_included: true, tax_rate: 10 } as Record<string, any>
   })
 
   const [menuItems, setMenuItems] = useState<MenuItem[]>([])
@@ -232,7 +238,10 @@ export default function MenuListPage() {
             cookingMethods: menu.cooking_methods || [],
             restrictions: menu.restrictions || [],
             confidenceScore: menu.confidence_score || 0,
-            dataSource: menu.data_source || null
+            dataSource: menu.data_source || null,
+            narrative: menu.narrative || null,
+            serving: menu.serving || null,
+            priceDetail: menu.price_detail || null
           }))
           setMenuItems(menus)
         } catch (menuErr) {
@@ -359,6 +368,11 @@ export default function MenuListPage() {
         ? newMenu.ingredients.split(',').map(s => s.trim()).filter(Boolean) 
         : []
 
+      // Build narrative/serving/price_detail, omitting empty values
+      const narrativeData = Object.fromEntries(Object.entries(newMenu.narrative).filter(([, v]) => v))
+      const servingData = Object.fromEntries(Object.entries(newMenu.serving).filter(([, v]) => v))
+      const priceDetailData = { ...newMenu.priceDetail }
+
       const menuData: MenuCreate = {
         name_jp: newMenu.name,
         name_en: newMenu.nameEn || null,
@@ -371,13 +385,16 @@ export default function MenuListPage() {
         allergen_uids: selectedAllergenUids.length > 0 ? selectedAllergenUids : null,
         cooking_method_uids: selectedCookingMethodUids.length > 0 ? selectedCookingMethodUids : null,
         restriction_uids: selectedRestrictionUids.length > 0 ? selectedRestrictionUids : null,
-        status: false
+        status: false,
+        narrative: Object.keys(narrativeData).length > 0 ? narrativeData : null,
+        serving: Object.keys(servingData).length > 0 ? servingData : null,
+        price_detail: Object.keys(priceDetailData).length > 0 ? priceDetailData : null
       }
 
       await MenuApi.create(menuData)
       await refreshMenus()
 
-      setNewMenu({ name: '', nameEn: '', price: '', category: '', description: '', descriptionEn: '', ingredients: '' })
+      setNewMenu({ name: '', nameEn: '', price: '', category: '', description: '', descriptionEn: '', ingredients: '', narrative: { story: '', chef_note: '', tasting_note: '', pairing_suggestion: '', seasonal_note: '' }, serving: { size: '', availability: '' }, priceDetail: { currency: 'JPY', tax_included: true, tax_rate: 10 } })
       setSelectedAllergenUids([])
       setSelectedCookingMethodUids([])
       setSelectedRestrictionUids([])
@@ -551,7 +568,10 @@ export default function MenuListPage() {
         allergen_uids: editSelectedAllergenUids.length > 0 ? editSelectedAllergenUids : null,
         cooking_method_uids: editSelectedCookingMethodUids.length > 0 ? editSelectedCookingMethodUids : null,
         restriction_uids: editSelectedRestrictionUids.length > 0 ? editSelectedRestrictionUids : null,
-        status: editItem.status
+        status: editItem.status,
+        narrative: editItem.narrative,
+        serving: editItem.serving,
+        price_detail: editItem.priceDetail
       }
 
       await MenuApi.update(editItem.uid, updateData)
@@ -866,6 +886,7 @@ export default function MenuListPage() {
               <button className={`tab-nav-btn ${activeTab === 'basic' ? 'active' : ''}`} onClick={() => setActiveTab('basic')}>📝 基本情報</button>
               <button className={`tab-nav-btn ${activeTab === 'materials' ? 'active' : ''}`} onClick={() => setActiveTab('materials')}>🥕 原材料</button>
               <button className={`tab-nav-btn ${activeTab === 'allergens' ? 'active' : ''}`} onClick={() => setActiveTab('allergens')}>⚠️ アレルギー</button>
+              <button className={`tab-nav-btn ${activeTab === 'nfg' ? 'active' : ''}`} onClick={() => setActiveTab('nfg')}>📊 NFG詳細</button>
             </div>
 
             {activeTab === 'basic' && (
@@ -1038,6 +1059,84 @@ export default function MenuListPage() {
                   )}
                 </div>
                 <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+                  <button className="btn btn-primary" onClick={() => setActiveTab('nfg')}>次へ: NFG詳細 →</button>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'nfg' && (
+              <div className="tab-content">
+                <div style={{ marginBottom: '20px' }}>
+                  <h4 style={{ fontSize: '15px', fontWeight: 600, marginBottom: '12px', color: '#374151' }}>📖 ナラティブ（料理の物語）</h4>
+                  <div className="form-group">
+                    <label className="form-label">料理のストーリー</label>
+                    <textarea className="form-input" rows={2} value={newMenu.narrative.story || ''} onChange={(e) => setNewMenu({...newMenu, narrative: {...newMenu.narrative, story: e.target.value}})} placeholder="この料理が生まれた背景やこだわり" />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">シェフのコメント</label>
+                    <textarea className="form-input" rows={2} value={newMenu.narrative.chef_note || ''} onChange={(e) => setNewMenu({...newMenu, narrative: {...newMenu.narrative, chef_note: e.target.value}})} placeholder="料理人のおすすめポイント" />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">テイスティングノート</label>
+                    <textarea className="form-input" rows={2} value={newMenu.narrative.tasting_note || ''} onChange={(e) => setNewMenu({...newMenu, narrative: {...newMenu.narrative, tasting_note: e.target.value}})} placeholder="味わいの特徴" />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">ペアリング提案</label>
+                    <input type="text" className="form-input" value={newMenu.narrative.pairing_suggestion || ''} onChange={(e) => setNewMenu({...newMenu, narrative: {...newMenu.narrative, pairing_suggestion: e.target.value}})} placeholder="おすすめのお酒や組み合わせ" />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">季節のメモ</label>
+                    <input type="text" className="form-input" value={newMenu.narrative.seasonal_note || ''} onChange={(e) => setNewMenu({...newMenu, narrative: {...newMenu.narrative, seasonal_note: e.target.value}})} placeholder="旬の情報など" />
+                  </div>
+                </div>
+
+                <div style={{ marginBottom: '20px', borderTop: '1px solid #e5e7eb', paddingTop: '16px' }}>
+                  <h4 style={{ fontSize: '15px', fontWeight: 600, marginBottom: '12px', color: '#374151' }}>🍽️ 提供情報</h4>
+                  <div style={{ display: 'flex', gap: '12px' }}>
+                    <div className="form-group" style={{ flex: 1 }}>
+                      <label className="form-label">サイズ</label>
+                      <select className="form-input" value={newMenu.serving.size || ''} onChange={(e) => setNewMenu({...newMenu, serving: {...newMenu.serving, size: e.target.value}})}>
+                        <option value="">未設定</option>
+                        <option value="small">小盛り</option>
+                        <option value="regular">普通</option>
+                        <option value="large">大盛り</option>
+                        <option value="family">ファミリー</option>
+                      </select>
+                    </div>
+                    <div className="form-group" style={{ flex: 1 }}>
+                      <label className="form-label">提供期間</label>
+                      <select className="form-input" value={newMenu.serving.availability || ''} onChange={(e) => setNewMenu({...newMenu, serving: {...newMenu.serving, availability: e.target.value}})}>
+                        <option value="">未設定</option>
+                        <option value="always">通年</option>
+                        <option value="seasonal">季節限定</option>
+                        <option value="limited">数量限定</option>
+                        <option value="special_event">イベント限定</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ marginBottom: '20px', borderTop: '1px solid #e5e7eb', paddingTop: '16px' }}>
+                  <h4 style={{ fontSize: '15px', fontWeight: 600, marginBottom: '12px', color: '#374151' }}>💰 価格詳細</h4>
+                  <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                    <div className="form-group" style={{ flex: 1 }}>
+                      <label className="form-label">通貨</label>
+                      <input type="text" className="form-input" value={newMenu.priceDetail.currency || 'JPY'} onChange={(e) => setNewMenu({...newMenu, priceDetail: {...newMenu.priceDetail, currency: e.target.value}})} />
+                    </div>
+                    <div className="form-group" style={{ flex: 1 }}>
+                      <label className="form-label">税率(%)</label>
+                      <input type="number" className="form-input" value={newMenu.priceDetail.tax_rate ?? 10} onChange={(e) => setNewMenu({...newMenu, priceDetail: {...newMenu.priceDetail, tax_rate: Number(e.target.value)}})} />
+                    </div>
+                    <div className="form-group" style={{ flex: 1, paddingTop: '24px' }}>
+                      <label className="checkbox-item">
+                        <input type="checkbox" checked={newMenu.priceDetail.tax_included !== false} onChange={(e) => setNewMenu({...newMenu, priceDetail: {...newMenu.priceDetail, tax_included: e.target.checked}})} />
+                        税込価格
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
                   <button className="btn btn-secondary" onClick={() => { setShowAddModal(false); setActiveTab('basic'); }}>キャンセル</button>
                   <button className="btn btn-primary" onClick={handleAddMenu}>💾 保存</button>
                 </div>
@@ -1191,6 +1290,7 @@ export default function MenuListPage() {
               <button className={`tab-nav-btn ${activeTab === 'basic' ? 'active' : ''}`} onClick={() => setActiveTab('basic')}>📝 基本情報</button>
               <button className={`tab-nav-btn ${activeTab === 'materials' ? 'active' : ''}`} onClick={() => setActiveTab('materials')}>🥕 原材料</button>
               <button className={`tab-nav-btn ${activeTab === 'allergens' ? 'active' : ''}`} onClick={() => setActiveTab('allergens')}>⚠️ アレルギー</button>
+              <button className={`tab-nav-btn ${activeTab === 'nfg' ? 'active' : ''}`} onClick={() => setActiveTab('nfg')}>📊 NFG詳細</button>
             </div>
 
             {activeTab === 'basic' && (
@@ -1359,16 +1459,94 @@ export default function MenuListPage() {
                   )}
                 </div>
 
+                <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '20px' }}>
+                  <button className="btn btn-primary" onClick={() => setActiveTab('nfg')}>次へ: NFG詳細 →</button>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'nfg' && (
+              <div className="tab-content">
+                <div style={{ marginBottom: '20px' }}>
+                  <h4 style={{ fontSize: '15px', fontWeight: 600, marginBottom: '12px', color: '#374151' }}>📖 ナラティブ（料理の物語）</h4>
+                  <div className="form-group">
+                    <label className="form-label">料理のストーリー</label>
+                    <textarea className="form-input" rows={2} value={editItem.narrative?.story || ''} onChange={(e) => setEditItem({...editItem, narrative: {...(editItem.narrative || {}), story: e.target.value}})} placeholder="この料理が生まれた背景やこだわり" />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">シェフのコメント</label>
+                    <textarea className="form-input" rows={2} value={editItem.narrative?.chef_note || ''} onChange={(e) => setEditItem({...editItem, narrative: {...(editItem.narrative || {}), chef_note: e.target.value}})} placeholder="料理人のおすすめポイント" />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">テイスティングノート</label>
+                    <textarea className="form-input" rows={2} value={editItem.narrative?.tasting_note || ''} onChange={(e) => setEditItem({...editItem, narrative: {...(editItem.narrative || {}), tasting_note: e.target.value}})} placeholder="味わいの特徴" />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">ペアリング提案</label>
+                    <input type="text" className="form-input" value={editItem.narrative?.pairing_suggestion || ''} onChange={(e) => setEditItem({...editItem, narrative: {...(editItem.narrative || {}), pairing_suggestion: e.target.value}})} placeholder="おすすめのお酒や組み合わせ" />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">季節のメモ</label>
+                    <input type="text" className="form-input" value={editItem.narrative?.seasonal_note || ''} onChange={(e) => setEditItem({...editItem, narrative: {...(editItem.narrative || {}), seasonal_note: e.target.value}})} placeholder="旬の情報など" />
+                  </div>
+                </div>
+
+                <div style={{ marginBottom: '20px', borderTop: '1px solid #e5e7eb', paddingTop: '16px' }}>
+                  <h4 style={{ fontSize: '15px', fontWeight: 600, marginBottom: '12px', color: '#374151' }}>🍽️ 提供情報</h4>
+                  <div style={{ display: 'flex', gap: '12px' }}>
+                    <div className="form-group" style={{ flex: 1 }}>
+                      <label className="form-label">サイズ</label>
+                      <select className="form-input" value={editItem.serving?.size || ''} onChange={(e) => setEditItem({...editItem, serving: {...(editItem.serving || {}), size: e.target.value}})}>
+                        <option value="">未設定</option>
+                        <option value="small">小盛り</option>
+                        <option value="regular">普通</option>
+                        <option value="large">大盛り</option>
+                        <option value="family">ファミリー</option>
+                      </select>
+                    </div>
+                    <div className="form-group" style={{ flex: 1 }}>
+                      <label className="form-label">提供期間</label>
+                      <select className="form-input" value={editItem.serving?.availability || ''} onChange={(e) => setEditItem({...editItem, serving: {...(editItem.serving || {}), availability: e.target.value}})}>
+                        <option value="">未設定</option>
+                        <option value="always">通年</option>
+                        <option value="seasonal">季節限定</option>
+                        <option value="limited">数量限定</option>
+                        <option value="special_event">イベント限定</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ marginBottom: '20px', borderTop: '1px solid #e5e7eb', paddingTop: '16px' }}>
+                  <h4 style={{ fontSize: '15px', fontWeight: 600, marginBottom: '12px', color: '#374151' }}>💰 価格詳細</h4>
+                  <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                    <div className="form-group" style={{ flex: 1 }}>
+                      <label className="form-label">通貨</label>
+                      <input type="text" className="form-input" value={editItem.priceDetail?.currency || 'JPY'} onChange={(e) => setEditItem({...editItem, priceDetail: {...(editItem.priceDetail || {}), currency: e.target.value}})} />
+                    </div>
+                    <div className="form-group" style={{ flex: 1 }}>
+                      <label className="form-label">税率(%)</label>
+                      <input type="number" className="form-input" value={editItem.priceDetail?.tax_rate ?? 10} onChange={(e) => setEditItem({...editItem, priceDetail: {...(editItem.priceDetail || {}), tax_rate: Number(e.target.value)}})} />
+                    </div>
+                    <div className="form-group" style={{ flex: 1, paddingTop: '24px' }}>
+                      <label className="checkbox-item">
+                        <input type="checkbox" checked={editItem.priceDetail?.tax_included !== false} onChange={(e) => setEditItem({...editItem, priceDetail: {...(editItem.priceDetail || {}), tax_included: e.target.checked}})} />
+                        税込価格
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
                 {/* Status toggle */}
                 <div className="form-group" style={{ marginTop: '20px', padding: '16px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
                   <label className="form-label" style={{ marginBottom: '12px', display: 'block' }}>📋 確認ステータス</label>
                   <div style={{ display: 'flex', gap: '12px' }}>
-                    <button 
+                    <button
                       type="button"
                       onClick={() => setEditItem({...editItem, status: true})}
-                      style={{ 
-                        padding: '10px 20px', 
-                        borderRadius: '6px', 
+                      style={{
+                        padding: '10px 20px',
+                        borderRadius: '6px',
                         border: editItem.status ? '2px solid #10b981' : '1px solid #d1d5db',
                         background: editItem.status ? '#d1fae5' : 'white',
                         color: editItem.status ? '#059669' : '#6b7280',
@@ -1381,12 +1559,12 @@ export default function MenuListPage() {
                     >
                       ✓ 承認済み
                     </button>
-                    <button 
+                    <button
                       type="button"
                       onClick={() => setEditItem({...editItem, status: false})}
-                      style={{ 
-                        padding: '10px 20px', 
-                        borderRadius: '6px', 
+                      style={{
+                        padding: '10px 20px',
+                        borderRadius: '6px',
                         border: !editItem.status ? '2px solid #f59e0b' : '1px solid #d1d5db',
                         background: !editItem.status ? '#fef3c7' : 'white',
                         color: !editItem.status ? '#d97706' : '#6b7280',
