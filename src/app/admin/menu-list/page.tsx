@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import AdminLayout from '../../../components/admin/AdminLayout'
-import { MenuApi, Menu, MenuCreate, MenuUpdate, Ingredient, AllergenApi, Allergen, AllergenListResponse, ScrapingApi, apiClient, CookingMethodApi, RestrictionApi, CookingMethod, Restriction, VisionApi, VisionMenuItem } from '../../../services/api'
+import { MenuApi, Menu, MenuCreate, MenuUpdate, Ingredient, AllergenApi, Allergen, AllergenListResponse, ScrapingApi, apiClient, CookingMethodApi, RestrictionApi, CookingMethod, Restriction, VisionApi, VisionMenuItem, DISH_CATEGORIES } from '../../../services/api'
 import { useAuth } from '../../../contexts/AuthContext'
 
 interface MenuItem {
@@ -14,6 +14,7 @@ interface MenuItem {
   status: boolean
   ingredients: Ingredient[]
   description: string | null
+  descriptionEn: string | null
   allergens: Allergen[]
   cookingMethods: CookingMethod[]
   restrictions: Restriction[]
@@ -41,6 +42,7 @@ export default function MenuListPage() {
     price: '',
     category: '',
     description: '',
+    descriptionEn: '',
     ingredients: ''
   })
 
@@ -155,7 +157,7 @@ export default function MenuListPage() {
       ingredients: item.ingredients || [],
       allergen_uids: allergenUids.length > 0 ? allergenUids : null,
       status: false,
-      data_source: 'ai_image'
+      data_source: 'ai_inferred'
     }
   }
 
@@ -225,6 +227,7 @@ export default function MenuListPage() {
             status: menu.status,
             ingredients: menu.ingredients || [],
             description: menu.description,
+            descriptionEn: menu.description_en || null,
             allergens: menu.allergens || [],
             cookingMethods: menu.cooking_methods || [],
             restrictions: menu.restrictions || [],
@@ -362,6 +365,7 @@ export default function MenuListPage() {
         category: newMenu.category,
         price: Number(newMenu.price),
         description: newMenu.description || null,
+        description_en: newMenu.descriptionEn || null,
         restaurant_uid: restaurant.uid,
         ingredients: ingredientsArray,
         allergen_uids: selectedAllergenUids.length > 0 ? selectedAllergenUids : null,
@@ -373,7 +377,7 @@ export default function MenuListPage() {
       await MenuApi.create(menuData)
       await refreshMenus()
 
-      setNewMenu({ name: '', nameEn: '', price: '', category: '', description: '', ingredients: '' })
+      setNewMenu({ name: '', nameEn: '', price: '', category: '', description: '', descriptionEn: '', ingredients: '' })
       setSelectedAllergenUids([])
       setSelectedCookingMethodUids([])
       setSelectedRestrictionUids([])
@@ -542,6 +546,7 @@ export default function MenuListPage() {
         category: editItem.category,
         price: editItem.price,
         description: editItem.description,
+        description_en: editItem.descriptionEn,
         ingredients: ingredientNames,
         allergen_uids: editSelectedAllergenUids.length > 0 ? editSelectedAllergenUids : null,
         cooking_method_uids: editSelectedCookingMethodUids.length > 0 ? editSelectedCookingMethodUids : null,
@@ -754,7 +759,7 @@ export default function MenuListPage() {
                             </div>
                           )}
                           <div style={{ fontSize: '11px', color: '#6c757d', marginBottom: '2px' }}>
-                            📂 {item.category}
+                            📂 {DISH_CATEGORIES[item.category] || item.category}
                           </div>
                           <div style={{ fontSize: '10px', color: '#6c757d', marginBottom: '2px' }}>
                             🥘 {item.ingredients?.length > 0 ? item.ingredients.map(ing => ing.name).join(', ') : '原材料なし'}
@@ -882,19 +887,19 @@ export default function MenuListPage() {
                   <label className="form-label">カテゴリー *</label>
                   <select className="form-input" value={newMenu.category} onChange={(e) => setNewMenu({...newMenu, category: e.target.value})}>
                     <option value="">選択してください</option>
-                    <option value="ご飯もの">ご飯もの</option>
-                    <option value="刺身">刺身</option>
-                    <option value="焼き物">焼き物</option>
-                    <option value="揚げ物">揚げ物</option>
-                    <option value="コース">コース</option>
-                    <option value="ドリンク">ドリンク</option>
-                    <option value="そば">そば</option>
+                    {Object.entries(DISH_CATEGORIES).map(([value, label]) => (
+                      <option key={value} value={value}>{label}</option>
+                    ))}
                   </select>
                 </div>
                 <div className="form-group">
-                  <label className="form-label">料理の説明</label>
+                  <label className="form-label">料理の説明（日本語）</label>
                   <textarea className="form-input" value={newMenu.description} onChange={(e) => setNewMenu({...newMenu, description: e.target.value})} />
                   <button className="btn ai-btn btn-small" style={{ marginTop: '5px' }}>🤖 AI生成</button>
+                </div>
+                <div className="form-group">
+                  <label className="form-label">料理の説明（英語）</label>
+                  <textarea className="form-input" value={newMenu.descriptionEn} onChange={(e) => setNewMenu({...newMenu, descriptionEn: e.target.value})} />
                 </div>
                 <button className="btn btn-primary" onClick={() => setActiveTab('materials')}>次へ: 原材料設定 →</button>
               </div>
@@ -1150,7 +1155,7 @@ export default function MenuListPage() {
               </div>
               <p style={{ fontSize: '14px', color: '#666', marginBottom: '12px' }}>{previewItem.description}</p>
               <div style={{ fontSize: '13px', color: '#888' }}>
-                <strong>カテゴリ:</strong> {previewItem.category}
+                <strong>カテゴリ:</strong> {DISH_CATEGORIES[previewItem.category] || previewItem.category}
               </div>
               {previewItem.ingredients && previewItem.ingredients.length > 0 && (
                 <div style={{ fontSize: '13px', color: '#888', marginTop: '8px' }}>
@@ -1207,19 +1212,19 @@ export default function MenuListPage() {
                   <label className="form-label">カテゴリー *</label>
                   <select className="form-input" value={editItem.category} onChange={(e) => setEditItem({...editItem, category: e.target.value})}>
                     <option value="">選択してください</option>
-                    <option value="ご飯もの">ご飯もの</option>
-                    <option value="刺身">刺身</option>
-                    <option value="焼き物">焼き物</option>
-                    <option value="揚げ物">揚げ物</option>
-                    <option value="コース">コース</option>
-                    <option value="ドリンク">ドリンク</option>
-                    <option value="そば">そば</option>
+                    {Object.entries(DISH_CATEGORIES).map(([value, label]) => (
+                      <option key={value} value={value}>{label}</option>
+                    ))}
                   </select>
                 </div>
                 <div className="form-group">
-                  <label className="form-label">料理の説明</label>
+                  <label className="form-label">料理の説明（日本語）</label>
                   <textarea className="form-input" value={editItem.description || ''} onChange={(e) => setEditItem({...editItem, description: e.target.value})} />
                   <button className="btn ai-btn btn-small" style={{ marginTop: '5px' }}>🤖 AI生成</button>
+                </div>
+                <div className="form-group">
+                  <label className="form-label">料理の説明（英語）</label>
+                  <textarea className="form-input" value={editItem.descriptionEn || ''} onChange={(e) => setEditItem({...editItem, descriptionEn: e.target.value})} />
                 </div>
                 <button className="btn btn-primary" onClick={() => setActiveTab('materials')}>次へ: 原材料設定 →</button>
               </div>
@@ -1525,7 +1530,7 @@ export default function MenuListPage() {
                         {item.name_en && <span style={{ fontSize: '13px', color: '#888', marginLeft: '8px' }}>{item.name_en}</span>}
                       </div>
                       <div style={{ fontSize: '13px', color: '#666', marginBottom: '4px' }}>
-                        💰 ¥{(item.price || 0).toLocaleString()} | 📂 {item.category || '未分類'}
+                        💰 ¥{(item.price || 0).toLocaleString()} | 📂 {DISH_CATEGORIES[item.category] || item.category || '未分類'}
                       </div>
                       {item.description && (
                         <div style={{ fontSize: '12px', color: '#888', marginBottom: '4px' }}>{item.description}</div>
