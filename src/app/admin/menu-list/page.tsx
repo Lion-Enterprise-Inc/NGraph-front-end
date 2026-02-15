@@ -17,6 +17,8 @@ interface MenuItem {
   allergens: Allergen[]
   cookingMethods: CookingMethod[]
   restrictions: Restriction[]
+  confidenceScore: number
+  dataSource: string | null
 }
 
 export default function MenuListPage() {
@@ -152,7 +154,8 @@ export default function MenuListPage() {
       restaurant_uid: restaurant!.uid,
       ingredients: item.ingredients || [],
       allergen_uids: allergenUids.length > 0 ? allergenUids : null,
-      status: false
+      status: false,
+      data_source: 'ai_image'
     }
   }
 
@@ -228,7 +231,9 @@ export default function MenuListPage() {
             description: menu.description,
             allergens: menu.allergens || [],
             cookingMethods: menu.cooking_methods || [],
-            restrictions: menu.restrictions || []
+            restrictions: menu.restrictions || [],
+            confidenceScore: menu.confidence_score || 0,
+            dataSource: menu.data_source || null
           }))
           setMenuItems(menus)
         } catch (menuErr) {
@@ -593,36 +598,6 @@ export default function MenuListPage() {
     }
   }
 
-  const calcConfidence = (item: MenuItem): number => {
-    // 各フィールドのスコア
-    let score = 10 // name_jp + price は必ずある
-    const hasNameEn = !!item.nameEn
-    const hasCategory = !!item.category
-    const hasDescription = !!item.description
-    const hasIngredients = item.ingredients && item.ingredients.length > 0
-    const hasIngredients3 = item.ingredients && item.ingredients.length >= 3
-    const hasAllergens = item.allergens && item.allergens.length > 0
-
-    if (hasNameEn) score += 8
-    if (hasCategory) score += 8
-    if (hasDescription) score += 10
-    if (hasIngredients) score += 10
-    if (hasIngredients3) score += 6
-    if (hasAllergens) score += 10
-    if (item.cookingMethods && item.cookingMethods.length > 0) score += 3
-
-    // 全主要フィールド完備ボーナス（秋刀魚の塩焼きみたいに明らかなもの）
-    // → AIが全部埋められた = 信頼できるデータ → 自動で緑
-    if (hasNameEn && hasCategory && hasDescription && hasIngredients3 && hasAllergens) {
-      score += 20
-    }
-
-    // 店主承認ボーナス（+15%）→ 完璧に近づける
-    if (item.status) score += 15
-
-    return Math.min(score, 100)
-  }
-
   const handleApprove = async (item: MenuItem) => {
     try {
       await MenuApi.update(item.uid, { status: true })
@@ -630,6 +605,26 @@ export default function MenuListPage() {
     } catch (err) {
       console.error('Failed to approve menu:', err)
       alert('承認に失敗しました')
+    }
+  }
+
+  const handleBulkApprove = async () => {
+    const unverified = menuItems.filter(i => !i.status)
+    if (unverified.length === 0) {
+      alert('承認待ちのメニューはありません')
+      return
+    }
+    if (!confirm(`${unverified.length}件の未承認メニューをすべて承認しますか？`)) return
+
+    try {
+      for (const item of unverified) {
+        await MenuApi.update(item.uid, { status: true })
+      }
+      await refreshMenus()
+      alert(`${unverified.length}件を承認しました`)
+    } catch (err) {
+      console.error('Failed to bulk approve:', err)
+      alert('一括承認に失敗しました')
     }
   }
 
@@ -737,6 +732,19 @@ export default function MenuListPage() {
           </div>
         )}
 
+        {/* 一括承認ボタン */}
+        {!isLoading && !error && countWarning > 0 && (
+          <div style={{ marginBottom: '12px' }}>
+            <button
+              className="btn"
+              onClick={handleBulkApprove}
+              style={{ background: '#10b981', color: 'white', padding: '8px 16px', fontSize: '13px' }}
+            >
+              一括承認 ({countWarning}件)
+            </button>
+          </div>
+        )}
+
         {/* メニューテーブル */}
         {!isLoading && !error && (
         <div className="menu-table-container">
@@ -759,7 +767,9 @@ export default function MenuListPage() {
                   </td>
                 </tr>
               ) : filteredItems.map((item, index) => {
-                const confidence = calcConfidence(item)
+                const confidence = item.confidenceScore
+                const confidenceColor = confidence >= 75 ? '#28a745' : confidence >= 40 ? '#ffc107' : '#dc3545'
+                const confidenceLabel = confidence >= 75 ? 'OK' : confidence >= 40 ? '確認推奨' : '要修正'
                 const rowNum = (currentPage - 1) * itemsPerPage + index + 1
                 return (
                   <tr key={item.uid}>
@@ -785,11 +795,14 @@ export default function MenuListPage() {
                     </td>
                     <td style={{ textAlign: 'center', fontWeight: 600, color: '#28a745', fontSize: '14px' }}>¥{item.price.toLocaleString()}</td>
                     <td style={{ textAlign: 'center' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
-                        <div style={{ width: '50px', height: '4px', background: '#e9ecef', borderRadius: '2px', overflow: 'hidden' }}>
-                          <div style={{ width: `${confidence}%`, height: '100%', background: confidence >= 80 ? '#28a745' : confidence >= 60 ? '#ffc107' : '#dc3545' }}></div>
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <div style={{ width: '50px', height: '4px', background: '#e9ecef', borderRadius: '2px', overflow: 'hidden' }}>
+                            <div style={{ width: `${confidence}%`, height: '100%', background: confidenceColor }}></div>
+                          </div>
+                          <span style={{ fontSize: '11px', fontWeight: 600, color: confidenceColor }}>{confidence}%</span>
                         </div>
-                        <span style={{ fontSize: '11px', fontWeight: 600, color: confidence >= 80 ? '#28a745' : confidence >= 60 ? '#ffc107' : '#dc3545' }}>{confidence}%</span>
+                        <span style={{ fontSize: '9px', fontWeight: 600, color: confidenceColor }}>{confidenceLabel}</span>
                       </div>
                     </td>
                     <td style={{ textAlign: 'center' }}>

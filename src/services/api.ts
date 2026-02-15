@@ -424,6 +424,8 @@ export interface Menu {
   calorie_range: CalorieRange | null;
   verified: boolean;
   image_url: string | null;
+  data_source: string | null;
+  confidence_score: number;
   created_at: string;
   updated_at: string;
 }
@@ -442,6 +444,7 @@ export interface MenuCreate {
   restriction_uids?: string[] | null;
   taste_profile_uids?: string[] | null;
   calorie_range_uid?: string | null;
+  data_source?: string;
 }
 
 export interface MenuUpdate {
@@ -457,6 +460,7 @@ export interface MenuUpdate {
   restriction_uids?: string[] | null;
   taste_profile_uids?: string[] | null;
   calorie_range_uid?: string | null;
+  data_source?: string;
 }
 
 export interface MenuListResponse {
