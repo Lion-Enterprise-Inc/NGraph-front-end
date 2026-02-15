@@ -568,7 +568,9 @@ export const VisionApi = {
     if (save) formData.append('save', 'true');
 
     const token = TokenService.getAccessToken();
-    const response = await fetch(`${API_BASE_URL}/menus/analyze-image`, {
+    const url = `${API_BASE_URL}/menus/analyze-image`;
+    console.log('VisionApi.analyzeImage URL:', url, 'API_BASE_URL:', API_BASE_URL);
+    const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Accept': 'application/json',
