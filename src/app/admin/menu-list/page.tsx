@@ -594,17 +594,19 @@ export default function MenuListPage() {
   }
 
   const calcConfidence = (item: MenuItem): number => {
-    let score = 20 // name_jp + price は必ずある
-    if (item.nameEn) score += 10
-    if (item.category) score += 10
-    if (item.description) score += 15
-    if (item.ingredients && item.ingredients.length > 0) score += 15
-    if (item.ingredients && item.ingredients.length >= 3) score += 5
-    if (item.allergens && item.allergens.length > 0) score += 10
-    if (item.cookingMethods && item.cookingMethods.length > 0) score += 5
-    if (item.restrictions && item.restrictions.length > 0) score += 5
-    if (item.status) score += 5 // 人間が確認済み
-    return Math.min(score, 100)
+    // データ充実度 (最大75%)
+    let dataScore = 15 // name_jp + price は必ずある
+    if (item.nameEn) dataScore += 8
+    if (item.category) dataScore += 8
+    if (item.description) dataScore += 12
+    if (item.ingredients && item.ingredients.length > 0) dataScore += 12
+    if (item.ingredients && item.ingredients.length >= 3) dataScore += 5
+    if (item.allergens && item.allergens.length > 0) dataScore += 10
+    if (item.cookingMethods && item.cookingMethods.length > 0) dataScore += 3
+    if (item.restrictions && item.restrictions.length > 0) dataScore += 2
+    // 店主承認 (+25%) — これがないと80%超えない
+    if (item.status) dataScore += 25
+    return Math.min(dataScore, 100)
   }
 
   const handleApprove = async (item: MenuItem) => {
