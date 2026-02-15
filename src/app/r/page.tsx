@@ -1,17 +1,22 @@
 'use client'
 
-import { useParams, useSearchParams, useRouter } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
 export default function ShortCodeRedirect() {
-  const params = useParams()
-  const searchParams = useSearchParams()
   const router = useRouter()
-  const shortCode = params?.code as string
   const [error, setError] = useState(false)
 
   useEffect(() => {
-    if (!shortCode) return
+    // Extract short_code from pathname: /r/XXXX
+    const path = window.location.pathname
+    const match = path.match(/^\/r\/(.+)$/)
+    const shortCode = match?.[1]
+
+    if (!shortCode) {
+      setError(true)
+      return
+    }
 
     const resolve = async () => {
       try {
@@ -27,7 +32,8 @@ export default function ShortCodeRedirect() {
           setError(true)
           return
         }
-        const table = searchParams?.get('t')
+        const params = new URLSearchParams(window.location.search)
+        const table = params.get('t')
         const url = `/capture?restaurant=${slug}${table ? `&t=${table}` : ''}`
         router.replace(url)
       } catch {
@@ -36,7 +42,7 @@ export default function ShortCodeRedirect() {
     }
 
     resolve()
-  }, [shortCode, searchParams, router])
+  }, [router])
 
   if (error) {
     return (
