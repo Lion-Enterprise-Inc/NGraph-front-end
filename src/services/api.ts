@@ -587,6 +587,32 @@ export const VisionApi = {
     }
 
     return response.json();
+  },
+
+  analyzeText: async (text: string): Promise<VisionAnalysisResponse> => {
+    const formData = new FormData();
+    formData.append('text', text);
+
+    const token = TokenService.getAccessToken();
+    const response = await fetch(`${API_BASE_URL}/menus/analyze-text`, {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+      },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      let errorMessage = 'Failed to analyze text';
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.detail || errorMessage;
+      } catch {}
+      throw new Error(errorMessage);
+    }
+
+    return response.json();
   }
 };
 
