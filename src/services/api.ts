@@ -406,12 +406,36 @@ export interface AllergenResponse {
   status_code: number;
 }
 
+// Dish categories (NFG v0.2 English enum → Japanese label)
+export const DISH_CATEGORIES: Record<string, string> = {
+  main: 'メイン',
+  appetizer: '前菜',
+  rice: 'ご飯もの',
+  sashimi: '刺身',
+  sushi: '寿司',
+  nabe: '鍋物',
+  ramen: 'ラーメン',
+  soba: 'そば・うどん',
+  tempura: '天ぷら',
+  yakitori: '焼き鳥',
+  salad: 'サラダ',
+  soup: 'スープ',
+  side: '一品料理',
+  drink: 'ドリンク',
+  dessert: 'デザート',
+  course: 'コース',
+  bento: '弁当',
+  bread: 'パン',
+  other: 'その他',
+}
+
 // Menu types
 export interface Menu {
   uid: string;
   name_en: string | null;
   name_jp: string;
   description: string | null;
+  description_en: string | null;
   category: string;
   status: boolean;
   price: number;
@@ -423,9 +447,14 @@ export interface Menu {
   taste_profiles: TasteProfile[] | null;
   calorie_range: CalorieRange | null;
   verified: boolean;
+  verified_by: string | null;
   image_url: string | null;
   data_source: string | null;
   confidence_score: number;
+  field_confidence: Record<string, number> | null;
+  nfg_version: string | null;
+  valid_from: string | null;
+  valid_until: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -434,6 +463,7 @@ export interface MenuCreate {
   name_en?: string | null;
   name_jp: string;
   description?: string | null;
+  description_en?: string | null;
   category: string;
   status?: boolean;
   price: number;
@@ -451,6 +481,7 @@ export interface MenuUpdate {
   name_en?: string | null;
   name_jp?: string | null;
   description?: string | null;
+  description_en?: string | null;
   category?: string | null;
   status?: boolean | null;
   price?: number | null;
