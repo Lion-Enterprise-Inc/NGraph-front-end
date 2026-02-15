@@ -129,22 +129,39 @@ export default function MenuListPage() {
     }
   }
 
+  const mapAllergenNamesToUids = (allergenNames: string[]): string[] => {
+    if (!allergenNames || allergenNames.length === 0) return []
+    const allAllergens = [...(allergens.mandatory || []), ...(allergens.recommended || [])]
+    const uids: string[] = []
+    for (const name of allergenNames) {
+      const nameLower = name.toLowerCase()
+      const match = allAllergens.find(a => a.name_en.toLowerCase() === nameLower)
+      if (match) uids.push(match.uid)
+    }
+    return uids
+  }
+
+  const buildMenuDataFromVision = (item: VisionMenuItem): MenuCreate => {
+    const allergenUids = mapAllergenNamesToUids(item.allergens || [])
+    return {
+      name_jp: item.name_jp,
+      name_en: item.name_en || null,
+      category: item.category || '未分類',
+      price: item.price || 0,
+      description: item.description || null,
+      restaurant_uid: restaurant!.uid,
+      ingredients: item.ingredients || [],
+      allergen_uids: allergenUids.length > 0 ? allergenUids : null,
+      status: false
+    }
+  }
+
   const handleApproveVisionItem = async (index: number) => {
     const item = visionResults[index]
     if (!item || !restaurant?.uid) return
 
     try {
-      const menuData: MenuCreate = {
-        name_jp: item.name_jp,
-        name_en: item.name_en || null,
-        category: item.category || '未分類',
-        price: item.price || 0,
-        description: item.description || null,
-        restaurant_uid: restaurant.uid,
-        ingredients: item.ingredients || [],
-        status: false
-      }
-      await MenuApi.create(menuData)
+      await MenuApi.create(buildMenuDataFromVision(item))
       await refreshMenus()
       setVisionResults(visionResults.filter((_, i) => i !== index))
     } catch (err) {
@@ -158,17 +175,7 @@ export default function MenuListPage() {
 
     try {
       for (const item of visionResults) {
-        const menuData: MenuCreate = {
-          name_jp: item.name_jp,
-          name_en: item.name_en || null,
-          category: item.category || '未分類',
-          price: item.price || 0,
-          description: item.description || null,
-          restaurant_uid: restaurant.uid,
-          ingredients: item.ingredients || [],
-          status: false
-        }
-        await MenuApi.create(menuData)
+        await MenuApi.create(buildMenuDataFromVision(item))
       }
       await refreshMenus()
       setVisionResults([])
