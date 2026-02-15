@@ -192,14 +192,11 @@ export default function MenuListPage() {
 
   // Fetch restaurant and menus
   const fetchData = useCallback(async (page: number = 1) => {
-    console.log('fetchData called, authLoading:', authLoading, 'user:', user)
     if (authLoading || !user?.uid) {
-      console.log('Skipping fetchData - auth loading or no user')
       return
     }
 
     try {
-      console.log('Starting data fetch for page:', page)
       setIsLoading(true)
       setError('')
 
@@ -213,7 +210,6 @@ export default function MenuListPage() {
         // Fetch menus for this restaurant with pagination
         try {
           const menusResponse = await MenuApi.getAll(restaurantData.uid, page, itemsPerPage)
-          console.log('Menus response:', menusResponse)
           const items = menusResponse.result?.items || []
           const total = menusResponse.result?.total || 0
           
@@ -238,7 +234,6 @@ export default function MenuListPage() {
           setMenuItems(menus)
         } catch (menuErr) {
           // No menus found - this is OK, just show empty list
-          console.log('No menus found for restaurant')
           setMenuItems([])
           setTotalItems(0)
           setTotalPages(1)
@@ -247,21 +242,17 @@ export default function MenuListPage() {
         // Fetch allergens
         try {
           const allergensResponse = await AllergenApi.getAll()
-          console.log('Allergen API response:', allergensResponse)
           // Transform array response to object format
           // The API returns an array of objects, each containing either mandatory or recommended allergens
           let allMandatory: Allergen[] = []
           let allRecommended: Allergen[] = []
 
           if (Array.isArray(allergensResponse.result)) {
-            allergensResponse.result.forEach((item, index) => {
-              console.log(`Processing item ${index}:`, item)
+            allergensResponse.result.forEach((item) => {
               if (item.mandatory) {
-                console.log(`Found mandatory allergens:`, item.mandatory.length)
                 allMandatory = [...allMandatory, ...item.mandatory]
               }
               if (item.recommended) {
-                console.log(`Found recommended allergens:`, item.recommended.length)
                 allRecommended = [...allRecommended, ...item.recommended]
               }
             })
@@ -271,11 +262,8 @@ export default function MenuListPage() {
             mandatory: allMandatory,
             recommended: allRecommended
           }
-          console.log('Final transformed allergens:', transformedAllergens)
           setAllergens(transformedAllergens)
-          console.log('Allergens state set successfully')
         } catch (allergenErr) {
-          console.log('Failed to fetch allergens:', allergenErr)
           // Set empty allergens if fetch fails
           setAllergens({ mandatory: [], recommended: [] })
         }
@@ -285,7 +273,7 @@ export default function MenuListPage() {
           const cmResponse = await CookingMethodApi.getAll()
           setCookingMethods(cmResponse.result || [])
         } catch (e) {
-          console.log('Failed to fetch cooking methods:', e)
+          // cooking methods fetch failed, ignore
         }
 
         // Fetch restrictions
@@ -293,7 +281,7 @@ export default function MenuListPage() {
           const rResponse = await RestrictionApi.getAll()
           setRestrictions(rResponse.result || [])
         } catch (e) {
-          console.log('Failed to fetch restrictions:', e)
+          // restrictions fetch failed, ignore
         }
       }
     } catch (err: any) {
@@ -401,9 +389,6 @@ export default function MenuListPage() {
   }
 
   const handleFetchFromSource = async () => {
-    console.log('Restaurant object:', restaurant)
-    console.log('Scraping URL:', scrapingUrl)
-
     if (!restaurant?.uid) {
       alert('レストラン情報が見つかりません')
       return
@@ -420,11 +405,9 @@ export default function MenuListPage() {
 
       // Use restaurant name or slug for the API call
       const restaurantIdentifier = restaurant.slug || restaurant.name?.toLowerCase().replace(/\s+/g, '-') || 'restaurant'
-      console.log('Using restaurant identifier:', restaurantIdentifier)
 
       // Start scraping
       const scrapingResponse = await ScrapingApi.scrapeMenu(restaurantIdentifier, { url: scrapingUrl })
-      console.log('Scraping response:', scrapingResponse)
       const taskId = scrapingResponse.result.task_id
       setScrapingTaskId(taskId)
 
@@ -439,14 +422,11 @@ export default function MenuListPage() {
 
   const pollTaskStatus = async (taskId: string) => {
     try {
-      console.log('Checking task status for:', taskId)
       const statusResponse = await ScrapingApi.getTaskStatus(taskId)
-      console.log('Task status response:', statusResponse)
       const task = statusResponse.result
 
       if (task.status === 'completed' && task.result) {
         // Scraping completed successfully
-        console.log('Scraping completed, menus:', task.result.menus)
         const scrapedMenus = task.result.menus.map((menu, index) => ({
           id: index + 1,
           name: menu.name,
@@ -461,29 +441,18 @@ export default function MenuListPage() {
         setScrapingTaskId(null)
       } else if (task.status === 'failed') {
         // Scraping failed
-        console.log('Scraping failed:', task.error)
         setShowFetchModal(false)
         setError(task.error || 'スクレイピングに失敗しました')
         setScrapingTaskId(null)
       } else {
         // Still processing, poll again in 2 seconds
-        console.log('Task still processing, polling again...')
         setTimeout(() => pollTaskStatus(taskId), 2000)
       }
     } catch (err) {
       console.error('Failed to check task status:', err)
-      // For now, simulate success with mock data since the API might not be ready
-      console.log('API not ready, simulating success with mock data')
-      setTimeout(() => {
-        const mockMenus = [
-          { id: 1, name: '特選海鮮丼', price: 1200, category: 'ご飯もの', confidence: 88 },
-          { id: 2, name: '福井牛ステーキ', price: 3500, category: '焼き物', confidence: 92 },
-        ]
-        setPendingMenus(mockMenus)
-        setShowFetchModal(false)
-        setShowApprovalModal(true)
-        setScrapingTaskId(null)
-      }, 3000)
+      setShowFetchModal(false)
+      setScrapingTaskId(null)
+      setError('タスクステータスの確認に失敗しました。再度お試しください。')
     }
   }
 

@@ -55,13 +55,10 @@ export default function AllergensPage() {
 
       if (Array.isArray(response.result)) {
         response.result.forEach((item, index) => {
-          console.log(`Processing allergen item ${index}:`, item)
           if (item.mandatory) {
-            console.log(`Found mandatory allergens:`, item.mandatory.length)
             allMandatory = [...allMandatory, ...item.mandatory]
           }
           if (item.recommended) {
-            console.log(`Found recommended allergens:`, item.recommended.length)
             allRecommended = [...allRecommended, ...item.recommended]
           }
         })
@@ -71,7 +68,6 @@ export default function AllergensPage() {
         mandatory: allMandatory,
         recommended: allRecommended
       }
-      console.log('Final transformed allergens:', transformedAllergens)
       setAllergens(transformedAllergens)
     } catch (err: any) {
       console.error('Failed to fetch allergens:', err)
