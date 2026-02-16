@@ -1,14 +1,26 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, Suspense } from 'react'
+import { useSearchParams } from 'next/navigation'
 import AdminLayout from '../../../components/admin/AdminLayout'
 import { apiClient, BUSINESS_TYPES } from '../../../services/api'
 import { useAuth } from '../../../contexts/AuthContext'
 
-type TabType = 'basic' | 'ai'
+type TabType = 'basic'
 
 export default function BasicInfoPage() {
+  return (
+    <Suspense fallback={<AdminLayout title="基本情報"><div style={{ textAlign: 'center', padding: '40px' }}>読み込み中...</div></AdminLayout>}>
+      <BasicInfoContent />
+    </Suspense>
+  )
+}
+
+function BasicInfoContent() {
   const { user, isLoading: authLoading } = useAuth()
+  const searchParams = useSearchParams()
+  const uidParam = searchParams?.get('uid') ?? null
+  const isAdminViewing = !!(uidParam && user && (user.role === 'superadmin' || user.role === 'platform_owner'))
   const [activeTab, setActiveTab] = useState<TabType>('basic')
   const [restaurant, setRestaurant] = useState<any>(null)
   const [restaurantLoading, setRestaurantLoading] = useState(true)
@@ -19,7 +31,10 @@ export default function BasicInfoPage() {
     phone: '',
     address: '',
     officialWebsite: '',
+    googleBusinessProfile: '',
     instagramUrl: '',
+    tabelogUrl: '',
+    gurunaviUrl: '',
     menuScrapingUrl: '',
     description: '',
     businessHours: '',
@@ -29,13 +44,16 @@ export default function BasicInfoPage() {
     parking: '',
     payment: '',
     features: '',
+    accessInfo: '',
+    reservationUrl: '',
+    googleRating: '',
+    tabelogRating: '',
     logoUrl: ''
   })
 
-  const [aiIndustry, setAiIndustry] = useState('restaurant')
-  const [aiTone, setAiTone] = useState('polite')
   const [isSaving, setIsSaving] = useState(false)
   const [isScraping, setIsScraping] = useState(false)
+  const [isSearching, setIsSearching] = useState(false)
   const [logoFile, setLogoFile] = useState<File | null>(null)
   const [logoPreview, setLogoPreview] = useState<string>('')
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -76,8 +94,14 @@ export default function BasicInfoPage() {
       setRestaurantLoading(true)
       setRestaurantError('')
 
-      const response = await apiClient.get(`/restaurants/detail-by-user/${userUid}`) as { result: any; message: string; status_code: number }
-      const restaurantData = response.result
+      let restaurantData: any
+      if (isAdminViewing && uidParam) {
+        const response = await apiClient.get(`/restaurants/${uidParam}`) as { result: any }
+        restaurantData = response.result
+      } else {
+        const response = await apiClient.get(`/restaurants/detail-by-user/${userUid}`) as { result: any; message: string; status_code: number }
+        restaurantData = response.result
+      }
 
       setRestaurant(restaurantData)
 
@@ -87,16 +111,23 @@ export default function BasicInfoPage() {
         phone: restaurantData.phone_number || '',
         address: restaurantData.address || '',
         officialWebsite: restaurantData.official_website || '',
-        instagramUrl: restaurantData.other_sources || '',
-        menuScrapingUrl: restaurantData.menu_scraping_url || '',
+        googleBusinessProfile: restaurantData.google_business_profile || '',
+        instagramUrl: restaurantData.instagram_url || restaurantData.other_sources || '',
+        tabelogUrl: restaurantData.tabelog_url || '',
+        gurunaviUrl: restaurantData.gurunavi_url || '',
+        menuScrapingUrl: '',
         description: restaurantData.store_introduction || '',
         businessHours: restaurantData.opening_hours || '',
-        holidays: '',
-        seats: '',
+        holidays: restaurantData.holidays || '',
+        seats: restaurantData.seats || '',
         budget: restaurantData.budget || '',
         parking: restaurantData.parking_slot || '',
-        payment: '',
+        payment: restaurantData.payment_methods || '',
         features: restaurantData.attention_in_detail || '',
+        accessInfo: restaurantData.access_info || '',
+        reservationUrl: restaurantData.reservation_url || '',
+        googleRating: restaurantData.google_rating ? String(restaurantData.google_rating) : '',
+        tabelogRating: restaurantData.tabelog_rating ? String(restaurantData.tabelog_rating) : '',
         logoUrl: restaurantData.logo_url || ''
       })
     } catch (error) {
@@ -115,7 +146,7 @@ export default function BasicInfoPage() {
       setRestaurantError('ユーザーデータが見つかりません')
       setRestaurantLoading(false)
     }
-  }, [authLoading, user?.uid])
+  }, [authLoading, user?.uid, isAdminViewing, uidParam])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value })
@@ -135,9 +166,9 @@ export default function BasicInfoPage() {
       formDataToSend.append('description', formData.description)
       formDataToSend.append('phone_number', formData.phone)
       formDataToSend.append('official_website', formData.officialWebsite)
+      formDataToSend.append('google_business_profile', formData.googleBusinessProfile)
       formDataToSend.append('address', formData.address)
       formDataToSend.append('other_sources', formData.instagramUrl)
-      formDataToSend.append('menu_scraping_url', formData.menuScrapingUrl)
       formDataToSend.append('store_introduction', formData.description)
       formDataToSend.append('opening_hours', formData.businessHours)
       formDataToSend.append('budget', formData.budget)
@@ -145,6 +176,16 @@ export default function BasicInfoPage() {
       formDataToSend.append('attention_in_detail', formData.features)
       formDataToSend.append('business_type', formData.storeType)
       formDataToSend.append('is_active', String(restaurant.is_active))
+      formDataToSend.append('holidays', formData.holidays)
+      formDataToSend.append('seats', formData.seats)
+      formDataToSend.append('payment_methods', formData.payment)
+      formDataToSend.append('access_info', formData.accessInfo)
+      formDataToSend.append('reservation_url', formData.reservationUrl)
+      formDataToSend.append('google_rating', formData.googleRating)
+      formDataToSend.append('tabelog_rating', formData.tabelogRating)
+      formDataToSend.append('instagram_url', formData.instagramUrl)
+      formDataToSend.append('tabelog_url', formData.tabelogUrl)
+      formDataToSend.append('gurunavi_url', formData.gurunaviUrl)
       
       // Add logo file if selected
       if (logoFile) {
@@ -196,7 +237,7 @@ export default function BasicInfoPage() {
   const handleScrapeInfo = async (withMenus: boolean = false) => {
     if (!restaurant) return
 
-    const urls = [formData.officialWebsite, formData.instagramUrl, formData.menuScrapingUrl].filter(u => u.trim())
+    const urls = [formData.menuScrapingUrl, formData.officialWebsite, formData.tabelogUrl, formData.gurunaviUrl, formData.instagramUrl].filter(u => u.trim())
     if (urls.length === 0) {
       alert('URLを1つ以上入力してください')
       return
@@ -235,6 +276,15 @@ export default function BasicInfoPage() {
           parking: info.parking || prev.parking,
           payment: info.payment || prev.payment,
           features: info.features || prev.features,
+          accessInfo: info.access || prev.accessInfo,
+          reservationUrl: info.reservation_url || prev.reservationUrl,
+          googleRating: info.google_rating ? String(info.google_rating) : prev.googleRating,
+          tabelogRating: info.tabelog_rating ? String(info.tabelog_rating) : prev.tabelogRating,
+          instagramUrl: info.instagram_url || prev.instagramUrl,
+          tabelogUrl: info.tabelog_url || prev.tabelogUrl,
+          gurunaviUrl: info.gurunavi_url || prev.gurunaviUrl,
+          officialWebsite: info.official_website || prev.officialWebsite,
+          googleBusinessProfile: info.google_business_profile || prev.googleBusinessProfile,
         }))
 
         alert(`情報を取得しました。内容を確認して保存してください。${withMenus && data.result?.menu_scrape ? `\nメニュー: ${data.result.menu_scrape.items_saved || 0}件登録` : ''}`)
@@ -247,9 +297,65 @@ export default function BasicInfoPage() {
     }
   }
 
+  const handleSearchInfo = async (withMenus: boolean = false) => {
+    if (!restaurant) return
+
+    setIsSearching(true)
+    try {
+      const token = localStorage.getItem('access_token')
+      const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://15.207.22.103:8000'
+
+      const res = await fetch(`${apiBaseUrl}/restaurants/${restaurant.uid}/search-info`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ scrape_menus: withMenus })
+      })
+
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+
+      const data = await res.json()
+      const info = data.result?.store_info
+
+      if (info) {
+        setFormData(prev => ({
+          ...prev,
+          storeName: info.name || prev.storeName,
+          phone: info.phone || prev.phone,
+          address: info.address || prev.address,
+          description: info.description || prev.description,
+          businessHours: info.business_hours || prev.businessHours,
+          holidays: info.holidays || prev.holidays,
+          seats: info.seats || prev.seats,
+          budget: info.budget || prev.budget,
+          parking: info.parking || prev.parking,
+          payment: info.payment || prev.payment,
+          features: info.features || prev.features,
+          accessInfo: info.access || prev.accessInfo,
+          reservationUrl: info.reservation_url || prev.reservationUrl,
+          googleRating: info.google_rating ? String(info.google_rating) : prev.googleRating,
+          tabelogRating: info.tabelog_rating ? String(info.tabelog_rating) : prev.tabelogRating,
+          instagramUrl: info.instagram_url || prev.instagramUrl,
+          tabelogUrl: info.tabelog_url || prev.tabelogUrl,
+          gurunaviUrl: info.gurunavi_url || prev.gurunaviUrl,
+          officialWebsite: info.official_website || prev.officialWebsite,
+          googleBusinessProfile: info.google_business_profile || prev.googleBusinessProfile,
+        }))
+
+        alert(`Web検索で情報を取得しました。内容を確認して保存してください。${withMenus && data.result?.menu_scrape ? `\nメニュー: ${data.result.menu_scrape.items_saved || 0}件登録` : ''}`)
+      }
+    } catch (error) {
+      console.error('Search failed:', error)
+      alert(`情報の検索に失敗しました: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    } finally {
+      setIsSearching(false)
+    }
+  }
+
   const tabs = [
     { key: 'basic', label: '📍 基本情報' },
-    { key: 'ai', label: '🤖 AI設定' },
   ]
 
   return (
@@ -386,38 +492,44 @@ export default function BasicInfoPage() {
 
               <div className="section-divider" />
 
-              <div className="card-title">🔗 情報ソース</div>
+              <div className="card-title">🔍 AI情報取得</div>
               <p style={{ color: '#666', marginBottom: '16px', fontSize: '13px' }}>
-                URLを入力して「情報を取得」を押すと、AIが店舗情報を自動で読み取ります
+                店名で検索すると、食べログ・Googleマップ・公式HPなどから情報を自動取得します
               </p>
-              <div className="form-group">
-                <label className="form-label">公式HP / 食べログ / Googleマイビジネス等</label>
-                <input type="url" name="officialWebsite" className="form-input" placeholder="https://tabelog.com/..." value={formData.officialWebsite} onChange={handleChange} />
-              </div>
-              <div className="form-group">
-                <label className="form-label">その他の情報ソース</label>
-                <input type="url" name="instagramUrl" className="form-input" placeholder="https://instagram.com/yourstore" value={formData.instagramUrl} onChange={handleChange} />
-              </div>
-              <div className="form-group">
-                <label className="form-label">メニュー情報URL</label>
-                <input type="url" name="menuScrapingUrl" className="form-input" placeholder="https://tabelog.com/.../dtlmenu/" value={formData.menuScrapingUrl} onChange={handleChange} />
-              </div>
-              <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '20px' }}>
                 <button
                   className="btn btn-primary"
-                  onClick={() => handleScrapeInfo(false)}
-                  disabled={isScraping}
+                  onClick={() => handleSearchInfo(false)}
+                  disabled={isSearching || isScraping}
                 >
-                  {isScraping ? '⏳ 取得中...' : '🤖 店舗情報を取得'}
+                  {isSearching ? '⏳ 検索中...' : '🔍 店名で情報を検索'}
                 </button>
                 <button
                   className="btn btn-secondary"
-                  onClick={() => handleScrapeInfo(true)}
-                  disabled={isScraping}
+                  onClick={() => handleSearchInfo(true)}
+                  disabled={isSearching || isScraping}
                 >
-                  {isScraping ? '⏳ 取得中...' : '🍽️ メニューも一緒に取得'}
+                  {isSearching ? '⏳ 検索中...' : '🍽️ メニューも一緒に検索'}
                 </button>
               </div>
+
+              <details style={{ marginBottom: '16px' }}>
+                <summary style={{ cursor: 'pointer', color: '#666', fontSize: '13px' }}>URL指定で取得（従来方式）</summary>
+                <div style={{ padding: '12px 0' }}>
+                  <div className="form-group">
+                    <label className="form-label">情報取得用URL</label>
+                    <input type="url" name="menuScrapingUrl" className="form-input" placeholder="https://tabelog.com/..." value={formData.menuScrapingUrl} onChange={handleChange} />
+                  </div>
+                  <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                    <button className="btn btn-secondary" onClick={() => handleScrapeInfo(false)} disabled={isScraping || isSearching}>
+                      {isScraping ? '⏳ 取得中...' : 'URLから店舗情報を取得'}
+                    </button>
+                    <button className="btn btn-secondary" onClick={() => handleScrapeInfo(true)} disabled={isScraping || isSearching}>
+                      {isScraping ? '⏳ 取得中...' : 'URLからメニューも取得'}
+                    </button>
+                  </div>
+                </div>
+              </details>
 
               <div className="section-divider" />
 
@@ -426,95 +538,82 @@ export default function BasicInfoPage() {
                 <label className="form-label">レストラン紹介</label>
                 <textarea name="description" className="form-input" placeholder="レストランの特徴や魅力を入力してください" value={formData.description} onChange={handleChange} rows={4} />
               </div>
-              <div className="form-group">
-                <label className="form-label">営業時間</label>
-                <input type="text" name="businessHours" className="form-input" value={formData.businessHours} onChange={handleChange} />
-              </div>
-              <div className="form-group">
-                <label className="form-label">定休日</label>
-                <input type="text" name="holidays" className="form-input" value={formData.holidays} onChange={handleChange} />
-              </div>
-              <div className="form-group">
-                <label className="form-label">座席数</label>
-                <input type="text" name="seats" className="form-input" placeholder="例: 50席" value={formData.seats} onChange={handleChange} />
-              </div>
-              <div className="form-group">
-                <label className="form-label">予算</label>
-                <input type="text" name="budget" className="form-input" placeholder="例: ¥3,000～¥4,000" value={formData.budget} onChange={handleChange} />
-              </div>
-              <div className="form-group">
-                <label className="form-label">駐車場</label>
-                <input type="text" name="parking" className="form-input" placeholder="例: 有（10台）" value={formData.parking} onChange={handleChange} />
-              </div>
-              <div className="form-group">
-                <label className="form-label">支払い方法</label>
-                <input type="text" name="payment" className="form-input" placeholder="例: カード可、電子マネー可" value={formData.payment} onChange={handleChange} />
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                <div className="form-group">
+                  <label className="form-label">営業時間</label>
+                  <input type="text" name="businessHours" className="form-input" value={formData.businessHours} onChange={handleChange} />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">定休日</label>
+                  <input type="text" name="holidays" className="form-input" value={formData.holidays} onChange={handleChange} />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">座席数</label>
+                  <input type="text" name="seats" className="form-input" placeholder="例: 50席" value={formData.seats} onChange={handleChange} />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">予算</label>
+                  <input type="text" name="budget" className="form-input" placeholder="例: ¥3,000～¥4,000" value={formData.budget} onChange={handleChange} />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">駐車場</label>
+                  <input type="text" name="parking" className="form-input" placeholder="例: 有（10台）" value={formData.parking} onChange={handleChange} />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">支払い方法</label>
+                  <input type="text" name="payment" className="form-input" placeholder="例: カード可、電子マネー可" value={formData.payment} onChange={handleChange} />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">最寄り駅・アクセス</label>
+                  <input type="text" name="accessInfo" className="form-input" placeholder="例: JR福井駅 徒歩5分" value={formData.accessInfo} onChange={handleChange} />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">予約URL</label>
+                  <input type="url" name="reservationUrl" className="form-input" placeholder="https://..." value={formData.reservationUrl} onChange={handleChange} />
+                </div>
               </div>
               <div className="form-group">
                 <label className="form-label">特徴・こだわり</label>
                 <textarea name="features" className="form-input" placeholder="例: 地元食材使用、個室あり" value={formData.features} onChange={handleChange} rows={3} />
               </div>
-            </div>
-          )}
 
-          {activeTab === 'ai' && (
-            <div className="inner-card">
-              <div style={{ marginBottom: '24px', paddingBottom: '16px', borderBottom: '1px solid #e5e7eb' }}>
-                <h3 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px', color: '#1f2937' }}>
-                  <span>🤖</span>
-                  <span>AI基本設定</span>
-                  <span style={{ fontSize: '11px', fontWeight: 500, color: '#667eea', background: '#f0f4ff', padding: '4px 10px', borderRadius: '12px', marginLeft: '8px' }}>ライトプラン以上</span>
-                </h3>
-                <p style={{ fontSize: '13px', color: '#6b7280', margin: 0 }}>お客様と対話するAIアシスタントの基本的な設定を行います</p>
-              </div>
+              <div className="section-divider" />
 
-              <div style={{ background: '#f8fafc', padding: '24px', borderRadius: '12px', marginBottom: '20px', border: '1px solid #e2e8f0' }}>
-                <h4 style={{ fontSize: '15px', fontWeight: 600, margin: '0 0 8px 0', color: '#1a202c' }}>システムプロンプト</h4>
-                <p style={{ fontSize: '12px', color: '#64748b', marginBottom: '16px' }}>選択したAI応答テンプレートが自動適用されます</p>
-                <select value={aiIndustry} onChange={(e) => setAiIndustry(e.target.value)} style={{ width: '100%', padding: '10px 12px', border: '1px solid #cbd5e0', borderRadius: '6px', fontSize: '14px', background: 'white' }}>
-                  <option value="">テンプレートを選択してください</option>
-                  <option value="template1">テンプレート1</option>
-                  <option value="template2">テンプレート2</option>
-                  <option value="template3">テンプレート3</option>
-                  <option value="template4">テンプレート4</option>
-                  <option value="template5">テンプレート5</option>
-                </select>
-              </div>
-
-              <div style={{ background: '#f8fafc', padding: '24px', borderRadius: '12px', marginBottom: '20px', border: '1px solid #e2e8f0' }}>
-                <h4 style={{ fontSize: '15px', fontWeight: 600, margin: '0 0 8px 0', color: '#1a202c' }}>AIトーン</h4>
-                <p style={{ fontSize: '12px', color: '#64748b', marginBottom: '16px' }}>お客様への話し方のスタイルを選択してください</p>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                  <label style={{ display: 'flex', alignItems: 'flex-start', padding: '16px', background: aiTone === 'casual' ? '#f0f4ff' : 'white', border: aiTone === 'casual' ? '2px solid #667eea' : '1px solid #e2e8f0', borderRadius: '8px', cursor: 'pointer' }}>
-                    <input type="radio" name="aiTone" value="casual" checked={aiTone === 'casual'} onChange={(e) => setAiTone(e.target.value)} style={{ marginRight: '12px', marginTop: '4px' }} />
-                    <div>
-                      <div style={{ fontWeight: 600, marginBottom: '4px', color: '#1a202c' }}>カジュアル - 親しみやすい話し方</div>
-                      <div style={{ fontSize: '12px', color: '#64748b', fontStyle: 'italic' }}>例: 「いらっしゃい！うちの料理、めっちゃ美味しいよ！」</div>
-                    </div>
-                  </label>
-                  <label style={{ display: 'flex', alignItems: 'flex-start', padding: '16px', background: aiTone === 'polite' ? '#f0f4ff' : 'white', border: aiTone === 'polite' ? '2px solid #667eea' : '1px solid #e2e8f0', borderRadius: '8px', cursor: 'pointer' }}>
-                    <input type="radio" name="aiTone" value="polite" checked={aiTone === 'polite'} onChange={(e) => setAiTone(e.target.value)} style={{ marginRight: '12px', marginTop: '4px' }} />
-                    <div>
-                      <div style={{ fontWeight: 600, marginBottom: '4px', color: '#1a202c' }}>丁寧 - 敬語でしっかりと</div>
-                      <div style={{ fontSize: '12px', color: '#64748b', fontStyle: 'italic' }}>例: 「いらっしゃいませ。当店自慢の料理をご堪能ください。」</div>
-                    </div>
-                  </label>
-                  <label style={{ display: 'flex', alignItems: 'flex-start', padding: '16px', background: aiTone === 'luxury' ? '#f0f4ff' : 'white', border: aiTone === 'luxury' ? '2px solid #667eea' : '1px solid #e2e8f0', borderRadius: '8px', cursor: 'pointer' }}>
-                    <input type="radio" name="aiTone" value="luxury" checked={aiTone === 'luxury'} onChange={(e) => setAiTone(e.target.value)} style={{ marginRight: '12px', marginTop: '4px' }} />
-                    <div>
-                      <div style={{ fontWeight: 600, marginBottom: '4px', color: '#1a202c' }}>高級感 - 上品で洗練された表現</div>
-                      <div style={{ fontSize: '12px', color: '#64748b', fontStyle: 'italic' }}>例: 「ようこそお越しくださいました。厳選された食材の逸品をお楽しみください。」</div>
-                    </div>
-                  </label>
+              <div className="card-title">🔗 外部リンク・評価</div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                <div className="form-group">
+                  <label className="form-label">公式HP</label>
+                  <input type="url" name="officialWebsite" className="form-input" placeholder="https://..." value={formData.officialWebsite} onChange={handleChange} />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Googleマップ</label>
+                  <input type="url" name="googleBusinessProfile" className="form-input" placeholder="https://maps.google.com/..." value={formData.googleBusinessProfile} onChange={handleChange} />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">食べログ</label>
+                  <input type="url" name="tabelogUrl" className="form-input" placeholder="https://tabelog.com/..." value={formData.tabelogUrl} onChange={handleChange} />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">ぐるなび</label>
+                  <input type="url" name="gurunaviUrl" className="form-input" placeholder="https://r.gnavi.co.jp/..." value={formData.gurunaviUrl} onChange={handleChange} />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Instagram</label>
+                  <input type="url" name="instagramUrl" className="form-input" placeholder="https://instagram.com/..." value={formData.instagramUrl} onChange={handleChange} />
+                </div>
+                <div className="form-group" />
+                <div className="form-group">
+                  <label className="form-label">Google評価</label>
+                  <input type="number" name="googleRating" className="form-input" placeholder="例: 3.8" step="0.1" min="0" max="5" value={formData.googleRating} onChange={handleChange} />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">食べログ評価</label>
+                  <input type="number" name="tabelogRating" className="form-input" placeholder="例: 3.45" step="0.01" min="0" max="5" value={formData.tabelogRating} onChange={handleChange} />
                 </div>
               </div>
-
-              <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
-                <button className="btn btn-secondary">リセット</button>
-                <button className="btn btn-primary" onClick={() => alert('AI設定を保存しました！')}>AI設定を保存</button>
-              </div>
             </div>
           )}
+
         </div>
 
         {/* Global Save Button - Visible on all tabs */}
@@ -736,6 +835,11 @@ export default function BasicInfoPage() {
         @media (max-width: 768px) {
           .upgrade-features {
             grid-template-columns: 1fr;
+          }
+        }
+        @media (max-width: 640px) {
+          div[style*="grid-template-columns: 1fr 1fr"] {
+            grid-template-columns: 1fr !important;
           }
         }
         .section-divider {
