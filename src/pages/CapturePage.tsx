@@ -1096,7 +1096,7 @@ export default function CapturePage({
               <div className="chat-content">
                 <div className="chat-message-wrapper">
                   <div className="chat-loading-spinner" aria-live="polite">
-                    <img src="/favicon.png" alt="Loading" className="loading-logo-spin" />
+                    <img src="/ngraph-logo.svg" alt="Loading" className="loading-logo-spin" />
                   </div>
                   <div className="chat-timestamp">
                     {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
