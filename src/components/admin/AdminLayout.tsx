@@ -46,7 +46,7 @@ export default function AdminLayout({ children, title }: Props) {
       setUser(storedUser)
       setUserEmail(storedUser.email)
       // Map role to userType for UI
-      setUserType(storedUser.role === 'platform_owner' ? 'admin' : 'store')
+      setUserType(storedUser.role === 'platform_owner' || storedUser.role === 'superadmin' ? 'admin' : 'store')
     }
     
     setIsLoading(false)
@@ -72,6 +72,7 @@ export default function AdminLayout({ children, title }: Props) {
     { key: 'menu-list', label: 'メニュー一覧', icon: '📋', to: '/admin/menu-list' },
     // { key: 'ai-editor', label: 'AIエディタ', icon: '✨', to: '/admin/ai-editor' },
     { key: 'qr', label: 'QRコード', icon: '📱', to: '/admin/qr-management' },
+    { key: 'prompts', label: 'AI設定', icon: '🤖', to: '/admin/prompts' },
   ]
 
   const platformOwnerNavItems: NavItem[] = [
@@ -79,8 +80,7 @@ export default function AdminLayout({ children, title }: Props) {
     { key: 'users', label: 'ユーザー管理', icon: '👥', to: '/admin/users' },
     { key: 'restaurant-list', label: '導入レストラン', icon: '🍽️', to: '/admin/stores' },
     { key: 'allergens', label: 'アレルゲン管理', icon: '⚠️', to: '/admin/allergens' },
-    { key: 'ai-management', label: 'AI管理', icon: '🤖', to: '/admin/ai-management' },
-    { key: 'system-prompt', label: 'システムプロンプト', icon: '📝', to: '/admin/prompts' },
+    { key: 'prompts', label: 'AI設定', icon: '🤖', to: '/admin/prompts' },
   ]
 
   const navItems = userType === 'store' ? restaurantNavItems : platformOwnerNavItems

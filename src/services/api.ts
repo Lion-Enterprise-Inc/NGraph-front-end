@@ -101,6 +101,9 @@ export interface Restaurant {
   parking_slot: string | null;
   attention_in_detail: string | null;
   business_type: string | null;
+  custom_prompt: string | null;
+  ai_tone: string | null;
+  menu_count?: number;
   created_at: string;
   updated_at: string;
 }
@@ -733,7 +736,7 @@ export const AuthApi = {
         localStorage.setItem('admin_logged_in', 'true');
         localStorage.setItem('admin_user_email', response.result.user.email);
         // Map role to legacy user type
-        const userType = response.result.user.role === 'platform_owner' ? 'admin' : 'store';
+        const userType = (response.result.user.role === 'platform_owner' || response.result.user.role === 'superadmin') ? 'admin' : 'store';
         localStorage.setItem('admin_user_type', userType);
       }
     }
