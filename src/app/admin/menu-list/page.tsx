@@ -792,16 +792,16 @@ function MenuListContent() {
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <div style={{ width: '40px', height: '30px', background: '#1E293B', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', color: '#94A3B8' }}>📄</div>
                         <div style={{ flex: 1 }}>
-                          <div style={{ fontWeight: 600, color: '#212529', marginBottom: '2px', fontSize: '14px' }}>🇯🇵 {item.name}</div>
+                          <div style={{ fontWeight: 600, color: 'var(--text)', marginBottom: '2px', fontSize: '14px' }}>🇯🇵 {item.name}</div>
                           {item.nameEn && (
-                            <div style={{ fontSize: '12px', color: '#6c757d', marginBottom: '2px', fontStyle: 'italic' }}>
+                            <div style={{ fontSize: '12px', color: 'var(--muted)', marginBottom: '2px', fontStyle: 'italic' }}>
                               🇬🇧 {item.nameEn}
                             </div>
                           )}
-                          <div style={{ fontSize: '11px', color: '#6c757d', marginBottom: '2px' }}>
+                          <div style={{ fontSize: '11px', color: 'var(--muted)', marginBottom: '2px' }}>
                             📂 {DISH_CATEGORIES[item.category] || item.category}
                           </div>
-                          <div style={{ fontSize: '10px', color: '#6c757d', marginBottom: '2px' }}>
+                          <div style={{ fontSize: '10px', color: 'var(--muted)', marginBottom: '2px' }}>
                             🥘 {item.ingredients?.length > 0 ? item.ingredients.map(ing => ing.name).join(', ') : '原材料なし'}
                           </div>
                         </div>
