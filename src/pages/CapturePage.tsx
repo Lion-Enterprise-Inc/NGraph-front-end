@@ -574,10 +574,8 @@ export default function CapturePage({
           const { scrollTop, scrollHeight, clientHeight } = container;
           const distanceFromBottom = scrollHeight - scrollTop - clientHeight;
           
-          // Only auto-scroll if we're within 150px of bottom (user hasn't scrolled up much)
-          if (distanceFromBottom < 150) {
-            container.scrollTop = container.scrollHeight;
-          }
+          // Always auto-scroll during active typing/loading
+          container.scrollTop = container.scrollHeight;
         }
       }, 50); // Check every 50ms for smooth scrolling
     }
