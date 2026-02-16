@@ -965,9 +965,6 @@ export default function CapturePage({
           {responses.map((response) => (
             <div key={response.id} className="chat-thread-item">
               <div className="chat-row chat-row-user">
-                <div className="chat-avatar chat-avatar-user">
-                  <User size={20} />
-                </div>
                 <div className="chat-content">
                   {response.input.text && (
                     <div className="chat-message-wrapper">
