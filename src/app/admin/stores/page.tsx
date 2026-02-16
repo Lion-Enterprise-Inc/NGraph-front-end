@@ -121,10 +121,10 @@ export default function StoresPage() {
   const fetchRestaurantOwners = async () => {
     setLoadingOwners(true)
     try {
-      const owners = await UserApi.getUnassociatedRestaurantOwners()
+      const owners = await UserApi.getRestaurantOwners()
       setRestaurantOwners(owners.filter(u => u.is_active))
     } catch (error) {
-      console.error('Failed to fetch unassociated restaurant owners:', error)
+      console.error('Failed to fetch restaurant owners:', error)
     } finally {
       setLoadingOwners(false)
     }
