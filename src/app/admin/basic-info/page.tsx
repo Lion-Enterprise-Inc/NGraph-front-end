@@ -311,7 +311,10 @@ function BasicInfoContent() {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ scrape_menus: withMenus })
+        body: JSON.stringify({
+          query: [formData.storeName, formData.address, formData.phone].filter(s => s.trim()).join(' '),
+          scrape_menus: withMenus
+        })
       })
 
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
