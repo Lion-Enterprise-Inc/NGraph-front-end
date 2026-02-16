@@ -741,32 +741,73 @@ export default function CapturePage({
           output = { title: '', intro: fallbackResponse, body: [] };
         }
       } else {
-        // Text only → use existing chat API
+        // Text only → SSE streaming chat
         const requestText = trimmedMessage;
         try {
           const restaurantSlugForApi = selectedRestaurant?.slug || 'default';
-          const chatResponse = await fetch(`${apiBaseUrl}/public-chat/${restaurantSlugForApi}`, {
+          const streamResponse = await fetch(`${apiBaseUrl}/public-chat/${restaurantSlugForApi}/stream`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ message: requestText }),
           });
 
-          if (chatResponse.ok) {
-            const chatData = await chatResponse.json();
-            output = { title: '', intro: chatData.ai_response, body: [] };
-            // Store message_uid for feedback
-            if (chatData.message_uid) {
-              setResponses((prev) =>
-                prev.map((item) =>
-                  item.id === responseId ? { ...item, messageUid: chatData.message_uid } : item
-                )
-              );
+          if (streamResponse.ok && streamResponse.body) {
+            setLoading(false);
+            setIsTypingActive(true);
+            // Initialize typing state for streaming
+            setTypingState((prev) => ({
+              ...prev,
+              [responseId]: { title: '', intro: '', body: [] },
+            }));
+            // Set empty output so assistant row renders
+            setResponses((prev) =>
+              prev.map((item) =>
+                item.id === responseId ? { ...item, output: { title: '', intro: '', body: [] } } : item
+              )
+            );
+
+            let streamedText = '';
+            const reader = streamResponse.body.getReader();
+            const decoder = new TextDecoder();
+            let buffer = '';
+
+            while (true) {
+              const { done, value } = await reader.read();
+              if (done) break;
+              buffer += decoder.decode(value, { stream: true });
+              const lines = buffer.split('\n');
+              buffer = lines.pop() || '';
+
+              for (const line of lines) {
+                if (!line.startsWith('data: ')) continue;
+                try {
+                  const data = JSON.parse(line.slice(6));
+                  if (data.type === 'content') {
+                    streamedText += data.content;
+                    setTypingState((prev) => ({
+                      ...prev,
+                      [responseId]: { title: '', intro: streamedText, body: [] },
+                    }));
+                  } else if (data.type === 'done' && data.message_uid) {
+                    setResponses((prev) =>
+                      prev.map((item) =>
+                        item.id === responseId ? { ...item, messageUid: data.message_uid } : item
+                      )
+                    );
+                  }
+                } catch { /* skip malformed JSON */ }
+              }
             }
+
+            output = { title: '', intro: streamedText, body: [] };
+            setIsTypingActive(false);
+            setTypingComplete((prev) => new Set(prev).add(responseId));
           } else {
-            throw new Error(`Chat API failed with status: ${chatResponse.status}`);
+            throw new Error(`Stream API failed: ${streamResponse.status}`);
           }
         } catch (apiError) {
           console.log("chat_api_error", apiError);
+          setLoading(false);
           const fallbackResponse = await generateChatResponse(requestText, selectedRestaurant);
           output = { title: '', intro: fallbackResponse, body: [] };
         }
