@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import AdminLayout from '../../../components/admin/AdminLayout'
 import { AllergenApi, Allergen, AllergenCreate, AllergenUpdate, TokenService } from '../../../services/api'
 import { useAuth } from '../../../contexts/AuthContext'
+import { useToast } from '../../../components/admin/Toast'
 
 type AllergenType = 'mandatory' | 'recommended'
 
@@ -38,6 +39,8 @@ export default function AllergensPage() {
 
   const [createErrors, setCreateErrors] = useState<{ name_en?: string; name_jp?: string }>({})
   const [editErrors, setEditErrors] = useState<{ name_en?: string; name_jp?: string }>({})
+
+  const toast = useToast()
 
   // Check if user is platform owner or superadmin
   const canManageAllergens = user?.role === 'platform_owner' || user?.role === 'superadmin'
@@ -133,10 +136,10 @@ export default function AllergensPage() {
       setShowCreateModal(false)
       setCreateAllergen({ name_en: '', name_jp: '', allergen_type: 'mandatory' })
       setCreateErrors({})
-      alert('アレルゲンを追加しました')
+      toast('success', 'アレルゲンを追加しました')
     } catch (err: any) {
       console.error('Failed to create allergen:', err)
-      alert(`アレルゲンの追加に失敗しました: ${err.message || 'Unknown error'}`)
+      toast('error', `アレルゲンの追加に失敗しました: ${err.message || 'Unknown error'}`)
     } finally {
       setIsSubmitting(false)
     }
@@ -177,10 +180,10 @@ export default function AllergensPage() {
       setEditingAllergen(null)
       setEditAllergen({ name_en: '', name_jp: '', allergen_type: 'mandatory' })
       setEditErrors({})
-      alert('アレルゲンを更新しました')
+      toast('success', 'アレルゲンを更新しました')
     } catch (err: any) {
       console.error('Failed to update allergen:', err)
-      alert(`アレルゲンの更新に失敗しました: ${err.message || 'Unknown error'}`)
+      toast('error', `アレルゲンの更新に失敗しました: ${err.message || 'Unknown error'}`)
     } finally {
       setIsSubmitting(false)
     }
@@ -195,10 +198,10 @@ export default function AllergensPage() {
     try {
       await AllergenApi.delete(allergen.uid)
       await fetchAllergens()
-      alert('アレルゲンを削除しました')
+      toast('success', 'アレルゲンを削除しました')
     } catch (err: any) {
       console.error('Failed to delete allergen:', err)
-      alert(`アレルゲンの削除に失敗しました: ${err.message || 'Unknown error'}`)
+      toast('error', `アレルゲンの削除に失敗しました: ${err.message || 'Unknown error'}`)
     }
   }
 
@@ -523,12 +526,12 @@ export default function AllergensPage() {
         .page-title {
           font-size: 24px;
           font-weight: 600;
-          color: #0f172a;
+          color: var(--text);
           margin: 0 0 4px 0;
         }
 
         .header-description {
-          color: #64748b;
+          color: var(--muted);
           font-size: 14px;
           margin: 0;
         }
@@ -554,7 +557,9 @@ export default function AllergensPage() {
         .search-input {
           width: 100%;
           padding: 8px 12px;
-          border: 1px solid #e5e7eb;
+          border: 1px solid var(--border-strong);
+          background: var(--bg-input);
+          color: var(--text);
           border-radius: 6px;
           font-size: 14px;
         }
@@ -566,17 +571,17 @@ export default function AllergensPage() {
 
         .filter-btn {
           padding: 8px 16px;
-          border: 1px solid #e5e7eb;
+          border: 1px solid var(--border-strong);
           border-radius: 6px;
-          background: white;
-          color: #374151;
+          background: var(--bg-surface);
+          color: var(--text-body);
           font-size: 13px;
           cursor: pointer;
           transition: all 0.2s;
         }
 
         .filter-btn:hover {
-          background: #f9fafb;
+          background: var(--bg-hover);
         }
 
         .filter-btn.active {
@@ -586,18 +591,18 @@ export default function AllergensPage() {
         }
 
         .error-message {
-          background: #fef2f2;
-          color: #dc2626;
+          background: rgba(239,68,68,0.1);
+          color: #EF4444;
           padding: 12px;
           border-radius: 6px;
           margin-bottom: 16px;
-          border: 1px solid #fecaca;
+          border: 1px solid rgba(239,68,68,0.2);
         }
 
         .loading {
           text-align: center;
           padding: 40px;
-          color: #64748b;
+          color: var(--muted);
         }
 
         .allergens-grid {
@@ -607,11 +612,11 @@ export default function AllergensPage() {
         }
 
         .allergen-card {
-          background: white;
+          background: var(--bg-surface);
           border-radius: 12px;
           padding: 20px;
-          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-          border: 1px solid #e5e7eb;
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+          border: 1px solid var(--border);
         }
 
         .allergen-header {
@@ -628,13 +633,13 @@ export default function AllergensPage() {
         .allergen-name-jp {
           font-size: 18px;
           font-weight: 600;
-          color: #0f172a;
+          color: var(--text);
           margin: 0 0 4px 0;
         }
 
         .allergen-name-en {
           font-size: 14px;
-          color: #64748b;
+          color: var(--muted);
           margin: 0;
         }
 
@@ -652,7 +657,7 @@ export default function AllergensPage() {
 
         .allergen-date {
           font-size: 12px;
-          color: #64748b;
+          color: var(--muted);
         }
 
         .allergen-actions {
@@ -664,7 +669,7 @@ export default function AllergensPage() {
           grid-column: 1 / -1;
           text-align: center;
           padding: 40px;
-          color: #64748b;
+          color: var(--muted);
           font-style: italic;
         }
 
@@ -675,7 +680,7 @@ export default function AllergensPage() {
           left: 0;
           width: 100%;
           height: 100%;
-          background: rgba(0, 0, 0, 0.5);
+          background: rgba(0, 0, 0, 0.7);
           z-index: 1000;
           align-items: center;
           justify-content: center;
@@ -686,7 +691,7 @@ export default function AllergensPage() {
         }
 
         .modal-content {
-          background: white;
+          background: var(--bg-surface);
           border-radius: 12px;
           padding: 24px;
           max-width: 500px;
@@ -704,13 +709,13 @@ export default function AllergensPage() {
           border: none;
           font-size: 24px;
           cursor: pointer;
-          color: #64748b;
+          color: var(--muted);
         }
 
         .modal-title {
           font-size: 20px;
           font-weight: 600;
-          color: #0f172a;
+          color: var(--text);
           margin: 0 0 20px 0;
         }
 
@@ -722,14 +727,16 @@ export default function AllergensPage() {
           display: block;
           font-size: 14px;
           font-weight: 500;
-          color: #374151;
+          color: var(--text-body);
           margin-bottom: 6px;
         }
 
         .form-input {
           width: 100%;
           padding: 8px 12px;
-          border: 1px solid #e5e7eb;
+          border: 1px solid var(--border-strong);
+          background: var(--bg-input);
+          color: var(--text);
           border-radius: 6px;
           font-size: 14px;
         }
@@ -778,13 +785,13 @@ export default function AllergensPage() {
         }
 
         .btn-secondary {
-          background: white;
-          color: #374151;
-          border: 1px solid #e5e7eb;
+          background: var(--bg-hover);
+          color: var(--text-body);
+          border: 1px solid var(--border-strong);
         }
 
         .btn-secondary:hover {
-          background: #f9fafb;
+          background: var(--border-strong);
         }
 
         .btn-danger {
@@ -834,9 +841,9 @@ export default function AllergensPage() {
 
         .pagination-btn {
           padding: 8px 16px;
-          border: 1px solid #d1d5db;
-          background: white;
-          color: #374151;
+          border: 1px solid var(--border-strong);
+          background: var(--bg-surface);
+          color: var(--text-body);
           border-radius: 6px;
           cursor: pointer;
           font-size: 14px;
@@ -844,8 +851,8 @@ export default function AllergensPage() {
         }
 
         .pagination-btn:hover:not(:disabled) {
-          background: #f3f4f6;
-          border-color: #9ca3af;
+          background: var(--bg-hover);
+          border-color: var(--border-strong);
         }
 
         .pagination-btn:disabled {
@@ -854,7 +861,7 @@ export default function AllergensPage() {
         }
 
         .pagination-info {
-          color: #6b7280;
+          color: var(--muted);
           font-size: 14px;
           font-weight: 500;
         }

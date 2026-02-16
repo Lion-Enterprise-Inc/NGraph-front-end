@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import AdminLayout from '../../../components/admin/AdminLayout'
+import { useToast } from '../../../components/admin/Toast'
 import { RestaurantApi, UserApi, UserListItem, CreateRestaurantRequest, Restaurant, BUSINESS_TYPES } from '../../../services/api'
 
 // Store type for UI display
@@ -24,6 +25,7 @@ interface StoreDisplay {
 
 export default function StoresPage() {
   const router = useRouter()
+  const toast = useToast()
   const [filter, setFilter] = useState('all')
   const [stores, setStores] = useState<StoreDisplay[]>([])
   const [loading, setLoading] = useState(true)
@@ -143,17 +145,17 @@ export default function StoresPage() {
 
   const handleCreateStore = async () => {
     if (!newStore.name || !newStore.user_uid) {
-      alert('レストラン名とレストランオーナーは必須です')
+      toast('warning', 'レストラン名とレストランオーナーは必須です')
       return
     }
 
     // Validate required fields based on API requirements
     if (!newStore.phone) {
-      alert('電話番号は必須です')
+      toast('warning', '電話番号は必須です')
       return
     }
     if (!newStore.address) {
-      alert('住所は必須です')
+      toast('warning', '住所は必須です')
       return
     }
 
@@ -204,11 +206,11 @@ export default function StoresPage() {
         setStores([...stores, newStoreData])
         setShowModal(false)
         resetNewStore()
-        alert(`レストラン "${response.result.name}" を登録しました\nUID: ${response.result.uid}`)
+        toast('success', `レストラン "${response.result.name}" を登録しました（UID: ${response.result.uid}）`)
       }
     } catch (error) {
       console.error('Failed to create restaurant:', error)
-      alert(`レストラン作成に失敗しました: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      toast('error', `レストラン作成に失敗しました: ${error instanceof Error ? error.message : 'Unknown error'}`)
     } finally {
       setIsSubmitting(false)
     }
@@ -224,7 +226,7 @@ export default function StoresPage() {
 
   const handleStoreSearch = async () => {
     if (!newStore.name.trim()) {
-      alert('店名を入力してください')
+      toast('warning', '店名を入力してください')
       return
     }
 
@@ -267,13 +269,13 @@ export default function StoresPage() {
           accessInfo: info.access || prev.accessInfo,
           features: info.features || prev.features,
         }))
-        alert('情報を取得しました。内容を確認して登録してください。')
+        toast('success', '情報を取得しました。内容を確認して登録してください。')
       } else {
-        alert('情報が見つかりませんでした')
+        toast('info', '情報が見つかりませんでした')
       }
     } catch (error) {
       console.error('Search failed:', error)
-      alert(`情報の検索に失敗しました: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      toast('error', `情報の検索に失敗しました: ${error instanceof Error ? error.message : 'Unknown error'}`)
     } finally {
       setIsStoreSearching(false)
     }
@@ -287,10 +289,10 @@ export default function StoresPage() {
       // Remove from local state
       setStores(stores.filter(s => s.uid !== storeUid))
       setTotalRestaurants(prev => prev - 1)
-      alert(`レストラン "${storeName}" を削除しました`)
+      toast('success', `レストラン "${storeName}" を削除しました`)
     } catch (error) {
       console.error('Failed to delete restaurant:', error)
-      alert(`レストランの削除に失敗しました: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      toast('error', `レストランの削除に失敗しました: ${error instanceof Error ? error.message : 'Unknown error'}`)
     }
   }
 
@@ -306,7 +308,7 @@ export default function StoresPage() {
           minHeight: '400px',
           width: '100%'
         }}>
-          <div style={{ color: '#666', fontSize: '16px' }}>レストランを読み込み中...</div>
+          <div style={{ color: '#94A3B8', fontSize: '16px' }}>レストランを読み込み中...</div>
         </div>
       </AdminLayout>
     )
@@ -323,7 +325,7 @@ export default function StoresPage() {
             </button>
             <div>
               <span style={{ fontSize: '24px', fontWeight: 700, color: '#667eea' }}>{stores.length}</span>
-              <span style={{ color: '#666', marginLeft: '5px' }}>レストラン</span>
+              <span style={{ color: '#94A3B8', marginLeft: '5px' }}>レストラン</span>
             </div>
           </div>
         </div>
@@ -360,7 +362,7 @@ export default function StoresPage() {
         </div>
 
         {filteredStores.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '60px 40px', color: '#666', width: '100%' }}>
+          <div style={{ textAlign: 'center', padding: '60px 40px', color: '#94A3B8', width: '100%' }}>
             <div style={{ fontSize: '32px', marginBottom: '12px' }}>--</div>
             <div>レストランが見つかりません</div>
           </div>
@@ -440,7 +442,7 @@ export default function StoresPage() {
                   {isStoreSearching ? '検索中...' : '店名で情報を検索'}
                 </button>
               </div>
-              <p style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>店名を入力して検索すると、食べログ・Googleマップ等から情報を自動取得します</p>
+              <p style={{ fontSize: '12px', color: '#94A3B8', marginTop: '4px' }}>店名を入力して検索すると、食べログ・Googleマップ等から情報を自動取得します</p>
             </div>
 
             <div className="form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
@@ -490,8 +492,8 @@ export default function StoresPage() {
               </div>
             </div>
 
-            <div className="card" style={{ background: '#f8f9fa', borderRadius: '12px', padding: '20px', border: '1px solid #e5e7eb', marginBottom: '16px' }}>
-              <h3 style={{ fontSize: '14px', fontWeight: 600, color: '#1f2937', marginBottom: '12px' }}>詳細情報（検索で自動入力されます）</h3>
+            <div className="card" style={{ background: '#1E293B', borderRadius: '12px', padding: '20px', border: '1px solid #1E293B', marginBottom: '16px' }}>
+              <h3 style={{ fontSize: '14px', fontWeight: 600, color: '#F8FAFC', marginBottom: '12px' }}>詳細情報（検索で自動入力されます）</h3>
               <div className="form-group">
                 <label className="form-label">レストラン紹介</label>
                 <textarea className="form-input" rows={3} placeholder="レストランの特徴や魅力" value={newStore.description} onChange={(e) => setNewStore({...newStore, description: e.target.value})} />
@@ -555,16 +557,16 @@ export default function StoresPage() {
 
       <style jsx>{`
         .card {
-          background: white;
+          background: var(--bg-surface);
           border-radius: 12px;
           padding: 24px;
-          box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+          box-shadow: 0 1px 3px rgba(0,0,0,0.3);
         }
 
         .card-title {
           font-size: 18px;
           font-weight: 600;
-          color: #333;
+          color: var(--text);
           margin-bottom: 16px;
         }
 
@@ -620,8 +622,8 @@ export default function StoresPage() {
 
         /* Store Card Compact - matching HTML exactly */
         .store-card-compact {
-          background: white;
-          border: 1px solid #e0e0e0;
+          background: var(--bg-surface);
+          border: 1px solid var(--border);
           border-radius: 8px;
           padding: 16px;
           margin-bottom: 0;
@@ -652,7 +654,7 @@ export default function StoresPage() {
         .store-name-compact {
           font-size: 16px;
           font-weight: 600;
-          color: #333;
+          color: var(--text);
           margin-bottom: 4px;
           line-height: 1.3;
         }
@@ -665,7 +667,7 @@ export default function StoresPage() {
 
         .store-location-compact {
           font-size: 14px;
-          color: #666;
+          color: var(--muted);
           line-height: 1.4;
         }
 
@@ -726,7 +728,7 @@ export default function StoresPage() {
         .metric-label {
           display: block;
           font-size: 12px;
-          color: #666;
+          color: var(--muted);
           margin-top: 2px;
         }
 
@@ -742,7 +744,7 @@ export default function StoresPage() {
           left: 0;
           right: 0;
           bottom: 0;
-          background: rgba(0, 0, 0, 0.5);
+          background: rgba(0, 0, 0, 0.7);
           display: none;
           align-items: center;
           justify-content: center;
@@ -755,7 +757,7 @@ export default function StoresPage() {
         }
 
         .modal-content {
-          background: white;
+          background: var(--bg-surface);
           border-radius: 12px;
           padding: 24px;
           max-width: 800px;
@@ -769,7 +771,7 @@ export default function StoresPage() {
           justify-content: space-between;
           align-items: center;
           margin-bottom: 20px;
-          border-bottom: 2px solid #e0e0e0;
+          border-bottom: 2px solid var(--border);
           padding-bottom: 15px;
         }
 
@@ -778,11 +780,11 @@ export default function StoresPage() {
           border: none;
           font-size: 24px;
           cursor: pointer;
-          color: #999;
+          color: var(--muted);
         }
 
         .close-btn:hover {
-          color: #333;
+          color: var(--text);
         }
 
         .form-group {
@@ -793,14 +795,14 @@ export default function StoresPage() {
           display: block;
           margin-bottom: 6px;
           font-weight: 500;
-          color: #555;
+          color: var(--muted);
           font-size: 14px;
         }
 
         .form-input {
           width: 100%;
           padding: 10px;
-          border: 1px solid #e0e0e0;
+          border: 1px solid var(--border);
           border-radius: 6px;
           font-size: 14px;
           transition: border 0.3s;

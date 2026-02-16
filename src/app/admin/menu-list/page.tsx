@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import AdminLayout from '../../../components/admin/AdminLayout'
+import { useToast } from '../../../components/admin/Toast'
 import { MenuApi, Menu, MenuCreate, MenuUpdate, Ingredient, AllergenApi, Allergen, AllergenListResponse, ScrapingApi, apiClient, CookingMethodApi, RestrictionApi, CookingMethod, Restriction, VisionApi, VisionMenuItem, DISH_CATEGORIES } from '../../../services/api'
 import { useAuth } from '../../../contexts/AuthContext'
 
@@ -35,6 +36,7 @@ export default function MenuListPage() {
 }
 
 function MenuListContent() {
+  const toast = useToast()
   const { user, isLoading: authLoading } = useAuth()
   const searchParams = useSearchParams()
   const uidParam = searchParams?.get('uid') ?? null
@@ -111,14 +113,14 @@ function MenuListContent() {
       const response = await VisionApi.analyzeImage(file, restaurantSlug, false)
       const items = response.result?.items || []
       if (items.length === 0) {
-        alert('メニューを検出できませんでした。別のファイルを試してください。')
+        toast('warning', 'メニューを検出できませんでした。別のファイルを試してください。')
         return
       }
       setVisionResults(items)
       setShowVisionApproval(true)
     } catch (err) {
       console.error('File analysis failed:', err)
-      alert(`ファイル解析に失敗しました: ${err instanceof Error ? err.message : 'Unknown error'}`)
+      toast('error', `ファイル解析に失敗しました: ${err instanceof Error ? err.message : 'Unknown error'}`)
     } finally {
       setIsAnalyzing(false)
       e.target.value = ''
@@ -127,7 +129,7 @@ function MenuListContent() {
 
   const handleTextAnalyze = async () => {
     if (!pasteText.trim()) {
-      alert('テキストを入力してください')
+      toast('warning', 'テキストを入力してください')
       return
     }
 
@@ -137,7 +139,7 @@ function MenuListContent() {
       const response = await VisionApi.analyzeText(pasteText.trim())
       const items = response.result?.items || []
       if (items.length === 0) {
-        alert('メニューを検出できませんでした。別のテキストを試してください。')
+        toast('warning', 'メニューを検出できませんでした。別のテキストを試してください。')
         return
       }
       setVisionResults(items)
@@ -145,7 +147,7 @@ function MenuListContent() {
       setPasteText('')
     } catch (err) {
       console.error('Text analysis failed:', err)
-      alert(`テキスト解析に失敗しました: ${err instanceof Error ? err.message : 'Unknown error'}`)
+      toast('error', `テキスト解析に失敗しました: ${err instanceof Error ? err.message : 'Unknown error'}`)
     } finally {
       setIsAnalyzing(false)
     }
@@ -189,7 +191,7 @@ function MenuListContent() {
       setVisionResults(visionResults.filter((_, i) => i !== index))
     } catch (err) {
       console.error('Failed to save menu:', err)
-      alert('メニューの保存に失敗しました')
+      toast('error', 'メニューの保存に失敗しました')
     }
   }
 
@@ -203,10 +205,10 @@ function MenuListContent() {
       await refreshMenus()
       setVisionResults([])
       setShowVisionApproval(false)
-      alert(`✅ ${visionResults.length}件のメニューを追加しました！`)
+      toast('success', `${visionResults.length}件のメニューを追加しました！`)
     } catch (err) {
       console.error('Failed to save menus:', err)
-      alert('メニューの保存に失敗しました')
+      toast('error', 'メニューの保存に失敗しました')
     }
   }
 
@@ -371,11 +373,11 @@ function MenuListContent() {
 
   const handleAddMenu = async () => {
     if (!newMenu.name || !newMenu.price || !newMenu.category) {
-      alert('料理名、価格、カテゴリーは必須です')
+      toast('warning', '料理名、価格、カテゴリーは必須です')
       return
     }
     if (!restaurant?.uid) {
-      alert('レストラン情報が見つかりません')
+      toast('error', 'レストラン情報が見つかりません')
       return
     }
 
@@ -418,10 +420,10 @@ function MenuListContent() {
       setSelectedRestrictionUids([])
       setShowAddModal(false)
       setActiveTab('basic')
-      alert('✅ メニューを追加しました！')
+      toast('success', 'メニューを追加しました！')
     } catch (err) {
       console.error('Failed to add menu:', err)
-      alert(`❌ メニューの追加に失敗しました: ${err instanceof Error ? err.message : 'Unknown error'}`)
+      toast('error', `メニューの追加に失敗しました: ${err instanceof Error ? err.message : 'Unknown error'}`)
     } finally {
       setIsSaving(false)
     }
@@ -429,12 +431,12 @@ function MenuListContent() {
 
   const handleFetchFromSource = async () => {
     if (!restaurant?.uid) {
-      alert('レストラン情報が見つかりません')
+      toast('error', 'レストラン情報が見つかりません')
       return
     }
 
     if (!scrapingUrl) {
-      alert('メニュー情報ソースURLが設定されていません。基本情報→情報ソースタブでURLを設定してください。')
+      toast('warning', 'メニュー情報ソースURLが設定されていません。基本情報→情報ソースタブでURLを設定してください。')
       return
     }
 
@@ -455,7 +457,7 @@ function MenuListContent() {
     } catch (err) {
       console.error('Failed to start scraping:', err)
       setShowFetchModal(false)
-      alert('スクレイピングの開始に失敗しました')
+      toast('error', 'スクレイピングの開始に失敗しました')
     }
   }
 
@@ -511,7 +513,7 @@ function MenuListContent() {
         setPendingMenus(pendingMenus.filter(m => m.id !== menuId))
       } catch (err) {
         console.error('Failed to approve menu:', err)
-        alert('メニューの承認に失敗しました')
+        toast('error', 'メニューの承認に失敗しました')
       }
     }
   }
@@ -537,10 +539,10 @@ function MenuListContent() {
       await refreshMenus()
       setPendingMenus([])
       setShowApprovalModal(false)
-      alert('✅ すべてのメニューを承認しました！')
+      toast('success', 'すべてのメニューを承認しました！')
     } catch (err) {
       console.error('Failed to approve all menus:', err)
-      alert('メニューの承認に失敗しました')
+      toast('error', 'メニューの承認に失敗しました')
     }
   }
 
@@ -601,10 +603,10 @@ function MenuListContent() {
       setEditSelectedAllergenUids([])
       setEditSelectedCookingMethodUids([])
       setEditSelectedRestrictionUids([])
-      alert('✅ メニューを更新しました！')
+      toast('success', 'メニューを更新しました！')
     } catch (err) {
       console.error('Failed to update menu:', err)
-      alert(`❌ メニューの更新に失敗しました: ${err instanceof Error ? err.message : 'Unknown error'}`)
+      toast('error', `メニューの更新に失敗しました: ${err instanceof Error ? err.message : 'Unknown error'}`)
     } finally {
       setIsSaving(false)
     }
@@ -616,14 +618,14 @@ function MenuListContent() {
       await refreshMenus()
     } catch (err) {
       console.error('Failed to approve menu:', err)
-      alert('承認に失敗しました')
+      toast('error', '承認に失敗しました')
     }
   }
 
   const handleBulkApprove = async () => {
     const unverified = menuItems.filter(i => !i.status)
     if (unverified.length === 0) {
-      alert('承認待ちのメニューはありません')
+      toast('info', '承認待ちのメニューはありません')
       return
     }
     if (!confirm(`${unverified.length}件の未承認メニューをすべて承認しますか？`)) return
@@ -633,10 +635,10 @@ function MenuListContent() {
         await MenuApi.update(item.uid, { status: true })
       }
       await refreshMenus()
-      alert(`${unverified.length}件を承認しました`)
+      toast('success', `${unverified.length}件を承認しました`)
     } catch (err) {
       console.error('Failed to bulk approve:', err)
-      alert('一括承認に失敗しました')
+      toast('error', '一括承認に失敗しました')
     }
   }
 
@@ -646,10 +648,10 @@ function MenuListContent() {
     try {
       await MenuApi.delete(uid)
       await refreshMenus()
-      alert('✅ メニューを削除しました')
+      toast('success', 'メニューを削除しました')
     } catch (err) {
       console.error('Failed to delete menu:', err)
-      alert(`❌ メニューの削除に失敗しました: ${err instanceof Error ? err.message : 'Unknown error'}`)
+      toast('error', `メニューの削除に失敗しました: ${err instanceof Error ? err.message : 'Unknown error'}`)
     }
   }
 
@@ -662,7 +664,7 @@ function MenuListContent() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <h2 style={{ fontSize: '18px', margin: 0 }}>メニュー一覧</h2>
-            <span style={{ fontSize: '14px', color: '#666', background: '#f0f4ff', padding: '4px 10px', borderRadius: '12px', fontWeight: 600 }}>
+            <span style={{ fontSize: '14px', color: '#94A3B8', background: '#f0f4ff', padding: '4px 10px', borderRadius: '12px', fontWeight: 600 }}>
               登録数: {totalItems}件
             </span>
           </div>
@@ -683,7 +685,7 @@ function MenuListContent() {
             />
             <button
               onClick={() => setSearchQuery('')}
-              style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#999', fontSize: '16px' }}
+              style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#94A3B8', fontSize: '16px' }}
             >
               ✕
             </button>
@@ -716,7 +718,7 @@ function MenuListContent() {
             </button>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <label style={{ fontSize: '13px', color: '#666' }}>表示件数:</label>
+            <label style={{ fontSize: '13px', color: '#94A3B8' }}>表示件数:</label>
             <select
               value={itemsPerPage}
               onChange={(e) => { setItemsPerPage(Number(e.target.value)); setCurrentPage(1); }}
@@ -774,7 +776,7 @@ function MenuListContent() {
             <tbody>
               {filteredItems.length === 0 ? (
                 <tr>
-                  <td colSpan={6} style={{ textAlign: 'center', padding: '40px', color: '#666' }}>
+                  <td colSpan={6} style={{ textAlign: 'center', padding: '40px', color: '#94A3B8' }}>
                     メニューがありません。「手動で新規追加」ボタンからメニューを追加してください。
                   </td>
                 </tr>
@@ -785,10 +787,10 @@ function MenuListContent() {
                 const rowNum = (currentPage - 1) * itemsPerPage + index + 1
                 return (
                   <tr key={item.uid}>
-                    <td style={{ textAlign: 'center', fontWeight: 600, color: '#999', fontSize: '13px' }}>{rowNum}</td>
+                    <td style={{ textAlign: 'center', fontWeight: 600, color: '#94A3B8', fontSize: '13px' }}>{rowNum}</td>
                     <td>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <div style={{ width: '40px', height: '30px', background: '#f8f9fa', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', color: '#999' }}>📄</div>
+                        <div style={{ width: '40px', height: '30px', background: '#1E293B', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', color: '#94A3B8' }}>📄</div>
                         <div style={{ flex: 1 }}>
                           <div style={{ fontWeight: 600, color: '#212529', marginBottom: '2px', fontSize: '14px' }}>🇯🇵 {item.name}</div>
                           {item.nameEn && (
@@ -841,7 +843,7 @@ function MenuListContent() {
 
         {/* Pagination */}
         {!isLoading && !error && totalPages > 1 && (
-          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '16px', margin: '20px 0', padding: '16px', background: '#f8f9fa', borderRadius: '8px' }}>
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '16px', margin: '20px 0', padding: '16px', background: '#1E293B', borderRadius: '8px' }}>
             <button 
               className="btn btn-secondary" 
               onClick={handlePrevPage} 
@@ -852,7 +854,7 @@ function MenuListContent() {
             </button>
             
             <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-              <span style={{ fontSize: '14px', color: '#666' }}>ページ</span>
+              <span style={{ fontSize: '14px', color: '#94A3B8' }}>ページ</span>
               {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                 const pageNum = Math.max(1, Math.min(totalPages - 4, currentPage - 2)) + i
                 if (pageNum > totalPages) return null
@@ -867,7 +869,7 @@ function MenuListContent() {
                   </button>
                 )
               })}
-              <span style={{ fontSize: '14px', color: '#666' }}>/{totalPages}</span>
+              <span style={{ fontSize: '14px', color: '#94A3B8' }}>/{totalPages}</span>
             </div>
             
             <button 
@@ -883,7 +885,7 @@ function MenuListContent() {
 
         {/* Total items info */}
         {!isLoading && !error && (
-          <div style={{ textAlign: 'center', marginBottom: '16px', color: '#666', fontSize: '14px' }}>
+          <div style={{ textAlign: 'center', marginBottom: '16px', color: '#94A3B8', fontSize: '14px' }}>
             全{totalItems}件中 {(currentPage - 1) * itemsPerPage + 1}-{Math.min(currentPage * itemsPerPage, totalItems)}件を表示
           </div>
         )}
@@ -960,7 +962,7 @@ function MenuListContent() {
                     rows={3}
                     style={{ marginBottom: '8px' }}
                   />
-                  <div style={{ fontSize: '12px', color: '#666' }}>
+                  <div style={{ fontSize: '12px', color: '#94A3B8' }}>
                     ※ 複数の原材料はカンマ（,）で区切って入力してください
                   </div>
                 </div>
@@ -987,10 +989,10 @@ function MenuListContent() {
                       ))}
                     </div>
                   ) : (
-                    <div style={{ color: '#666', fontStyle: 'italic', fontSize: '13px' }}>調理法マスタデータなし</div>
+                    <div style={{ color: '#94A3B8', fontStyle: 'italic', fontSize: '13px' }}>調理法マスタデータなし</div>
                   )}
                 </div>
-                <div style={{ marginTop: '12px', paddingTop: '8px', borderTop: '1px solid #e5e7eb' }}>
+                <div style={{ marginTop: '12px', paddingTop: '8px', borderTop: '1px solid #1E293B' }}>
                   <button className="btn btn-primary" onClick={() => setActiveTab('allergens')}>次へ: アレルギー設定 →</button>
                 </div>
               </div>
@@ -1045,7 +1047,7 @@ function MenuListContent() {
                     </div>
                   )}
                   {(!allergens || (!allergens.mandatory?.length && !allergens.recommended?.length)) && (
-                    <div style={{ color: '#666', fontStyle: 'italic' }}>
+                    <div style={{ color: '#94A3B8', fontStyle: 'italic' }}>
                       アレルゲン情報が読み込めませんでした。後で再試行してください。
                     </div>
                   )}
@@ -1068,12 +1070,12 @@ function MenuListContent() {
                               }
                             }}
                           />
-                          {r.name_jp} {r.name_en && <span style={{ fontSize: '11px', color: '#999' }}>({r.name_en})</span>}
+                          {r.name_jp} {r.name_en && <span style={{ fontSize: '11px', color: '#94A3B8' }}>({r.name_en})</span>}
                         </label>
                       ))}
                     </div>
                   ) : (
-                    <div style={{ color: '#666', fontStyle: 'italic', fontSize: '13px' }}>制約マスタデータなし</div>
+                    <div style={{ color: '#94A3B8', fontStyle: 'italic', fontSize: '13px' }}>制約マスタデータなし</div>
                   )}
                 </div>
                 <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
@@ -1108,7 +1110,7 @@ function MenuListContent() {
                   </div>
                 </div>
 
-                <div style={{ marginBottom: '20px', borderTop: '1px solid #e5e7eb', paddingTop: '16px' }}>
+                <div style={{ marginBottom: '20px', borderTop: '1px solid #1E293B', paddingTop: '16px' }}>
                   <h4 style={{ fontSize: '15px', fontWeight: 600, marginBottom: '12px', color: '#374151' }}>🍽️ 提供情報</h4>
                   <div style={{ display: 'flex', gap: '12px' }}>
                     <div className="form-group" style={{ flex: 1 }}>
@@ -1134,7 +1136,7 @@ function MenuListContent() {
                   </div>
                 </div>
 
-                <div style={{ marginBottom: '20px', borderTop: '1px solid #e5e7eb', paddingTop: '16px' }}>
+                <div style={{ marginBottom: '20px', borderTop: '1px solid #1E293B', paddingTop: '16px' }}>
                   <h4 style={{ fontSize: '15px', fontWeight: 600, marginBottom: '12px', color: '#374151' }}>💰 価格詳細</h4>
                   <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                     <div className="form-group" style={{ flex: 1 }}>
@@ -1172,7 +1174,7 @@ function MenuListContent() {
             <div className="progress-bar-container">
               <div className="progress-bar-fill"></div>
             </div>
-            <div style={{ marginTop: '10px', color: '#666' }}>基本情報のソースからメニューを取得しています...</div>
+            <div style={{ marginTop: '10px', color: '#94A3B8' }}>基本情報のソースからメニューを取得しています...</div>
           </div>
         </div>
       )}
@@ -1185,7 +1187,7 @@ function MenuListContent() {
             <div className="modal-title">🤖 AI取得メニューの承認</div>
             
             <div style={{ background: '#f8fafc', padding: '16px', borderRadius: '8px', marginBottom: '20px' }}>
-              <div style={{ fontSize: '14px', color: '#666', marginBottom: '8px' }}>
+              <div style={{ fontSize: '14px', color: '#94A3B8', marginBottom: '8px' }}>
                 ソース: <strong>{scrapingUrl}</strong>
               </div>
               <div style={{ display: 'flex', gap: '16px', fontSize: '13px' }}>
@@ -1212,11 +1214,11 @@ function MenuListContent() {
               </h4>
               
               {pendingMenus.map(menu => (
-                <div key={menu.id} style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: '8px', padding: '16px', marginBottom: '12px' }}>
+                <div key={menu.id} style={{ background: '#111827', border: '1px solid #1E293B', borderRadius: '8px', padding: '16px', marginBottom: '12px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                     <div>
                       <div style={{ fontWeight: 600, fontSize: '16px', marginBottom: '4px' }}>{menu.name}</div>
-                      <div style={{ fontSize: '13px', color: '#666' }}>
+                      <div style={{ fontSize: '13px', color: '#94A3B8' }}>
                         ¥{menu.price.toLocaleString()} | {menu.category} | 信頼度: {menu.confidence}%
                       </div>
                     </div>
@@ -1240,7 +1242,7 @@ function MenuListContent() {
               ))}
 
               {pendingMenus.length === 0 && (
-                <div style={{ textAlign: 'center', padding: '20px', color: '#999' }}>
+                <div style={{ textAlign: 'center', padding: '20px', color: '#94A3B8' }}>
                   すべてのメニューが処理されました
                 </div>
               )}
@@ -1257,7 +1259,7 @@ function MenuListContent() {
             <div className="modal-title">👁️ ユーザー画面プレビュー</div>
             
             <div style={{ marginBottom: '16px' }}>
-              <label style={{ fontSize: '13px', color: '#666' }}>言語選択: </label>
+              <label style={{ fontSize: '13px', color: '#94A3B8' }}>言語選択: </label>
               <select style={{ padding: '5px 10px', marginLeft: '10px', borderRadius: '4px', border: '1px solid #ddd' }}>
                 <option value="jp">🇯🇵 日本語</option>
                 <option value="en">🇬🇧 English</option>
@@ -1265,12 +1267,12 @@ function MenuListContent() {
               </select>
             </div>
 
-            <div style={{ border: '1px solid #e0e0e0', borderRadius: '10px', padding: '20px', background: '#f8f9fa' }}>
+            <div style={{ border: '1px solid #1E293B', borderRadius: '10px', padding: '20px', background: '#1E293B' }}>
               <h3 style={{ fontSize: '20px', fontWeight: 700, marginBottom: '8px' }}>{previewItem.name}</h3>
               <div style={{ fontSize: '18px', color: '#667eea', fontWeight: 600, marginBottom: '12px' }}>
                 ¥{previewItem.price.toLocaleString()}
               </div>
-              <p style={{ fontSize: '14px', color: '#666', marginBottom: '12px' }}>{previewItem.description}</p>
+              <p style={{ fontSize: '14px', color: '#94A3B8', marginBottom: '12px' }}>{previewItem.description}</p>
               <div style={{ fontSize: '13px', color: '#888' }}>
                 <strong>カテゴリ:</strong> {DISH_CATEGORIES[previewItem.category] || previewItem.category}
               </div>
@@ -1360,7 +1362,7 @@ function MenuListContent() {
                     placeholder="例: 鶏肉, 玉ねぎ, にんじん"
                     rows={3}
                   />
-                  <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
+                  <div style={{ fontSize: '12px', color: '#94A3B8', marginTop: '4px' }}>
                     ※ 複数の原材料はカンマ（,）で区切って入力してください
                   </div>
                 </div>
@@ -1387,10 +1389,10 @@ function MenuListContent() {
                       ))}
                     </div>
                   ) : (
-                    <div style={{ color: '#666', fontStyle: 'italic', fontSize: '13px' }}>調理法マスタデータなし</div>
+                    <div style={{ color: '#94A3B8', fontStyle: 'italic', fontSize: '13px' }}>調理法マスタデータなし</div>
                   )}
                 </div>
-                <div style={{ marginTop: '12px', paddingTop: '8px', borderTop: '1px solid #e5e7eb' }}>
+                <div style={{ marginTop: '12px', paddingTop: '8px', borderTop: '1px solid #1E293B' }}>
                   <button className="btn btn-primary" onClick={() => setActiveTab('allergens')}>次へ: アレルギー設定 →</button>
                 </div>
               </div>
@@ -1445,7 +1447,7 @@ function MenuListContent() {
                     </div>
                   )}
                   {(!allergens || (!allergens.mandatory?.length && !allergens.recommended?.length)) && (
-                    <div style={{ color: '#666', fontStyle: 'italic' }}>
+                    <div style={{ color: '#94A3B8', fontStyle: 'italic' }}>
                       アレルゲン情報が読み込めませんでした。後で再試行してください。
                     </div>
                   )}
@@ -1468,12 +1470,12 @@ function MenuListContent() {
                               }
                             }}
                           />
-                          {r.name_jp} {r.name_en && <span style={{ fontSize: '11px', color: '#999' }}>({r.name_en})</span>}
+                          {r.name_jp} {r.name_en && <span style={{ fontSize: '11px', color: '#94A3B8' }}>({r.name_en})</span>}
                         </label>
                       ))}
                     </div>
                   ) : (
-                    <div style={{ color: '#666', fontStyle: 'italic', fontSize: '13px' }}>制約マスタデータなし</div>
+                    <div style={{ color: '#94A3B8', fontStyle: 'italic', fontSize: '13px' }}>制約マスタデータなし</div>
                   )}
                 </div>
 
@@ -1509,7 +1511,7 @@ function MenuListContent() {
                   </div>
                 </div>
 
-                <div style={{ marginBottom: '20px', borderTop: '1px solid #e5e7eb', paddingTop: '16px' }}>
+                <div style={{ marginBottom: '20px', borderTop: '1px solid #1E293B', paddingTop: '16px' }}>
                   <h4 style={{ fontSize: '15px', fontWeight: 600, marginBottom: '12px', color: '#374151' }}>🍽️ 提供情報</h4>
                   <div style={{ display: 'flex', gap: '12px' }}>
                     <div className="form-group" style={{ flex: 1 }}>
@@ -1535,7 +1537,7 @@ function MenuListContent() {
                   </div>
                 </div>
 
-                <div style={{ marginBottom: '20px', borderTop: '1px solid #e5e7eb', paddingTop: '16px' }}>
+                <div style={{ marginBottom: '20px', borderTop: '1px solid #1E293B', paddingTop: '16px' }}>
                   <h4 style={{ fontSize: '15px', fontWeight: 600, marginBottom: '12px', color: '#374151' }}>💰 価格詳細</h4>
                   <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                     <div className="form-group" style={{ flex: 1 }}>
@@ -1566,7 +1568,7 @@ function MenuListContent() {
                         padding: '10px 20px',
                         borderRadius: '6px',
                         border: editItem.status ? '2px solid #10b981' : '1px solid #d1d5db',
-                        background: editItem.status ? '#d1fae5' : 'white',
+                        background: editItem.status ? '#d1fae5' : '#111827',
                         color: editItem.status ? '#059669' : '#6b7280',
                         fontWeight: 600,
                         cursor: 'pointer',
@@ -1584,7 +1586,7 @@ function MenuListContent() {
                         padding: '10px 20px',
                         borderRadius: '6px',
                         border: !editItem.status ? '2px solid #f59e0b' : '1px solid #d1d5db',
-                        background: !editItem.status ? '#fef3c7' : 'white',
+                        background: !editItem.status ? '#fef3c7' : '#111827',
                         color: !editItem.status ? '#d97706' : '#6b7280',
                         fontWeight: 600,
                         cursor: 'pointer',
@@ -1596,7 +1598,7 @@ function MenuListContent() {
                       ⚠️ 未承認
                     </button>
                   </div>
-                  <div style={{ fontSize: '12px', color: '#666', marginTop: '8px' }}>
+                  <div style={{ fontSize: '12px', color: '#94A3B8', marginTop: '8px' }}>
                     ※ 「承認済み」に設定すると、メニューが検証済みとしてマークされます
                   </div>
                 </div>
@@ -1614,7 +1616,7 @@ function MenuListContent() {
       {/* アップロードカード */}
       <div className="card" style={{ marginTop: '8px' }}>
         <div className="card-title">📤 メニュー・商品をアップロード</div>
-        <p style={{ marginBottom: '16px', color: '#666', fontSize: '14px' }}>メニュー情報をアップロードすると、AIが自動で構造化します</p>
+        <p style={{ marginBottom: '16px', color: '#94A3B8', fontSize: '14px' }}>メニュー情報をアップロードすると、AIが自動で構造化します</p>
 
         <input
           ref={fileInputRef}
@@ -1640,7 +1642,7 @@ function MenuListContent() {
           <button className="upload-btn" onClick={handleFileSelect}>
             <div className="upload-icon">📄</div>
             ファイル選択
-            <span style={{ fontSize: '10px', color: '#999' }}>画像/PDF/Excel/CSV</span>
+            <span style={{ fontSize: '10px', color: '#94A3B8' }}>画像/PDF/Excel/CSV</span>
           </button>
           <button className="upload-btn" onClick={() => setShowTextModal(true)}>
             <div className="upload-icon">📝</div>
@@ -1649,7 +1651,7 @@ function MenuListContent() {
           <button className="upload-btn" style={{ opacity: 0.4, cursor: 'not-allowed' }} disabled>
             <div className="upload-icon">☁️</div>
             Googleドライブ
-            <span style={{ fontSize: '10px', color: '#999' }}>準備中</span>
+            <span style={{ fontSize: '10px', color: '#94A3B8' }}>準備中</span>
           </button>
         </div>
       </div>
@@ -1660,7 +1662,7 @@ function MenuListContent() {
           <div className="modal-content" style={{ maxWidth: '600px' }}>
             <button className="modal-close" onClick={() => { setShowTextModal(false); setPasteText(''); }}>×</button>
             <div className="modal-title">📝 メニューテキストを貼り付け</div>
-            <p style={{ marginBottom: '12px', color: '#666', fontSize: '14px' }}>
+            <p style={{ marginBottom: '12px', color: '#94A3B8', fontSize: '14px' }}>
               メニューの情報をテキストで貼り付けてください。料理名・価格・説明などが含まれていればAIが自動で構造化します。
             </p>
             <textarea
@@ -1689,7 +1691,7 @@ function MenuListContent() {
             <div className="progress-bar-container">
               <div className="progress-bar-fill" style={{ animation: 'progress 8s ease-in-out forwards' }}></div>
             </div>
-            <div style={{ marginTop: '10px', color: '#666', fontSize: '14px' }}>
+            <div style={{ marginTop: '10px', color: '#94A3B8', fontSize: '14px' }}>
               メニューデータを抽出しています
             </div>
           </div>
@@ -1718,21 +1720,21 @@ function MenuListContent() {
 
             <div>
               {visionResults.map((item, index) => (
-                <div key={index} style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: '8px', padding: '16px', marginBottom: '12px' }}>
+                <div key={index} style={{ background: '#111827', border: '1px solid #1E293B', borderRadius: '8px', padding: '16px', marginBottom: '12px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                     <div style={{ flex: 1 }}>
                       <div style={{ fontWeight: 600, fontSize: '16px', marginBottom: '4px' }}>
                         {item.name_jp}
                         {item.name_en && <span style={{ fontSize: '13px', color: '#888', marginLeft: '8px' }}>{item.name_en}</span>}
                       </div>
-                      <div style={{ fontSize: '13px', color: '#666', marginBottom: '4px' }}>
+                      <div style={{ fontSize: '13px', color: '#94A3B8', marginBottom: '4px' }}>
                         💰 ¥{(item.price || 0).toLocaleString()} | 📂 {DISH_CATEGORIES[item.category] || item.category || '未分類'}
                       </div>
                       {item.description && (
                         <div style={{ fontSize: '12px', color: '#888', marginBottom: '4px' }}>{item.description}</div>
                       )}
                       {item.ingredients && item.ingredients.length > 0 && (
-                        <div style={{ fontSize: '11px', color: '#999' }}>🥘 {item.ingredients.join(', ')}</div>
+                        <div style={{ fontSize: '11px', color: '#94A3B8' }}>🥘 {item.ingredients.join(', ')}</div>
                       )}
                       {item.allergens && item.allergens.length > 0 && (
                         <div style={{ fontSize: '11px', color: '#dc2626', marginTop: '2px' }}>⚠️ {item.allergens.join(', ')}</div>
@@ -1758,7 +1760,7 @@ function MenuListContent() {
               ))}
 
               {visionResults.length === 0 && (
-                <div style={{ textAlign: 'center', padding: '20px', color: '#999' }}>
+                <div style={{ textAlign: 'center', padding: '20px', color: '#94A3B8' }}>
                   すべてのメニューが処理されました
                 </div>
               )}
@@ -1769,17 +1771,17 @@ function MenuListContent() {
 
       <style jsx>{`
         .card {
-          background: white;
+          background: var(--bg-surface);
           border-radius: 12px;
           padding: 20px;
-          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
         }
 
         .card-title {
           font-size: 16px;
           font-weight: 600;
           margin-bottom: 16px;
-          color: #1a1a1a;
+          color: var(--text);
         }
 
         .btn {
@@ -1825,14 +1827,14 @@ function MenuListContent() {
           padding: 6px 12px;
           font-size: 13px;
           background: #f3f4f6;
-          border: 1px solid #e5e7eb;
+          border: 1px solid var(--border);
           border-radius: 6px;
           cursor: pointer;
           transition: all 0.2s;
         }
 
         .filter-btn:hover {
-          background: #e5e7eb;
+          background: var(--bg-hover);
         }
 
         .filter-btn.active {
@@ -1855,18 +1857,18 @@ function MenuListContent() {
         .menu-table td {
           padding: 12px;
           text-align: left;
-          border-bottom: 1px solid #e5e7eb;
+          border-bottom: 1px solid var(--border);
         }
 
         .menu-table th {
-          background: #f9fafb;
+          background: var(--bg-hover);
           font-weight: 600;
           font-size: 13px;
           color: #374151;
         }
 
         .menu-table tr:hover {
-          background: #f9fafb;
+          background: var(--bg-hover);
         }
 
         .btn-action {
@@ -1905,17 +1907,17 @@ function MenuListContent() {
 
         .btn-edit {
           color: #6c757d;
-          background: white;
+          background: var(--bg-surface);
           border-color: #6c757d;
         }
 
         .btn-edit:hover {
-          background: #f8f9fa;
+          background: var(--bg-hover);
         }
 
         .btn-delete {
           color: #dc3545;
-          background: white;
+          background: var(--bg-surface);
           border-color: #dc3545;
         }
 
@@ -1954,8 +1956,8 @@ function MenuListContent() {
           align-items: center;
           justify-content: center;
           padding: 24px 16px;
-          background: #f9fafb;
-          border: 2px dashed #e5e7eb;
+          background: var(--bg-hover);
+          border: 2px dashed var(--border);
           border-radius: 12px;
           cursor: pointer;
           transition: all 0.2s;
@@ -1998,7 +2000,7 @@ function MenuListContent() {
         }
 
         .modal-content {
-          background: white;
+          background: var(--bg-surface);
           border-radius: 12px;
           padding: 24px;
           max-width: 800px;
@@ -2016,11 +2018,11 @@ function MenuListContent() {
           border: none;
           font-size: 24px;
           cursor: pointer;
-          color: #999;
+          color: var(--muted);
         }
 
         .modal-close:hover {
-          color: #333;
+          color: var(--text);
         }
 
         .modal-title {
@@ -2028,14 +2030,14 @@ function MenuListContent() {
           font-weight: 600;
           margin-bottom: 20px;
           padding-bottom: 12px;
-          border-bottom: 1px solid #e5e7eb;
+          border-bottom: 1px solid var(--border);
         }
 
         .tab-nav {
           display: flex;
           gap: 8px;
           margin-bottom: 20px;
-          border-bottom: 1px solid #e5e7eb;
+          border-bottom: 1px solid var(--border);
           padding-bottom: 0;
         }
 
@@ -2045,13 +2047,13 @@ function MenuListContent() {
           background: none;
           cursor: pointer;
           font-size: 14px;
-          color: #666;
+          color: var(--muted);
           border-bottom: 2px solid transparent;
           transition: all 0.2s;
         }
 
         .tab-nav-btn:hover {
-          color: #333;
+          color: var(--text);
         }
 
         .tab-nav-btn.active {
@@ -2072,14 +2074,14 @@ function MenuListContent() {
           display: block;
           margin-bottom: 6px;
           font-weight: 500;
-          color: #555;
+          color: var(--muted);
           font-size: 14px;
         }
 
         .form-input {
           width: 100%;
           padding: 10px;
-          border: 1px solid #e0e0e0;
+          border: 1px solid var(--border);
           border-radius: 6px;
           font-size: 14px;
           transition: border 0.3s;
@@ -2091,13 +2093,13 @@ function MenuListContent() {
         }
 
         .btn-secondary {
-          background: white;
+          background: var(--bg-surface);
           color: #374151;
-          border: 1px solid #e5e7eb;
+          border: 1px solid var(--border);
         }
 
         .btn-secondary:hover {
-          background: #f9fafb;
+          background: var(--bg-hover);
         }
 
         .ai-btn {
@@ -2143,7 +2145,7 @@ function MenuListContent() {
 
         .progress-bar-container {
           height: 12px;
-          background: #e5e7eb;
+          background: var(--border);
           border-radius: 6px;
           overflow: hidden;
           margin-top: 16px;

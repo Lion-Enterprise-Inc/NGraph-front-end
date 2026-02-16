@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import AdminLayout from '../../../components/admin/AdminLayout'
 import { useAuth } from '../../../contexts/AuthContext'
+import { useToast } from '../../../components/admin/Toast'
 
 type PlanType = 'free' | 'light' | 'business' | 'pro'
 
@@ -16,6 +17,7 @@ export default function AccountPage() {
   const [currentPlan, setCurrentPlan] = useState<PlanType>('business')
   const [isLoading, setIsLoading] = useState(true)
   const [showPlanManagement, setShowPlanManagement] = useState(false)
+  const toast = useToast()
 
   useEffect(() => {
     const savedEmail = localStorage.getItem('admin_user_email')
@@ -26,31 +28,31 @@ export default function AccountPage() {
 
   const handleUpdateEmail = () => {
     localStorage.setItem('admin_user_email', email)
-    alert('メールアドレスを保存しました')
+    toast('success', 'メールアドレスを保存しました')
   }
 
   const handleUpdatePassword = () => {
     if (!currentPassword || !newPassword) {
-      alert('パスワードを入力してください')
+      toast('warning', 'パスワードを入力してください')
       return
     }
-    alert('パスワードを変更しました')
+    toast('success', 'パスワードを変更しました')
     setCurrentPassword('')
     setNewPassword('')
   }
 
   const handleSelectPlan = (plan: PlanType) => {
     if (plan === 'pro') {
-      alert('Proプランは準備中です')
+      toast('info', 'Proプランは準備中です')
       return
     }
     if (plan === currentPlan) {
-      alert('現在ご利用中のプランです')
+      toast('info', '現在ご利用中のプランです')
       return
     }
     if (confirm(`${getPlanName(plan)}に変更しますか？`)) {
       setCurrentPlan(plan)
-      alert(`${getPlanName(plan)}に変更しました`)
+      toast('success', `${getPlanName(plan)}に変更しました`)
     }
   }
 
@@ -248,17 +250,17 @@ export default function AccountPage() {
             margin-bottom: 16px;
           }
           .breadcrumb-link {
-            color: #667eea;
+            color: var(--primary);
             cursor: pointer;
           }
           .breadcrumb-link:hover {
             text-decoration: underline;
           }
           .breadcrumb .separator {
-            color: #cbd5e1;
+            color: var(--muted);
           }
           .breadcrumb .current {
-            color: #374151;
+            color: var(--text);
             font-weight: 500;
           }
 
@@ -269,12 +271,12 @@ export default function AccountPage() {
           .page-title {
             font-size: 24px;
             font-weight: 700;
-            color: #1f2937;
+            color: var(--text);
             margin: 0 0 6px 0;
           }
           .page-description {
             font-size: 14px;
-            color: #6b7280;
+            color: var(--muted);
             margin: 0;
           }
 
@@ -334,8 +336,8 @@ export default function AccountPage() {
           }
 
           .plan-card {
-            background: white;
-            border: 1px solid #e5e7eb;
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
             border-radius: 12px;
             position: relative;
             display: flex;
@@ -343,11 +345,11 @@ export default function AccountPage() {
             overflow: hidden;
           }
           .plan-card.active {
-            border: 2px solid #667eea;
+            border: 2px solid var(--primary);
           }
           .plan-card.recommended {
-            border: 2px solid #667eea;
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+            border: 2px solid var(--primary);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
           }
           .plan-card.coming-soon {
             opacity: 0.7;
@@ -378,23 +380,23 @@ export default function AccountPage() {
 
           .plan-header {
             padding: 16px;
-            border-bottom: 1px solid #e5e7eb;
+            border-bottom: 1px solid var(--border);
           }
           .plan-name {
             font-size: 16px;
             font-weight: 700;
             margin: 0 0 8px 0;
-            color: #1f2937;
+            color: var(--text);
           }
           .plan-price {
             font-size: 24px;
             font-weight: 700;
-            color: #1f2937;
+            color: var(--text);
             margin-bottom: 2px;
           }
           .plan-period {
             font-size: 12px;
-            color: #6b7280;
+            color: var(--muted);
           }
 
           .plan-body {
@@ -404,7 +406,7 @@ export default function AccountPage() {
             flex: 1;
           }
           .plan-desc {
-            color: #6b7280;
+            color: var(--muted);
             margin: 0 0 12px 0;
             font-size: 12px;
             line-height: 1.5;
@@ -416,19 +418,19 @@ export default function AccountPage() {
           .features-label {
             font-weight: 600;
             margin-bottom: 6px;
-            color: #374151;
+            color: var(--text-body);
             font-size: 12px;
           }
           .feature-text {
             font-size: 11px;
-            color: #6b7280;
+            color: var(--muted);
             line-height: 1.6;
           }
           .plan-features ul {
             margin: 0;
             padding-left: 16px;
             font-size: 11px;
-            color: #6b7280;
+            color: var(--muted);
             line-height: 1.6;
           }
 
@@ -443,31 +445,31 @@ export default function AccountPage() {
             margin-top: auto;
           }
           .plan-select-btn.primary {
-            background: #667eea;
+            background: var(--primary);
             color: white;
             border: none;
           }
           .plan-select-btn.primary:hover {
-            background: #5a67d8;
+            background: #2563EB;
           }
           .plan-select-btn.secondary {
-            background: white;
-            color: #374151;
-            border: 1px solid #e5e7eb;
+            background: var(--bg-hover);
+            color: var(--text-body);
+            border: 1px solid var(--border-strong);
           }
           .plan-select-btn.secondary:hover {
-            background: #f9fafb;
-            border-color: #667eea;
-            color: #667eea;
+            background: var(--border-strong);
+            border-color: var(--primary);
+            color: var(--primary);
           }
           .plan-select-btn.selected {
-            background: #667eea;
+            background: var(--primary);
             color: white;
             border: none;
           }
           .plan-select-btn.disabled {
-            background: #cbd5e0;
-            color: #64748b;
+            background: var(--bg-hover);
+            color: var(--muted);
             border: none;
             cursor: not-allowed;
           }
@@ -561,28 +563,29 @@ export default function AccountPage() {
 
       <style jsx>{`
         .account-card {
-          background: white;
+          background: var(--bg-surface);
           border-radius: 12px;
           padding: 24px;
-          box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+          box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+          border: 1px solid var(--border);
         }
         .card-title {
           margin: 0 0 24px 0;
           font-size: 20px;
           font-weight: 600;
-          color: #333;
+          color: var(--text);
         }
 
         .form-section {
           margin-bottom: 20px;
           padding-bottom: 20px;
-          border-bottom: 1px solid #f0f0f0;
+          border-bottom: 1px solid var(--border);
         }
         .form-label {
           display: block;
           font-size: 13px;
           font-weight: 600;
-          color: #333;
+          color: var(--text-body);
           margin-bottom: 8px;
         }
         .input-row {
@@ -594,13 +597,15 @@ export default function AccountPage() {
           flex: 1;
           max-width: 400px;
           padding: 8px 12px;
-          border: 1px solid #e0e0e0;
+          border: 1px solid var(--border-strong);
+          background: var(--bg-input);
+          color: var(--text);
           border-radius: 6px;
           font-size: 14px;
         }
         .form-input:focus {
           outline: none;
-          border-color: #667eea;
+          border-color: var(--primary);
         }
 
         .password-inputs {
@@ -618,7 +623,7 @@ export default function AccountPage() {
 
         .btn-primary {
           padding: 10px 16px;
-          background: #667eea;
+          background: var(--primary);
           color: white;
           border: none;
           border-radius: 6px;
@@ -628,7 +633,7 @@ export default function AccountPage() {
           transition: background 0.2s;
         }
         .btn-primary:hover {
-          background: #5a67d8;
+          background: #2563EB;
         }
         .btn-small {
           padding: 6px 12px;
@@ -636,9 +641,9 @@ export default function AccountPage() {
         }
         .btn-secondary {
           padding: 6px 12px;
-          background: white;
-          color: #374151;
-          border: 1px solid #e5e7eb;
+          background: var(--bg-hover);
+          color: var(--text-body);
+          border: 1px solid var(--border-strong);
           border-radius: 6px;
           font-size: 12px;
           font-weight: 500;
@@ -646,14 +651,14 @@ export default function AccountPage() {
           transition: all 0.2s;
         }
         .btn-secondary:hover {
-          background: #f9fafb;
-          border-color: #667eea;
-          color: #667eea;
+          background: var(--border-strong);
+          border-color: var(--primary);
+          color: var(--primary);
         }
 
         .plan-section {
           padding-top: 20px;
-          border-top: 1px solid #f0f0f0;
+          border-top: 1px solid var(--border);
           border-bottom: none;
         }
         .plan-header-row {
@@ -677,24 +682,24 @@ export default function AccountPage() {
         }
         .info-label {
           font-size: 11px;
-          color: #666;
+          color: var(--muted);
         }
         .info-value {
           font-size: 14px;
           font-weight: 600;
-          color: #333;
+          color: var(--text);
         }
 
         .qr-section {
           margin-top: 32px;
-          border-top: 1px solid #f0f0f0;
+          border-top: 1px solid var(--border);
           padding-top: 24px;
         }
         .qr-card {
-          background: linear-gradient(135deg, #eff6ff 0%, #e0f2fe 100%);
+          background: linear-gradient(135deg, rgba(59,130,246,0.08), rgba(6,182,212,0.08));
           border-radius: 12px;
           padding: 24px;
-          border: 1px solid #bfdbfe;
+          border: 1px solid rgba(59,130,246,0.2);
           display: flex;
           align-items: center;
           gap: 16px;
@@ -708,12 +713,12 @@ export default function AccountPage() {
           margin: 0 0 8px 0;
           font-size: 16px;
           font-weight: 600;
-          color: #1e3a8a;
+          color: #3B82F6;
         }
         .qr-desc {
           margin: 0;
           font-size: 13px;
-          color: #64748b;
+          color: var(--muted);
           line-height: 1.6;
         }
 

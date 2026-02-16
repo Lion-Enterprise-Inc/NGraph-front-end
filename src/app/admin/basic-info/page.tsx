@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation'
 import AdminLayout from '../../../components/admin/AdminLayout'
 import { apiClient, BUSINESS_TYPES } from '../../../services/api'
 import { useAuth } from '../../../contexts/AuthContext'
+import { useToast } from '../../../components/admin/Toast'
 
 type TabType = 'basic'
 
@@ -58,17 +59,18 @@ function BasicInfoContent() {
   const [logoPreview, setLogoPreview] = useState<string>('')
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+  const toast = useToast()
   const ALLOWED_LOGO_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml', 'application/pdf']
 
   const handleLogoFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
       if (!ALLOWED_LOGO_TYPES.includes(file.type)) {
-        alert('対応形式: JPG, PNG, GIF, WebP, SVG, PDF')
+        toast('warning', '対応形式: JPG, PNG, GIF, WebP, SVG, PDF')
         return
       }
       if (file.size > 5 * 1024 * 1024) {
-        alert('ファイルサイズは5MB以下にしてください')
+        toast('warning', 'ファイルサイズは5MB以下にしてください')
         return
       }
       setLogoFile(file)
@@ -154,7 +156,7 @@ function BasicInfoContent() {
 
   const handleSave = async () => {
     if (!restaurant) {
-      alert('❌ レストラン情報が読み込まれていません')
+      toast('error', 'レストラン情報が読み込まれていません')
       return
     }
 
@@ -225,10 +227,10 @@ function BasicInfoContent() {
         await fetchRestaurantData(user.uid)
       }
       
-      alert('✅ レストラン情報を保存しました！')
+      toast('success', 'レストラン情報を保存しました')
     } catch (error) {
       console.error('Failed to save restaurant:', error)
-      alert(`❌ 保存に失敗しました: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      toast('error', `保存に失敗しました: ${error instanceof Error ? error.message : 'Unknown error'}`)
     } finally {
       setIsSaving(false)
     }
@@ -239,7 +241,7 @@ function BasicInfoContent() {
 
     const urls = [formData.menuScrapingUrl, formData.officialWebsite, formData.tabelogUrl, formData.gurunaviUrl, formData.instagramUrl].filter(u => u.trim())
     if (urls.length === 0) {
-      alert('URLを1つ以上入力してください')
+      toast('warning', 'URLを1つ以上入力してください')
       return
     }
 
@@ -287,11 +289,11 @@ function BasicInfoContent() {
           googleBusinessProfile: info.google_business_profile || prev.googleBusinessProfile,
         }))
 
-        alert(`情報を取得しました。内容を確認して保存してください。${withMenus && data.result?.menu_scrape ? `\nメニュー: ${data.result.menu_scrape.items_saved || 0}件登録` : ''}`)
+        toast('success', `情報を取得しました。内容を確認して保存してください。${withMenus && data.result?.menu_scrape ? ` メニュー: ${data.result.menu_scrape.items_saved || 0}件登録` : ''}`)
       }
     } catch (error) {
       console.error('Scrape failed:', error)
-      alert(`情報の取得に失敗しました: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      toast('error', `情報の取得に失敗しました: ${error instanceof Error ? error.message : 'Unknown error'}`)
     } finally {
       setIsScraping(false)
     }
@@ -347,11 +349,11 @@ function BasicInfoContent() {
           googleBusinessProfile: info.google_business_profile || prev.googleBusinessProfile,
         }))
 
-        alert(`Web検索で情報を取得しました。内容を確認して保存してください。${withMenus && data.result?.menu_scrape ? `\nメニュー: ${data.result.menu_scrape.items_saved || 0}件登録` : ''}`)
+        toast('success', `Web検索で情報を取得しました。内容を確認して保存してください。${withMenus && data.result?.menu_scrape ? ` メニュー: ${data.result.menu_scrape.items_saved || 0}件登録` : ''}`)
       }
     } catch (error) {
       console.error('Search failed:', error)
-      alert(`情報の検索に失敗しました: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      toast('error', `情報の検索に失敗しました: ${error instanceof Error ? error.message : 'Unknown error'}`)
     } finally {
       setIsSearching(false)
     }
@@ -380,12 +382,12 @@ function BasicInfoContent() {
           {restaurantLoading ? (
             <div className="inner-card" style={{ textAlign: 'center', padding: '40px' }}>
               <div style={{ fontSize: '18px', marginBottom: '16px' }}>🏪 レストラン情報を読み込み中...</div>
-              <div style={{ color: '#64748b' }}>情報を取得しています</div>
+              <div style={{ color: '#94A3B8' }}>情報を取得しています</div>
             </div>
           ) : restaurantError ? (
             <div className="inner-card" style={{ textAlign: 'center', padding: '40px' }}>
               <div style={{ fontSize: '18px', marginBottom: '16px', color: '#dc2626' }}>❌ エラー</div>
-              <div style={{ color: '#64748b', marginBottom: '20px' }}>{restaurantError}</div>
+              <div style={{ color: '#94A3B8', marginBottom: '20px' }}>{restaurantError}</div>
               <button 
                 className="btn btn-primary" 
                 onClick={() => window.location.reload()}
@@ -496,7 +498,7 @@ function BasicInfoContent() {
               <div className="section-divider" />
 
               <div className="card-title">🔍 AI情報取得</div>
-              <p style={{ color: '#666', marginBottom: '16px', fontSize: '13px' }}>
+              <p style={{ color: '#94A3B8', marginBottom: '16px', fontSize: '13px' }}>
                 店名で検索すると、食べログ・Googleマップ・公式HPなどから情報を自動取得します
               </p>
               <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '20px' }}>
@@ -517,7 +519,7 @@ function BasicInfoContent() {
               </div>
 
               <details style={{ marginBottom: '16px' }}>
-                <summary style={{ cursor: 'pointer', color: '#666', fontSize: '13px' }}>URL指定で取得（従来方式）</summary>
+                <summary style={{ cursor: 'pointer', color: '#94A3B8', fontSize: '13px' }}>URL指定で取得（従来方式）</summary>
                 <div style={{ padding: '12px 0' }}>
                   <div className="form-group">
                     <label className="form-label">情報取得用URL</label>
@@ -620,7 +622,7 @@ function BasicInfoContent() {
         </div>
 
         {/* Global Save Button - Visible on all tabs */}
-        <div style={{ display: 'flex', justifyContent: 'center', marginTop: '20px', paddingTop: '20px', borderTop: '1px solid #e5e7eb' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', marginTop: '20px', paddingTop: '20px', borderTop: '1px solid var(--border)' }}>
           <button className="btn btn-primary" onClick={handleSave} disabled={isSaving} style={{ padding: '12px 24px', fontSize: '16px' }}>
             {isSaving ? '⏳ 保存中...' : '💾 すべての変更を保存'}
           </button>
@@ -661,16 +663,17 @@ function BasicInfoContent() {
 
       <style jsx>{`
         .card {
-          background: white;
+          background: var(--bg-surface);
           border-radius: 12px;
           padding: 20px;
-          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+          border: 1px solid var(--border);
         }
         .tab-nav {
           display: flex;
           gap: 8px;
           margin-bottom: 20px;
-          border-bottom: 1px solid #e5e7eb;
+          border-bottom: 1px solid var(--border);
           padding-bottom: 12px;
           flex-wrap: wrap;
         }
@@ -680,14 +683,14 @@ function BasicInfoContent() {
           background: transparent;
           font-size: 14px;
           font-weight: 500;
-          color: #64748b;
+          color: var(--muted);
           cursor: pointer;
           border-radius: 8px;
           transition: all 0.2s;
         }
         .tab-btn:hover {
-          background: #f1f5f9;
-          color: #334155;
+          background: var(--bg-hover);
+          color: var(--text);
         }
         .tab-btn.active {
           background: linear-gradient(135deg, #667eea, #764ba2);
@@ -698,14 +701,14 @@ function BasicInfoContent() {
         }
         .inner-card {
           padding: 20px;
-          border: 1px solid #e5e7eb;
+          border: 1px solid var(--border);
           border-radius: 12px;
         }
         .card-title {
           font-size: 16px;
           font-weight: 600;
           margin-bottom: 16px;
-          color: #1a1a1a;
+          color: var(--text);
         }
         .form-group {
           margin-bottom: 16px;
@@ -714,20 +717,22 @@ function BasicInfoContent() {
           display: block;
           margin-bottom: 6px;
           font-weight: 500;
-          color: #555;
+          color: var(--muted);
           font-size: 14px;
         }
         .form-input {
           width: 100%;
           padding: 10px;
-          border: 1px solid #e0e0e0;
+          border: 1px solid var(--border-strong);
           border-radius: 6px;
           font-size: 14px;
           transition: border 0.3s;
+          background: var(--bg-input);
+          color: var(--text);
         }
         .form-input:focus {
           outline: none;
-          border-color: #667eea;
+          border-color: var(--primary);
         }
         .btn {
           border: none;
@@ -747,12 +752,12 @@ function BasicInfoContent() {
           box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
         }
         .btn-secondary {
-          background: #f8f9fa;
-          color: #333;
-          border: 1px solid #e0e0e0;
+          background: var(--bg-hover);
+          color: var(--text);
+          border: 1px solid var(--border-strong);
         }
         .btn-secondary:hover {
-          background: #e9ecef;
+          background: var(--border-strong);
         }
         .upgrade-card {
           margin-top: 24px;
@@ -846,7 +851,7 @@ function BasicInfoContent() {
           }
         }
         .section-divider {
-          border-top: 1px solid #e5e7eb;
+          border-top: 1px solid var(--border);
           margin: 24px 0;
         }
         .logo-upload-section {

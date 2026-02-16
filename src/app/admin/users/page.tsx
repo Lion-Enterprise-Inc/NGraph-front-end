@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import AdminLayout from '../../../components/admin/AdminLayout'
+import { useToast } from '../../../components/admin/Toast'
 import { apiClient, TokenService } from '../../../services/api'
 
 type ApiUser = {
@@ -37,6 +38,7 @@ export default function UsersPage() {
     role: 'consumer' as 'consumer' | 'restaurant_owner' | 'platform_owner' | 'superadmin'
   })
   const [createErrors, setCreateErrors] = useState<{ email?: string; password?: string }>({})
+  const toast = useToast()
 
   // Fetch users from API
   const fetchUsers = async () => {
@@ -115,7 +117,7 @@ export default function UsersPage() {
       }) as { status_code: number; message: string; result: { email: string; role: string; is_validated: boolean } }
 
       if (response.status_code === 201) {
-        alert(`✅ ${response.message}\n\nユーザー: ${response.result.email}\n役割: ${response.result.role}`)
+        toast('success', `${response.message} ユーザー: ${response.result.email} 役割: ${response.result.role}`)
         setShowCreateModal(false)
         resetCreateForm()
         // Refresh user list
@@ -123,7 +125,7 @@ export default function UsersPage() {
       }
     } catch (error) {
       console.error('Failed to create user:', error)
-      alert(`❌ ユーザー作成に失敗しました: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      toast('error', `ユーザー作成に失敗しました: ${error instanceof Error ? error.message : 'Unknown error'}`)
     } finally {
       setIsSubmitting(false)
     }
@@ -141,7 +143,7 @@ export default function UsersPage() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'active':
-        return <span style={{ background: '#E8F5E9', color: '#2E7D32', padding: '4px 8px', borderRadius: '12px', fontSize: '12px', fontWeight: 600 }}>✅ 有効</span>
+        return <span style={{ background: 'rgba(16,185,129,0.1)', color: '#2E7D32', padding: '4px 8px', borderRadius: '12px', fontSize: '12px', fontWeight: 600 }}>✅ 有効</span>
       case 'inactive':
         return <span style={{ background: '#FFEBEE', color: '#C62828', padding: '4px 8px', borderRadius: '12px', fontSize: '12px', fontWeight: 600 }}>⛔ 無効</span>
       default:
@@ -152,15 +154,15 @@ export default function UsersPage() {
   const getRoleBadge = (role: string) => {
     switch (role) {
       case 'platform_owner':
-        return <span style={{ background: '#E3F2FD', color: '#1565C0', padding: '4px 8px', borderRadius: '12px', fontSize: '12px', fontWeight: 600 }}>👑 プラットフォームオーナー</span>
+        return <span style={{ background: 'rgba(59,130,246,0.1)', color: '#1565C0', padding: '4px 8px', borderRadius: '12px', fontSize: '12px', fontWeight: 600 }}>👑 プラットフォームオーナー</span>
       case 'restaurant_owner':
-        return <span style={{ background: '#E8F5E9', color: '#2E7D32', padding: '4px 8px', borderRadius: '12px', fontSize: '12px', fontWeight: 600 }}>🍽️ レストランオーナー</span>
+        return <span style={{ background: 'rgba(16,185,129,0.1)', color: '#2E7D32', padding: '4px 8px', borderRadius: '12px', fontSize: '12px', fontWeight: 600 }}>🍽️ レストランオーナー</span>
       case 'superadmin':
-        return <span style={{ background: '#FFF3E0', color: '#E65100', padding: '4px 8px', borderRadius: '12px', fontSize: '12px', fontWeight: 600 }}>👑 スーパー管理者</span>
+        return <span style={{ background: 'rgba(245,158,11,0.1)', color: '#E65100', padding: '4px 8px', borderRadius: '12px', fontSize: '12px', fontWeight: 600 }}>👑 スーパー管理者</span>
       case 'consumer':
-        return <span style={{ background: '#F3E5F5', color: '#7B1FA2', padding: '4px 8px', borderRadius: '12px', fontSize: '12px', fontWeight: 600 }}>👤 コンシューマー</span>
+        return <span style={{ background: 'rgba(139,92,246,0.1)', color: '#7B1FA2', padding: '4px 8px', borderRadius: '12px', fontSize: '12px', fontWeight: 600 }}>👤 コンシューマー</span>
       default:
-        return <span style={{ background: '#F5F5F5', color: '#666', padding: '4px 8px', borderRadius: '12px', fontSize: '12px', fontWeight: 600 }}>❓ 不明</span>
+        return <span style={{ background: '#F5F5F5', color: '#94A3B8', padding: '4px 8px', borderRadius: '12px', fontSize: '12px', fontWeight: 600 }}>❓ 不明</span>
     }
   }
 
@@ -176,7 +178,7 @@ export default function UsersPage() {
       <AdminLayout title="ユーザー管理">
         <div className="card" style={{ width: '100%', maxWidth: 'none', textAlign: 'center', padding: '60px' }}>
           <div style={{ fontSize: '18px', marginBottom: '16px' }}>🔄 読み込み中...</div>
-          <div style={{ color: '#64748b' }}>ユーザー情報を取得しています</div>
+          <div style={{ color: '#94A3B8' }}>ユーザー情報を取得しています</div>
         </div>
       </AdminLayout>
     )
@@ -187,7 +189,7 @@ export default function UsersPage() {
       <AdminLayout title="ユーザー管理">
         <div className="card" style={{ width: '100%', maxWidth: 'none', textAlign: 'center', padding: '60px' }}>
           <div style={{ fontSize: '18px', marginBottom: '16px', color: '#dc2626' }}>❌ エラー</div>
-          <div style={{ color: '#64748b', marginBottom: '20px' }}>{error}</div>
+          <div style={{ color: '#94A3B8', marginBottom: '20px' }}>{error}</div>
           <button 
             className="btn btn-primary" 
             onClick={() => window.location.reload()}
@@ -206,7 +208,7 @@ export default function UsersPage() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
           <div>
             <h2 className="card-title" style={{ margin: 0 }}>👥 ユーザー管理</h2>
-            <p style={{ margin: '8px 0 0', color: '#64748b', fontSize: '14px' }}>プラットフォームの全ユーザーを管理します</p>
+            <p style={{ margin: '8px 0 0', color: '#94A3B8', fontSize: '14px' }}>プラットフォームの全ユーザーを管理します</p>
           </div>
           <button 
             className="btn btn-primary" 
@@ -219,29 +221,29 @@ export default function UsersPage() {
 
         {/* Stats */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '16px', marginBottom: '20px' }}>
-          <div style={{ background: '#f8f9fa', padding: '16px', borderRadius: '12px', textAlign: 'center' }}>
+          <div style={{ background: '#1E293B', padding: '16px', borderRadius: '12px', textAlign: 'center' }}>
             <div style={{ fontSize: '28px', fontWeight: 700, color: '#667eea' }}>{users.length}</div>
-            <div style={{ fontSize: '13px', color: '#666' }}>総ユーザー数</div>
+            <div style={{ fontSize: '13px', color: '#94A3B8' }}>総ユーザー数</div>
           </div>
-          <div style={{ background: '#E3F2FD', padding: '16px', borderRadius: '12px', textAlign: 'center' }}>
+          <div style={{ background: 'rgba(59,130,246,0.1)', padding: '16px', borderRadius: '12px', textAlign: 'center' }}>
             <div style={{ fontSize: '28px', fontWeight: 700, color: '#1565C0' }}>{platformOwnerCount}</div>
-            <div style={{ fontSize: '13px', color: '#666' }}>プラットフォームオーナー</div>
+            <div style={{ fontSize: '13px', color: '#94A3B8' }}>プラットフォームオーナー</div>
           </div>
-          <div style={{ background: '#E8F5E9', padding: '16px', borderRadius: '12px', textAlign: 'center' }}>
+          <div style={{ background: 'rgba(16,185,129,0.1)', padding: '16px', borderRadius: '12px', textAlign: 'center' }}>
             <div style={{ fontSize: '28px', fontWeight: 700, color: '#2E7D32' }}>{restaurantOwnerCount}</div>
-            <div style={{ fontSize: '13px', color: '#666' }}>レストランオーナー</div>
+            <div style={{ fontSize: '13px', color: '#94A3B8' }}>レストランオーナー</div>
           </div>
-          <div style={{ background: '#F3E5F5', padding: '16px', borderRadius: '12px', textAlign: 'center' }}>
+          <div style={{ background: 'rgba(139,92,246,0.1)', padding: '16px', borderRadius: '12px', textAlign: 'center' }}>
             <div style={{ fontSize: '28px', fontWeight: 700, color: '#7B1FA2' }}>{consumerCount}</div>
-            <div style={{ fontSize: '13px', color: '#666' }}>コンシューマー</div>
+            <div style={{ fontSize: '13px', color: '#94A3B8' }}>コンシューマー</div>
           </div>
-          <div style={{ background: '#FFF3E0', padding: '16px', borderRadius: '12px', textAlign: 'center' }}>
+          <div style={{ background: 'rgba(245,158,11,0.1)', padding: '16px', borderRadius: '12px', textAlign: 'center' }}>
             <div style={{ fontSize: '28px', fontWeight: 700, color: '#E65100' }}>{superadminCount}</div>
-            <div style={{ fontSize: '13px', color: '#666' }}>スーパー管理者</div>
+            <div style={{ fontSize: '13px', color: '#94A3B8' }}>スーパー管理者</div>
           </div>
-          <div style={{ background: '#E8F5E9', padding: '16px', borderRadius: '12px', textAlign: 'center' }}>
+          <div style={{ background: 'rgba(16,185,129,0.1)', padding: '16px', borderRadius: '12px', textAlign: 'center' }}>
             <div style={{ fontSize: '28px', fontWeight: 700, color: '#2E7D32' }}>{activeCount}</div>
-            <div style={{ fontSize: '13px', color: '#666' }}>有効</div>
+            <div style={{ fontSize: '13px', color: '#94A3B8' }}>有効</div>
           </div>
         </div>
 
@@ -283,21 +285,21 @@ export default function UsersPage() {
         <div style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
-              <tr style={{ background: '#f8f9fa' }}>
-                <th style={{ padding: '12px', textAlign: 'left', borderBottom: '2px solid #e0e0e0', fontSize: '13px', fontWeight: 600 }}>ユーザー情報</th>
-                <th style={{ padding: '12px', textAlign: 'left', borderBottom: '2px solid #e0e0e0', fontSize: '13px', fontWeight: 600 }}>役割</th>
-                <th style={{ padding: '12px', textAlign: 'center', borderBottom: '2px solid #e0e0e0', fontSize: '13px', fontWeight: 600 }}>ステータス</th>
-                <th style={{ padding: '12px', textAlign: 'left', borderBottom: '2px solid #e0e0e0', fontSize: '13px', fontWeight: 600 }}>作成日</th>
-                <th style={{ padding: '12px', textAlign: 'left', borderBottom: '2px solid #e0e0e0', fontSize: '13px', fontWeight: 600 }}>最終更新</th>
-                <th style={{ padding: '12px', textAlign: 'center', borderBottom: '2px solid #e0e0e0', fontSize: '13px', fontWeight: 600 }}>操作</th>
+              <tr style={{ background: '#1E293B' }}>
+                <th style={{ padding: '12px', textAlign: 'left', borderBottom: '2px solid #1E293B', fontSize: '13px', fontWeight: 600 }}>ユーザー情報</th>
+                <th style={{ padding: '12px', textAlign: 'left', borderBottom: '2px solid #1E293B', fontSize: '13px', fontWeight: 600 }}>役割</th>
+                <th style={{ padding: '12px', textAlign: 'center', borderBottom: '2px solid #1E293B', fontSize: '13px', fontWeight: 600 }}>ステータス</th>
+                <th style={{ padding: '12px', textAlign: 'left', borderBottom: '2px solid #1E293B', fontSize: '13px', fontWeight: 600 }}>作成日</th>
+                <th style={{ padding: '12px', textAlign: 'left', borderBottom: '2px solid #1E293B', fontSize: '13px', fontWeight: 600 }}>最終更新</th>
+                <th style={{ padding: '12px', textAlign: 'center', borderBottom: '2px solid #1E293B', fontSize: '13px', fontWeight: 600 }}>操作</th>
               </tr>
             </thead>
             <tbody>
               {filteredUsers.map((user) => (
-                <tr key={user.id} style={{ borderBottom: '1px solid #f0f0f0' }}>
+                <tr key={user.id} style={{ borderBottom: '1px solid #1E293B' }}>
                   <td style={{ padding: '12px' }}>
                     <div style={{ fontWeight: 600, marginBottom: '4px' }}>{user.email}</div>
-                    <div style={{ fontSize: '12px', color: '#999' }}>ID: {user.id}</div>
+                    <div style={{ fontSize: '12px', color: '#64748B' }}>ID: {user.id}</div>
                   </td>
                   <td style={{ padding: '12px' }}>
                     {getRoleBadge(user.role)}
@@ -305,10 +307,10 @@ export default function UsersPage() {
                   <td style={{ padding: '12px', textAlign: 'center' }}>
                     {getStatusBadge(user.status)}
                   </td>
-                  <td style={{ padding: '12px', fontSize: '13px', color: '#666' }}>
+                  <td style={{ padding: '12px', fontSize: '13px', color: '#94A3B8' }}>
                     {user.createdAt}
                   </td>
-                  <td style={{ padding: '12px', fontSize: '13px', color: '#666' }}>
+                  <td style={{ padding: '12px', fontSize: '13px', color: '#94A3B8' }}>
                     {user.lastLogin}
                   </td>
                   <td style={{ padding: '12px' }}>
@@ -357,7 +359,7 @@ export default function UsersPage() {
         </div>
 
         {filteredUsers.length === 0 && (
-          <div style={{ textAlign: 'center', padding: '40px', color: '#666' }}>
+          <div style={{ textAlign: 'center', padding: '40px', color: '#94A3B8' }}>
             該当するユーザーが見つかりません
           </div>
         )}
@@ -374,7 +376,7 @@ export default function UsersPage() {
             left: 0,
             right: 0,
             bottom: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            backgroundColor: 'rgba(0, 0, 0, 0.7)',
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
@@ -384,7 +386,7 @@ export default function UsersPage() {
           <div 
             className="modal-content"
             style={{
-              background: 'white',
+              background: '#111827',
               borderRadius: '12px',
               padding: '24px',
               maxWidth: '500px',
@@ -394,10 +396,10 @@ export default function UsersPage() {
             }}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-              <h2 style={{ margin: 0, fontSize: '20px', fontWeight: 600 }}>➕ 新規ユーザー作成</h2>
+              <h2 style={{ margin: 0, fontSize: '20px', fontWeight: 600, color: '#F8FAFC' }}>➕ 新規ユーザー作成</h2>
               <button 
                 onClick={() => setShowCreateModal(false)}
-                style={{ background: 'none', border: 'none', fontSize: '24px', cursor: 'pointer', color: '#666' }}
+                style={{ background: 'none', border: 'none', fontSize: '24px', cursor: 'pointer', color: '#94A3B8' }}
               >
                 ×
               </button>
@@ -469,16 +471,17 @@ export default function UsersPage() {
 
       <style jsx>{`
         .card {
-          background: white;
+          background: var(--bg-surface);
           border-radius: 12px;
           padding: 24px;
-          box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+          box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+          border: 1px solid var(--border);
         }
 
         .card-title {
           font-size: 18px;
           font-weight: 600;
-          color: #1a1a1a;
+          color: var(--text);
         }
 
         .form-group {
@@ -489,14 +492,16 @@ export default function UsersPage() {
           display: block;
           font-size: 13px;
           font-weight: 600;
-          color: #333;
+          color: var(--text-body);
           margin-bottom: 6px;
         }
 
         .form-input {
           width: 100%;
           padding: 10px 12px;
-          border: 1px solid #e0e0e0;
+          border: 1px solid var(--border-strong);
+          background: var(--bg-input);
+          color: var(--text);
           border-radius: 8px;
           font-size: 14px;
           transition: border-color 0.2s;
@@ -504,7 +509,7 @@ export default function UsersPage() {
 
         .form-input:focus {
           outline: none;
-          border-color: #667eea;
+          border-color: var(--primary);
         }
 
         .btn {
@@ -528,13 +533,13 @@ export default function UsersPage() {
         }
 
         .btn-secondary {
-          background: #f8f9fa;
-          color: #333;
-          border: 1px solid #e0e0e0;
+          background: var(--bg-hover);
+          color: var(--text);
+          border: 1px solid var(--border-strong);
         }
 
         .btn-secondary:hover {
-          background: #e9ecef;
+          background: var(--border-strong);
         }
 
         .btn-small {
@@ -543,7 +548,7 @@ export default function UsersPage() {
         }
 
         table tr:hover {
-          background: #f8f9fa;
+          background: var(--bg-hover);
         }
       `}</style>
     </AdminLayout>

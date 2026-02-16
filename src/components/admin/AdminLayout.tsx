@@ -3,6 +3,7 @@
 import React, { useState, ReactNode, useEffect } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { TokenService, AuthApi, User } from '../../services/api'
+import { useToast } from './Toast'
 
 type NavItem = { key: string; label: string; icon: string; to: string; locked?: boolean }
 
@@ -17,6 +18,7 @@ export default function AdminLayout({ children, title }: Props) {
   const [mounted, setMounted] = useState(false)
   const pathname = usePathname()
   const router = useRouter()
+  const toast = useToast()
 
   useEffect(() => {
     // Check for JWT token and user data
@@ -59,7 +61,7 @@ export default function AdminLayout({ children, title }: Props) {
   const handleNavClick = (e: React.MouseEvent, item: NavItem) => {
     e.preventDefault()
     if (item.locked) {
-      alert('この機能はビジネスプラン以上で利用可能です')
+      toast('warning', 'この機能はビジネスプラン以上で利用可能です')
       return
     }
     setSidebarOpen(false)
@@ -104,18 +106,18 @@ export default function AdminLayout({ children, title }: Props) {
         flexDirection: 'column',
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: '#F8FAFC',
+        backgroundColor: '#0B1121',
         zIndex: 9999
       }}>
         <div style={{
           width: '48px',
           height: '48px',
-          border: '3px solid #E5E7EB',
-          borderTopColor: '#1f2937',
+          border: '3px solid #334155',
+          borderTopColor: '#3B82F6',
           borderRadius: '50%',
           animation: 'spin 1s linear infinite'
         }} />
-        <div style={{ marginTop: '16px', color: '#64748B', fontSize: '14px' }}>読み込み中...</div>
+        <div style={{ marginTop: '16px', color: '#94A3B8', fontSize: '14px' }}>読み込み中...</div>
         <style>{`
           @keyframes spin {
             to { transform: rotate(360deg); }
@@ -129,12 +131,21 @@ export default function AdminLayout({ children, title }: Props) {
     <>
       <style jsx global>{`
         :root {
-          --bg-page: #F8FAFC;
-          --bg-surface: #FFFFFF;
-          --text: #0F172A;
-          --muted: #64748B;
-          --border: #E5E7EB;
-          --primary: #2563EB;
+          --bg-page: #0B1121;
+          --bg-surface: #111827;
+          --bg-hover: #1E293B;
+          --bg-input: #0F172A;
+          --text: #F8FAFC;
+          --text-body: #E2E8F0;
+          --muted: #94A3B8;
+          --border: #1E293B;
+          --border-strong: #334155;
+          --primary: #3B82F6;
+          --accent-cyan: #06B6D4;
+          --accent-purple: #8B5CF6;
+          --success: #10B981;
+          --error: #EF4444;
+          --warning: #F59E0B;
           --radius: 12px;
           --space-2: 12px;
           --space-3: 16px;
@@ -143,14 +154,14 @@ export default function AdminLayout({ children, title }: Props) {
           --space-6: 32px;
           --sidebar-w: 260px;
           --sidebar-w-compact: 72px;
-          --color-primary: #2563EB;
-          --color-gray-50: #F8FAFC;
-          --color-gray-200: #E5E7EB;
-          --color-gray-300: #D1D5DB;
-          --color-gray-500: #6B7280;
-          --color-gray-600: #4B5563;
-          --color-gray-700: #64748B;
-          --color-gray-900: #0F172A;
+          --color-primary: #3B82F6;
+          --color-gray-50: #1E293B;
+          --color-gray-200: #1E293B;
+          --color-gray-300: #334155;
+          --color-gray-500: #94A3B8;
+          --color-gray-600: #94A3B8;
+          --color-gray-700: #94A3B8;
+          --color-gray-900: #F8FAFC;
         }
 
         * {
@@ -164,6 +175,45 @@ export default function AdminLayout({ children, title }: Props) {
           background: var(--bg-page);
           min-height: 100vh;
           color: var(--text);
+        }
+
+        /* Global dark overrides for form elements in admin */
+        .app-shell input,
+        .app-shell select,
+        .app-shell textarea {
+          background: var(--bg-input) !important;
+          color: var(--text) !important;
+          border-color: var(--border-strong) !important;
+        }
+        .app-shell input::placeholder,
+        .app-shell textarea::placeholder {
+          color: var(--muted) !important;
+        }
+        .app-shell input:focus,
+        .app-shell select:focus,
+        .app-shell textarea:focus {
+          border-color: var(--primary) !important;
+          outline: none;
+          box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2) !important;
+        }
+        .app-shell option {
+          background: var(--bg-surface);
+          color: var(--text);
+        }
+        .app-shell table {
+          border-color: var(--border) !important;
+        }
+        .app-shell th {
+          background: var(--bg-hover) !important;
+          color: var(--muted) !important;
+          border-color: var(--border) !important;
+        }
+        .app-shell td {
+          border-color: var(--border) !important;
+          color: var(--text-body) !important;
+        }
+        .app-shell tr:hover td {
+          background: var(--bg-hover) !important;
         }
       `}</style>
 
@@ -252,6 +302,8 @@ export default function AdminLayout({ children, title }: Props) {
           display: grid;
           grid-template-columns: var(--sidebar-w) 1fr;
           min-height: 100dvh;
+          background: var(--bg-page);
+          color: var(--text);
         }
 
         .overlay {
@@ -285,15 +337,19 @@ export default function AdminLayout({ children, title }: Props) {
 
         .brand-text {
           font-size: 20px;
-          color: var(--color-gray-900);
+          background: linear-gradient(135deg, #3B82F6, #06B6D4);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
         }
 
         .user-type-badge {
           text-align: center;
           padding: 10px 12px;
           margin: 8px 0 16px;
-          background: ${userType === 'store' ? 'linear-gradient(135deg, #dcfce7, #bbf7d0)' : 'linear-gradient(135deg, #dbeafe, #bfdbfe)'};
-          color: ${userType === 'store' ? '#166534' : '#1e40af'};
+          background: ${userType === 'store' ? 'linear-gradient(135deg, rgba(16,185,129,0.15), rgba(6,182,212,0.1))' : 'linear-gradient(135deg, rgba(59,130,246,0.15), rgba(139,92,246,0.1))'};
+          color: ${userType === 'store' ? '#10B981' : '#3B82F6'};
+          border: 1px solid ${userType === 'store' ? 'rgba(16,185,129,0.2)' : 'rgba(59,130,246,0.2)'};
           border-radius: 10px;
           font-weight: 600;
           font-size: 13px;
@@ -319,28 +375,28 @@ export default function AdminLayout({ children, title }: Props) {
         }
 
         .nav-link:hover {
-          background: #F1F5F9;
+          background: var(--bg-hover);
         }
 
         .nav-link.active {
-          background: #E8F0FF;
-          color: #1E40AF;
+          background: rgba(59, 130, 246, 0.1);
+          color: #3B82F6;
           font-weight: 600;
-          outline: 1px solid #BFDBFE;
+          outline: 1px solid rgba(59, 130, 246, 0.3);
         }
 
         .nav-link.locked {
-          opacity: 0.6;
-          color: #888;
-          background: #f5f5f5;
+          opacity: 0.4;
+          color: var(--muted);
+          background: transparent;
         }
 
         .nav-link.locked:hover {
-          background: #f0f0f0;
+          background: var(--bg-hover);
         }
 
         .nav-link.locked .label {
-          color: #888;
+          color: var(--muted);
           opacity: 0.8;
           font-weight: 400;
         }
@@ -378,7 +434,7 @@ export default function AdminLayout({ children, title }: Props) {
 
         .user-info {
           padding: 12px;
-          background: rgba(255, 255, 255, 0.5);
+          background: rgba(255, 255, 255, 0.03);
           border-radius: 8px;
           margin-bottom: 12px;
         }
@@ -545,7 +601,7 @@ export default function AdminLayout({ children, title }: Props) {
             display: block;
             position: fixed;
             inset: 0;
-            background: rgba(0, 0, 0, 0.5);
+            background: rgba(0, 0, 0, 0.7);
             z-index: 99;
           }
 

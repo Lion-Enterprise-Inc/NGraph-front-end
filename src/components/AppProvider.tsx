@@ -12,6 +12,7 @@ import LanguageModal from "./LanguageModal";
 import HistoryDrawer from "./HistoryDrawer";
 import { getUiCopy } from "../i18n/uiCopy";
 import { AuthProvider } from "../contexts/AuthContext";
+import { ToastProvider } from "./admin/Toast";
 
 type PendingAttachment = {
   file: File;
@@ -108,6 +109,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthProvider>
+      <ToastProvider>
       <AppContext.Provider
         value={{
           language,
@@ -135,6 +137,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           items={historyItems}
         />
       </AppContext.Provider>
+      </ToastProvider>
     </AuthProvider>
   );
 }

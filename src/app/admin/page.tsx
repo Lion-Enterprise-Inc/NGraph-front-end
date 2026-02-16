@@ -61,40 +61,40 @@ function StoreDashboard() {
 
         {restaurantLoading ? (
           <div className="card" style={{ textAlign: 'center', padding: '40px' }}>
-            <div style={{ fontSize: '16px', color: '#64748b' }}>読み込み中...</div>
+            <div style={{ fontSize: '16px', color: '#94A3B8' }}>読み込み中...</div>
           </div>
         ) : restaurantError ? (
           <div className="card" style={{ textAlign: 'center', padding: '40px' }}>
             <div style={{ fontSize: '16px', marginBottom: '16px', color: '#dc2626' }}>エラー</div>
-            <div style={{ color: '#64748b' }}>{restaurantError}</div>
+            <div style={{ color: '#94A3B8' }}>{restaurantError}</div>
           </div>
         ) : restaurant ? (
           <>
             <div className="card" style={{ marginBottom: '16px' }}>
               <div className="card-title">レストラン情報</div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '16px' }}>
-                <div style={{ padding: '16px', background: '#f8f9fa', borderRadius: '8px' }}>
-                  <div style={{ fontSize: '14px', color: '#666', marginBottom: '4px' }}>レストラン名</div>
-                  <div style={{ fontSize: '18px', fontWeight: 600, color: '#333' }}>{restaurant.name || '未設定'}</div>
+                <div style={{ padding: '16px', background: '#1E293B', borderRadius: '8px' }}>
+                  <div style={{ fontSize: '14px', color: '#94A3B8', marginBottom: '4px' }}>レストラン名</div>
+                  <div style={{ fontSize: '18px', fontWeight: 600, color: '#F8FAFC' }}>{restaurant.name || '未設定'}</div>
                 </div>
-                <div style={{ padding: '16px', background: '#f8f9fa', borderRadius: '8px' }}>
-                  <div style={{ fontSize: '14px', color: '#666', marginBottom: '4px' }}>登録メニュー数</div>
+                <div style={{ padding: '16px', background: '#1E293B', borderRadius: '8px' }}>
+                  <div style={{ fontSize: '14px', color: '#94A3B8', marginBottom: '4px' }}>登録メニュー数</div>
                   <div style={{ fontSize: '18px', fontWeight: 600, color: '#667eea' }}>{menuCount !== null ? menuCount : '-'}</div>
                 </div>
-                <div style={{ padding: '16px', background: '#f8f9fa', borderRadius: '8px' }}>
-                  <div style={{ fontSize: '14px', color: '#666', marginBottom: '4px' }}>電話番号</div>
-                  <div style={{ fontSize: '16px', fontWeight: 600, color: '#333' }}>{restaurant.phone_number || '未設定'}</div>
+                <div style={{ padding: '16px', background: '#1E293B', borderRadius: '8px' }}>
+                  <div style={{ fontSize: '14px', color: '#94A3B8', marginBottom: '4px' }}>電話番号</div>
+                  <div style={{ fontSize: '16px', fontWeight: 600, color: '#F8FAFC' }}>{restaurant.phone_number || '未設定'}</div>
                 </div>
-                <div style={{ padding: '16px', background: '#f8f9fa', borderRadius: '8px' }}>
-                  <div style={{ fontSize: '14px', color: '#666', marginBottom: '4px' }}>住所</div>
-                  <div style={{ fontSize: '14px', fontWeight: 600, color: '#333', lineHeight: 1.4 }}>{restaurant.address || '未設定'}</div>
+                <div style={{ padding: '16px', background: '#1E293B', borderRadius: '8px' }}>
+                  <div style={{ fontSize: '14px', color: '#94A3B8', marginBottom: '4px' }}>住所</div>
+                  <div style={{ fontSize: '14px', fontWeight: 600, color: '#F8FAFC', lineHeight: 1.4 }}>{restaurant.address || '未設定'}</div>
                 </div>
-                <div style={{ padding: '16px', background: '#f8f9fa', borderRadius: '8px' }}>
-                  <div style={{ fontSize: '14px', color: '#666', marginBottom: '4px' }}>ステータス</div>
+                <div style={{ padding: '16px', background: '#1E293B', borderRadius: '8px' }}>
+                  <div style={{ fontSize: '14px', color: '#94A3B8', marginBottom: '4px' }}>ステータス</div>
                   <div style={{ fontSize: '16px', fontWeight: 600 }}>
                     <span style={{
-                      background: restaurant.is_active ? '#E8F5E9' : '#FFEBEE',
-                      color: restaurant.is_active ? '#2E7D32' : '#C62828',
+                      background: restaurant.is_active ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)',
+                      color: restaurant.is_active ? '#10B981' : '#EF4444',
                       padding: '4px 8px',
                       borderRadius: '12px',
                       fontSize: '12px'
@@ -110,7 +110,7 @@ function StoreDashboard() {
               <div className="card-title">集客効果</div>
               <div className="dashboard-metrics" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px', width: '100%', maxWidth: 'none' }}>
                 <div className="stat-card" style={{
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
                   textAlign: 'center',
                   padding: '16px',
                   minHeight: '160px',
@@ -119,13 +119,13 @@ function StoreDashboard() {
                   justifyContent: 'flex-start',
                   alignItems: 'center',
                   borderRadius: '12px',
-                  border: '1px solid #f0f0f0'
+                  border: '1px solid #1E293B'
                 }}>
-                  <div className="stat-label" style={{ fontSize: '18px', fontWeight: 600, color: '#1f2937', marginBottom: '16px' }}>QRスキャン数</div>
+                  <div className="stat-label" style={{ fontSize: '18px', fontWeight: 600, color: '#F8FAFC', marginBottom: '16px' }}>QRスキャン数</div>
                   <div className="stat-value" style={{ fontSize: '42px', fontWeight: 700, color: '#667eea', margin: '12px 0' }}>0</div>
                 </div>
                 <div className="stat-card" style={{
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
                   textAlign: 'center',
                   padding: '16px',
                   minHeight: '160px',
@@ -134,9 +134,9 @@ function StoreDashboard() {
                   justifyContent: 'flex-start',
                   alignItems: 'center',
                   borderRadius: '12px',
-                  border: '1px solid #f0f0f0'
+                  border: '1px solid #1E293B'
                 }}>
-                  <div className="stat-label" style={{ fontSize: '18px', fontWeight: 600, color: '#1f2937', marginBottom: '16px' }}>質問数</div>
+                  <div className="stat-label" style={{ fontSize: '18px', fontWeight: 600, color: '#F8FAFC', marginBottom: '16px' }}>質問数</div>
                   <div className="stat-value" style={{ fontSize: '42px', fontWeight: 700, color: '#667eea', margin: '12px 0' }}>0</div>
                 </div>
               </div>
@@ -153,41 +153,42 @@ function StoreDashboard() {
         .section-title {
           font-size: 24px;
           font-weight: 700;
-          color: #333;
+          color: var(--text);
         }
 
         .card {
-          background: white;
+          background: var(--bg-surface);
           border-radius: 12px;
           padding: 20px;
-          box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+          box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+          border: 1px solid var(--border);
         }
 
         .card-title {
           font-size: 16px;
           font-weight: 600;
           margin-bottom: 16px;
-          color: #1a1a1a;
+          color: var(--text);
         }
 
         .stat-card {
-          background: white;
-          border: 1px solid #f0f0f0;
+          background: var(--bg-surface);
+          border: 1px solid var(--border);
           border-radius: 12px;
           padding: 20px;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+          box-shadow: 0 2px 8px rgba(0,0,0,0.2);
         }
 
         .stat-label {
           font-size: 14px;
-          color: #666;
+          color: var(--muted);
           margin-bottom: 8px;
         }
 
         .stat-value {
           font-size: 32px;
           font-weight: 700;
-          color: #1a1a1a;
+          color: var(--text);
         }
 
         @media (max-width: 768px) {
@@ -224,7 +225,7 @@ function AdminDashboard() {
   if (loading) {
     return (
       <div style={{ textAlign: 'center', padding: '60px' }}>
-        <div style={{ color: '#64748b', fontSize: '16px' }}>統計情報を読み込み中...</div>
+        <div style={{ color: '#94A3B8', fontSize: '16px' }}>統計情報を読み込み中...</div>
       </div>
     )
   }
@@ -233,7 +234,7 @@ function AdminDashboard() {
     return (
       <div style={{ textAlign: 'center', padding: '60px' }}>
         <div style={{ color: '#dc2626', fontSize: '16px', marginBottom: '8px' }}>エラー</div>
-        <div style={{ color: '#64748b' }}>{error}</div>
+        <div style={{ color: '#94A3B8' }}>{error}</div>
       </div>
     )
   }
@@ -296,18 +297,19 @@ function AdminDashboard() {
 
       <style jsx>{`
         .card {
-          background: white;
+          background: var(--bg-surface);
           border-radius: 12px;
           padding: 20px;
           margin-bottom: 16px;
-          box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+          box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+          border: 1px solid var(--border);
         }
 
         .card-title {
           font-size: 16px;
           font-weight: 600;
           margin-bottom: 16px;
-          color: #1a1a1a;
+          color: var(--text);
         }
 
         .stats-grid {
@@ -317,24 +319,24 @@ function AdminDashboard() {
         }
 
         .stat-card {
-          background: white;
-          border: 1px solid #f0f0f0;
+          background: var(--bg-surface);
+          border: 1px solid var(--border);
           border-radius: 12px;
           padding: 20px;
           text-align: center;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+          box-shadow: 0 2px 8px rgba(0,0,0,0.2);
         }
 
         .stat-label {
           font-size: 14px;
-          color: #666;
+          color: var(--muted);
           margin-bottom: 8px;
         }
 
         .stat-value {
           font-size: 32px;
           font-weight: 700;
-          color: #1a1a1a;
+          color: var(--text);
         }
 
         @media (max-width: 768px) {
@@ -377,18 +379,18 @@ export default function AdminDashboardPage() {
         flexDirection: 'column',
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: '#F8FAFC',
+        backgroundColor: '#0B1121',
         zIndex: 9999
       }}>
         <div style={{
           width: '48px',
           height: '48px',
-          border: '3px solid #E5E7EB',
-          borderTopColor: '#2563EB',
+          border: '3px solid #334155',
+          borderTopColor: '#3B82F6',
           borderRadius: '50%',
           animation: 'spin 1s linear infinite'
         }} />
-        <div style={{ marginTop: '16px', color: '#64748B', fontSize: '14px' }}>読み込み中...</div>
+        <div style={{ marginTop: '16px', color: '#94A3B8', fontSize: '14px' }}>読み込み中...</div>
         <style>{`
           @keyframes spin {
             to { transform: rotate(360deg); }

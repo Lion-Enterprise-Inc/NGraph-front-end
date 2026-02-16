@@ -7,6 +7,7 @@ import AdminLayout from '../../../components/admin/AdminLayout'
 import { useAppContext } from '../../../components/AppProvider'
 import { useAuth } from '../../../contexts/AuthContext'
 import { getUiCopy } from '../../../i18n/uiCopy'
+import { useToast } from '../../../components/admin/Toast'
 
 export default function QRManagementPage() {
   const { language } = useAppContext()
@@ -19,6 +20,7 @@ export default function QRManagementPage() {
   const [isGenerating, setIsGenerating] = useState(false)
   const [copied, setCopied] = useState(false)
   const [slugInitialized, setSlugInitialized] = useState(false)
+  const toast = useToast()
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
   // Pre-fill restaurant slug for restaurant owners - only run once when auth is loaded
@@ -36,14 +38,14 @@ export default function QRManagementPage() {
 
   const generateQRCode = async () => {
     if (!restaurantSlug.trim()) {
-      alert('Please enter a restaurant slug')
+      toast('warning', 'Please enter a restaurant slug')
       return
     }
 
     // Validate slug format (letters, numbers, hyphens, and Unicode characters)
     const slugPattern = /^[\w\u3000-\u303f\u3040-\u309f\u30a0-\u30ff\uff00-\uff9f\u4e00-\u9faf\u3400-\u4dbf-]+$/
     if (!slugPattern.test(restaurantSlug.trim())) {
-      alert('Restaurant slug can only contain letters, numbers, hyphens, and Unicode characters')
+      toast('warning', 'Restaurant slug can only contain letters, numbers, hyphens, and Unicode characters')
       return
     }
 
@@ -68,7 +70,7 @@ export default function QRManagementPage() {
       setQrCodeDataUrl(dataUrl)
     } catch (error) {
       console.error('Error generating QR code:', error)
-      alert('Failed to generate QR code')
+      toast('error', 'Failed to generate QR code')
     } finally {
       setIsGenerating(false)
     }
@@ -106,13 +108,13 @@ export default function QRManagementPage() {
             <div style={{ 
               width: '40px', 
               height: '40px', 
-              border: '3px solid #e1e5e9', 
-              borderTopColor: '#10a37f', 
+              border: '3px solid #334155',
+              borderTopColor: '#3B82F6', 
               borderRadius: '50%', 
               animation: 'spin 1s linear infinite',
               margin: '0 auto 16px'
             }} />
-            <p style={{ color: '#666' }}>Loading...</p>
+            <p style={{ color: '#94A3B8' }}>Loading...</p>
             <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
           </div>
         </div>
@@ -142,7 +144,7 @@ export default function QRManagementPage() {
                 placeholder="e.g., fc-restaurant"
                 className="qr-input"
                 readOnly={!!user?.restaurant_slug}
-                style={user?.restaurant_slug ? { backgroundColor: '#f8f9fa', cursor: 'not-allowed' } : {}}
+                style={user?.restaurant_slug ? { backgroundColor: '#1E293B', cursor: 'not-allowed' } : {}}
               />
               <button
                 onClick={generateQRCode}
@@ -216,21 +218,22 @@ export default function QRManagementPage() {
         .qr-management-header h1 {
           font-size: 28px;
           font-weight: 700;
-          color: #1a1a1a;
+          color: var(--text);
           margin: 0 0 8px 0;
         }
 
         .qr-management-header p {
           font-size: 16px;
-          color: #666;
+          color: var(--muted);
           margin: 0;
         }
 
         .qr-generator-section {
-          background: #ffffff;
+          background: var(--bg-surface);
           border-radius: 12px;
           padding: 32px;
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+          border: 1px solid var(--border);
         }
 
         .qr-input-section {
@@ -241,7 +244,7 @@ export default function QRManagementPage() {
           display: block;
           font-size: 14px;
           font-weight: 600;
-          color: #333;
+          color: var(--text-body);
           margin-bottom: 8px;
         }
 
@@ -254,7 +257,9 @@ export default function QRManagementPage() {
         .qr-input {
           flex: 1;
           padding: 12px 16px;
-          border: 2px solid #e1e5e9;
+          border: 2px solid var(--border-strong);
+          background: var(--bg-input);
+          color: var(--text);
           border-radius: 8px;
           font-size: 16px;
           transition: border-color 0.2s ease;
@@ -262,7 +267,7 @@ export default function QRManagementPage() {
 
         .qr-input:focus {
           outline: none;
-          border-color: #10a37f;
+          border-color: var(--primary);
         }
 
         .qr-generate-btn {
@@ -290,12 +295,12 @@ export default function QRManagementPage() {
 
         .qr-input-help {
           font-size: 14px;
-          color: #666;
+          color: var(--muted);
           margin: 0;
         }
 
         .qr-result-section {
-          border-top: 1px solid #e1e5e9;
+          border-top: 1px solid var(--border);
           padding-top: 32px;
         }
 
@@ -313,7 +318,7 @@ export default function QRManagementPage() {
           width: 300px;
           height: 300px;
           border-radius: 12px;
-          border: 1px solid #e1e5e9;
+          border: 1px solid var(--border);
         }
 
         .qr-code-info {
@@ -323,13 +328,13 @@ export default function QRManagementPage() {
         .qr-code-info h3 {
           font-size: 20px;
           font-weight: 700;
-          color: #1a1a1a;
+          color: var(--text);
           margin: 0 0 16px 0;
         }
 
         .qr-code-info p {
           font-size: 16px;
-          color: #666;
+          color: var(--muted);
           margin: 0 0 24px 0;
         }
 
@@ -341,7 +346,7 @@ export default function QRManagementPage() {
           display: block;
           font-size: 14px;
           font-weight: 600;
-          color: #333;
+          color: var(--text-body);
           margin-bottom: 8px;
         }
 
@@ -353,17 +358,19 @@ export default function QRManagementPage() {
         .qr-url-input {
           flex: 1;
           padding: 10px 12px;
-          border: 1px solid #e1e5e9;
+          border: 1px solid var(--border-strong);
           border-radius: 6px;
           font-size: 14px;
           font-family: 'Courier New', monospace;
-          background: #f8f9fa;
+          background: var(--bg-input);
+          color: var(--text);
         }
 
         .qr-copy-btn {
           padding: 10px;
-          background: #f8f9fa;
-          border: 1px solid #e1e5e9;
+          background: var(--bg-hover);
+          border: 1px solid var(--border-strong);
+          color: var(--text);
           border-radius: 6px;
           cursor: pointer;
           transition: background-color 0.2s ease;
@@ -373,7 +380,7 @@ export default function QRManagementPage() {
         }
 
         .qr-copy-btn:hover {
-          background: #e9ecef;
+          background: var(--border-strong);
         }
 
         .qr-actions {
@@ -405,7 +412,7 @@ export default function QRManagementPage() {
           display: flex;
           gap: 8px;
           margin-bottom: 32px;
-          border-bottom: 2px solid #e1e5e9;
+          border-bottom: 2px solid var(--border);
         }
 
         .qr-tab {
@@ -413,7 +420,7 @@ export default function QRManagementPage() {
           background: none;
           border: none;
           border-bottom: 2px solid transparent;
-          color: #666;
+          color: var(--muted);
           font-size: 16px;
           font-weight: 500;
           cursor: pointer;
@@ -433,7 +440,9 @@ export default function QRManagementPage() {
         .qr-textarea {
           width: 100%;
           padding: 12px 16px;
-          border: 2px solid #e1e5e9;
+          border: 2px solid var(--border-strong);
+          background: var(--bg-input);
+          color: var(--text);
           border-radius: 8px;
           font-size: 16px;
           font-family: 'Courier New', monospace;
@@ -443,11 +452,11 @@ export default function QRManagementPage() {
 
         .qr-textarea:focus {
           outline: none;
-          border-color: #10a37f;
+          border-color: var(--primary);
         }
 
         .qr-bulk-result-section {
-          border-top: 1px solid #e1e5e9;
+          border-top: 1px solid var(--border);
           padding-top: 32px;
         }
 
@@ -461,7 +470,7 @@ export default function QRManagementPage() {
         .qr-bulk-header h3 {
           font-size: 20px;
           font-weight: 700;
-          color: #1a1a1a;
+          color: var(--text);
           margin: 0;
         }
 
@@ -492,7 +501,7 @@ export default function QRManagementPage() {
         }
 
         .qr-bulk-item {
-          border: 1px solid #e1e5e9;
+          border: 1px solid var(--border);
           border-radius: 12px;
           padding: 16px;
           text-align: center;
@@ -508,7 +517,7 @@ export default function QRManagementPage() {
         .qr-bulk-info h4 {
           font-size: 16px;
           font-weight: 600;
-          color: #1a1a1a;
+          color: var(--text);
           margin: 0 0 12px 0;
         }
 
@@ -539,7 +548,7 @@ export default function QRManagementPage() {
           }
 
           .qr-tab {
-            border-bottom: 1px solid #e1e5e9;
+            border-bottom: 1px solid var(--border);
             border-radius: 0;
             margin-bottom: 0;
           }

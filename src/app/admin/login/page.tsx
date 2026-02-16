@@ -80,18 +80,18 @@ export default function AdminLoginPage() {
         flexDirection: 'column',
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: '#F8FAFC',
+        backgroundColor: '#0B1121',
         zIndex: 9999
       }}>
         <div style={{
           width: '48px',
           height: '48px',
-          border: '3px solid #E5E7EB',
-          borderTopColor: '#2563EB',
+          border: '3px solid #334155',
+          borderTopColor: '#3B82F6',
           borderRadius: '50%',
           animation: 'spin 1s linear infinite'
         }} />
-        <div style={{ marginTop: '16px', color: '#64748B', fontSize: '14px' }}>読み込み中...</div>
+        <div style={{ marginTop: '16px', color: '#94A3B8', fontSize: '14px' }}>読み込み中...</div>
         <style>{`
           @keyframes spin {
             to { transform: rotate(360deg); }
@@ -382,16 +382,16 @@ export default function AdminLoginPage() {
           align-items: center;
           justify-content: center;
           min-height: 100vh;
-          background: linear-gradient(135deg, #e0f2fe, #ede9fe);
+          background: #0B1121;
           padding: 40px 16px;
           font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
         }
 
         .login-card {
-          background: rgba(255, 255, 255, 0.9);
+          background: #111827;
           border-radius: 28px;
-          box-shadow: 0 32px 60px rgba(15, 23, 42, 0.18);
-          border: 1px solid rgba(148, 163, 184, 0.22);
+          box-shadow: 0 32px 60px rgba(0, 0, 0, 0.4);
+          border: 1px solid #1E293B;
           max-width: 960px;
           width: 100%;
           display: grid;
@@ -400,7 +400,7 @@ export default function AdminLoginPage() {
         }
 
         .login-visual {
-          background: linear-gradient(180deg, rgba(37, 99, 235, 0.12), rgba(99, 102, 241, 0.12));
+          background: linear-gradient(180deg, rgba(59, 130, 246, 0.08), rgba(139, 92, 246, 0.08));
           padding: 48px 40px;
           display: grid;
           gap: 18px;
@@ -409,14 +409,14 @@ export default function AdminLoginPage() {
         .login-visual h1 {
           margin: 0;
           font-size: 28px;
-          color: #1e293b;
+          color: #F8FAFC;
           font-weight: 700;
         }
 
         .login-visual p {
           margin: 0;
           font-size: 15px;
-          color: #475569;
+          color: #94A3B8;
           line-height: 1.7;
         }
 
@@ -425,7 +425,7 @@ export default function AdminLoginPage() {
           padding-left: 20px;
           display: grid;
           gap: 8px;
-          color: #1f2937;
+          color: #E2E8F0;
           font-size: 14px;
         }
 
@@ -440,7 +440,7 @@ export default function AdminLoginPage() {
           grid-template-columns: repeat(2, 1fr);
           border-radius: 999px;
           padding: 6px;
-          background: rgba(148, 163, 184, 0.18);
+          background: rgba(30, 41, 59, 0.5);
         }
 
         .login-tab-button {
@@ -449,20 +449,20 @@ export default function AdminLoginPage() {
           padding: 12px 18px;
           background: transparent;
           font-weight: 600;
-          color: #475569;
+          color: #94A3B8;
           cursor: pointer;
           transition: background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
           font-size: 14px;
         }
 
         .login-tab-button.active {
-          background: #fff;
-          color: #2563eb;
+          background: #1E293B;
+          color: #3B82F6;
           box-shadow: 0 14px 28px rgba(37, 99, 235, 0.2);
         }
 
         .login-tab-button:not(.active):hover {
-          background: rgba(255, 255, 255, 0.5);
+          background: rgba(30, 41, 59, 0.3);
         }
 
         .login-form {
@@ -477,29 +477,30 @@ export default function AdminLoginPage() {
 
         .form-label {
           font-size: 13px;
-          color: #0f172a;
+          color: #E2E8F0;
           font-weight: 600;
         }
 
         .form-input {
           width: 100%;
           border-radius: 14px;
-          border: 1px solid rgba(148, 163, 184, 0.35);
+          border: 1px solid #334155;
           padding: 12px 16px;
           font-size: 14px;
-          background: #fff;
+          background: #0F172A;
+          color: #F8FAFC;
           transition: border 0.2s ease, box-shadow 0.2s ease;
           outline: none;
         }
 
         .form-input:focus {
-          border-color: #2563eb;
-          box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+          border-color: #3B82F6;
+          box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
         }
 
         .form-input.input-error {
-          border-color: #dc2626;
-          background: #fef2f2;
+          border-color: #EF4444;
+          background: rgba(239, 68, 68, 0.1);
         }
 
         .form-input.input-error:focus {
@@ -515,8 +516,8 @@ export default function AdminLoginPage() {
         }
 
         .success-message {
-          background: #f0fdf4;
-          color: #16a34a;
+          background: rgba(16, 185, 129, 0.1);
+          color: #10B981;
           padding: 12px;
           border-radius: 8px;
           font-size: 13px;
@@ -524,8 +525,8 @@ export default function AdminLoginPage() {
         }
 
         .error-message {
-          background: #fef2f2;
-          color: #dc2626;
+          background: rgba(239, 68, 68, 0.1);
+          color: #EF4444;
           padding: 12px;
           border-radius: 8px;
           font-size: 13px;
@@ -561,11 +562,11 @@ export default function AdminLoginPage() {
           display: flex;
           justify-content: space-between;
           font-size: 12px;
-          color: #64748b;
+          color: #94A3B8;
         }
 
         .link {
-          color: #2563eb;
+          color: #3B82F6;
           cursor: pointer;
         }
 
@@ -578,7 +579,7 @@ export default function AdminLoginPage() {
           align-items: center;
           gap: 10px;
           font-size: 13px;
-          color: #475569;
+          color: #94A3B8;
           cursor: pointer;
         }
 

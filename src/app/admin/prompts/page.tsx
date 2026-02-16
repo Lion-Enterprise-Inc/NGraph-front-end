@@ -180,14 +180,14 @@ export default function PromptsPage() {
         </div>
       )}
 
-      {loading && <div style={{ padding: '20px', color: '#666' }}>読み込み中...</div>}
+      {loading && <div style={{ padding: '20px', color: '#94A3B8' }}>読み込み中...</div>}
 
       {selectedRestaurant && !loading && (
         <>
           {/* 基礎プロンプト（読み取り専用） */}
           <div className="card" style={{ marginBottom: '16px' }}>
             <div className="card-title">基礎プロンプト（編集不可）</div>
-            <p style={{ color: '#666', fontSize: '13px', marginBottom: '12px' }}>
+            <p style={{ color: '#94A3B8', fontSize: '13px', marginBottom: '12px' }}>
               ツール使用・多言語対応などの必須ルール。全レストラン共通で適用されます。
             </p>
             <textarea
@@ -195,7 +195,7 @@ export default function PromptsPage() {
               rows={8}
               value={BASE_PROMPT_DISPLAY}
               readOnly
-              style={{ fontFamily: 'monospace', fontSize: '13px', background: '#f9fafb', color: '#666' }}
+              style={{ fontFamily: 'monospace', fontSize: '13px', background: '#1E293B', color: '#94A3B8' }}
             />
           </div>
 
@@ -216,7 +216,7 @@ export default function PromptsPage() {
                   <option key={t.value} value={t.value}>{t.label}</option>
                 ))}
               </select>
-              <div style={{ marginTop: '6px', fontSize: '13px', color: '#666' }}>
+              <div style={{ marginTop: '6px', fontSize: '13px', color: '#94A3B8' }}>
                 AIの応答スタイルを選択します。「スタンダード」はデフォルトのトーンです。
               </div>
             </div>
@@ -232,7 +232,7 @@ export default function PromptsPage() {
                 onChange={(e) => setCustomPrompt(e.target.value)}
                 placeholder="例：季節のおすすめメニューを積極的に案内してください。地元食材の魅力も伝えてください。"
               />
-              <div style={{ marginTop: '6px', fontSize: '13px', color: '#666' }}>
+              <div style={{ marginTop: '6px', fontSize: '13px', color: '#94A3B8' }}>
                 文字数: {customPrompt.length}　|　AIへの追加指示を自由に記述できます
               </div>
             </div>
@@ -241,7 +241,7 @@ export default function PromptsPage() {
           {/* おすすめメニュー */}
           <div className="card" style={{ marginBottom: '16px' }}>
             <div className="card-title">おすすめメニュー</div>
-            <p style={{ color: '#666', fontSize: '13px', marginBottom: '12px' }}>
+            <p style={{ color: '#94A3B8', fontSize: '13px', marginBottom: '12px' }}>
               AIが「おすすめは？」と聞かれたときに案内するメニューを設定します。
             </p>
             <div style={{ marginBottom: '12px' }}>
@@ -255,19 +255,19 @@ export default function PromptsPage() {
               </label>
             </div>
             {!recommendedMenus.auto && (
-              <div style={{ maxHeight: '300px', overflowY: 'auto', border: '1px solid #e0e0e0', borderRadius: '6px', padding: '12px' }}>
+              <div style={{ maxHeight: '300px', overflowY: 'auto', border: '1px solid #334155', borderRadius: '6px', padding: '12px' }}>
                 {menus.length === 0 ? (
-                  <div style={{ color: '#999', fontSize: '13px' }}>メニューが登録されていません</div>
+                  <div style={{ color: '#64748B', fontSize: '13px' }}>メニューが登録されていません</div>
                 ) : (
                   menus.map((m) => (
-                    <label key={m.uid} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 0', cursor: 'pointer', borderBottom: '1px solid #f0f0f0' }}>
+                    <label key={m.uid} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 0', cursor: 'pointer', borderBottom: '1px solid #1E293B' }}>
                       <input
                         type="checkbox"
                         checked={recommendedMenus.menu_uids.includes(m.uid)}
                         onChange={() => toggleMenuUid(recommendedMenus, setRecommendedMenus, m.uid)}
                       />
                       <span style={{ fontSize: '14px' }}>{m.name_jp}</span>
-                      <span style={{ fontSize: '12px', color: '#999', marginLeft: 'auto' }}>{m.category} / ¥{m.price?.toLocaleString()}</span>
+                      <span style={{ fontSize: '12px', color: '#64748B', marginLeft: 'auto' }}>{m.category} / ¥{m.price?.toLocaleString()}</span>
                     </label>
                   ))
                 )}
@@ -278,7 +278,7 @@ export default function PromptsPage() {
           {/* 人気メニュー */}
           <div className="card" style={{ marginBottom: '16px' }}>
             <div className="card-title">人気メニュー</div>
-            <p style={{ color: '#666', fontSize: '13px', marginBottom: '12px' }}>
+            <p style={{ color: '#94A3B8', fontSize: '13px', marginBottom: '12px' }}>
               AIが「人気メニューは？」と聞かれたときに案内するメニューを設定します。
             </p>
             <div style={{ marginBottom: '12px' }}>
@@ -292,19 +292,19 @@ export default function PromptsPage() {
               </label>
             </div>
             {!popularMenus.auto && (
-              <div style={{ maxHeight: '300px', overflowY: 'auto', border: '1px solid #e0e0e0', borderRadius: '6px', padding: '12px' }}>
+              <div style={{ maxHeight: '300px', overflowY: 'auto', border: '1px solid #334155', borderRadius: '6px', padding: '12px' }}>
                 {menus.length === 0 ? (
-                  <div style={{ color: '#999', fontSize: '13px' }}>メニューが登録されていません</div>
+                  <div style={{ color: '#64748B', fontSize: '13px' }}>メニューが登録されていません</div>
                 ) : (
                   menus.map((m) => (
-                    <label key={m.uid} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 0', cursor: 'pointer', borderBottom: '1px solid #f0f0f0' }}>
+                    <label key={m.uid} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 0', cursor: 'pointer', borderBottom: '1px solid #1E293B' }}>
                       <input
                         type="checkbox"
                         checked={popularMenus.menu_uids.includes(m.uid)}
                         onChange={() => toggleMenuUid(popularMenus, setPopularMenus, m.uid)}
                       />
                       <span style={{ fontSize: '14px' }}>{m.name_jp}</span>
-                      <span style={{ fontSize: '12px', color: '#999', marginLeft: 'auto' }}>{m.category} / ¥{m.price?.toLocaleString()}</span>
+                      <span style={{ fontSize: '12px', color: '#64748B', marginLeft: 'auto' }}>{m.category} / ¥{m.price?.toLocaleString()}</span>
                     </label>
                   ))
                 )}
@@ -315,7 +315,7 @@ export default function PromptsPage() {
           {/* レコメンドテキスト */}
           <div className="card" style={{ marginBottom: '16px' }}>
             <div className="card-title">レコメンドテキスト</div>
-            <p style={{ color: '#666', fontSize: '13px', marginBottom: '12px' }}>
+            <p style={{ color: '#94A3B8', fontSize: '13px', marginBottom: '12px' }}>
               チャット画面のサジェストボタンに表示されるテキストを設定します（最大3つ）。
             </p>
             {recommendTexts.map((text, i) => (
@@ -352,7 +352,7 @@ export default function PromptsPage() {
           {/* Googleレビュー誘導 */}
           <div className="card" style={{ marginBottom: '16px' }}>
             <div className="card-title">Googleレビュー誘導</div>
-            <p style={{ color: '#666', fontSize: '13px', marginBottom: '12px' }}>
+            <p style={{ color: '#94A3B8', fontSize: '13px', marginBottom: '12px' }}>
               会話の終盤でGoogleクチコミへの投稿を促します。
             </p>
             {hasGmb ? (
@@ -365,7 +365,7 @@ export default function PromptsPage() {
                 <span style={{ fontSize: '14px' }}>有効にする</span>
               </label>
             ) : (
-              <div style={{ padding: '12px', background: '#f9fafb', borderRadius: '6px', color: '#999', fontSize: '13px' }}>
+              <div style={{ padding: '12px', background: '#1E293B', borderRadius: '6px', color: '#64748B', fontSize: '13px' }}>
                 Googleビジネスプロフィールが基本情報に未設定です。先に基本情報ページでGMB URLを設定してください。
               </div>
             )}
@@ -377,8 +377,8 @@ export default function PromptsPage() {
               padding: '10px 14px',
               marginBottom: '16px',
               borderRadius: '6px',
-              background: message.type === 'success' ? '#dcfce7' : '#fef2f2',
-              color: message.type === 'success' ? '#166534' : '#991b1b',
+              background: message.type === 'success' ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
+              color: message.type === 'success' ? '#10B981' : '#EF4444',
               fontSize: '14px',
             }}>
               {message.text}
@@ -406,28 +406,31 @@ export default function PromptsPage() {
         }
 
         .breadcrumb-item.active {
-          color: #333;
+          color: var(--text);
           font-weight: 600;
         }
 
         .card {
-          background: white;
+          background: var(--bg-surface);
           border-radius: 12px;
           padding: 24px;
-          box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+          box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+          border: 1px solid var(--border);
         }
 
         .card-title {
           font-size: 18px;
           font-weight: 600;
-          color: #333;
+          color: var(--text);
           margin-bottom: 12px;
         }
 
         .form-control {
           width: 100%;
           padding: 10px 12px;
-          border: 1px solid #e0e0e0;
+          border: 1px solid var(--border-strong);
+          background: var(--bg-input);
+          color: var(--text);
           border-radius: 6px;
           font-size: 14px;
           transition: border-color 0.2s, box-shadow 0.2s;
@@ -435,8 +438,8 @@ export default function PromptsPage() {
 
         .form-control:focus {
           outline: none;
-          border-color: #2563eb;
-          box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+          border-color: var(--primary);
+          box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
         }
 
         textarea.form-control {
@@ -460,31 +463,31 @@ export default function PromptsPage() {
         }
 
         .btn-primary {
-          background: #2563eb;
+          background: var(--primary);
           color: white;
         }
 
         .btn-primary:hover:not(:disabled) {
-          background: #1d4ed8;
+          background: #2563EB;
         }
 
         .btn-secondary {
-          background: #f3f4f6;
-          color: #374151;
+          background: var(--bg-hover);
+          color: var(--text-body);
         }
 
         .btn-secondary:hover:not(:disabled) {
-          background: #e5e7eb;
+          background: var(--border-strong);
         }
 
         .btn-danger {
-          background: #fef2f2;
-          color: #991b1b;
+          background: rgba(239,68,68,0.1);
+          color: #EF4444;
           padding: 8px 16px;
         }
 
         .btn-danger:hover:not(:disabled) {
-          background: #fee2e2;
+          background: rgba(239,68,68,0.15);
         }
       `}</style>
     </AdminLayout>
