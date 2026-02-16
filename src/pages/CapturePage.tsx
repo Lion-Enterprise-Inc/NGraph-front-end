@@ -430,8 +430,8 @@ export default function CapturePage({
       onUpdate: (value: string) => void,
       scrollDuringTyping = false
     ) => {
-      const chunkSize = 2; // Smaller chunks for more frequent updates
-      const delay = 25; // Slightly faster
+      const chunkSize = 5;
+      const delay = 10;
       
       for (let i = chunkSize; i <= fullText.length; i += chunkSize) {
         await wait(delay);
@@ -740,7 +740,7 @@ export default function CapturePage({
           }
           const requestText = trimmedMessage || ocrText.trim() || "メニュー画像を送信しました";
           const fallbackResponse = await generateChatResponse(requestText, selectedRestaurant);
-          output = { title: 'Chat Response', intro: fallbackResponse, body: [] };
+          output = { title: '', intro: fallbackResponse, body: [] };
         }
       } else {
         // Text only → use existing chat API
@@ -755,7 +755,7 @@ export default function CapturePage({
 
           if (chatResponse.ok) {
             const chatData = await chatResponse.json();
-            output = { title: 'Chat Response', intro: chatData.ai_response, body: [] };
+            output = { title: '', intro: chatData.ai_response, body: [] };
             // Store message_uid for feedback
             if (chatData.message_uid) {
               setResponses((prev) =>
@@ -770,7 +770,7 @@ export default function CapturePage({
         } catch (apiError) {
           console.log("chat_api_error", apiError);
           const fallbackResponse = await generateChatResponse(requestText, selectedRestaurant);
-          output = { title: 'Chat Response', intro: fallbackResponse, body: [] };
+          output = { title: '', intro: fallbackResponse, body: [] };
         }
       }
 
@@ -1104,7 +1104,7 @@ export default function CapturePage({
               </div>
               <div className="chat-content">
                 <div className="chat-message-wrapper">
-                  <div className="chat-bubble chat-bubble-assistant">
+                  <div className="chat-bubble chat-bubble-assistant chat-loading-bubble">
                     <div className="loader-card" aria-live="polite">
                       <div className="loader-icon">
                         <Sparkles size={20} className="sparkle-icon" />
