@@ -82,24 +82,6 @@ export default function UsersPage() {
     return matchesRole && matchesStatus && matchesSearch
   })
 
-  const handleStatusChange = async (userId: string, newStatus: 'active' | 'inactive') => {
-    // Note: This would need a backend API endpoint to update user status
-    // For now, just show a message
-    alert(`${newStatus === 'active' ? '有効化' : '無効化'}機能は現在開発中です`)
-  }
-
-  const handleResetPassword = (userId: string) => {
-    // Note: This would need a backend API endpoint to reset password
-    const user = users.find(u => u.id === userId)
-    if (user) {
-      alert(`${user.email} へのパスワードリセット機能は現在開発中です`)
-    }
-  }
-
-  const handleDeleteUser = (userId: string) => {
-    // Note: This would need a backend API endpoint to delete user
-    alert('ユーザー削除機能は現在開発中です')
-  }
 
   // User registration functions
   const validateCreateUser = () => {
@@ -332,36 +314,39 @@ export default function UsersPage() {
                   <td style={{ padding: '12px' }}>
                     <div style={{ display: 'flex', gap: '6px', justifyContent: 'center', flexWrap: 'wrap' }}>
                       {user.status === 'active' ? (
-                        <button 
+                        <button
                           className="btn btn-secondary btn-small"
-                          onClick={() => handleStatusChange(user.id, 'inactive')}
-                          title="無効化"
+                          disabled
+                          title="無効化（準備中）"
+                          style={{ opacity: 0.5 }}
                         >
-                          ⛔
+                          ⛔ (準備中)
                         </button>
                       ) : (
-                        <button 
+                        <button
                           className="btn btn-primary btn-small"
-                          onClick={() => handleStatusChange(user.id, 'active')}
-                          title="有効化"
+                          disabled
+                          title="有効化（準備中）"
+                          style={{ opacity: 0.5 }}
                         >
-                          ✅
+                          ✅ (準備中)
                         </button>
                       )}
-                      <button 
+                      <button
                         className="btn btn-secondary btn-small"
-                        onClick={() => handleResetPassword(user.id)}
-                        title="パスワードリセット"
+                        disabled
+                        title="パスワードリセット（準備中）"
+                        style={{ opacity: 0.5 }}
                       >
-                        🔑
+                        🔑 (準備中)
                       </button>
-                      <button 
+                      <button
                         className="btn btn-secondary btn-small"
-                        onClick={() => handleDeleteUser(user.id)}
-                        title="削除"
-                        style={{ color: '#C62828' }}
+                        disabled
+                        title="削除（準備中）"
+                        style={{ opacity: 0.5, color: '#C62828' }}
                       >
-                        🗑️
+                        🗑️ (準備中)
                       </button>
                     </div>
                   </td>

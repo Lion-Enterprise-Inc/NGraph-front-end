@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, Suspense } from 'react'
+import { useSearchParams } from 'next/navigation'
 import AdminLayout from '../../../components/admin/AdminLayout'
 import { MenuApi, Menu, MenuCreate, MenuUpdate, Ingredient, AllergenApi, Allergen, AllergenListResponse, ScrapingApi, apiClient, CookingMethodApi, RestrictionApi, CookingMethod, Restriction, VisionApi, VisionMenuItem, DISH_CATEGORIES } from '../../../services/api'
 import { useAuth } from '../../../contexts/AuthContext'
@@ -26,7 +27,18 @@ interface MenuItem {
 }
 
 export default function MenuListPage() {
+  return (
+    <Suspense fallback={<AdminLayout title="メニュー一覧"><div style={{ textAlign: 'center', padding: '40px' }}>読み込み中...</div></AdminLayout>}>
+      <MenuListContent />
+    </Suspense>
+  )
+}
+
+function MenuListContent() {
   const { user, isLoading: authLoading } = useAuth()
+  const searchParams = useSearchParams()
+  const uidParam = searchParams?.get('uid') ?? null
+  const isAdminViewing = !!(uidParam && user && (user.role === 'superadmin' || user.role === 'platform_owner'))
   const [searchQuery, setSearchQuery] = useState('')
   const [filter, setFilter] = useState('all')
   const [itemsPerPage, setItemsPerPage] = useState(30)
@@ -208,9 +220,15 @@ export default function MenuListPage() {
       setIsLoading(true)
       setError('')
 
-      // First get the restaurant for this user
-      const restaurantResponse = await apiClient.get(`/restaurants/detail-by-user/${user.uid}`) as { result: any }
-      const restaurantData = restaurantResponse.result
+      // Get restaurant: by uid param (admin viewing) or by user (owner)
+      let restaurantData: any
+      if (isAdminViewing && uidParam) {
+        const restaurantResponse = await apiClient.get(`/restaurants/${uidParam}`) as { result: any }
+        restaurantData = restaurantResponse.result
+      } else {
+        const restaurantResponse = await apiClient.get(`/restaurants/detail-by-user/${user.uid}`) as { result: any }
+        restaurantData = restaurantResponse.result
+      }
       setRestaurant(restaurantData)
       setScrapingUrl(localStorage.getItem(`menu_scraping_url_${restaurantData.uid}`) || '')
 
@@ -302,7 +320,7 @@ export default function MenuListPage() {
     } finally {
       setIsLoading(false)
     }
-  }, [authLoading, user, itemsPerPage])
+  }, [authLoading, user, itemsPerPage, isAdminViewing, uidParam])
 
   // Initial data fetch
   useEffect(() => {
