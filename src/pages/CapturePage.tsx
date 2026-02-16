@@ -11,7 +11,7 @@ import {
 import { useRouter, useSearchParams } from "next/navigation";
 import { mockRestaurants, mockScanResponse, type Restaurant } from "../api/mockApi";
 import Tesseract from "tesseract.js";
-import type { VisionMenuItem } from "../services/api";
+import { FeedbackApi, type VisionMenuItem } from "../services/api";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
@@ -99,6 +99,7 @@ type ResponseItem = {
   output: MockOutput | null;
   language: string;
   feedback: "good" | "bad" | null;
+  messageUid: string | null;
 };
 
 type FeedbackEntry = {
@@ -655,6 +656,7 @@ export default function CapturePage({
         output: null,
         language: activeLanguage,
         feedback: null,
+        messageUid: null,
       },
     ]);
 
@@ -754,6 +756,14 @@ export default function CapturePage({
           if (chatResponse.ok) {
             const chatData = await chatResponse.json();
             output = { title: 'Chat Response', intro: chatData.ai_response, body: [] };
+            // Store message_uid for feedback
+            if (chatData.message_uid) {
+              setResponses((prev) =>
+                prev.map((item) =>
+                  item.id === responseId ? { ...item, messageUid: chatData.message_uid } : item
+                )
+              );
+            }
           } else {
             throw new Error(`Chat API failed with status: ${chatResponse.status}`);
           }
@@ -812,11 +822,19 @@ export default function CapturePage({
   const handleFeedback = (id: string, rating: "good" | "bad") => {
     const response = responses.find((item) => item.id === id);
     if (!response || !response.output) return;
+    // Optimistic UI update
     setResponses((prev) =>
       prev.map((item) =>
         item.id === id ? { ...item, feedback: rating } : item
       )
     );
+    // Send to API if message_uid exists
+    if (response.messageUid) {
+      FeedbackApi.submit(response.messageUid, rating).catch((err) => {
+        console.log("feedback_api_error", err);
+      });
+    }
+    // Keep local log as fallback
     logFeedback({
       input: response.input,
       output: response.output,

@@ -829,4 +829,76 @@ export const CalorieRangeApi = {
   }
 };
 
+// Conversation types
+export interface ConversationListItem {
+  thread_uid: string;
+  restaurant_name: string;
+  restaurant_uid: string;
+  summary: string | null;
+  message_count: number;
+  good_count: number;
+  bad_count: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ConversationMessage {
+  uid: string;
+  user_message: string;
+  ai_response: string | null;
+  images: string[] | null;
+  feedback: 'good' | 'bad' | null;
+  created_at: string;
+}
+
+export interface ConversationDetail {
+  thread_uid: string;
+  restaurant_name: string | null;
+  restaurant_uid: string | null;
+  summary: string | null;
+  created_at: string;
+  updated_at: string;
+  messages: ConversationMessage[];
+}
+
+export interface ConversationListResponse {
+  result: {
+    total: number;
+    page: number;
+    size: number;
+    pages: number;
+    items: ConversationListItem[];
+  };
+  message: string;
+  status_code: number;
+}
+
+export interface ConversationDetailResponse {
+  result: ConversationDetail;
+  message: string;
+  status_code: number;
+}
+
+// Conversation API
+export const ConversationApi = {
+  getAll: async (page: number = 1, size: number = 20, restaurantUid?: string): Promise<ConversationListResponse> => {
+    const params = new URLSearchParams();
+    params.append('page', page.toString());
+    params.append('size', size.toString());
+    if (restaurantUid) params.append('restaurant_uid', restaurantUid);
+    return apiClient.get<ConversationListResponse>(`/admin/conversations?${params.toString()}`);
+  },
+
+  getDetail: async (threadUid: string): Promise<ConversationDetailResponse> => {
+    return apiClient.get<ConversationDetailResponse>(`/admin/conversations/${threadUid}`);
+  },
+};
+
+// Feedback API (public, no auth)
+export const FeedbackApi = {
+  submit: async (messageUid: string, rating: 'good' | 'bad'): Promise<{ message: string; status_code: number }> => {
+    return apiClient.post('/public-chat/feedback', { message_uid: messageUid, rating });
+  },
+};
+
 export default apiClient;
