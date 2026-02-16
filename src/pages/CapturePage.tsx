@@ -994,9 +994,6 @@ export default function CapturePage({
 
               {response.output && (
                 <div className="chat-row chat-row-assistant">
-                  <div className="chat-avatar chat-avatar-assistant">
-                    <Bot size={20} />
-                  </div>
                   <div className="chat-content">
                     <div className="chat-message-wrapper">
                       <div className="chat-bubble chat-bubble-assistant">
@@ -1096,9 +1093,6 @@ export default function CapturePage({
           ))}
           {loading && (
             <div className="chat-row chat-row-assistant">
-              <div className="chat-avatar chat-avatar-assistant">
-                <Bot size={20} />
-              </div>
               <div className="chat-content">
                 <div className="chat-message-wrapper">
                   <div className="chat-bubble chat-bubble-assistant chat-loading-bubble">

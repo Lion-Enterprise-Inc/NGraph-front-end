@@ -1046,7 +1046,7 @@ body {
 }
 
 .chat-content {
-  max-width: calc(100% - 52px);
+  max-width: 100%;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -1159,7 +1159,7 @@ body {
 }
 
 .chat-content {
-  max-width: calc(100% - 48px);
+  max-width: 100%;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -1177,7 +1177,7 @@ body {
   }
 
   .chat-content {
-    max-width: calc(100% - 40px);
+    max-width: 100%;
   }
 
   .chat-bubble {
