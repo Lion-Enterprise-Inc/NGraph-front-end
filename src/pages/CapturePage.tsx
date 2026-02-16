@@ -29,6 +29,7 @@ type ApiRestaurant = {
   is_active: boolean
   slug: string
   logo_url?: string | null
+  recommend_texts?: string[] | null
   created_at: string
   updated_at: string
 };
@@ -281,6 +282,7 @@ export default function CapturePage({
                 slug: data.result.slug,
                 is_active: data.result.is_active,
                 logo_url: data.result.logo_url,
+                recommend_texts: data.result.recommend_texts,
                 created_at: '',
                 updated_at: ''
               });
@@ -321,18 +323,25 @@ export default function CapturePage({
   
   const currentSuggestions = useMemo(() => {
     if (selectedRestaurant) {
-      // Restaurant-specific suggestions
+      // Use custom recommend_texts if set
+      if (selectedRestaurant.recommend_texts && selectedRestaurant.recommend_texts.length > 0) {
+        return {
+          guide: copy.restaurant.chatPlaceholder.replace('{name}', selectedRestaurant.name),
+          chips: selectedRestaurant.recommend_texts
+        };
+      }
+
+      // Default restaurant-specific suggestions
       const chips = [
         copy.restaurant.signatureDish.replace('{name}', selectedRestaurant.name),
         copy.restaurant.bestTime.replace('{name}', selectedRestaurant.name),
         copy.restaurant.dietaryOptions
       ];
-      
-      // Only add cuisine suggestion if restaurant has cuisine property
+
       if ('cuisine' in selectedRestaurant) {
         chips.splice(1, 0, copy.restaurant.aboutCuisine.replace('{cuisine}', (selectedRestaurant as any).cuisine));
       }
-      
+
       return {
         guide: copy.restaurant.chatPlaceholder.replace('{name}', selectedRestaurant.name),
         chips

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import AdminLayout from '../../../components/admin/AdminLayout'
-import { TokenService, RestaurantApi, Restaurant } from '../../../services/api'
+import { TokenService, RestaurantApi, MenuApi, Restaurant, Menu } from '../../../services/api'
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://dev-backend.ngraph.jp/api'
 
@@ -20,6 +20,8 @@ const BASE_PROMPT_DISPLAY = `【基本ルール（編集不可）】
 4. お客様の言語を検出し、同じ言語で応答（日本語・英語・中国語・韓国語等）
 5. そのレストランの話題のみに応答を限定`
 
+type MenuConfig = { auto: boolean; menu_uids: string[] }
+
 export default function PromptsPage() {
   const [userType, setUserType] = useState<'admin' | 'store'>('store')
   const [restaurants, setRestaurants] = useState<Restaurant[]>([])
@@ -30,6 +32,31 @@ export default function PromptsPage() {
   const [saving, setSaving] = useState(false)
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+
+  // New AI settings state
+  const [menus, setMenus] = useState<Menu[]>([])
+  const [recommendedMenus, setRecommendedMenus] = useState<MenuConfig>({ auto: true, menu_uids: [] })
+  const [popularMenus, setPopularMenus] = useState<MenuConfig>({ auto: true, menu_uids: [] })
+  const [recommendTexts, setRecommendTexts] = useState<string[]>([])
+  const [googleReviewEnabled, setGoogleReviewEnabled] = useState(false)
+
+  const loadRestaurantData = (r: Restaurant) => {
+    setSelectedRestaurant(r)
+    setSelectedUid(r.uid)
+    setCustomPrompt(r.custom_prompt || '')
+    setAiTone(r.ai_tone || 'standard')
+    setRecommendedMenus(r.recommended_menus || { auto: true, menu_uids: [] })
+    setPopularMenus(r.popular_menus || { auto: true, menu_uids: [] })
+    setRecommendTexts(r.recommend_texts || [])
+    setGoogleReviewEnabled(r.google_review_enabled || false)
+
+    // Load menus for this restaurant
+    MenuApi.getAll(r.uid, 1, 500).then(res => {
+      if (res.result?.items) {
+        setMenus(res.result.items)
+      }
+    }).catch(console.error)
+  }
 
   useEffect(() => {
     const user = TokenService.getUser()
@@ -44,7 +71,6 @@ export default function PromptsPage() {
         }
       }).catch(console.error)
     } else if (user.uid) {
-      // Store owner: load own restaurant
       const token = TokenService.getAccessToken()
       fetch(`${API_BASE_URL}/restaurants/detail-by-user/${user.uid}`, {
         headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' },
@@ -52,11 +78,7 @@ export default function PromptsPage() {
         .then(r => r.json())
         .then(data => {
           if (data.result) {
-            const r = data.result
-            setSelectedRestaurant(r)
-            setSelectedUid(r.uid)
-            setCustomPrompt(r.custom_prompt || '')
-            setAiTone(r.ai_tone || 'standard')
+            loadRestaurantData(data.result)
           }
         })
         .catch(console.error)
@@ -70,6 +92,11 @@ export default function PromptsPage() {
       setSelectedRestaurant(null)
       setCustomPrompt('')
       setAiTone('standard')
+      setMenus([])
+      setRecommendedMenus({ auto: true, menu_uids: [] })
+      setPopularMenus({ auto: true, menu_uids: [] })
+      setRecommendTexts([])
+      setGoogleReviewEnabled(false)
       return
     }
 
@@ -77,9 +104,7 @@ export default function PromptsPage() {
     try {
       const res = await RestaurantApi.getById(uid)
       if (res.result) {
-        setSelectedRestaurant(res.result)
-        setCustomPrompt(res.result.custom_prompt || '')
-        setAiTone(res.result.ai_tone || 'standard')
+        loadRestaurantData(res.result)
       }
     } catch (e) {
       console.error(e)
@@ -98,6 +123,10 @@ export default function PromptsPage() {
       const formData = new FormData()
       formData.append('custom_prompt', customPrompt)
       formData.append('ai_tone', aiTone)
+      formData.append('recommended_menus', JSON.stringify(recommendedMenus))
+      formData.append('popular_menus', JSON.stringify(popularMenus))
+      formData.append('recommend_texts', JSON.stringify(recommendTexts))
+      formData.append('google_review_enabled', String(googleReviewEnabled))
 
       const res = await fetch(`${API_BASE_URL}/restaurants/${selectedUid}`, {
         method: 'PUT',
@@ -117,6 +146,15 @@ export default function PromptsPage() {
       setSaving(false)
     }
   }
+
+  const toggleMenuUid = (config: MenuConfig, setConfig: (c: MenuConfig) => void, uid: string) => {
+    const uids = config.menu_uids.includes(uid)
+      ? config.menu_uids.filter(u => u !== uid)
+      : [...config.menu_uids, uid]
+    setConfig({ ...config, menu_uids: uids })
+  }
+
+  const hasGmb = Boolean(selectedRestaurant?.google_business_profile)
 
   return (
     <AdminLayout title="AI設定">
@@ -162,7 +200,7 @@ export default function PromptsPage() {
           </div>
 
           {/* カスタムプロンプト + トーン */}
-          <div className="card">
+          <div className="card" style={{ marginBottom: '16px' }}>
             <div className="card-title">カスタム設定 — {selectedRestaurant.name}</div>
 
             {/* トーン選択 */}
@@ -198,30 +236,163 @@ export default function PromptsPage() {
                 文字数: {customPrompt.length}　|　AIへの追加指示を自由に記述できます
               </div>
             </div>
+          </div>
 
-            {/* メッセージ */}
-            {message && (
-              <div style={{
-                padding: '10px 14px',
-                marginBottom: '16px',
-                borderRadius: '6px',
-                background: message.type === 'success' ? '#dcfce7' : '#fef2f2',
-                color: message.type === 'success' ? '#166534' : '#991b1b',
-                fontSize: '14px',
-              }}>
-                {message.text}
+          {/* おすすめメニュー */}
+          <div className="card" style={{ marginBottom: '16px' }}>
+            <div className="card-title">おすすめメニュー</div>
+            <p style={{ color: '#666', fontSize: '13px', marginBottom: '12px' }}>
+              AIが「おすすめは？」と聞かれたときに案内するメニューを設定します。
+            </p>
+            <div style={{ marginBottom: '12px' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={recommendedMenus.auto}
+                  onChange={(e) => setRecommendedMenus({ ...recommendedMenus, auto: e.target.checked })}
+                />
+                <span style={{ fontSize: '14px' }}>自動（AIがツールで判断）</span>
+              </label>
+            </div>
+            {!recommendedMenus.auto && (
+              <div style={{ maxHeight: '300px', overflowY: 'auto', border: '1px solid #e0e0e0', borderRadius: '6px', padding: '12px' }}>
+                {menus.length === 0 ? (
+                  <div style={{ color: '#999', fontSize: '13px' }}>メニューが登録されていません</div>
+                ) : (
+                  menus.map((m) => (
+                    <label key={m.uid} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 0', cursor: 'pointer', borderBottom: '1px solid #f0f0f0' }}>
+                      <input
+                        type="checkbox"
+                        checked={recommendedMenus.menu_uids.includes(m.uid)}
+                        onChange={() => toggleMenuUid(recommendedMenus, setRecommendedMenus, m.uid)}
+                      />
+                      <span style={{ fontSize: '14px' }}>{m.name_jp}</span>
+                      <span style={{ fontSize: '12px', color: '#999', marginLeft: 'auto' }}>{m.category} / ¥{m.price?.toLocaleString()}</span>
+                    </label>
+                  ))
+                )}
               </div>
             )}
-
-            {/* 保存 */}
-            <button
-              className="btn btn-primary"
-              onClick={handleSave}
-              disabled={saving}
-            >
-              {saving ? '保存中...' : '保存'}
-            </button>
           </div>
+
+          {/* 人気メニュー */}
+          <div className="card" style={{ marginBottom: '16px' }}>
+            <div className="card-title">人気メニュー</div>
+            <p style={{ color: '#666', fontSize: '13px', marginBottom: '12px' }}>
+              AIが「人気メニューは？」と聞かれたときに案内するメニューを設定します。
+            </p>
+            <div style={{ marginBottom: '12px' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={popularMenus.auto}
+                  onChange={(e) => setPopularMenus({ ...popularMenus, auto: e.target.checked })}
+                />
+                <span style={{ fontSize: '14px' }}>自動（AIがツールで判断）</span>
+              </label>
+            </div>
+            {!popularMenus.auto && (
+              <div style={{ maxHeight: '300px', overflowY: 'auto', border: '1px solid #e0e0e0', borderRadius: '6px', padding: '12px' }}>
+                {menus.length === 0 ? (
+                  <div style={{ color: '#999', fontSize: '13px' }}>メニューが登録されていません</div>
+                ) : (
+                  menus.map((m) => (
+                    <label key={m.uid} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 0', cursor: 'pointer', borderBottom: '1px solid #f0f0f0' }}>
+                      <input
+                        type="checkbox"
+                        checked={popularMenus.menu_uids.includes(m.uid)}
+                        onChange={() => toggleMenuUid(popularMenus, setPopularMenus, m.uid)}
+                      />
+                      <span style={{ fontSize: '14px' }}>{m.name_jp}</span>
+                      <span style={{ fontSize: '12px', color: '#999', marginLeft: 'auto' }}>{m.category} / ¥{m.price?.toLocaleString()}</span>
+                    </label>
+                  ))
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* レコメンドテキスト */}
+          <div className="card" style={{ marginBottom: '16px' }}>
+            <div className="card-title">レコメンドテキスト</div>
+            <p style={{ color: '#666', fontSize: '13px', marginBottom: '12px' }}>
+              チャット画面のサジェストボタンに表示されるテキストを設定します（最大3つ）。
+            </p>
+            {recommendTexts.map((text, i) => (
+              <div key={i} style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
+                <input
+                  className="form-control"
+                  value={text}
+                  onChange={(e) => {
+                    const updated = [...recommendTexts]
+                    updated[i] = e.target.value
+                    setRecommendTexts(updated)
+                  }}
+                  placeholder={`テキスト ${i + 1}`}
+                />
+                <button
+                  className="btn btn-danger"
+                  onClick={() => setRecommendTexts(recommendTexts.filter((_, idx) => idx !== i))}
+                  style={{ flexShrink: 0 }}
+                >
+                  削除
+                </button>
+              </div>
+            ))}
+            {recommendTexts.length < 3 && (
+              <button
+                className="btn btn-secondary"
+                onClick={() => setRecommendTexts([...recommendTexts, ''])}
+              >
+                + 追加
+              </button>
+            )}
+          </div>
+
+          {/* Googleレビュー誘導 */}
+          <div className="card" style={{ marginBottom: '16px' }}>
+            <div className="card-title">Googleレビュー誘導</div>
+            <p style={{ color: '#666', fontSize: '13px', marginBottom: '12px' }}>
+              会話の終盤でGoogleクチコミへの投稿を促します。
+            </p>
+            {hasGmb ? (
+              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={googleReviewEnabled}
+                  onChange={(e) => setGoogleReviewEnabled(e.target.checked)}
+                />
+                <span style={{ fontSize: '14px' }}>有効にする</span>
+              </label>
+            ) : (
+              <div style={{ padding: '12px', background: '#f9fafb', borderRadius: '6px', color: '#999', fontSize: '13px' }}>
+                Googleビジネスプロフィールが基本情報に未設定です。先に基本情報ページでGMB URLを設定してください。
+              </div>
+            )}
+          </div>
+
+          {/* メッセージ */}
+          {message && (
+            <div style={{
+              padding: '10px 14px',
+              marginBottom: '16px',
+              borderRadius: '6px',
+              background: message.type === 'success' ? '#dcfce7' : '#fef2f2',
+              color: message.type === 'success' ? '#166534' : '#991b1b',
+              fontSize: '14px',
+            }}>
+              {message.text}
+            </div>
+          )}
+
+          {/* 保存 */}
+          <button
+            className="btn btn-primary"
+            onClick={handleSave}
+            disabled={saving}
+          >
+            {saving ? '保存中...' : '保存'}
+          </button>
         </>
       )}
 
@@ -295,6 +466,25 @@ export default function PromptsPage() {
 
         .btn-primary:hover:not(:disabled) {
           background: #1d4ed8;
+        }
+
+        .btn-secondary {
+          background: #f3f4f6;
+          color: #374151;
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+          background: #e5e7eb;
+        }
+
+        .btn-danger {
+          background: #fef2f2;
+          color: #991b1b;
+          padding: 8px 16px;
+        }
+
+        .btn-danger:hover:not(:disabled) {
+          background: #fee2e2;
         }
       `}</style>
     </AdminLayout>

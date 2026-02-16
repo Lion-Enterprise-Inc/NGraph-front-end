@@ -103,6 +103,10 @@ export interface Restaurant {
   business_type: string | null;
   custom_prompt: string | null;
   ai_tone: string | null;
+  recommended_menus: { auto: boolean; menu_uids: string[] } | null;
+  popular_menus: { auto: boolean; menu_uids: string[] } | null;
+  recommend_texts: string[] | null;
+  google_review_enabled: boolean | null;
   menu_count?: number;
   created_at: string;
   updated_at: string;
