@@ -1,7 +1,4 @@
-import MenuSimpleIcon from './icons/MenuSimpleIcon'
-import vector from '../assets/vector.png'
-import newTabIcon from './new_tab.svg'
-import hamburgerIcon from './ham.png'
+import { Menu, SquarePen } from 'lucide-react'
 import { getUiCopy } from '../i18n/uiCopy'
 import { type Restaurant } from '../api/mockApi'
 import { useAppContext } from './AppProvider'
@@ -31,12 +28,12 @@ export default function CaptureHeader({ restaurant, onMenu, onLanguage, onNewCha
   return (
     <header className="capture-header sticky">
       <button className="icon-button" type="button" aria-label={copy.captureHeader.menu} onClick={onMenu}>
-        <img src={hamburgerIcon.src} alt="" style={{ width: '20px', height: '20px' }} />
+        <Menu size={22} strokeWidth={1.75} />
       </button>
       <div className="brand-title nav-brand" style={{
         fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-        fontWeight: 800,
-        fontSize: '20px',
+        fontWeight: 700,
+        fontSize: '18px',
         letterSpacing: '-0.02em',
         color: '#1f2937',
         fontStretch: 'expanded'
@@ -44,7 +41,7 @@ export default function CaptureHeader({ restaurant, onMenu, onLanguage, onNewCha
         NGraph
       </div>
       <button className="icon-button" type="button" aria-label="New Chat" onClick={onNewChat}>
-        <img src={newTabIcon.src} alt="" />
+        <SquarePen size={20} strokeWidth={1.75} />
       </button>
     </header>
   )

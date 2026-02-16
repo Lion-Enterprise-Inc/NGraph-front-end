@@ -8,10 +8,7 @@ import {
   type RefObject,
   type SyntheticEvent,
 } from "react";
-import GalleryIcon from "../assets/Group 624689.svg";
-import CameraIcon from "../assets/Group 624690.svg";
-import VectorIcon from "../assets/Vector.svg";
-import Vector from "../assets/vectorbtn.png";
+import { Camera, ImagePlus, ArrowUp } from "lucide-react";
 import { getUiCopy } from "../i18n/uiCopy";
 import { useAppContext } from "./AppProvider";
 
@@ -201,7 +198,7 @@ export default function ChatDock({
               }
             }}
           >
-            <img src={CameraIcon.src} alt="" />
+            <Camera size={20} strokeWidth={1.6} />
           </button>
           <button
             className="chat-icon"
@@ -212,7 +209,7 @@ export default function ChatDock({
               galleryInputRef.current?.click();
             }}
           >
-            <img src={GalleryIcon.src} alt="" />
+            <ImagePlus size={20} strokeWidth={1.6} />
           </button>
         </div>
         <div className={`chat-dock-area${multiline ? " multiline" : ""}`}>
@@ -237,17 +234,13 @@ export default function ChatDock({
             }}
           />
           <button
-            className={`chat-dock-send${sendEnabled ? " " : ""}`}
+            className={`chat-dock-send${sendEnabled ? " active" : ""}`}
             type="button"
             aria-label={copy.chat.sendMessage}
             disabled={!sendEnabled}
             onClick={onSend}
           >
-            {sendEnabled ? (
-              <img src={Vector.src} alt={copy.chat.send} />
-            ) : (
-              <img src={VectorIcon.src} alt={copy.chat.sendDisabled} />
-            )}
+            <ArrowUp size={18} strokeWidth={2.5} color="#fff" />
           </button>
         </div>
       </div>

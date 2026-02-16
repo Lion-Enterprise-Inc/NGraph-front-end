@@ -15,7 +15,7 @@ import { FeedbackApi, type VisionMenuItem } from "../services/api";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
-import { User, Bot, ChevronDown, Copy, Sparkles } from "lucide-react";
+import { User, Bot, ChevronDown, Copy, Sparkles, ThumbsUp, ThumbsDown } from "lucide-react";
 import CaptureHeader from "../components/CaptureHeader";
 import CameraPrompt from "../components/CameraPrompt";
 import ChatDock from "../components/ChatDock";
@@ -1110,20 +1110,20 @@ export default function CapturePage({
                           <div className="feedback-row">
                             <div className="feedback-actions">
                               <button
-                                className={`feedback-btn${response.feedback === 'good' ? ' active' : ''}`}
+                                className={`feedback-btn${response.feedback === 'good' ? ' active good' : ''}`}
                                 type="button"
                                 onClick={() => handleFeedback(response.id, 'good')}
                                 aria-label="Good"
                               >
-                                👍
+                                <ThumbsUp size={16} />
                               </button>
                               <button
-                                className={`feedback-btn${response.feedback === 'bad' ? ' active' : ''}`}
+                                className={`feedback-btn${response.feedback === 'bad' ? ' active bad' : ''}`}
                                 type="button"
                                 onClick={() => handleFeedback(response.id, 'bad')}
                                 aria-label="Bad"
                               >
-                                👎
+                                <ThumbsDown size={16} />
                               </button>
                             </div>
                           </div>

@@ -1,5 +1,4 @@
-import globeImage from '../assets/glob.png'
-import triangleImage from '../assets/tri-angle.png'
+import { Globe, ChevronDown } from 'lucide-react'
 import { getUiCopy, languageOptions } from '../i18n/uiCopy'
 import { useAppContext } from './AppProvider'
 
@@ -32,7 +31,7 @@ export default function HistoryDrawer({
       >
         <div className="drawer-language">
           <span className="drawer-language-icon" aria-hidden="true">
-            <img src={globeImage.src} alt="" />
+            <Globe size={20} strokeWidth={1.6} />
           </span>
           <select
             className="drawer-language-select"
@@ -47,7 +46,7 @@ export default function HistoryDrawer({
             ))}
           </select>
           <span className="drawer-chevron" aria-hidden="true">
-            <img src={triangleImage.src} alt="" />
+            <ChevronDown size={16} strokeWidth={2} />
           </span>
         </div>
       </aside>
