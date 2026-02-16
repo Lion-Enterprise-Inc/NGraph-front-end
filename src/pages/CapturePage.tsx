@@ -810,10 +810,10 @@ export default function CapturePage({
             }
 
             output = { title: '', intro: streamedText, body: [] };
-            // Clear streaming flag and mark complete
+            // Clear streaming flag, set output, and mark complete together
             setResponses((prev) =>
               prev.map((item) =>
-                item.id === responseId ? { ...item, streaming: false } : item
+                item.id === responseId ? { ...item, output, streaming: false } : item
               )
             );
             setIsTypingActive(false);
@@ -1106,31 +1106,30 @@ export default function CapturePage({
                             </ReactMarkdown>
                           </div>
                         ))}
+                        {typingComplete.has(response.id) && (
+                          <div className="feedback-row">
+                            <div className="feedback-actions">
+                              <button
+                                className={`feedback-btn${response.feedback === 'good' ? ' active' : ''}`}
+                                type="button"
+                                onClick={() => handleFeedback(response.id, 'good')}
+                                aria-label="Good"
+                              >
+                                👍
+                              </button>
+                              <button
+                                className={`feedback-btn${response.feedback === 'bad' ? ' active' : ''}`}
+                                type="button"
+                                onClick={() => handleFeedback(response.id, 'bad')}
+                                aria-label="Bad"
+                              >
+                                👎
+                              </button>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
-                  </div>
-                </div>
-              )}
-
-              {typingComplete.has(response.id) && (
-                <div className="feedback-row">
-                  <div className="feedback-actions">
-                    <button
-                      className={`feedback-btn${response.feedback === 'good' ? ' active' : ''}`}
-                      type="button"
-                      onClick={() => handleFeedback(response.id, 'good')}
-                      aria-label="Good"
-                    >
-                      👍
-                    </button>
-                    <button
-                      className={`feedback-btn${response.feedback === 'bad' ? ' active' : ''}`}
-                      type="button"
-                      onClick={() => handleFeedback(response.id, 'bad')}
-                      aria-label="Bad"
-                    >
-                      👎
-                    </button>
                   </div>
                 </div>
               )}
