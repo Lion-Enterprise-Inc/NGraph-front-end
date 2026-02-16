@@ -100,6 +100,7 @@ type ResponseItem = {
   language: string;
   feedback: "good" | "bad" | null;
   messageUid: string | null;
+  streaming?: boolean;
 };
 
 type FeedbackEntry = {
@@ -543,6 +544,7 @@ export default function CapturePage({
 
     responses.forEach((response) => {
       if (!response.output) return;
+      if (response.streaming) return; // SSE streaming handles its own display
       if (typingStartedRef.current.has(response.id)) return;
       typingStartedRef.current.add(response.id);
       void startTyping(response);
@@ -752,21 +754,11 @@ export default function CapturePage({
           });
 
           if (streamResponse.ok && streamResponse.body) {
-            setLoading(false);
+            // Keep loading spinner until first content token
             setIsTypingActive(true);
-            // Initialize typing state for streaming
-            setTypingState((prev) => ({
-              ...prev,
-              [responseId]: { title: '', intro: '', body: [] },
-            }));
-            // Set empty output so assistant row renders
-            setResponses((prev) =>
-              prev.map((item) =>
-                item.id === responseId ? { ...item, output: { title: '', intro: '', body: [] } } : item
-              )
-            );
 
             let streamedText = '';
+            let firstToken = true;
             const reader = streamResponse.body.getReader();
             const decoder = new TextDecoder();
             let buffer = '';
@@ -783,6 +775,22 @@ export default function CapturePage({
                 try {
                   const data = JSON.parse(line.slice(6));
                   if (data.type === 'content') {
+                    if (firstToken) {
+                      firstToken = false;
+                      setLoading(false);
+                      // Show assistant row with streaming flag
+                      setResponses((prev) =>
+                        prev.map((item) =>
+                          item.id === responseId
+                            ? { ...item, output: { title: '', intro: '', body: [] }, streaming: true }
+                            : item
+                        )
+                      );
+                      setTypingState((prev) => ({
+                        ...prev,
+                        [responseId]: { title: '', intro: '', body: [] },
+                      }));
+                    }
                     streamedText += data.content;
                     setTypingState((prev) => ({
                       ...prev,
@@ -800,6 +808,12 @@ export default function CapturePage({
             }
 
             output = { title: '', intro: streamedText, body: [] };
+            // Clear streaming flag and mark complete
+            setResponses((prev) =>
+              prev.map((item) =>
+                item.id === responseId ? { ...item, streaming: false } : item
+              )
+            );
             setIsTypingActive(false);
             setTypingComplete((prev) => new Set(prev).add(responseId));
           } else {
