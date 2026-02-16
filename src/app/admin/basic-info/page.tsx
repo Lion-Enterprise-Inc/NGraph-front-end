@@ -363,15 +363,6 @@ export default function BasicInfoPage() {
               </div>
 
               <div className="form-group">
-                <label className="form-label">業種 *</label>
-                <select name="storeType" className="form-input" value={formData.storeType} onChange={handleChange}>
-                  <option value="">選択してください</option>
-                  {Object.entries(BUSINESS_TYPES).map(([key, label]) => (
-                    <option key={key} value={key}>{label}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="form-group">
                 <label className="form-label">レストラン名 *</label>
                 <input type="text" name="storeName" className="form-input" value={formData.storeName} onChange={handleChange} />
               </div>
@@ -382,6 +373,15 @@ export default function BasicInfoPage() {
               <div className="form-group">
                 <label className="form-label">住所</label>
                 <input type="text" name="address" className="form-input" value={formData.address} onChange={handleChange} />
+              </div>
+              <div className="form-group">
+                <label className="form-label">業種</label>
+                <select name="storeType" className="form-input" value={formData.storeType} onChange={handleChange}>
+                  <option value="">選択してください</option>
+                  {Object.entries(BUSINESS_TYPES).map(([key, label]) => (
+                    <option key={key} value={key}>{label}</option>
+                  ))}
+                </select>
               </div>
 
               <div className="section-divider" />
