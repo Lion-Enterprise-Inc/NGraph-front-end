@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import AdminLayout from '../../../components/admin/AdminLayout'
-import { apiClient } from '../../../services/api'
+import { apiClient, BUSINESS_TYPES } from '../../../services/api'
 import { useAuth } from '../../../contexts/AuthContext'
 
 type TabType = 'basic' | 'ai'
@@ -14,7 +14,7 @@ export default function BasicInfoPage() {
   const [restaurantLoading, setRestaurantLoading] = useState(true)
   const [restaurantError, setRestaurantError] = useState('')
   const [formData, setFormData] = useState({
-    storeType: 'restaurant_izakaya',
+    storeType: '',
     storeName: '',
     phone: '',
     address: '',
@@ -82,7 +82,7 @@ export default function BasicInfoPage() {
       setRestaurant(restaurantData)
 
       setFormData({
-        storeType: 'restaurant_izakaya',
+        storeType: restaurantData.business_type || '',
         storeName: restaurantData.name || '',
         phone: restaurantData.phone_number || '',
         address: restaurantData.address || '',
@@ -143,6 +143,7 @@ export default function BasicInfoPage() {
       formDataToSend.append('budget', formData.budget)
       formDataToSend.append('parking_slot', formData.parking)
       formDataToSend.append('attention_in_detail', formData.features)
+      formDataToSend.append('business_type', formData.storeType)
       formDataToSend.append('is_active', String(restaurant.is_active))
       
       // Add logo file if selected
@@ -365,12 +366,9 @@ export default function BasicInfoPage() {
                 <label className="form-label">業種 *</label>
                 <select name="storeType" className="form-input" value={formData.storeType} onChange={handleChange}>
                   <option value="">選択してください</option>
-                  <option value="restaurant_izakaya">飲食店 - 居酒屋</option>
-                  <option value="restaurant_cafe">飲食店 - カフェ</option>
-                  <option value="restaurant_ramen">飲食店 - ラーメン店</option>
-                  <option value="retail_apparel">小売店 - アパレル</option>
-                  <option value="retail_goods">小売店 - 雑貨店</option>
-                  <option value="hotel">宿泊施設</option>
+                  {Object.entries(BUSINESS_TYPES).map(([key, label]) => (
+                    <option key={key} value={key}>{label}</option>
+                  ))}
                 </select>
               </div>
               <div className="form-group">

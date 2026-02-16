@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import AdminLayout from '../../../components/admin/AdminLayout'
-import { RestaurantApi, UserApi, UserListItem, CreateRestaurantRequest, Restaurant } from '../../../services/api'
+import { RestaurantApi, UserApi, UserListItem, CreateRestaurantRequest, Restaurant, BUSINESS_TYPES } from '../../../services/api'
 
 // Store type for UI display
 interface StoreDisplay {
@@ -52,7 +52,7 @@ export default function StoresPage() {
           name: restaurant.name,
           location: restaurant.address ? extractLocation(restaurant.address) : '未設定',
           address: restaurant.address || '',
-          type: '🍽️ 飲食店',
+          type: restaurant.business_type ? (BUSINESS_TYPES[restaurant.business_type] || restaurant.business_type) : '未設定',
           plan: 'フリープラン',
           planId: 'free',
           planPrice: 0,
@@ -182,6 +182,7 @@ export default function StoresPage() {
       if (newStore.parking) requestData.parking_slot = newStore.parking
       if (newStore.features) requestData.attention_in_detail = newStore.features
       if (newStore.otherSources) requestData.other_sources = newStore.otherSources
+      if (newStore.type) requestData.business_type = newStore.type
 
       const response = await RestaurantApi.create(requestData)
       
@@ -194,7 +195,7 @@ export default function StoresPage() {
           name: response.result.name,
           location: newStore.location || '未設定',
           address: response.result.address || '',
-          type: newStore.type || '🍽️ 飲食店',
+          type: newStore.type ? (BUSINESS_TYPES[newStore.type] || newStore.type) : '未設定',
           plan: newStore.planName || 'フリープラン',
           planId: newStore.planId || 'free',
           planPrice: newStore.planPrice,
@@ -456,16 +457,9 @@ export default function StoresPage() {
                     onChange={(e) => setNewStore({...newStore, type: e.target.value})}
                   >
                     <option value="">選択してください</option>
-                    <option value="🍽️ 飲食店 - 居酒屋">🍽️ 飲食店 - 居酒屋</option>
-                    <option value="🍽️ 飲食店 - カフェ">🍽️ 飲食店 - カフェ</option>
-                    <option value="🍽️ 飲食店 - ラーメン店">🍽️ 飲食店 - ラーメン店</option>
-                    <option value="🍽️ 飲食店 - 寿司">🍽️ 飲食店 - 寿司</option>
-                    <option value="🍽️ 飲食店 - その他">🍽️ 飲食店 - その他</option>
-                    <option value="��️ 小売店 - アパレル">🛍️ 小売店 - アパレル</option>
-                    <option value="🛍️ 小売店 - 雑貨">🛍️ 小売店 - 雑貨</option>
-                    <option value="🛍️ 小売店 - 食品">🛍️ 小売店 - 食品</option>
-                    <option value="🏪 アンテナショップ">🏪 アンテナショップ</option>
-                    <option value="🏨 宿泊施設">🏨 宿泊施設</option>
+                    {Object.entries(BUSINESS_TYPES).map(([key, label]) => (
+                      <option key={key} value={key}>{label}</option>
+                    ))}
                   </select>
                 </div>
 

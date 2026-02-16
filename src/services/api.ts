@@ -79,6 +79,7 @@ export interface CreateRestaurantRequest {
   budget?: string;
   parking_slot?: string;
   attention_in_detail?: string;
+  business_type?: string;
 }
 
 export interface Restaurant {
@@ -99,6 +100,7 @@ export interface Restaurant {
   budget: string | null;
   parking_slot: string | null;
   attention_in_detail: string | null;
+  business_type: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -325,6 +327,7 @@ export const RestaurantApi = {
     if (data.budget) formData.append('budget', data.budget);
     if (data.parking_slot) formData.append('parking_slot', data.parking_slot);
     if (data.attention_in_detail) formData.append('attention_in_detail', data.attention_in_detail);
+    if (data.business_type) formData.append('business_type', data.business_type);
 
     const token = TokenService.getAccessToken();
     const response = await fetch(`${API_BASE_URL}/restaurants/`, {
@@ -405,6 +408,37 @@ export interface AllergenResponse {
   result: Allergen;
   message: string;
   status_code: number;
+}
+
+// Business types (業種カテゴリ)
+export const BUSINESS_TYPES: Record<string, string> = {
+  izakaya: '居酒屋',
+  japanese: '和食・日本料理',
+  sushi: '寿司',
+  ramen: 'ラーメン',
+  soba_udon: 'そば・うどん',
+  yakitori: '焼き鳥・串揚げ',
+  yakiniku: '焼肉',
+  chinese: '中華',
+  italian: 'イタリアン',
+  french: 'フレンチ',
+  western: '洋食',
+  curry: 'カレー',
+  korean: '韓国料理',
+  ethnic: 'エスニック・各国料理',
+  cafe: 'カフェ・喫茶',
+  bar: 'バー・ダイニングバー',
+  sweets: 'スイーツ・パティスリー',
+  bakery: 'ベーカリー・パン',
+  takeout_stand: 'テイクアウト・スタンド',
+  shokudo: '食堂・定食',
+  fast_food: 'ファストフード',
+  restaurant_other: '飲食店 - その他',
+  retail_apparel: '小売店 - アパレル',
+  retail_goods: '小売店 - 雑貨',
+  retail_food: '小売店 - 食品',
+  antenna_shop: 'アンテナショップ',
+  hotel: '宿泊施設',
 }
 
 // Dish categories (NFG v0.2 English enum → Japanese label)
