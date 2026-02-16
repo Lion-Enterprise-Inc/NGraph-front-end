@@ -18,8 +18,6 @@ interface StoreDisplay {
   planId: string;
   planPrice: number;
   menuCount: number;
-  responses: number;
-  satisfaction: number;
   lastUpdate: string;
   status: string;
 }
@@ -56,9 +54,7 @@ export default function StoresPage() {
           plan: 'フリープラン',
           planId: 'free',
           planPrice: 0,
-          menuCount: 0,
-          responses: 0,
-          satisfaction: 0,
+          menuCount: restaurant.menu_count || 0,
           lastUpdate: formatDate(restaurant.updated_at),
           status: restaurant.is_active ? 'active' : 'inactive'
         }))
@@ -96,25 +92,24 @@ export default function StoresPage() {
   }
   const [newStore, setNewStore] = useState({
     name: '',
-    user_uid: '', // Restaurant owner UID
+    user_uid: '',
     type: '',
-    location: '',
     address: '',
     phone: '',
-    planId: '',
-    planName: '',
-    planPrice: 0,
+    description: '',
     officialWebsite: '',
     googleProfile: '',
-    description: '',
     hours: '',
+    holidays: '',
     budget: '',
     parking: '',
     payment: '',
+    seats: '',
+    accessInfo: '',
     features: '',
-    otherSources: '',
     is_active: true
   })
+  const [isStoreSearching, setIsStoreSearching] = useState(false)
 
   // Fetch restaurant owners when modal opens
   useEffect(() => {
@@ -135,8 +130,8 @@ export default function StoresPage() {
     }
   }
 
-  const filteredStores = filter === 'all' 
-    ? stores 
+  const filteredStores = filter === 'all'
+    ? stores
     : stores.filter(s => s.location.toLowerCase().includes(filter === 'fukui' ? '福井' : filter === 'kanazawa' ? '金沢' : '名古屋'))
 
   const locationCounts = {
@@ -172,20 +167,22 @@ export default function StoresPage() {
         address: newStore.address,
       }
 
-      // Only add optional fields if they have values
       if (newStore.description) requestData.description = newStore.description
       if (newStore.officialWebsite) requestData.official_website = newStore.officialWebsite
       if (newStore.googleProfile) requestData.google_business_profile = newStore.googleProfile
       if (newStore.description) requestData.store_introduction = newStore.description
       if (newStore.hours) requestData.opening_hours = newStore.hours
+      if (newStore.holidays) (requestData as any).holidays = newStore.holidays
       if (newStore.budget) requestData.budget = newStore.budget
       if (newStore.parking) requestData.parking_slot = newStore.parking
+      if (newStore.payment) (requestData as any).payment_methods = newStore.payment
+      if (newStore.seats) (requestData as any).seats = newStore.seats
+      if (newStore.accessInfo) (requestData as any).access_info = newStore.accessInfo
       if (newStore.features) requestData.attention_in_detail = newStore.features
-      if (newStore.otherSources) requestData.other_sources = newStore.otherSources
       if (newStore.type) requestData.business_type = newStore.type
 
       const response = await RestaurantApi.create(requestData)
-      
+
       if (response.result) {
         // Add to local state for immediate UI update
         const newStoreData: StoreDisplay = {
@@ -193,27 +190,25 @@ export default function StoresPage() {
           uid: response.result.uid,
           storeCode: response.result.uid.substring(0, 8).toUpperCase(),
           name: response.result.name,
-          location: newStore.location || '未設定',
+          location: response.result.address ? extractLocation(response.result.address) : '未設定',
           address: response.result.address || '',
           type: newStore.type ? (BUSINESS_TYPES[newStore.type] || newStore.type) : '未設定',
-          plan: newStore.planName || 'フリープラン',
-          planId: newStore.planId || 'free',
-          planPrice: newStore.planPrice,
+          plan: 'フリープラン',
+          planId: 'free',
+          planPrice: 0,
           menuCount: 0,
-          responses: 0,
-          satisfaction: 0,
           lastUpdate: '今',
           status: response.result.is_active ? 'active' : 'inactive'
         }
-        
+
         setStores([...stores, newStoreData])
         setShowModal(false)
         resetNewStore()
-        alert(`✅ ${response.message}\n\nレストラン: ${response.result.name}\nUID: ${response.result.uid}`)
+        alert(`レストラン "${response.result.name}" を登録しました\nUID: ${response.result.uid}`)
       }
     } catch (error) {
       console.error('Failed to create restaurant:', error)
-      alert(`❌ レストラン作成に失敗しました: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      alert(`レストラン作成に失敗しました: ${error instanceof Error ? error.message : 'Unknown error'}`)
     } finally {
       setIsSubmitting(false)
     }
@@ -221,30 +216,66 @@ export default function StoresPage() {
 
   const resetNewStore = () => {
     setNewStore({
-      name: '', user_uid: '', type: '', location: '', address: '', phone: '', planId: '', planName: '', planPrice: 0,
-      officialWebsite: '', googleProfile: '', description: '', hours: '', budget: '', parking: '', payment: '', features: '', otherSources: '', is_active: true
+      name: '', user_uid: '', type: '', address: '', phone: '',
+      description: '', officialWebsite: '', googleProfile: '', hours: '', holidays: '',
+      budget: '', parking: '', payment: '', seats: '', accessInfo: '', features: '', is_active: true
     })
   }
 
-  const enterStoreView = (storeId: number) => {
-    const store = stores.find(s => s.id === storeId)
-    if (store) {
-      // Show store management modal/alert for now
-      alert(`${store.name}の管理画面\n\nレストランコード: ${store.storeCode}\n住所: ${store.address}\nプラン: ${store.plan}\n\nダッシュボード・基本情報・メニュー編集が可能です。`)
+  const handleStoreSearch = async () => {
+    if (!newStore.name.trim()) {
+      alert('店名を入力してください')
+      return
     }
-  }
 
-  const viewStoreMenus = (storeId: number) => {
-    const store = stores.find(s => s.id === storeId)
-    if (store) {
-      alert(`${store.name}のメニュー一覧を表示します\n\n登録メニュー数: ${store.menuCount}件`)
-    }
-  }
+    setIsStoreSearching(true)
+    try {
+      const token = localStorage.getItem('access_token')
+      const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://15.207.22.103:8000'
 
-  const showStoreDetail = (storeId: number) => {
-    const store = stores.find(s => s.id === storeId)
-    if (store) {
-      alert(`${store.name}の詳細情報\n\nレストランコード: ${store.storeCode}\n住所: ${store.address}\nプラン: ${store.plan}\nメニュー数: ${store.menuCount}件`)
+      const query = [newStore.name, newStore.address, newStore.phone].filter(s => s.trim()).join(' ')
+
+      const res = await fetch(`${apiBaseUrl}/restaurants/search-info-public`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ query })
+      })
+
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+
+      const data = await res.json()
+      const info = data.result?.store_info
+
+      if (info) {
+        setNewStore(prev => ({
+          ...prev,
+          name: info.name || prev.name,
+          phone: info.phone || prev.phone,
+          address: info.address || prev.address,
+          description: info.description || prev.description,
+          officialWebsite: info.official_website || prev.officialWebsite,
+          googleProfile: info.google_business_profile || prev.googleProfile,
+          hours: info.business_hours || prev.hours,
+          holidays: info.holidays || prev.holidays,
+          budget: info.budget || prev.budget,
+          parking: info.parking || prev.parking,
+          payment: info.payment || prev.payment,
+          seats: info.seats || prev.seats,
+          accessInfo: info.access || prev.accessInfo,
+          features: info.features || prev.features,
+        }))
+        alert('情報を取得しました。内容を確認して登録してください。')
+      } else {
+        alert('情報が見つかりませんでした')
+      }
+    } catch (error) {
+      console.error('Search failed:', error)
+      alert(`情報の検索に失敗しました: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    } finally {
+      setIsStoreSearching(false)
     }
   }
 
@@ -256,33 +287,25 @@ export default function StoresPage() {
       // Remove from local state
       setStores(stores.filter(s => s.uid !== storeUid))
       setTotalRestaurants(prev => prev - 1)
-      alert(`✅ レストラン "${storeName}" を削除しました`)
+      alert(`レストラン "${storeName}" を削除しました`)
     } catch (error) {
       console.error('Failed to delete restaurant:', error)
-      alert(`❌ レストランの削除に失敗しました: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      alert(`レストランの削除に失敗しました: ${error instanceof Error ? error.message : 'Unknown error'}`)
     }
-  }
-
-  const showPlanSelection = () => {
-    const plan = prompt('プランを選択:\n1. フリープラン (¥0)\n2. ライトプラン (¥980)\n3. ビジネスプラン (¥3,980)', '1')
-    if (plan === '1') setNewStore({...newStore, planId: 'free', planName: 'フリープラン', planPrice: 0})
-    else if (plan === '2') setNewStore({...newStore, planId: 'light', planName: 'ライトプラン', planPrice: 980})
-    else if (plan === '3') setNewStore({...newStore, planId: 'business', planName: 'ビジネスプラン', planPrice: 3980})
   }
 
   // Show full page loader before data is ready
   if (loading) {
     return (
       <AdminLayout title="導入レストラン一覧">
-        <div style={{ 
-          display: 'flex', 
+        <div style={{
+          display: 'flex',
           flexDirection: 'column',
-          justifyContent: 'center', 
-          alignItems: 'center', 
+          justifyContent: 'center',
+          alignItems: 'center',
           minHeight: '400px',
           width: '100%'
         }}>
-          <div style={{ fontSize: '48px', marginBottom: '16px' }}>⏳</div>
           <div style={{ color: '#666', fontSize: '16px' }}>レストランを読み込み中...</div>
         </div>
       </AdminLayout>
@@ -293,10 +316,10 @@ export default function StoresPage() {
     <AdminLayout title="導入レストラン一覧">
       <div className="card" style={{ width: '100%', maxWidth: 'none' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-          <h2 className="card-title" style={{ margin: 0 }}>🍽️ 導入レストラン一覧</h2>
+          <h2 className="card-title" style={{ margin: 0 }}>導入レストラン一覧</h2>
           <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
             <button className="btn btn-primary" onClick={() => setShowModal(true)}>
-              ➕ 新規レストランを登録
+              新規レストランを登録
             </button>
             <div>
               <span style={{ fontSize: '24px', fontWeight: 700, color: '#667eea' }}>{stores.length}</span>
@@ -306,28 +329,28 @@ export default function StoresPage() {
         </div>
 
         <div style={{ display: 'flex', gap: '10px', marginBottom: '8px', flexWrap: 'wrap' }}>
-          <button 
+          <button
             className={`btn btn-secondary btn-small ${filter === 'all' ? 'active' : ''}`}
             onClick={() => setFilter('all')}
             id="filter-all"
           >
             すべて ({locationCounts.all})
           </button>
-          <button 
+          <button
             className={`btn btn-secondary btn-small ${filter === 'fukui' ? 'active' : ''}`}
             onClick={() => setFilter('fukui')}
             id="filter-fukui"
           >
             福井 ({locationCounts.fukui})
           </button>
-          <button 
+          <button
             className={`btn btn-secondary btn-small ${filter === 'kanazawa' ? 'active' : ''}`}
             onClick={() => setFilter('kanazawa')}
             id="filter-kanazawa"
           >
             金沢 ({locationCounts.kanazawa})
           </button>
-          <button 
+          <button
             className={`btn btn-secondary btn-small ${filter === 'nagoya' ? 'active' : ''}`}
             onClick={() => setFilter('nagoya')}
             id="filter-nagoya"
@@ -338,7 +361,7 @@ export default function StoresPage() {
 
         {filteredStores.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '60px 40px', color: '#666', width: '100%' }}>
-            <div style={{ fontSize: '32px', marginBottom: '12px' }}>🍽️</div>
+            <div style={{ fontSize: '32px', marginBottom: '12px' }}>--</div>
             <div>レストランが見つかりません</div>
           </div>
         ) : (
@@ -349,7 +372,7 @@ export default function StoresPage() {
                 <div className="store-main-info">
                   <div className="store-name-compact">{store.name}</div>
                   {store.storeCode && <div className="store-code-compact">ID: {store.storeCode}</div>}
-                  <div className="store-location-compact">📍 {store.location} | {store.type}</div>
+                  <div className="store-location-compact">{store.location} | {store.type}</div>
                 </div>
                 <div className="store-status-compact">
                   {store.storeCode && <div className="store-id-badge">ID: {store.storeCode}</div>}
@@ -357,39 +380,28 @@ export default function StoresPage() {
                   <div className="store-update-compact">更新: {store.lastUpdate}</div>
                 </div>
               </div>
-              
+
               <div className="store-metrics-compact">
                 <div className="metric-item">
                   <span className="metric-value">{store.menuCount}</span>
                   <span className="metric-label">メニュー</span>
                 </div>
-                <div className="metric-item">
-                  <span className="metric-value">{store.responses}</span>
-                  <span className="metric-label">応答</span>
-                </div>
-                <div className="metric-item">
-                  <span className="metric-value">{store.satisfaction}</span>
-                  <span className="metric-label">満足度</span>
-                </div>
               </div>
-              
+
               <div className="store-actions-compact">
-                <button className="btn btn-primary btn-small" onClick={() => enterStoreView(store.id)} title="プラットフォーム権限でレストラン管理（ダッシュボード・基本情報・メニュー編集）">
-                  🔑 管理
+                <button className="btn btn-primary btn-small" onClick={() => router.push(`/admin/basic-info?uid=${store.uid}`)} title="基本情報を管理">
+                  管理
                 </button>
-                <button className="btn btn-secondary btn-small" onClick={() => viewStoreMenus(store.id)} title="登録メニュー情報の内容確認">
-                  🍽️ メニュー
+                <button className="btn btn-secondary btn-small" onClick={() => router.push(`/admin/menu-list?uid=${store.uid}`)} title="メニュー一覧を表示">
+                  メニュー
                 </button>
-                <button className="btn btn-secondary btn-small" onClick={() => showStoreDetail(store.id)} title="レストランの現状把握（統計・分析・パフォーマンス）">
-                  📊 詳細
-                </button>
-                <button 
-                  className="btn btn-danger btn-small" 
-                  onClick={() => handleDeleteStore(store.uid, store.name)} 
-                  title="レストランを削除（元に戻せません）"
+                <button
+                  className="btn btn-danger btn-small"
+                  onClick={() => handleDeleteStore(store.uid, store.name)}
+                  title="レストランを削除"
                   style={{ background: '#dc3545', color: 'white' }}
                 >
-                  🗑️ 削除
+                  削除
                 </button>
               </div>
             </div>
@@ -403,263 +415,134 @@ export default function StoresPage() {
         <div id="newStoreModal" className="modal active" onClick={(e) => { if (e.target === e.currentTarget) setShowModal(false) }}>
           <div className="modal-content">
             <div className="modal-header">
-              <h2 style={{ fontSize: '24px', fontWeight: 700, margin: 0 }}>➕ 新規レストランを登録</h2>
+              <h2 style={{ fontSize: '24px', fontWeight: 700, margin: 0 }}>新規レストランを登録</h2>
               <button className="close-btn" onClick={() => setShowModal(false)}>×</button>
             </div>
 
-            {/* フォームを2列レイアウトに変更 */}
-            <div className="form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '8px' }}>
-              {/* 左列 */}
-              <div>
-                <div className="form-group">
-                  <label className="form-label">レストラン名 *</label>
-                  <input 
-                    type="text" 
-                    className="form-input" 
-                    id="newStoreName"
-                    placeholder="例: カフェ・ド・金沢"
-                    value={newStore.name}
-                    onChange={(e) => setNewStore({...newStore, name: e.target.value})}
-                  />
-                </div>
+            <div className="form-group">
+              <label className="form-label">レストラン名 *</label>
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <input
+                  type="text"
+                  className="form-input"
+                  placeholder="例: 蟹と海鮮ぼんた くるふ福井駅店"
+                  value={newStore.name}
+                  onChange={(e) => setNewStore({...newStore, name: e.target.value})}
+                  style={{ flex: 1 }}
+                />
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={handleStoreSearch}
+                  disabled={isStoreSearching}
+                  style={{ whiteSpace: 'nowrap' }}
+                >
+                  {isStoreSearching ? '検索中...' : '店名で情報を検索'}
+                </button>
+              </div>
+              <p style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>店名を入力して検索すると、食べログ・Googleマップ等から情報を自動取得します</p>
+            </div>
 
-                <div className="form-group">
-                  <label className="form-label">レストランオーナー *</label>
-                  <select 
-                    className="form-input"
-                    id="newStoreOwner"
-                    value={newStore.user_uid}
-                    onChange={(e) => setNewStore({...newStore, user_uid: e.target.value})}
-                    disabled={loadingOwners}
-                  >
-                    <option value="">
-                      {loadingOwners ? '読み込み中...' : 'オーナーを選択してください'}
+            <div className="form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">レストランオーナー *</label>
+                <select
+                  className="form-input"
+                  value={newStore.user_uid}
+                  onChange={(e) => setNewStore({...newStore, user_uid: e.target.value})}
+                  disabled={loadingOwners}
+                >
+                  <option value="">
+                    {loadingOwners ? '読み込み中...' : 'オーナーを選択してください'}
+                  </option>
+                  {restaurantOwners.map(owner => (
+                    <option key={owner.uid} value={owner.uid}>
+                      {owner.email}
                     </option>
-                    {restaurantOwners.map(owner => (
-                      <option key={owner.uid} value={owner.uid}>
-                        {owner.email}
-                      </option>
-                    ))}
-                  </select>
-                  {restaurantOwners.length === 0 && !loadingOwners && (
-                    <div style={{ fontSize: '12px', color: '#E65100', marginTop: '4px' }}>
-                      ⚠️ 利用可能なレストランオーナーがいません
-                    </div>
-                  )}
-                </div>
-
-                <div className="form-group">
-                  <label className="form-label">業種</label>
-                  <select 
-                    className="form-input"
-                    id="newStoreType"
-                    value={newStore.type}
-                    onChange={(e) => setNewStore({...newStore, type: e.target.value})}
-                  >
-                    <option value="">選択してください</option>
-                    {Object.entries(BUSINESS_TYPES).map(([key, label]) => (
-                      <option key={key} value={key}>{label}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="form-group">
-                  <label className="form-label">地域 *</label>
-                  <select 
-                    className="form-input"
-                    id="newStoreLocation"
-                    value={newStore.location}
-                    onChange={(e) => setNewStore({...newStore, location: e.target.value})}
-                  >
-                    <option value="">選択してください</option>
-                    <option value="福井">福井</option>
-                    <option value="金沢">金沢</option>
-                    <option value="名古屋">名古屋</option>
-                    <option value="東京">東京</option>
-                    <option value="大阪">大阪</option>
-                    <option value="その他">その他</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* 右列 */}
-              <div>
-                <div className="form-group">
-                  <label className="form-label">住所 *</label>
-                  <input 
-                    type="text" 
-                    className="form-input" 
-                    id="newStoreAddress"
-                    placeholder="例: 石川県金沢市香林坊1-2-3"
-                    value={newStore.address}
-                    onChange={(e) => setNewStore({...newStore, address: e.target.value})}
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label className="form-label">電話番号 *</label>
-                  <input 
-                    type="tel" 
-                    className="form-input" 
-                    id="newStorePhone"
-                    placeholder="例: 076-123-4567"
-                    value={newStore.phone}
-                    onChange={(e) => setNewStore({...newStore, phone: e.target.value})}
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label className="form-label">プラン *</label>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <div id="selectedPlanDisplay" style={{ flex: 1, padding: '10px', background: '#f8f9fa', borderRadius: '6px', color: newStore.planName ? '#333' : '#666', fontSize: '14px' }}>
-                      {newStore.planName || 'プランを選択してください'}
-                    </div>
-                    <button 
-                      type="button" 
-                      className="btn btn-primary" 
-                      onClick={showPlanSelection}
-                      style={{ whiteSpace: 'nowrap' }}
-                    >
-                      💳 プランを選択
-                    </button>
+                  ))}
+                </select>
+                {restaurantOwners.length === 0 && !loadingOwners && (
+                  <div style={{ fontSize: '12px', color: '#E65100', marginTop: '4px' }}>
+                    利用可能なレストランオーナーがいません
                   </div>
-                </div>
+                )}
+              </div>
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">業種</label>
+                <select
+                  className="form-input"
+                  value={newStore.type}
+                  onChange={(e) => setNewStore({...newStore, type: e.target.value})}
+                >
+                  <option value="">選択してください</option>
+                  {Object.entries(BUSINESS_TYPES).map(([key, label]) => (
+                    <option key={key} value={key}>{label}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">住所 *</label>
+                <input type="text" className="form-input" placeholder="例: 福井県福井市中央1-1-25" value={newStore.address} onChange={(e) => setNewStore({...newStore, address: e.target.value})} />
+              </div>
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">電話番号 *</label>
+                <input type="tel" className="form-input" placeholder="例: 0776-22-2235" value={newStore.phone} onChange={(e) => setNewStore({...newStore, phone: e.target.value})} />
               </div>
             </div>
 
             <div className="card" style={{ background: '#f8f9fa', borderRadius: '12px', padding: '20px', border: '1px solid #e5e7eb', marginBottom: '16px' }}>
-              <h3 style={{ fontSize: '14px', fontWeight: 600, color: '#1f2937', marginBottom: '12px' }}>🔗 情報ソース（任意）</h3>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label className="form-label">公式HP</label>
-                  <input 
-                    type="url" 
-                    className="form-input" 
-                    id="newStoreOfficialWebsite"
-                    placeholder="https://example.com"
-                    value={newStore.officialWebsite}
-                    onChange={(e) => setNewStore({...newStore, officialWebsite: e.target.value})}
-                  />
-                </div>
-                <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label className="form-label">Googleビジネスプロフィール</label>
-                  <input 
-                    type="url" 
-                    className="form-input" 
-                    id="newStoreGoogleProfile"
-                    placeholder="https://maps.google.com/..."
-                    value={newStore.googleProfile}
-                    onChange={(e) => setNewStore({...newStore, googleProfile: e.target.value})}
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="card" style={{ background: '#f8f9fa', borderRadius: '12px', padding: '20px', border: '1px solid #e5e7eb', marginBottom: '16px' }}>
-              <h3 style={{ fontSize: '14px', fontWeight: 600, color: '#1f2937', marginBottom: '12px' }}>📝 レストラン詳細（任意）</h3>
+              <h3 style={{ fontSize: '14px', fontWeight: 600, color: '#1f2937', marginBottom: '12px' }}>詳細情報（検索で自動入力されます）</h3>
               <div className="form-group">
                 <label className="form-label">レストラン紹介</label>
-                <textarea 
-                  className="form-input" 
-                  id="newStoreDescription"
-                  rows={3} 
-                  placeholder="レストランの特徴やこだわりを記入します"
-                  value={newStore.description}
-                  onChange={(e) => setNewStore({...newStore, description: e.target.value})}
-                />
+                <textarea className="form-input" rows={3} placeholder="レストランの特徴や魅力" value={newStore.description} onChange={(e) => setNewStore({...newStore, description: e.target.value})} />
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                 <div className="form-group" style={{ marginBottom: 0 }}>
                   <label className="form-label">営業時間</label>
-                  <input 
-                    type="text" 
-                    className="form-input" 
-                    id="newStoreHours"
-                    placeholder="例: 11:00-22:00（火曜定休）"
-                    value={newStore.hours}
-                    onChange={(e) => setNewStore({...newStore, hours: e.target.value})}
-                  />
+                  <input type="text" className="form-input" value={newStore.hours} onChange={(e) => setNewStore({...newStore, hours: e.target.value})} />
+                </div>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label">定休日</label>
+                  <input type="text" className="form-input" value={newStore.holidays} onChange={(e) => setNewStore({...newStore, holidays: e.target.value})} />
+                </div>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label">座席数</label>
+                  <input type="text" className="form-input" value={newStore.seats} onChange={(e) => setNewStore({...newStore, seats: e.target.value})} />
                 </div>
                 <div className="form-group" style={{ marginBottom: 0 }}>
                   <label className="form-label">予算</label>
-                  <input 
-                    type="text" 
-                    className="form-input" 
-                    id="newStoreBudget"
-                    placeholder="例: ランチ ¥1,000～ / ディナー ¥3,000～"
-                    value={newStore.budget}
-                    onChange={(e) => setNewStore({...newStore, budget: e.target.value})}
-                  />
+                  <input type="text" className="form-input" value={newStore.budget} onChange={(e) => setNewStore({...newStore, budget: e.target.value})} />
                 </div>
                 <div className="form-group" style={{ marginBottom: 0 }}>
                   <label className="form-label">駐車場</label>
-                  <input 
-                    type="text" 
-                    className="form-input" 
-                    id="newStoreParking"
-                    placeholder="例: 近隣に提携パーキングあり（2時間無料）"
-                    value={newStore.parking}
-                    onChange={(e) => setNewStore({...newStore, parking: e.target.value})}
-                  />
+                  <input type="text" className="form-input" value={newStore.parking} onChange={(e) => setNewStore({...newStore, parking: e.target.value})} />
                 </div>
                 <div className="form-group" style={{ marginBottom: 0 }}>
                   <label className="form-label">支払い方法</label>
-                  <input 
-                    type="text" 
-                    className="form-input" 
-                    id="newStorePayment"
-                    placeholder="例: 現金 / クレジット / 電子マネー"
-                    value={newStore.payment}
-                    onChange={(e) => setNewStore({...newStore, payment: e.target.value})}
-                  />
+                  <input type="text" className="form-input" value={newStore.payment} onChange={(e) => setNewStore({...newStore, payment: e.target.value})} />
                 </div>
-              </div>
-              <div className="form-group" style={{ marginTop: '16px' }}>
-                <label className="form-label">特徴・こだわり</label>
-                <textarea 
-                  className="form-input" 
-                  id="newStoreFeatures"
-                  rows={3} 
-                  placeholder="例: 地元食材使用、英語対応スタッフ在籍、個室あり"
-                  value={newStore.features}
-                  onChange={(e) => setNewStore({...newStore, features: e.target.value})}
-                />
-              </div>
-            </div>
-
-            <div className="alert alert-info" style={{ background: '#E3F2FD', padding: '20px', borderRadius: '8px', marginTop: '20px' }}>
-              <div style={{ fontWeight: 600, marginBottom: '8px', fontSize: '16px' }}>💡 登録後の流れ</div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '15px' }}>
-                <div style={{ background: 'white', padding: '16px', borderRadius: '8px', borderLeft: '4px solid #1976D2' }}>
-                  <div style={{ fontWeight: 600, color: '#1976D2', marginBottom: '4px' }}>1. レストラン情報を登録</div>
-                  <div style={{ fontSize: '12px', color: '#666' }}>基本情報を入力して登録</div>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label">アクセス</label>
+                  <input type="text" className="form-input" value={newStore.accessInfo} onChange={(e) => setNewStore({...newStore, accessInfo: e.target.value})} />
                 </div>
-                <div style={{ background: 'white', padding: '16px', borderRadius: '8px', borderLeft: '4px solid #1976D2' }}>
-                  <div style={{ fontWeight: 600, color: '#1976D2', marginBottom: '4px' }}>2. QRコードとログイン情報を発行</div>
-                  <div style={{ fontSize: '12px', color: '#666' }}>自動でQRコードとログイン情報を生成</div>
-                </div>
-                <div style={{ background: 'white', padding: '16px', borderRadius: '8px', borderLeft: '4px solid #1976D2' }}>
-                  <div style={{ fontWeight: 600, color: '#1976D2', marginBottom: '4px' }}>3. レストランにメニュー登録を案内</div>
-                  <div style={{ fontSize: '12px', color: '#666' }}>レストランスタッフにメニュー登録を案内</div>
-                </div>
-                <div style={{ background: 'white', padding: '16px', borderRadius: '8px', borderLeft: '4px solid #1976D2' }}>
-                  <div style={{ fontWeight: 600, color: '#1976D2', marginBottom: '4px' }}>4. システム準備完了</div>
-                  <div style={{ fontSize: '12px', color: '#666' }}>AIチャットが利用可能に</div>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label">特徴・こだわり</label>
+                  <input type="text" className="form-input" value={newStore.features} onChange={(e) => setNewStore({...newStore, features: e.target.value})} />
                 </div>
               </div>
             </div>
 
             <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginTop: '20px' }}>
-              <button 
-                className="btn btn-primary" 
+              <button
+                className="btn btn-primary"
                 onClick={handleCreateStore}
                 disabled={isSubmitting}
                 style={{ opacity: isSubmitting ? 0.7 : 1 }}
               >
-                {isSubmitting ? '⏳ 登録中...' : '✅ 登録する'}
+                {isSubmitting ? '登録中...' : '登録する'}
               </button>
-              <button 
-                className="btn btn-secondary" 
+              <button
+                className="btn btn-secondary"
                 onClick={() => setShowModal(false)}
                 disabled={isSubmitting}
               >
@@ -823,14 +706,14 @@ export default function StoresPage() {
 
         .store-metrics-compact {
           display: flex;
-          justify-content: space-between;
+          justify-content: center;
           gap: 12px;
           margin: 8px 0;
         }
 
         .metric-item {
           text-align: center;
-          flex: 1;
+          flex: none;
         }
 
         .metric-value {
@@ -937,10 +820,6 @@ export default function StoresPage() {
           .store-status-compact {
             flex-direction: row;
             align-items: center;
-          }
-
-          .store-metrics-compact {
-            flex-wrap: wrap;
           }
 
           .store-actions-compact {
