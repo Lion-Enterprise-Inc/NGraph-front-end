@@ -1024,9 +1024,6 @@ export default function CapturePage({
                       <div className="chat-bubble chat-bubble-user">
                         {response.input.text}
                       </div>
-                      <div className="chat-timestamp">
-                        {new Date(parseInt(response.id)).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </div>
                     </div>
                   )}
                   {response.input.imageUrl && (
@@ -1036,9 +1033,6 @@ export default function CapturePage({
                           src={response.input.imageUrl}
                           alt={copy.chat.uploadPreview}
                         />
-                      </div>
-                      <div className="chat-timestamp">
-                        {new Date(parseInt(response.id)).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </div>
                     </div>
                   )}
@@ -1111,9 +1105,6 @@ export default function CapturePage({
                           </div>
                         ))}
                       </div>
-                      <div className="chat-timestamp">
-                        {new Date(parseInt(response.id)).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </div>
                     </div>
                   </div>
                 </div>
@@ -1121,7 +1112,6 @@ export default function CapturePage({
 
               {typingComplete.has(response.id) && (
                 <div className="feedback-row">
-                  <span className="feedback-question">解説は参考になりましたか</span>
                   <div className="feedback-actions">
                     <button
                       className={`feedback-btn${response.feedback === 'good' ? ' active' : ''}`}
@@ -1150,9 +1140,6 @@ export default function CapturePage({
                 <div className="chat-message-wrapper">
                   <div className="chat-loading-spinner" aria-live="polite">
                     <img src="/ngraph-logo.svg" alt="Loading" className="loading-logo-spin" />
-                  </div>
-                  <div className="chat-timestamp">
-                    {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </div>
                 </div>
               </div>

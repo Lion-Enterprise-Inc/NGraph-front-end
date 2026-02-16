@@ -1195,8 +1195,8 @@ body {
   }
 
   .feedback-row {
-    margin-left: 40px;
-    max-width: calc(100% - 40px);
+    margin-left: 0;
+    max-width: 100%;
   }
 
   .scroll-to-bottom-btn {
@@ -1658,14 +1658,14 @@ body {
 
 /* Premium Feedback Row - ChatGPT-style */
 .feedback-row {
-  margin-top: 12px;
-  margin-left: 48px;
+  margin-top: 2px;
+  margin-left: 0;
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  gap: 16px;
-  max-width: calc(100% - 48px);
-  padding: 8px 0;
+  gap: 8px;
+  max-width: 100%;
+  padding: 0;
   animation: fadeIn 0.3s ease-out;
 }
 
