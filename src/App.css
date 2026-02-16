@@ -1690,30 +1690,28 @@ body {
 }
 
 .feedback-btn {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  border: 1px solid #e5e5e5;
-  background: #ffffff;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   font-size: 14px;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.15s ease;
   box-shadow: none;
+  opacity: 0.5;
 }
 
 .feedback-btn:hover {
-  background: #f7f7f8;
-  border-color: #d5d5d5;
-  transform: translateY(-1px);
+  opacity: 1;
+  background: rgba(0, 0, 0, 0.05);
 }
 
 .feedback-btn.active {
-  border-color: #10a37f;
-  background: linear-gradient(135deg, rgba(16, 163, 127, 0.1) 0%, rgba(16, 163, 127, 0.05) 100%);
-  box-shadow: 0 0 0 1px rgba(16, 163, 127, 0.2);
+  opacity: 1;
 }
 
 .chat-loading-spinner {

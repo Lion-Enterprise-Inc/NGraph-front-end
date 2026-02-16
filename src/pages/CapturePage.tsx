@@ -756,6 +756,8 @@ export default function CapturePage({
           if (streamResponse.ok && streamResponse.body) {
             // Keep loading spinner until first content token
             setIsTypingActive(true);
+            // Prevent startTyping useEffect from running on this response
+            typingStartedRef.current.add(responseId);
 
             let streamedText = '';
             let firstToken = true;
