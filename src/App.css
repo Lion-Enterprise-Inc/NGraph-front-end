@@ -1716,6 +1716,23 @@ body {
   box-shadow: 0 0 0 1px rgba(16, 163, 127, 0.2);
 }
 
+.chat-loading-spinner {
+  display: flex;
+  align-items: center;
+  padding: 8px 0;
+}
+
+.loading-logo-spin {
+  width: 28px;
+  height: 28px;
+  animation: logoSpin 1.2s linear infinite;
+}
+
+@keyframes logoSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
 .loader-card {
   display: flex;
   flex-direction: row;

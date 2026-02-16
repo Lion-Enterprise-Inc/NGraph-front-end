@@ -1095,17 +1095,8 @@ export default function CapturePage({
             <div className="chat-row chat-row-assistant">
               <div className="chat-content">
                 <div className="chat-message-wrapper">
-                  <div className="chat-bubble chat-bubble-assistant chat-loading-bubble">
-                    <div className="loader-card" aria-live="polite">
-                      <div className="loader-icon">
-                        <Sparkles size={20} className="sparkle-icon" />
-                      </div>
-                      <div className="typing-indicator">
-                        <span></span>
-                        <span></span>
-                        <span></span>
-                      </div>
-                    </div>
+                  <div className="chat-loading-spinner" aria-live="polite">
+                    <img src="/favicon.png" alt="Loading" className="loading-logo-spin" />
                   </div>
                   <div className="chat-timestamp">
                     {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
