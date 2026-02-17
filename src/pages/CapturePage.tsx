@@ -381,7 +381,7 @@ export default function CapturePage({
       // Use custom recommend_texts if set
       if (selectedRestaurant.recommend_texts && selectedRestaurant.recommend_texts.length > 0) {
         return {
-          guide: copy.restaurant.chatPlaceholder.replace('{name}', selectedRestaurant.name),
+          guide: copy.restaurant.chatPlaceholder,
           chips: selectedRestaurant.recommend_texts
         };
       }
@@ -398,7 +398,7 @@ export default function CapturePage({
       }
 
       return {
-        guide: copy.restaurant.chatPlaceholder.replace('{name}', selectedRestaurant.name),
+        guide: copy.restaurant.chatPlaceholder,
         chips
       };
     }
