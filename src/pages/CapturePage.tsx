@@ -21,6 +21,7 @@ import CameraPrompt from "../components/CameraPrompt";
 import ChatDock from "../components/ChatDock";
 import { useAppContext } from "../components/AppProvider";
 import { getUiCopy, type LanguageCode } from "../i18n/uiCopy";
+import { recordVisit } from "../utils/storage";
 
 type ApiRestaurant = {
   uid: string
@@ -224,6 +225,8 @@ export default function CapturePage({
     openHistoryDrawer,
     pendingAttachment,
     setPendingAttachment,
+    setRestaurantSlug: setCtxSlug,
+    setOnNewChat,
   } = useAppContext();
   const activeLanguage = contextLanguage ?? language ?? "ja";
   const [message, setMessage] = useState("");
@@ -288,6 +291,7 @@ export default function CapturePage({
                 created_at: '',
                 updated_at: ''
               });
+              recordVisit(data.result.slug, data.result.name);
               return;
             }
           }
@@ -320,6 +324,11 @@ export default function CapturePage({
       fetchRestaurantBySlug();
     }
   }, [restaurantSlug]);
+
+  // Sync slug to AppContext for sidebar
+  useEffect(() => {
+    if (restaurantSlug) setCtxSlug(restaurantSlug);
+  }, [restaurantSlug, setCtxSlug]);
 
   const copy = useMemo(() => getUiCopy(activeLanguage), [activeLanguage]);
   
@@ -926,10 +935,16 @@ export default function CapturePage({
     });
   };
 
+  // Sync handleNewChat to AppContext for sidebar
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    setOnNewChat(() => handleNewChat);
+    return () => setOnNewChat(null);
+  }, []);
+
   return (
     <div className="page capture-page" onClick={handleBackgroundClick}>
       <CaptureHeader
-        restaurant={selectedRestaurant}
         onMenu={
           onOpenMenu ??
           openHistoryDrawer ??
@@ -940,6 +955,8 @@ export default function CapturePage({
         }
         onLanguage={openLanguageModal ?? openLanguageModalFromContext}
         onNewChat={handleNewChat}
+        showBack={responses.length > 0}
+        onBack={handleNewChat}
       />
 
       <div
@@ -955,25 +972,24 @@ export default function CapturePage({
           }`}
         >
           {restaurantLoading ? (
-            <div style={{ 
-              display: 'flex', 
-              flexDirection: 'column', 
-              alignItems: 'center', 
-              justifyContent: 'center', 
-              height: '300px',
-              fontFamily: 'Poppins, sans-serif'
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              height: '300px'
             }}>
-              <div style={{ 
-                width: '40px', 
-                height: '40px', 
-                border: '3px solid #e1e5e9', 
-                borderTopColor: '#10a37f', 
-                borderRadius: '50%', 
+              <div style={{
+                width: '32px',
+                height: '32px',
+                border: '2px solid rgba(255,255,255,0.1)',
+                borderTopColor: 'rgba(255,255,255,0.5)',
+                borderRadius: '50%',
                 animation: 'spin 1s linear infinite',
                 marginBottom: '16px'
               }} />
-              <div style={{ fontSize: '16px', color: '#6b7280', textAlign: 'center' }}>
-                レストラン情報を読み込み中...
+              <div style={{ fontSize: '14px', color: 'rgba(255,255,255,0.4)', textAlign: 'center' }}>
+                読み込み中...
               </div>
               <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
             </div>
@@ -992,29 +1008,16 @@ export default function CapturePage({
               }}
               restaurantLogo={selectedRestaurant?.logo_url}
               restaurantName={selectedRestaurant?.name}
+              recommendations={currentSuggestions.chips?.slice(0, 3)}
+              onRecommendationClick={(text) => {
+                setMessage(text);
+                setHideRecommendations(true);
+                requestAnimationFrame(() => textareaRef.current?.focus());
+              }}
             />
           )}
         </main>
 
-        {(fromHome || fromRestaurant) && !hideRecommendations && (
-          <div
-            className={`chip-row scrollable chip-row-floating${
-              dockCollapsed ? " elevated" : ""
-            }`}
-            role="list"
-          >
-            {currentSuggestions.chips.map((tip) => (
-              <button
-                key={tip}
-                className="chip"
-                type="button"
-                onClick={() => handleRecommendationClick(tip)}
-              >
-                {tip}
-              </button>
-            ))}
-          </div>
-        )}
 
         <section className="capture-thread" ref={threadRef}>
           {responses.map((response) => (
@@ -1043,6 +1046,7 @@ export default function CapturePage({
 
               {response.output && (
                 <div className="chat-row chat-row-assistant">
+                  <div className="chat-avatar chat-avatar-assistant">N</div>
                   <div className="chat-content">
                     <div className="chat-message-wrapper">
                       <div className="chat-bubble chat-bubble-assistant">
@@ -1137,10 +1141,16 @@ export default function CapturePage({
           ))}
           {loading && (
             <div className="chat-row chat-row-assistant">
+              <div className="chat-avatar chat-avatar-assistant">N</div>
               <div className="chat-content">
                 <div className="chat-message-wrapper">
-                  <div className="chat-loading-spinner" aria-live="polite">
-                    <img src="/ngraph-logo.svg" alt="Loading" className="loading-logo-spin" />
+                  <div className="chat-bubble chat-bubble-assistant chat-loading-bubble">
+                    <span className="loader-text">考え中</span>
+                    <span className="typing-indicator">
+                      <span />
+                      <span />
+                      <span />
+                    </span>
                   </div>
                 </div>
               </div>

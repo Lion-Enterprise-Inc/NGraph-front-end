@@ -27,6 +27,10 @@ type AppContextValue = {
   closeHistoryDrawer: () => void;
   pendingAttachment: PendingAttachment | null;
   setPendingAttachment: (attachment: PendingAttachment | null) => void;
+  restaurantSlug: string | null;
+  setRestaurantSlug: (slug: string | null) => void;
+  onNewChat: (() => void) | null;
+  setOnNewChat: (fn: (() => void) | null) => void;
 };
 
 const AppContext = createContext<AppContextValue | undefined>(undefined);
@@ -55,17 +59,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [pendingAttachment, setPendingAttachment] =
     useState<PendingAttachment | null>(null);
-
-  const historyItems = useMemo(() => {
-    const copy = getUiCopy(language);
-    return [
-      { id: "1", title: copy.history.title, date: "2025-01-08" },
-      { id: "2", title: copy.history.title, date: "2025-01-07" },
-      { id: "3", title: copy.history.title, date: "2025-01-06" },
-      { id: "4", title: copy.history.title, date: "2025-01-05" },
-      { id: "5", title: copy.history.title, date: "2025-01-04" },
-    ];
-  }, [language]);
+  const [restaurantSlug, setRestaurantSlug] = useState<string | null>(null);
+  const [onNewChat, setOnNewChat] = useState<(() => void) | null>(null);
 
   const setLanguage = (code: string, source = "unknown") => {
     setLanguageState(code);
@@ -88,6 +83,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setLanguage(stored, "storage");
       return;
     }
+    // First visit: detect browser language and show language picker
     const browserLanguage = navigator.language;
     const normalized = browserLanguage.toLowerCase();
     let detected = normalized.split("-")[0];
@@ -99,7 +95,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
           ? "zh-Hant"
           : "zh-Hans";
     }
-    setLanguage(detected, "browser");
+    setLanguageState(detected);
+    // Auto-open language sheet on first visit so user confirms their language
+    setLanguageModalOpen(true);
   }, []);
 
   useEffect(() => {
@@ -119,6 +117,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
           closeHistoryDrawer: () => setDrawerOpen(false),
           pendingAttachment,
           setPendingAttachment,
+          restaurantSlug,
+          setRestaurantSlug,
+          onNewChat,
+          setOnNewChat,
         }}
       >
         {children}
@@ -134,7 +136,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
         <HistoryDrawer
           open={drawerOpen}
           onClose={() => setDrawerOpen(false)}
-          items={historyItems}
+          restaurantSlug={restaurantSlug}
+          onNewChat={onNewChat ?? undefined}
         />
       </AppContext.Provider>
       </ToastProvider>

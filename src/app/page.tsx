@@ -1,56 +1,43 @@
 'use client'
 
 import { useRouter, useSearchParams } from 'next/navigation'
-import { Suspense } from 'react'
+import { Suspense, useEffect } from 'react'
 import HomePage from '../pages/HomePage'
-import { useAppContext } from '../components/AppProvider'
 
 function HomePageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { openLanguageModal } = useAppContext()
-  
-  // Check if there's a restaurant parameter from QR scan
   const restaurantSlug = searchParams?.get('restaurant')
 
-  const handleContinue = () => {
-    // Always go to capture/chat page with restaurant parameter if available
+  useEffect(() => {
     if (restaurantSlug) {
-      router.push(`/capture?restaurant=${restaurantSlug}`)
-    } else {
-      // Default restaurant or go to capture without specific restaurant
-      router.push('/capture')
+      router.replace(`/capture?restaurant=${encodeURIComponent(restaurantSlug)}`)
     }
-  }
+  }, [restaurantSlug, router])
 
-  return (
-    <HomePage
-      onContinue={handleContinue}
-    />
-  )
+  if (restaurantSlug) return null
+
+  return <HomePage />
 }
 
 export default function Page() {
   return (
     <Suspense fallback={
-      <div style={{ 
-        display: 'flex', 
-        flexDirection: 'column',
-        justifyContent: 'center', 
-        alignItems: 'center', 
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
         height: '100vh',
-        width: '100%',
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+        background: '#0D0D0D'
       }}>
-        <div style={{ 
-          width: '48px', 
-          height: '48px', 
-          border: '4px solid rgba(255,255,255,0.3)', 
-          borderTopColor: '#fff', 
-          borderRadius: '50%', 
-          animation: 'spin 1s linear infinite' 
+        <div style={{
+          width: '32px',
+          height: '32px',
+          border: '2px solid rgba(255,255,255,0.15)',
+          borderTopColor: 'rgba(255,255,255,0.6)',
+          borderRadius: '50%',
+          animation: 'spin 1s linear infinite'
         }} />
-        <p style={{ color: '#fff', marginTop: '16px', fontSize: '16px', fontWeight: '500' }}>読み込み中...</p>
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
     }>

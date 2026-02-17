@@ -8,7 +8,7 @@ import {
   type RefObject,
   type SyntheticEvent,
 } from "react";
-import { Camera, ImagePlus, ArrowUp } from "lucide-react";
+import { Camera, ArrowUp } from "lucide-react";
 import { getUiCopy } from "../i18n/uiCopy";
 import { useAppContext } from "./AppProvider";
 
@@ -52,7 +52,6 @@ export default function ChatDock({
   const copy = getUiCopy(language);
   const sendEnabled = message.trim().length > 0 || Boolean(attachment);
   const dockRef = useRef<HTMLDivElement | null>(null);
-  const galleryInputRef = useRef<HTMLInputElement | null>(null);
   const cameraInputRef = useRef<HTMLInputElement | null>(null);
   const measureRef = useRef<HTMLDivElement | null>(null);
   const [multiline, setMultiline] = useState(false);
@@ -198,18 +197,7 @@ export default function ChatDock({
               }
             }}
           >
-            <Camera size={20} strokeWidth={1.6} />
-          </button>
-          <button
-            className="chat-icon"
-            type="button"
-            aria-label={copy.chat.gallery}
-            onClick={(e) => {
-              e.stopPropagation();
-              galleryInputRef.current?.click();
-            }}
-          >
-            <ImagePlus size={20} strokeWidth={1.6} />
+            <Camera size={20} strokeWidth={1.6} color="#10a37f" />
           </button>
         </div>
         <div className={`chat-dock-area${multiline ? " multiline" : ""}`}>
@@ -240,7 +228,7 @@ export default function ChatDock({
             disabled={!sendEnabled}
             onClick={onSend}
           >
-            <ArrowUp size={18} strokeWidth={2.5} color="#fff" />
+            <ArrowUp size={18} strokeWidth={2.5} color={sendEnabled ? "#000" : "rgba(255,255,255,0.4)"} />
           </button>
         </div>
       </div>
@@ -258,13 +246,6 @@ export default function ChatDock({
         }}
       />
 
-      <input
-        ref={galleryInputRef}
-        type="file"
-        accept="image/*"
-        style={{ display: "none" }}
-        onChange={(e) => handleFileSelect(e, "library")}
-      />
       <input
         ref={cameraInputRef}
         type="file"

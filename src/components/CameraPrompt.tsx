@@ -1,4 +1,4 @@
-import CameraIcon from '../assets/Camera.png'
+import { Camera } from 'lucide-react'
 
 type CameraPromptProps = {
   heading: string
@@ -7,65 +7,49 @@ type CameraPromptProps = {
   onCamera?: () => void
   restaurantLogo?: string | null
   restaurantName?: string
+  recommendations?: string[]
+  onRecommendationClick?: (text: string) => void
 }
 
-export default function CameraPrompt({ heading, sub, buttonLabel, onCamera, restaurantLogo, restaurantName }: CameraPromptProps) {
-  // If restaurant has a logo, show the logo instead of camera prompt
-  if (restaurantLogo) {
-    return (
-      <div className="camera-prompt restaurant-logo-prompt">
-        {/* Japanese welcome texts above restaurant logo */}
-        <div style={{
-          textAlign: 'center',
-          marginBottom: '20px',
-          fontFamily: 'Poppins, sans-serif'
-        }}>
-          <div style={{
-            fontSize: '28px',
-            fontWeight: 700,
-            color: '#1f2937',
-            marginBottom: '8px'
-          }}>
-            いらっしゃいませ！
-          </div>
-          <div style={{
-            fontSize: '20px',
-            fontWeight: 500,
-            color: '#6b7280'
-          }}>
-            なんでも聞いてください
-          </div>
-        </div>
-
-        <div 
-          className="restaurant-logo-container"
-        >
-          <img 
-            src={restaurantLogo} 
-            alt={restaurantName || 'Restaurant logo'} 
-            className="restaurant-logo-image"
-          />
-        </div>
-        {restaurantName && (
-          <h2 className="restaurant-name-display">{restaurantName}</h2>
-        )}
-      </div>
-    )
-  }
-
-  // Default camera prompt for when no restaurant logo is available
+export default function CameraPrompt({
+  heading,
+  sub,
+  buttonLabel,
+  onCamera,
+  restaurantLogo,
+  restaurantName,
+  recommendations,
+  onRecommendationClick,
+}: CameraPromptProps) {
   return (
-    <div className="camera-prompt">
-      <h1 className="capture-title">{heading}</h1>
-      <p className="capture-sub">{sub}</p>
-      <button
-        className="camera-btn pressable"
-        type="button"
-        aria-label={buttonLabel}
-        onClick={onCamera}
-      >
-        <img src={CameraIcon.src} alt="" />
-      </button>
+    <div className="store-home">
+      <h1 className="store-home-name">
+        {restaurantName || heading}
+      </h1>
+      <p className="store-home-sub">
+        {restaurantName ? '何からお手伝いしますか？' : sub}
+      </p>
+
+      <div className="store-home-chips">
+        {recommendations?.map((text, i) => (
+          <button
+            key={i}
+            className="store-home-chip"
+            onClick={() => onRecommendationClick?.(text)}
+          >
+            {text}
+          </button>
+        ))}
+        <button
+          className="store-home-chip camera"
+          onClick={onCamera}
+        >
+          <span className="camera-icon-circle">
+            <Camera size={14} strokeWidth={1.6} color="#10a37f" />
+          </span>
+          メニューを撮影して翻訳
+        </button>
+      </div>
     </div>
   )
 }

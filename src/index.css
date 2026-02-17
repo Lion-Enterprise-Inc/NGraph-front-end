@@ -1,7 +1,7 @@
 :root {
-  font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
-  background: #ffffff;
-  color: #2e2e2e;
+  font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Hiragino Kaku Gothic ProN", sans-serif;
+  background: #0D0D0D;
+  color: rgba(255,255,255,0.9);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -10,8 +10,9 @@
   box-sizing: border-box;
 }
 
-body {
+html, body {
   margin: 0;
+  background: #0D0D0D;
 }
 
 #root {

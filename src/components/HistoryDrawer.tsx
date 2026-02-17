@@ -1,53 +1,67 @@
-import { Globe, ChevronDown } from 'lucide-react'
-import { getUiCopy, languageOptions } from '../i18n/uiCopy'
-import { useAppContext } from './AppProvider'
+'use client'
 
-type HistoryItem = {
-  id: string
-  title: string
-  date: string
-}
+import { X, Plus, ArrowRight } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { useChatHistory } from '../hooks/useChatHistory'
 
 type HistoryDrawerProps = {
   open: boolean
   onClose?: () => void
-  items?: HistoryItem[]
+  restaurantSlug?: string | null
+  onNewChat?: () => void
 }
 
 export default function HistoryDrawer({
   open,
   onClose,
-  items = [],
+  restaurantSlug,
+  onNewChat,
 }: HistoryDrawerProps) {
-  const { language, setLanguage } = useAppContext()
-  const copy = getUiCopy(language)
+  const router = useRouter()
+  const { threads } = useChatHistory(restaurantSlug ?? null)
 
   return (
     <div className={`drawer-overlay${open ? ' open' : ''}`} onClick={onClose}>
       <aside
         className={`drawer-panel${open ? ' open' : ''}`}
-        onClick={(event) => event.stopPropagation()}
-        aria-label={copy.drawer.historyLabel}
+        onClick={(e) => e.stopPropagation()}
       >
-        <div className="drawer-language">
-          <span className="drawer-language-icon" aria-hidden="true">
-            <Globe size={20} strokeWidth={1.6} />
-          </span>
-          <select
-            className="drawer-language-select"
-            value={language}
-            onChange={(event) => setLanguage(event.target.value)}
-            aria-label={copy.language.select}
+        <div className="sidebar-top">
+          <span className="sidebar-title">履歴</span>
+          <button className="icon-button" type="button" onClick={onClose}>
+            <X size={20} strokeWidth={1.75} color="rgba(255,255,255,0.6)" />
+          </button>
+        </div>
+
+        <button className="sidebar-new-chat" onClick={() => { onNewChat?.(); onClose?.(); }}>
+          <Plus size={16} strokeWidth={2} />
+          新しい会話
+        </button>
+
+        <div className="sidebar-threads">
+          {threads.length === 0 ? (
+            <p className="sidebar-empty">まだ会話がありません</p>
+          ) : (
+            threads.map(t => (
+              <div key={t.thread_uid} className="sidebar-thread-item">
+                <div className="sidebar-thread-title">{t.title || t.preview}</div>
+                <div className="sidebar-thread-date">
+                  {new Date(t.updatedAt).toLocaleDateString('ja-JP', { month: 'short', day: 'numeric' })}
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+
+        <div className="sidebar-footer">
+          <button
+            className="sidebar-hub-btn"
+            onClick={() => { router.push('/'); onClose?.(); }}
           >
-            {languageOptions.map((lang) => (
-              <option key={lang.code} value={lang.code}>
-                {lang.label}
-              </option>
-            ))}
-          </select>
-          <span className="drawer-chevron" aria-hidden="true">
-            <ChevronDown size={16} strokeWidth={2} />
-          </span>
+            <ArrowRight size={14} strokeWidth={2} />
+            他のお店を見る
+          </button>
+          <div className="sidebar-powered">Powered by NGraph</div>
         </div>
       </aside>
     </div>

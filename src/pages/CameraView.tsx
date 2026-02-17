@@ -238,6 +238,14 @@ export default function CameraView({ language = 'ja' }: CameraViewProps) {
             </div>
           </div>
         )}
+        <div className="camera-guide">
+          <div className="camera-guide-corner tl" />
+          <div className="camera-guide-corner tr" />
+          <div className="camera-guide-corner bl" />
+          <div className="camera-guide-corner br" />
+          <div className="camera-guide-label">MENU SCAN</div>
+          <div className="camera-guide-hint">メニューを枠内に入れて撮影してください</div>
+        </div>
         <div className="camera-overlay">
           <button
             className="icon-button light"
