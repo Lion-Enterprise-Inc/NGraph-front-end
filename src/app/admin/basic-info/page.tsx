@@ -162,32 +162,35 @@ function BasicInfoContent() {
 
     setIsSaving(true)
     try {
-      // Use FormData for multipart upload
+      // Use FormData for multipart upload — only send non-empty fields
       const formDataToSend = new FormData()
-      formDataToSend.append('name', formData.storeName)
-      formDataToSend.append('description', formData.description)
-      formDataToSend.append('phone_number', formData.phone)
-      formDataToSend.append('official_website', formData.officialWebsite)
-      formDataToSend.append('google_business_profile', formData.googleBusinessProfile)
-      formDataToSend.append('address', formData.address)
-      formDataToSend.append('other_sources', formData.instagramUrl)
-      formDataToSend.append('store_introduction', formData.description)
-      formDataToSend.append('opening_hours', formData.businessHours)
-      formDataToSend.append('budget', formData.budget)
-      formDataToSend.append('parking_slot', formData.parking)
-      formDataToSend.append('attention_in_detail', formData.features)
-      formDataToSend.append('business_type', formData.storeType)
+      const addIfPresent = (key: string, value: string) => {
+        if (value) formDataToSend.append(key, value)
+      }
+      addIfPresent('name', formData.storeName)
+      addIfPresent('description', formData.description)
+      addIfPresent('phone_number', formData.phone)
+      addIfPresent('official_website', formData.officialWebsite)
+      addIfPresent('google_business_profile', formData.googleBusinessProfile)
+      addIfPresent('address', formData.address)
+      addIfPresent('other_sources', formData.instagramUrl)
+      addIfPresent('store_introduction', formData.description)
+      addIfPresent('opening_hours', formData.businessHours)
+      addIfPresent('budget', formData.budget)
+      addIfPresent('parking_slot', formData.parking)
+      addIfPresent('attention_in_detail', formData.features)
+      addIfPresent('business_type', formData.storeType)
       formDataToSend.append('is_active', String(restaurant.is_active))
-      formDataToSend.append('holidays', formData.holidays)
-      formDataToSend.append('seats', formData.seats)
-      formDataToSend.append('payment_methods', formData.payment)
-      formDataToSend.append('access_info', formData.accessInfo)
-      formDataToSend.append('reservation_url', formData.reservationUrl)
-      formDataToSend.append('google_rating', formData.googleRating)
-      formDataToSend.append('tabelog_rating', formData.tabelogRating)
-      formDataToSend.append('instagram_url', formData.instagramUrl)
-      formDataToSend.append('tabelog_url', formData.tabelogUrl)
-      formDataToSend.append('gurunavi_url', formData.gurunaviUrl)
+      addIfPresent('holidays', formData.holidays)
+      addIfPresent('seats', formData.seats)
+      addIfPresent('payment_methods', formData.payment)
+      addIfPresent('access_info', formData.accessInfo)
+      addIfPresent('reservation_url', formData.reservationUrl)
+      addIfPresent('google_rating', formData.googleRating)
+      addIfPresent('tabelog_rating', formData.tabelogRating)
+      addIfPresent('instagram_url', formData.instagramUrl)
+      addIfPresent('tabelog_url', formData.tabelogUrl)
+      addIfPresent('gurunavi_url', formData.gurunaviUrl)
       
       // Add logo file if selected
       if (logoFile) {
@@ -265,28 +268,35 @@ function BasicInfoContent() {
       const info = data.result?.store_info
 
       if (info) {
+        const toStr = (v: any): string => {
+          if (v == null) return ''
+          if (typeof v === 'string') return v
+          if (Array.isArray(v)) return v.join('、')
+          if (typeof v === 'object') return Object.entries(v).map(([k, val]) => Array.isArray(val) ? `${k}: ${val.join(', ')}` : `${k}: ${val}`).join(' / ')
+          return String(v)
+        }
         setFormData(prev => ({
           ...prev,
-          storeName: info.name || prev.storeName,
-          phone: info.phone || prev.phone,
-          address: info.address || prev.address,
-          description: info.description || prev.description,
-          businessHours: info.business_hours || prev.businessHours,
-          holidays: info.holidays || prev.holidays,
-          seats: info.seats || prev.seats,
-          budget: info.budget || prev.budget,
-          parking: info.parking || prev.parking,
-          payment: info.payment || prev.payment,
-          features: info.features || prev.features,
-          accessInfo: info.access || prev.accessInfo,
-          reservationUrl: info.reservation_url || prev.reservationUrl,
+          storeName: toStr(info.name) || prev.storeName,
+          phone: toStr(info.phone) || prev.phone,
+          address: toStr(info.address) || prev.address,
+          description: toStr(info.description) || prev.description,
+          businessHours: toStr(info.business_hours) || prev.businessHours,
+          holidays: toStr(info.holidays) || prev.holidays,
+          seats: toStr(info.seats) || prev.seats,
+          budget: toStr(info.budget) || prev.budget,
+          parking: toStr(info.parking) || prev.parking,
+          payment: toStr(info.payment) || prev.payment,
+          features: toStr(info.features) || prev.features,
+          accessInfo: toStr(info.access) || prev.accessInfo,
+          reservationUrl: toStr(info.reservation_url) || prev.reservationUrl,
           googleRating: info.google_rating ? String(info.google_rating) : prev.googleRating,
           tabelogRating: info.tabelog_rating ? String(info.tabelog_rating) : prev.tabelogRating,
-          instagramUrl: info.instagram_url || prev.instagramUrl,
-          tabelogUrl: info.tabelog_url || prev.tabelogUrl,
-          gurunaviUrl: info.gurunavi_url || prev.gurunaviUrl,
-          officialWebsite: info.official_website || prev.officialWebsite,
-          googleBusinessProfile: info.google_business_profile || prev.googleBusinessProfile,
+          instagramUrl: toStr(info.instagram_url) || prev.instagramUrl,
+          tabelogUrl: toStr(info.tabelog_url) || prev.tabelogUrl,
+          gurunaviUrl: toStr(info.gurunavi_url) || prev.gurunaviUrl,
+          officialWebsite: toStr(info.official_website) || prev.officialWebsite,
+          googleBusinessProfile: toStr(info.google_business_profile) || prev.googleBusinessProfile,
         }))
 
         toast('success', `情報を取得しました。内容を確認して保存してください。${withMenus && data.result?.menu_scrape ? ` メニュー: ${data.result.menu_scrape.items_saved || 0}件登録` : ''}`)
@@ -325,28 +335,35 @@ function BasicInfoContent() {
       const info = data.result?.store_info
 
       if (info) {
+        const toStr = (v: any): string => {
+          if (v == null) return ''
+          if (typeof v === 'string') return v
+          if (Array.isArray(v)) return v.join('、')
+          if (typeof v === 'object') return Object.entries(v).map(([k, val]) => Array.isArray(val) ? `${k}: ${val.join(', ')}` : `${k}: ${val}`).join(' / ')
+          return String(v)
+        }
         setFormData(prev => ({
           ...prev,
-          storeName: info.name || prev.storeName,
-          phone: info.phone || prev.phone,
-          address: info.address || prev.address,
-          description: info.description || prev.description,
-          businessHours: info.business_hours || prev.businessHours,
-          holidays: info.holidays || prev.holidays,
-          seats: info.seats || prev.seats,
-          budget: info.budget || prev.budget,
-          parking: info.parking || prev.parking,
-          payment: info.payment || prev.payment,
-          features: info.features || prev.features,
-          accessInfo: info.access || prev.accessInfo,
-          reservationUrl: info.reservation_url || prev.reservationUrl,
+          storeName: toStr(info.name) || prev.storeName,
+          phone: toStr(info.phone) || prev.phone,
+          address: toStr(info.address) || prev.address,
+          description: toStr(info.description) || prev.description,
+          businessHours: toStr(info.business_hours) || prev.businessHours,
+          holidays: toStr(info.holidays) || prev.holidays,
+          seats: toStr(info.seats) || prev.seats,
+          budget: toStr(info.budget) || prev.budget,
+          parking: toStr(info.parking) || prev.parking,
+          payment: toStr(info.payment) || prev.payment,
+          features: toStr(info.features) || prev.features,
+          accessInfo: toStr(info.access) || prev.accessInfo,
+          reservationUrl: toStr(info.reservation_url) || prev.reservationUrl,
           googleRating: info.google_rating ? String(info.google_rating) : prev.googleRating,
           tabelogRating: info.tabelog_rating ? String(info.tabelog_rating) : prev.tabelogRating,
-          instagramUrl: info.instagram_url || prev.instagramUrl,
-          tabelogUrl: info.tabelog_url || prev.tabelogUrl,
-          gurunaviUrl: info.gurunavi_url || prev.gurunaviUrl,
-          officialWebsite: info.official_website || prev.officialWebsite,
-          googleBusinessProfile: info.google_business_profile || prev.googleBusinessProfile,
+          instagramUrl: toStr(info.instagram_url) || prev.instagramUrl,
+          tabelogUrl: toStr(info.tabelog_url) || prev.tabelogUrl,
+          gurunaviUrl: toStr(info.gurunavi_url) || prev.gurunaviUrl,
+          officialWebsite: toStr(info.official_website) || prev.officialWebsite,
+          googleBusinessProfile: toStr(info.google_business_profile) || prev.googleBusinessProfile,
         }))
 
         toast('success', `Web検索で情報を取得しました。内容を確認して保存してください。${withMenus && data.result?.menu_scrape ? ` メニュー: ${data.result.menu_scrape.items_saved || 0}件登録` : ''}`)

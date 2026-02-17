@@ -301,7 +301,7 @@ export default function AdminLayout({ children, title }: Props) {
         .app-shell {
           display: grid;
           grid-template-columns: var(--sidebar-w) 1fr;
-          min-height: 100dvh;
+          height: 100dvh;
           background: var(--bg-page);
           color: var(--text);
         }
@@ -498,7 +498,7 @@ export default function AdminLayout({ children, title }: Props) {
         .main-wrapper {
           display: flex;
           flex-direction: column;
-          min-height: 100dvh;
+          overflow-y: auto;
         }
 
         .app-header {
