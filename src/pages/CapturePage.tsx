@@ -277,7 +277,8 @@ export default function CapturePage({
         setRestaurantLoading(true);
         try {
           const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://15.207.22.103:8000';
-          const response = await fetch(`${apiBaseUrl}/restaurants/public/${restaurantSlug}`);
+          const langParam = activeLanguage !== 'ja' ? `?lang=${activeLanguage}` : '';
+          const response = await fetch(`${apiBaseUrl}/restaurants/public/${restaurantSlug}${langParam}`);
           
           if (response.ok) {
             const data = await response.json();
@@ -326,7 +327,7 @@ export default function CapturePage({
       };
       fetchRestaurantBySlug();
     }
-  }, [restaurantSlug]);
+  }, [restaurantSlug, activeLanguage]);
 
   // Sync slug to AppContext for sidebar
   useEffect(() => {
@@ -382,14 +383,11 @@ export default function CapturePage({
         ? selectedRestaurant.name_romaji
         : selectedRestaurant.name;
 
-      // Use custom recommend_texts if set
+      // Use custom recommend_texts if set (already translated by backend)
       if (selectedRestaurant.recommend_texts && selectedRestaurant.recommend_texts.length > 0) {
-        const chips = (activeLanguage !== 'ja' && selectedRestaurant.name_romaji)
-          ? selectedRestaurant.recommend_texts.map(t => t.replace(selectedRestaurant.name, displayName))
-          : selectedRestaurant.recommend_texts;
         return {
           guide: copy.restaurant.chatPlaceholder,
-          chips
+          chips: selectedRestaurant.recommend_texts
         };
       }
 
