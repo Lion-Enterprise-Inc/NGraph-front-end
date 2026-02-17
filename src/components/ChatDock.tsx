@@ -6,7 +6,6 @@ import {
   useState,
   type ChangeEvent,
   type RefObject,
-  type SyntheticEvent,
 } from "react";
 import { Camera, ArrowUp } from "lucide-react";
 import { getUiCopy } from "../i18n/uiCopy";
@@ -22,9 +21,7 @@ type ChatDockProps = {
   suggestion: string;
   attachment: Attachment | null;
   textareaRef: RefObject<HTMLTextAreaElement>;
-  collapsed?: boolean;
   onFocus?: () => void;
-  onExpand?: () => void;
   onChange: (event: ChangeEvent<HTMLTextAreaElement>) => void;
   onSend: () => void;
   onAttachment?: (file: File) => void;
@@ -38,9 +35,7 @@ export default function ChatDock({
   suggestion,
   attachment,
   textareaRef,
-  collapsed = false,
   onFocus,
-  onExpand,
   onChange,
   onSend,
   onAttachment,
@@ -112,16 +107,6 @@ export default function ChatDock({
     return () => cancelAnimationFrame(raf);
   }, [message, suggestion, textareaRef]);
 
-  const handleDockClick = (e: SyntheticEvent) => {
-    e.stopPropagation();
-    onExpand?.();
-  };
-
-  const handleInputFocus = () => {
-    onExpand?.();
-    onFocus?.();
-  };
-
   const handleFileSelect = (
     e: ChangeEvent<HTMLInputElement>,
     source: "camera" | "library"
@@ -140,12 +125,7 @@ export default function ChatDock({
   return (
     <div
       ref={dockRef}
-      className={`chat-dock chat-dock-floating${
-        collapsed ? " collapsed" : ""
-      }`}
-      onClick={handleDockClick}
-      onMouseDown={handleDockClick}
-      onTouchStart={handleDockClick}
+      className="chat-dock chat-dock-floating"
     >
       {attachment && (
         <div className="attachment-pill">
@@ -176,12 +156,6 @@ export default function ChatDock({
         </div>
       )}
 
-      {collapsed && (
-        <div className="chat-dock-collapsed" aria-hidden="true">
-          <span className="collapsed-hint">{copy.chat.tapToOpen}</span>
-        </div>
-      )}
-
       <div className="chat-dock-row">
         <div className="chat-dock-icons" aria-hidden="true">
           <button
@@ -208,8 +182,10 @@ export default function ChatDock({
             aria-label={copy.chat.messageInput}
             value={message}
             rows={1}
-            onFocus={handleInputFocus}
-            onClick={handleInputFocus}
+            enterKeyHint="send"
+            autoComplete="off"
+            onFocus={onFocus}
+            onClick={onFocus}
             onChange={onChange}
             onInput={(event) =>
               onChange(event as ChangeEvent<HTMLTextAreaElement>)
@@ -231,6 +207,10 @@ export default function ChatDock({
             <ArrowUp size={18} strokeWidth={2.5} color={sendEnabled ? "#fff" : "rgba(255,255,255,0.4)"} />
           </button>
         </div>
+      </div>
+
+      <div className="chat-dock-branding">
+        powered by NGraph
       </div>
 
       <div

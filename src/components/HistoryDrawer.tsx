@@ -3,6 +3,8 @@
 import { X, Plus, ArrowRight } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useChatHistory } from '../hooks/useChatHistory'
+import { getUiCopy } from '../i18n/uiCopy'
+import { useAppContext } from './AppProvider'
 
 type HistoryDrawerProps = {
   open: boolean
@@ -18,7 +20,12 @@ export default function HistoryDrawer({
   onNewChat,
 }: HistoryDrawerProps) {
   const router = useRouter()
+  const { language } = useAppContext()
+  const copy = getUiCopy(language)
   const { threads } = useChatHistory(restaurantSlug ?? null)
+
+  const tagline = (copy.history as any).brandTagline
+    || "Data infrastructure for authentic food knowledge."
 
   return (
     <div className={`drawer-overlay${open ? ' open' : ''}`} onClick={onClose}>
@@ -26,11 +33,21 @@ export default function HistoryDrawer({
         className={`drawer-panel${open ? ' open' : ''}`}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="sidebar-top">
-          <span className="sidebar-title">履歴</span>
+        <div className="sidebar-brand">
+          <div className="sidebar-brand-left">
+            <img src="/ngraph-logo.svg" alt="NGraph" className="sidebar-brand-logo" />
+            <div className="sidebar-brand-info">
+              <span className="sidebar-brand-name">NGraph</span>
+              <span className="sidebar-brand-tagline">{tagline}</span>
+            </div>
+          </div>
           <button className="icon-button" type="button" onClick={onClose}>
             <X size={20} strokeWidth={1.75} color="rgba(255,255,255,0.6)" />
           </button>
+        </div>
+
+        <div className="sidebar-top">
+          <span className="sidebar-title">履歴</span>
         </div>
 
         <button className="sidebar-new-chat" onClick={() => { onNewChat?.(); onClose?.(); }}>

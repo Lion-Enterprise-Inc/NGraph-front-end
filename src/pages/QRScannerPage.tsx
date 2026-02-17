@@ -68,7 +68,7 @@ export default function QRScannerPage({ language = 'ja', onClose }: QRScannerPag
       if (restaurantSlug) {
         // Redirect to Go page (home) with restaurant parameter, then user clicks Go to chat
         setTimeout(() => {
-          router.push(`/?restaurant=${restaurantSlug}`)
+          router.push(`/?restaurant=${restaurantSlug}&source=qr`)
         }, 500)
       } else {
         setError(copy.qrScanner?.invalidQR || 'Invalid QR code. No restaurant found.')
@@ -81,7 +81,7 @@ export default function QRScannerPage({ language = 'ja', onClose }: QRScannerPag
         const match = cleanText.match(/restaurant=([^&\s]+)/)
         if (match && match[1]) {
           setTimeout(() => {
-            router.push(`/?restaurant=${match[1]}`)
+            router.push(`/?restaurant=${match[1]}&source=qr`)
           }, 500)
           return
         }

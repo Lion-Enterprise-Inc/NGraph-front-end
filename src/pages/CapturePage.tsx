@@ -235,7 +235,6 @@ export default function CapturePage({
   const [attachment, setAttachment] = useState<Attachment | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const appliedAttachmentRef = useRef(false);
-  const [dockCollapsed, setDockCollapsed] = useState(false);
   const [responses, setResponses] = useState<ResponseItem[]>([]);
   const [loading, setLoading] = useState(false);
   const loadingTimerRef = useRef<number | null>(null);
@@ -267,6 +266,7 @@ export default function CapturePage({
   const fromHome = searchParams?.get("from") === "home" || defaultFromHome;
   const fromRestaurant = searchParams?.get("from") === "restaurant";
   const restaurantSlug = searchParams?.get("restaurant");
+  const isInStore = searchParams?.get("source") === "qr";
   
   const selectedRestaurant = restaurantData;
 
@@ -345,7 +345,7 @@ export default function CapturePage({
         const resp = await fetch(`${apiBaseUrl}/public-chat/${slug}/stream`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message: text }),
+          body: JSON.stringify({ message: text, in_store: isInStore }),
         });
         if (resp.ok && resp.body) {
           const reader = resp.body.getReader();
@@ -431,7 +431,6 @@ export default function CapturePage({
     });
     setPendingAttachment(null);
     setHideRecommendations(true);
-    setDockCollapsed(false);
     requestAnimationFrame(() => textareaRef.current?.focus());
   }, [pendingAttachment, setPendingAttachment, copy]);
 
@@ -679,9 +678,6 @@ export default function CapturePage({
       }
     }
 
-    if (scrollTop > 8) {
-      setDockCollapsed(true);
-    }
   };
 
   const handleSend = async (overrideText?: string) => {
@@ -804,7 +800,7 @@ export default function CapturePage({
           const streamResponse = await fetch(`${apiBaseUrl}/public-chat/${restaurantSlugForApi}/stream`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ message: requestText }),
+            body: JSON.stringify({ message: requestText, in_store: isInStore }),
           });
 
           if (streamResponse.ok && streamResponse.body) {
@@ -962,7 +958,6 @@ export default function CapturePage({
           : copy.attachment.photoLibrary,
     });
     setHideRecommendations(true);
-    setDockCollapsed(false);
     requestAnimationFrame(() => textareaRef.current?.focus());
   };
 
@@ -1038,8 +1033,8 @@ export default function CapturePage({
         }
         onLanguage={openLanguageModal ?? openLanguageModalFromContext}
         onNewChat={handleNewChat}
-        showBack={responses.length > 0}
-        onBack={handleNewChat}
+        restaurantName={selectedRestaurant?.name}
+        restaurantNameRomaji={activeLanguage !== 'ja' ? selectedRestaurant?.name_romaji : undefined}
       />
 
       <div
@@ -1261,11 +1256,7 @@ export default function CapturePage({
         message={message}
         suggestion={currentSuggestions.guide}
         attachment={attachment}
-        collapsed={dockCollapsed}
-        onExpand={() => setDockCollapsed(false)}
-        onFocus={() => {
-          setDockCollapsed(false);
-        }}
+        onFocus={() => {}}
         onChange={(event: ChangeEvent<HTMLTextAreaElement>) =>
           setMessage(event.target.value)
         }

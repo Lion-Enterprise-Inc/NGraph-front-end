@@ -34,7 +34,7 @@ export default function ShortCodeRedirect() {
         }
         const params = new URLSearchParams(window.location.search)
         const table = params.get('t')
-        const url = `/capture?restaurant=${slug}${table ? `&t=${table}` : ''}`
+        const url = `/capture?restaurant=${slug}&source=qr${table ? `&t=${table}` : ''}`
         router.replace(url)
       } catch {
         setError(true)

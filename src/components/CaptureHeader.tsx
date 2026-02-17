@@ -1,4 +1,4 @@
-import { Menu, ArrowLeft, Plus } from 'lucide-react'
+import { Menu, Plus } from 'lucide-react'
 import { getUiCopy } from '../i18n/uiCopy'
 import { useAppContext } from './AppProvider'
 
@@ -15,34 +15,43 @@ interface CaptureHeaderProps {
   onMenu: () => void
   onLanguage: () => void
   onNewChat: () => void
-  showBack?: boolean
-  onBack?: () => void
+  restaurantName?: string | null
+  restaurantNameRomaji?: string | null
 }
 
-export default function CaptureHeader({ onMenu, onLanguage, onNewChat, showBack, onBack }: CaptureHeaderProps) {
+export default function CaptureHeader({ onMenu, onLanguage, onNewChat, restaurantName, restaurantNameRomaji }: CaptureHeaderProps) {
   const { language } = useAppContext()
   const copy = getUiCopy(language)
   const badge = LANG_BADGES[language] || language.slice(0, 2).toUpperCase()
 
+  const isJa = language === 'ja'
+  // Non-Japanese: show romaji as primary if available, otherwise Japanese name
+  const displayName = (!isJa && restaurantNameRomaji) ? restaurantNameRomaji : (restaurantName || 'NGraph')
+
   return (
     <header className="capture-header sticky">
-      {showBack ? (
-        <button className="icon-button" type="button" aria-label="Back" onClick={onBack}>
-          <ArrowLeft size={22} strokeWidth={1.75} color="rgba(255,255,255,0.9)" />
-        </button>
-      ) : (
-        <button className="icon-button" type="button" aria-label={copy.captureHeader.menu} onClick={onMenu}>
-          <Menu size={22} strokeWidth={1.75} color="rgba(255,255,255,0.9)" />
-        </button>
-      )}
-      <div className="brand-title nav-brand" style={{
-        fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif',
-        fontWeight: 700,
-        fontSize: '18px',
-        letterSpacing: '-0.02em',
-        color: 'rgba(255,255,255,0.9)',
+      <button className="icon-button" type="button" aria-label={copy.captureHeader.menu} onClick={onMenu}>
+        <Menu size={22} strokeWidth={1.75} color="rgba(255,255,255,0.9)" />
+      </button>
+      <div className="header-title-area" style={{
+        flex: 1,
+        textAlign: 'center',
+        minWidth: 0,
+        overflow: 'hidden',
       }}>
-        NGraph
+        <div style={{
+          fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif',
+          fontWeight: 700,
+          fontSize: '17px',
+          letterSpacing: '-0.02em',
+          color: 'rgba(255,255,255,0.9)',
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          lineHeight: '1.4',
+        }}>
+          {displayName}
+        </div>
       </div>
       <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
         <button className="header-lang-badge" type="button" onClick={onLanguage}>

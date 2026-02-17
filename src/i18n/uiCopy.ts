@@ -121,6 +121,7 @@ const uiCopy = {
     },
     history: {
       title: "History title...",
+      brandTagline: "Data infrastructure for authentic food knowledge.",
     },
     hero: {
       heading: "Snap & Translate",
@@ -240,6 +241,7 @@ const uiCopy = {
     },
     history: {
       title: "履歴タイトル・・・",
+      brandTagline: "食を正しく伝える、データインフラ",
     },
     hero: {
       heading: "撮って翻訳",
@@ -359,6 +361,7 @@ const uiCopy = {
     },
     history: {
       title: "기록 제목...",
+      brandTagline: "음식을 올바르게 전하는 데이터 인프라.",
     },
     hero: {
       heading: "찍고 번역",
@@ -478,6 +481,7 @@ const uiCopy = {
     },
     history: {
       title: "历史标题...",
+      brandTagline: "准确传达美食的数据基础设施。",
     },
     hero: {
       heading: "拍照翻译",
@@ -584,6 +588,7 @@ const uiCopy = {
     },
     history: {
       title: "歷史標題...",
+      brandTagline: "準確傳達美食的數據基礎設施。",
     },
     hero: {
       heading: "拍照翻譯",

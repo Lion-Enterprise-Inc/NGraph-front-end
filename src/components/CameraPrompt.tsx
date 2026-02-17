@@ -1,4 +1,37 @@
 import { Camera } from 'lucide-react'
+import { getUiCopy } from '../i18n/uiCopy'
+import { useAppContext } from './AppProvider'
+
+const STORE_GREETINGS: Record<string, string> = {
+  ja: 'いらっしゃいませ。',
+  en: 'Welcome.',
+  ko: '어서 오세요.',
+  'zh-Hans': '欢迎光临。',
+  'zh-Hant': '歡迎光臨。',
+  es: 'Bienvenido.',
+  fr: 'Bienvenue.',
+  de: 'Willkommen.',
+  it: 'Benvenuto.',
+  pt: 'Bem-vindo.',
+  ru: 'Добро пожаловать.',
+  th: 'ยินดีต้อนรับ',
+  vi: 'Xin chào.',
+  id: 'Selamat datang.',
+  ms: 'Selamat datang.',
+  ar: 'أهلاً وسهلاً',
+  hi: 'स्वागत है।',
+  tr: 'Hoş geldiniz.',
+  bn: 'স্বাগতম।',
+  my: 'ကြိုဆိုပါသည်။',
+  tl: 'Maligayang pagdating.',
+  lo: 'ຍິນດີຕ້ອນຮັບ',
+  km: 'សូមស្វាគមន៍។',
+  ne: 'स्वागत छ।',
+  mn: 'Тавтай морил.',
+  fa: 'خوش آمدید.',
+  uk: 'Ласкаво просимо.',
+  pl: 'Witamy.',
+}
 
 type CameraPromptProps = {
   heading: string
@@ -23,6 +56,9 @@ export default function CameraPrompt({
   recommendations,
   onRecommendationClick,
 }: CameraPromptProps) {
+  const { language } = useAppContext()
+  const copy = getUiCopy(language)
+
   return (
     <div className="store-home">
       <h1 className="store-home-name">
@@ -32,7 +68,7 @@ export default function CameraPrompt({
         <p className="store-home-romaji">{restaurantNameRomaji}</p>
       )}
       <p className="store-home-sub">
-        {restaurantName ? '何からお手伝いしますか？' : sub}
+        {restaurantName ? (STORE_GREETINGS[language] || STORE_GREETINGS.en) : sub}
       </p>
 
       <div className="store-home-chips">
@@ -45,16 +81,20 @@ export default function CameraPrompt({
             {text}
           </button>
         ))}
-        <button
-          className="store-home-chip camera"
-          onClick={onCamera}
-        >
-          <span className="camera-icon-circle">
-            <Camera size={14} strokeWidth={1.6} color="#10a37f" />
-          </span>
-          メニューを撮影して翻訳
-        </button>
       </div>
+
+      <button
+        className="camera-scan-btn"
+        onClick={onCamera}
+      >
+        <div className="camera-scan-icon">
+          <Camera size={18} strokeWidth={1.8} color="#10a37f" />
+        </div>
+        <div className="camera-scan-text">
+          <span className="camera-scan-label">{copy.cameraPrompt.openCamera}</span>
+          <span className="camera-scan-hint">{copy.hero.sub}</span>
+        </div>
+      </button>
     </div>
   )
 }
