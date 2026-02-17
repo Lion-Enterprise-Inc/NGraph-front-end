@@ -209,10 +209,6 @@ export default function ChatDock({
         </div>
       </div>
 
-      <div className="chat-dock-branding">
-        powered by NGraph
-      </div>
-
       <div
         ref={measureRef}
         style={{
