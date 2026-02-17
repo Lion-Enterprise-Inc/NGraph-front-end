@@ -126,6 +126,7 @@ export default function ChatDock({
     <div
       ref={dockRef}
       className="chat-dock chat-dock-floating"
+      onClick={(e) => e.stopPropagation()}
     >
       {attachment && (
         <div className="attachment-pill">
@@ -202,7 +203,7 @@ export default function ChatDock({
             type="button"
             aria-label={copy.chat.sendMessage}
             disabled={!sendEnabled}
-            onClick={onSend}
+            onClick={() => onSend()}
           >
             <ArrowUp size={18} strokeWidth={2.5} color={sendEnabled ? "#fff" : "rgba(255,255,255,0.4)"} />
           </button>

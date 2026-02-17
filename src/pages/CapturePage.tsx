@@ -276,9 +276,9 @@ export default function CapturePage({
       const fetchRestaurantBySlug = async () => {
         setRestaurantLoading(true);
         try {
-          const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://15.207.22.103:8000';
+          const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://dev-backend.ngraph.jp/api';
           const langParam = activeLanguage !== 'ja' ? `?lang=${activeLanguage}` : '';
-          const response = await fetch(`${apiBaseUrl}/restaurants/public/${restaurantSlug}${langParam}`);
+          const response = await fetch(`${apiBaseUrl}/restaurants/public/${encodeURIComponent(restaurantSlug)}${langParam}`);
           
           if (response.ok) {
             const data = await response.json();
@@ -337,13 +337,13 @@ export default function CapturePage({
   // Pre-fetch recommend text responses for instant display
   useEffect(() => {
     if (!restaurantData?.recommend_texts?.length) return;
-    const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://15.207.22.103:8000';
+    const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://dev-backend.ngraph.jp/api';
     const slug = restaurantData.slug;
     recommendCacheRef.current = {};
 
     restaurantData.recommend_texts.forEach(async (text) => {
       try {
-        const resp = await fetch(`${apiBaseUrl}/public-chat/${slug}/stream`, {
+        const resp = await fetch(`${apiBaseUrl}/public-chat/${encodeURIComponent(slug)}/stream`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ message: text, in_store: isInStore }),
@@ -369,7 +369,9 @@ export default function CapturePage({
               } catch { /* skip */ }
             }
           }
-          recommendCacheRef.current[text] = { response: fullText, messageUid };
+          if (fullText) {
+            recommendCacheRef.current[text] = { response: fullText, messageUid };
+          }
         }
       } catch { /* silent */ }
     });
@@ -739,7 +741,7 @@ export default function CapturePage({
 
     try {
       let output: MockOutput;
-      const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://15.207.22.103:8000';
+      const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://dev-backend.ngraph.jp/api';
 
       if (attachmentSnapshot?.file) {
         // Image attached → use Vision API for menu analysis
@@ -802,7 +804,7 @@ export default function CapturePage({
         const requestText = trimmedMessage;
         try {
           const restaurantSlugForApi = selectedRestaurant?.slug || 'default';
-          const streamResponse = await fetch(`${apiBaseUrl}/public-chat/${restaurantSlugForApi}/stream`, {
+          const streamResponse = await fetch(`${apiBaseUrl}/public-chat/${encodeURIComponent(restaurantSlugForApi)}/stream`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ message: requestText, in_store: isInStore }),
@@ -853,6 +855,9 @@ export default function CapturePage({
                       ...prev,
                       [responseId]: { title: '', intro: streamedText, body: [] },
                     }));
+                  } else if (data.type === 'error') {
+                    console.log("sse_error", data.message);
+                    throw new Error(data.message || 'Server error');
                   } else if (data.type === 'done' && data.message_uid) {
                     setResponses((prev) =>
                       prev.map((item) =>
@@ -860,8 +865,16 @@ export default function CapturePage({
                       )
                     );
                   }
-                } catch { /* skip malformed JSON */ }
+                } catch (parseErr) {
+                  if (parseErr instanceof SyntaxError) continue;
+                  throw parseErr;
+                }
               }
+            }
+
+            // If stream completed but no content received, throw to trigger fallback
+            if (!streamedText) {
+              throw new Error('Empty response from server');
             }
 
             output = { title: '', intro: streamedText, body: [] };
@@ -879,8 +892,16 @@ export default function CapturePage({
         } catch (apiError) {
           console.log("chat_api_error", apiError);
           setLoading(false);
+          setIsTypingActive(false);
           const fallbackResponse = await generateChatResponse(requestText, selectedRestaurant);
           output = { title: '', intro: fallbackResponse, body: [] };
+          // typingStartedRef already has responseId from stream path, so startTyping won't run.
+          // Set typingState and typingComplete directly.
+          setTypingState((prev) => ({
+            ...prev,
+            [responseId]: { title: '', intro: fallbackResponse, body: [] },
+          }));
+          setTypingComplete((prev) => new Set(prev).add(responseId));
         }
       }
 
@@ -906,6 +927,10 @@ export default function CapturePage({
   };
 
   const handleCachedRecommendation = (text: string, cached: { response: string; messageUid: string | null }) => {
+    if (!cached.response) {
+      handleSend(text);
+      return;
+    }
     const responseId = `${Date.now()}`;
     setHideRecommendations(true);
     setUserScrolledUp(false);
