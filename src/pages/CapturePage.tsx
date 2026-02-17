@@ -32,6 +32,7 @@ type ApiRestaurant = {
   slug: string
   logo_url?: string | null
   recommend_texts?: string[] | null
+  recommend_texts_ja?: string[] | null
   created_at: string
   updated_at: string
 };
@@ -292,6 +293,7 @@ export default function CapturePage({
                 is_active: data.result.is_active,
                 logo_url: data.result.logo_url,
                 recommend_texts: data.result.recommend_texts,
+                recommend_texts_ja: data.result.recommend_texts_ja,
                 created_at: '',
                 updated_at: ''
               });
@@ -339,14 +341,16 @@ export default function CapturePage({
     if (!restaurantData?.recommend_texts?.length) return;
     const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://dev-backend.ngraph.jp/api';
     const slug = restaurantData.slug;
+    const jaTexts = restaurantData.recommend_texts_ja || restaurantData.recommend_texts;
     recommendCacheRef.current = {};
 
-    restaurantData.recommend_texts.forEach(async (text) => {
+    restaurantData.recommend_texts.forEach(async (text, i) => {
+      const jaText = jaTexts?.[i] || text;
       try {
         const resp = await fetch(`${apiBaseUrl}/public-chat/${encodeURIComponent(slug)}/stream`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message: text, in_store: isInStore }),
+          body: JSON.stringify({ message: jaText, in_store: isInStore }),
         });
         if (resp.ok && resp.body) {
           const reader = resp.body.getReader();
@@ -1117,10 +1121,14 @@ export default function CapturePage({
               recommendations={currentSuggestions.chips?.slice(0, 3)}
               onRecommendationClick={(text) => {
                 const cached = recommendCacheRef.current[text];
+                // Resolve Japanese original for API (chips may be translated)
+                const jaTexts = selectedRestaurant?.recommend_texts_ja || selectedRestaurant?.recommend_texts;
+                const idx = selectedRestaurant?.recommend_texts?.indexOf(text) ?? -1;
+                const jaText = (idx >= 0 && jaTexts?.[idx]) ? jaTexts[idx] : text;
                 if (cached) {
                   handleCachedRecommendation(text, cached);
                 } else {
-                  handleSend(text);
+                  handleSend(jaText);
                 }
               }}
             />
