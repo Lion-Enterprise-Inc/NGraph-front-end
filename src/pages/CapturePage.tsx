@@ -104,6 +104,7 @@ type ResponseItem = {
   feedback: "good" | "bad" | null;
   messageUid: string | null;
   streaming?: boolean;
+  visionItems?: VisionMenuItem[];
 };
 
 type FeedbackEntry = {
@@ -199,6 +200,7 @@ export default function CapturePage({
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
   const [showScrollButton, setShowScrollButton] = useState(false);
   const [userScrolledUp, setUserScrolledUp] = useState(false);
+  const [expandedCards, setExpandedCards] = useState<Record<string, Set<number>>>({});
 
   const handleCopyCode = async (code: string) => {
     try {
@@ -209,12 +211,33 @@ export default function CapturePage({
       console.error('Failed to copy code:', err);
     }
   };
+  const toggleCard = (responseId: string, cardIndex: number) => {
+    setExpandedCards((prev) => {
+      const current = prev[responseId] || new Set<number>();
+      const next = new Set(current);
+      if (next.has(cardIndex)) {
+        next.delete(cardIndex);
+      } else {
+        next.add(cardIndex);
+      }
+      return { ...prev, [responseId]: next };
+    });
+  };
+
+  const isCardExpanded = (responseId: string, cardIndex: number, totalItems: number) => {
+    const expanded = expandedCards[responseId];
+    if (expanded) return expanded.has(cardIndex);
+    // デフォルト: 1-2品なら全展開、3品以上なら最初の1品だけ展開
+    return totalItems <= 2 || cardIndex === 0;
+  };
+
   const [isTypingActive, setIsTypingActive] = useState(false);
   const sendEnabled = message.trim().length > 0 || Boolean(attachment);
   const fromHome = searchParams?.get("from") === "home" || defaultFromHome;
   const fromRestaurant = searchParams?.get("from") === "restaurant";
   const restaurantSlug = searchParams?.get("restaurant");
   const isInStore = searchParams?.get("source") === "qr";
+  const isNfgMode = searchParams?.get("nfg") === "true";
   
   const selectedRestaurant = restaurantData;
 
@@ -712,26 +735,43 @@ export default function CapturePage({
             const visionData = await visionResponse.json();
             const items: VisionMenuItem[] = visionData.result?.items || [];
 
-            const formatItem = (item: VisionMenuItem): string => {
-              const parts: string[] = [];
-              const name = item.name_en
-                ? `**${item.name_jp}** (${item.name_en})`
-                : `**${item.name_jp}**`;
-              const price = item.price > 0 ? ` — ¥${item.price.toLocaleString()}` : '';
-              parts.push(`${name}${price}`);
-              if (item.description) parts.push(item.description);
-              if (item.ingredients?.length) parts.push(`🥬 ${item.ingredients.join(', ')}`);
-              if (item.allergens?.length) parts.push(`⚠️ ${item.allergens.join(', ')}`);
-              return parts.join('\n');
-            };
+            if (isNfgMode) {
+              // NFGカード表示
+              output = {
+                title: `メニュー解析結果（${items.length}品）`,
+                intro: '',
+                body: [],
+              };
+              typingStartedRef.current.add(responseId);
+              setResponses((prev) =>
+                prev.map((item) =>
+                  item.id === responseId ? { ...item, visionItems: items } : item
+                )
+              );
+              setTypingComplete((prev) => new Set(prev).add(responseId));
+            } else {
+              // 従来のマークダウン表示
+              const formatItem = (item: VisionMenuItem): string => {
+                const parts: string[] = [];
+                const name = item.name_en
+                  ? `**${item.name_jp}** (${item.name_en})`
+                  : `**${item.name_jp}**`;
+                const price = item.price > 0 ? ` — ¥${item.price.toLocaleString()}` : '';
+                parts.push(`${name}${price}`);
+                if (item.description) parts.push(item.description);
+                if (item.ingredients?.length) parts.push(`主な材料: ${item.ingredients.join(', ')}`);
+                if (item.allergens?.length) parts.push(`アレルゲン: ${item.allergens.join(', ')}`);
+                return parts.join('\n');
+              };
 
-            output = {
-              title: `📋 メニュー解析結果（${items.length}品）`,
-              intro: trimmedMessage
-                ? `「${trimmedMessage}」の画像を解析しました。`
-                : 'メニュー画像を解析しました。',
-              body: items.map(formatItem),
-            };
+              output = {
+                title: `メニュー解析結果（${items.length}品）`,
+                intro: trimmedMessage
+                  ? `「${trimmedMessage}」の画像を解析しました。`
+                  : 'メニュー画像を解析しました。',
+                body: items.map(formatItem),
+              };
+            }
           } else {
             throw new Error(`Vision API failed: ${visionResponse.status}`);
           }
@@ -1108,7 +1148,116 @@ export default function CapturePage({
                 </div>
               </div>
 
-              {response.output && (
+              {response.output && response.visionItems && response.visionItems.length > 0 ? (
+                /* NFGカード表示 */
+                <div className="chat-row chat-row-assistant">
+                  <div className="chat-content">
+                    <div className="nfg-cards-container">
+                      <div className="nfg-cards-header">
+                        {response.output.title}
+                      </div>
+                      {response.visionItems.map((vi, idx) => {
+                        const expanded = isCardExpanded(response.id, idx, response.visionItems!.length);
+                        return (
+                          <div key={idx} className="nfg-card">
+                            <div
+                              className="nfg-card-header"
+                              onClick={() => toggleCard(response.id, idx)}
+                            >
+                              <div className="nfg-card-title-row">
+                                <span className="nfg-card-number">{idx + 1}.</span>
+                                <span className="nfg-card-name">{vi.name_jp}</span>
+                                {vi.price > 0 && (
+                                  <span className="nfg-card-price">¥{vi.price.toLocaleString()}</span>
+                                )}
+                                <span className={`nfg-card-chevron${expanded ? ' expanded' : ''}`}>▼</span>
+                              </div>
+                              {vi.name_en && (
+                                <div className="nfg-card-name-en">{vi.name_en}</div>
+                              )}
+                            </div>
+                            <div className={`nfg-card-body${expanded ? ' expanded' : ''}`}>
+                              {vi.description && (
+                                <div className="nfg-card-desc">{vi.description}</div>
+                              )}
+                              <div className="nfg-card-fields">
+                                {vi.ingredients?.length > 0 && (
+                                  <div className="nfg-field">
+                                    <span className="nfg-field-label">主な材料</span>
+                                    <span className="nfg-field-value">{vi.ingredients.join('、')}</span>
+                                  </div>
+                                )}
+                                {vi.allergens?.length > 0 && (
+                                  <div className="nfg-field nfg-field-allergen">
+                                    <span className="nfg-field-label">アレルゲン</span>
+                                    <span className="nfg-field-value">{vi.allergens.join('、')}</span>
+                                  </div>
+                                )}
+                                {vi.restrictions && vi.restrictions.length > 0 && (
+                                  <div className="nfg-field">
+                                    <span className="nfg-field-label">食事制約</span>
+                                    <span className="nfg-field-value">{vi.restrictions.join('、')}</span>
+                                  </div>
+                                )}
+                                {vi.flavor_profile && (
+                                  <div className="nfg-field">
+                                    <span className="nfg-field-label">味の特徴</span>
+                                    <span className="nfg-field-value">{vi.flavor_profile}</span>
+                                  </div>
+                                )}
+                                {vi.estimated_calories && (
+                                  <div className="nfg-field">
+                                    <span className="nfg-field-label">推定カロリー</span>
+                                    <span className="nfg-field-value">{vi.estimated_calories}</span>
+                                  </div>
+                                )}
+                                {vi.tax_note && (
+                                  <div className="nfg-field">
+                                    <span className="nfg-field-label">税表記</span>
+                                    <span className="nfg-field-value">{vi.tax_note}</span>
+                                  </div>
+                                )}
+                              </div>
+                              <div className="nfg-card-badge-row">
+                                {vi.source === 'db' ? (
+                                  <span className="nfg-badge nfg-badge-db">VAD 店主確認済み</span>
+                                ) : (
+                                  <span className="nfg-badge nfg-badge-ai">AI推測</span>
+                                )}
+                                {vi.confidence != null && vi.confidence > 0 && (
+                                  <span className="nfg-badge nfg-badge-confidence">信頼度 {vi.confidence}%</span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    {/* Feedback for NFG cards */}
+                    <div className="feedback-row">
+                      <div className="feedback-actions">
+                        <button
+                          className={`feedback-btn${response.feedback === 'good' ? ' active good' : ''}`}
+                          type="button"
+                          onClick={() => handleFeedback(response.id, 'good')}
+                          aria-label="Good"
+                        >
+                          <ThumbsUp size={16} />
+                        </button>
+                        <button
+                          className={`feedback-btn${response.feedback === 'bad' ? ' active bad' : ''}`}
+                          type="button"
+                          onClick={() => handleFeedback(response.id, 'bad')}
+                          aria-label="Bad"
+                        >
+                          <ThumbsDown size={16} />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : response.output ? (
+                /* 従来のチャットバブル表示 */
                 <div className="chat-row chat-row-assistant">
 
                   <div className="chat-content">
@@ -1200,7 +1349,7 @@ export default function CapturePage({
                     </div>
                   </div>
                 </div>
-              )}
+              ) : null}
             </div>
           ))}
           {loading && (

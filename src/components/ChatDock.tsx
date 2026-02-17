@@ -7,7 +7,7 @@ import {
   type ChangeEvent,
   type RefObject,
 } from "react";
-import { Camera, ArrowUp } from "lucide-react";
+import { Camera, ArrowUp, ImagePlus } from "lucide-react";
 import { getUiCopy } from "../i18n/uiCopy";
 import { useAppContext } from "./AppProvider";
 
@@ -48,6 +48,7 @@ export default function ChatDock({
   const sendEnabled = message.trim().length > 0 || Boolean(attachment);
   const dockRef = useRef<HTMLDivElement | null>(null);
   const cameraInputRef = useRef<HTMLInputElement | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const measureRef = useRef<HTMLDivElement | null>(null);
   const [multiline, setMultiline] = useState(false);
 
@@ -174,6 +175,17 @@ export default function ChatDock({
           >
             <Camera size={20} strokeWidth={1.6} color="#10a37f" />
           </button>
+          <button
+            className="chat-icon"
+            type="button"
+            aria-label="画像を選択"
+            onClick={(e) => {
+              e.stopPropagation();
+              fileInputRef.current?.click();
+            }}
+          >
+            <ImagePlus size={20} strokeWidth={1.6} color="#10a37f" />
+          </button>
         </div>
         <div className={`chat-dock-area${multiline ? " multiline" : ""}`}>
           <textarea
@@ -230,6 +242,13 @@ export default function ChatDock({
         capture="environment"
         style={{ display: "none" }}
         onChange={(e) => handleFileSelect(e, "camera")}
+      />
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        style={{ display: "none" }}
+        onChange={(e) => handleFileSelect(e, "library")}
       />
     </div>
   );

@@ -627,6 +627,12 @@ export interface VisionMenuItem {
   category: string;
   ingredients: string[];
   allergens: string[];
+  restrictions?: string[];
+  flavor_profile?: string;
+  estimated_calories?: string;
+  tax_note?: string;
+  source?: "db" | "ai";
+  confidence?: number;
 }
 
 export interface VisionAnalysisResult {
