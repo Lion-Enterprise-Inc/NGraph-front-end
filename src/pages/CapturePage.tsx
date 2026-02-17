@@ -378,6 +378,10 @@ export default function CapturePage({
   
   const currentSuggestions = useMemo(() => {
     if (selectedRestaurant) {
+      const displayName = (activeLanguage !== 'ja' && selectedRestaurant.name_romaji)
+        ? selectedRestaurant.name_romaji
+        : selectedRestaurant.name;
+
       // Use custom recommend_texts if set
       if (selectedRestaurant.recommend_texts && selectedRestaurant.recommend_texts.length > 0) {
         return {
@@ -388,8 +392,8 @@ export default function CapturePage({
 
       // Default restaurant-specific suggestions
       const chips = [
-        copy.restaurant.signatureDish.replace('{name}', selectedRestaurant.name),
-        copy.restaurant.bestTime.replace('{name}', selectedRestaurant.name),
+        copy.restaurant.signatureDish.replace('{name}', displayName),
+        copy.restaurant.bestTime.replace('{name}', displayName),
         copy.restaurant.dietaryOptions
       ];
 
@@ -403,7 +407,7 @@ export default function CapturePage({
       };
     }
     return copy.suggestions;
-  }, [selectedRestaurant, copy.suggestions, copy.restaurant]);
+  }, [selectedRestaurant, copy.suggestions, copy.restaurant, activeLanguage]);
 
   useEffect(() => {
     if (textareaRef.current) {
