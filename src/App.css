@@ -1206,14 +1206,7 @@ body {
 }
 
 .chat-avatar-assistant {
-  width: 28px;
-  height: 28px;
-  border-radius: 8px;
-  background: rgba(16,163,127,0.15);
-  color: #10a37f;
-  box-shadow: none;
-  font-size: 14px;
-  font-weight: 700;
+  display: none;
 }
 
 .chat-content {
@@ -1305,8 +1298,7 @@ body {
   cursor: default;
   max-width: 100%;
   box-shadow: none;
-  padding: 0;
-  padding: 10px 16px;
+  padding: 4px 4px;
 }
 
 .chat-bubble-assistant:hover {
