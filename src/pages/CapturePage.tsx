@@ -153,60 +153,7 @@ const logFeedback = (entry: FeedbackEntry) => {
 };
 
 const generateChatResponse = async (message: string, restaurant?: ApiRestaurant | null): Promise<string> => {
-  // This implements intelligent chat responses for restaurant conversations
-  // In production, this would integrate with an AI service like OpenAI
-
-  const lowerMessage = message.toLowerCase()
-  const restaurantName = restaurant?.name || 'the restaurant'
-  const restaurantDescription = restaurant?.description || 'We offer a great dining experience'
-
-  // Basic greeting responses
-  if (lowerMessage.includes('hello') || lowerMessage.includes('hi') || lowerMessage.includes('こんにちは')) {
-    return `Hello! Welcome to ${restaurantName}. ${restaurantDescription}. How can I help you today?`
-  }
-
-  // Menu-related queries
-  if (lowerMessage.includes('menu') || lowerMessage.includes('food') || lowerMessage.includes('dish') || lowerMessage.includes('what do you serve')) {
-    return `I'd be happy to help you with our menu at ${restaurantName}! We offer a variety of delicious dishes made with fresh ingredients. What type of cuisine are you interested in or do you have any dietary preferences?`
-  }
-
-  // Hours/location queries
-  if (lowerMessage.includes('hours') || lowerMessage.includes('time') || lowerMessage.includes('open') || lowerMessage.includes('when are you open')) {
-    return `${restaurantName} is open from 11:00 AM to 10:00 PM daily. We're here to serve you during our operating hours!`
-  }
-
-  if (lowerMessage.includes('location') || lowerMessage.includes('address') || lowerMessage.includes('where') || lowerMessage.includes('find you')) {
-    return `You can find ${restaurantName} at our convenient location. We're easily accessible and ready to welcome you for a great dining experience.`
-  }
-
-  // Reservation queries
-  if (lowerMessage.includes('reservation') || lowerMessage.includes('book') || lowerMessage.includes('table') || lowerMessage.includes('reserve')) {
-    return `I'd be happy to help you make a reservation at ${restaurantName}! Please let me know your preferred date, time, and party size, and I'll assist you with booking.`
-  }
-
-  // Dietary queries
-  if (lowerMessage.includes('vegetarian') || lowerMessage.includes('vegan') || lowerMessage.includes('gluten') || lowerMessage.includes('allergy')) {
-    return `At ${restaurantName}, we offer various options for dietary preferences and allergies. We have vegetarian, vegan, and gluten-free options available. Please let me know your specific requirements, and I'll help you find suitable dishes.`
-  }
-
-  // Restaurant-specific information
-  if (restaurant?.description) {
-    if (lowerMessage.includes('about') || lowerMessage.includes('what') || lowerMessage.includes('tell me') || lowerMessage.includes('information')) {
-      return `${restaurant.description} We're excited to serve you at ${restaurantName}!`
-    }
-  }
-
-  // Special requests or questions
-  if (lowerMessage.includes('special') || lowerMessage.includes('event') || lowerMessage.includes('party')) {
-    return `${restaurantName} can accommodate special events and parties. Please contact us for details about private dining options and group reservations.`
-  }
-
-  if (lowerMessage.includes('price') || lowerMessage.includes('cost') || lowerMessage.includes('expensive') || lowerMessage.includes('cheap')) {
-    return `At ${restaurantName}, we offer a range of dishes at various price points to suit different budgets. Our menu features both affordable options and premium selections.`
-  }
-
-  // Default response
-  return `Thank you for your message! I'm here to help with information about ${restaurantName}, our menu, reservations, or any other questions you might have. What would you like to know?`
+  return "申し訳ございません、接続に問題がありました。もう一度お試しください。";
 };
 
 export default function CapturePage({
