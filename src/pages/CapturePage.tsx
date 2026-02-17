@@ -384,9 +384,12 @@ export default function CapturePage({
 
       // Use custom recommend_texts if set
       if (selectedRestaurant.recommend_texts && selectedRestaurant.recommend_texts.length > 0) {
+        const chips = (activeLanguage !== 'ja' && selectedRestaurant.name_romaji)
+          ? selectedRestaurant.recommend_texts.map(t => t.replace(selectedRestaurant.name, displayName))
+          : selectedRestaurant.recommend_texts;
         return {
           guide: copy.restaurant.chatPlaceholder,
-          chips: selectedRestaurant.recommend_texts
+          chips
         };
       }
 
