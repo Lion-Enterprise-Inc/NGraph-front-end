@@ -1,4 +1,4 @@
-import { Menu, Plus } from 'lucide-react'
+import { Menu } from 'lucide-react'
 import { getUiCopy } from '../i18n/uiCopy'
 import { useAppContext } from './AppProvider'
 
@@ -14,12 +14,11 @@ const LANG_BADGES: Record<string, string> = {
 interface CaptureHeaderProps {
   onMenu: () => void
   onLanguage: () => void
-  onNewChat: () => void
   restaurantName?: string | null
   restaurantNameRomaji?: string | null
 }
 
-export default function CaptureHeader({ onMenu, onLanguage, onNewChat, restaurantName, restaurantNameRomaji }: CaptureHeaderProps) {
+export default function CaptureHeader({ onMenu, onLanguage, restaurantName, restaurantNameRomaji }: CaptureHeaderProps) {
   const { language } = useAppContext()
   const copy = getUiCopy(language)
   const badge = LANG_BADGES[language] || language.slice(0, 2).toUpperCase()
@@ -56,9 +55,6 @@ export default function CaptureHeader({ onMenu, onLanguage, onNewChat, restauran
       <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
         <button className="header-lang-badge" type="button" onClick={onLanguage}>
           {badge}
-        </button>
-        <button className="icon-button" type="button" aria-label="New Chat" onClick={onNewChat}>
-          <Plus size={20} strokeWidth={1.75} color="rgba(255,255,255,0.9)" />
         </button>
       </div>
     </header>

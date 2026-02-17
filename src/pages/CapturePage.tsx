@@ -1032,7 +1032,6 @@ export default function CapturePage({
           })
         }
         onLanguage={openLanguageModal ?? openLanguageModalFromContext}
-        onNewChat={handleNewChat}
         restaurantName={selectedRestaurant?.name}
         restaurantNameRomaji={activeLanguage !== 'ja' ? selectedRestaurant?.name_romaji : undefined}
       />
