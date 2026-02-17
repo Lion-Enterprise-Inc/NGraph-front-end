@@ -242,6 +242,7 @@ export default function CapturePage({
   const threadRef = useRef<HTMLElement | null>(null);
   const captureBodyRef = useRef<HTMLDivElement | null>(null);
   const typingTimersRef = useRef<number[]>([]);
+  const recommendCacheRef = useRef<Record<string, { response: string; messageUid: string | null }>>({});
   const typingStartedRef = useRef<Set<string>>(new Set());
   const [typingState, setTypingState] = useState<
     Record<string, { title: string; intro: string; body: string[] }>
@@ -329,6 +330,47 @@ export default function CapturePage({
   useEffect(() => {
     if (restaurantSlug) setCtxSlug(restaurantSlug);
   }, [restaurantSlug, setCtxSlug]);
+
+  // Pre-fetch recommend text responses for instant display
+  useEffect(() => {
+    if (!restaurantData?.recommend_texts?.length) return;
+    const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://15.207.22.103:8000';
+    const slug = restaurantData.slug;
+    recommendCacheRef.current = {};
+
+    restaurantData.recommend_texts.forEach(async (text) => {
+      try {
+        const resp = await fetch(`${apiBaseUrl}/public-chat/${slug}/stream`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: text }),
+        });
+        if (resp.ok && resp.body) {
+          const reader = resp.body.getReader();
+          const decoder = new TextDecoder();
+          let fullText = '';
+          let messageUid: string | null = null;
+          let buffer = '';
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split('\n');
+            buffer = lines.pop() || '';
+            for (const line of lines) {
+              if (!line.startsWith('data: ')) continue;
+              try {
+                const data = JSON.parse(line.slice(6));
+                if (data.type === 'content') fullText += data.content;
+                if (data.type === 'done' && data.message_uid) messageUid = data.message_uid;
+              } catch { /* skip */ }
+            }
+          }
+          recommendCacheRef.current[text] = { response: fullText, messageUid };
+        }
+      } catch { /* silent */ }
+    });
+  }, [restaurantData]);
 
   const copy = useMemo(() => getUiCopy(activeLanguage), [activeLanguage]);
   
@@ -640,9 +682,10 @@ export default function CapturePage({
     }
   };
 
-  const handleSend = async () => {
-    if (!sendEnabled || loading) return;
-    const trimmedMessage = message.trim();
+  const handleSend = async (overrideText?: string) => {
+    const textToSend = overrideText ?? message;
+    if ((!textToSend.trim() && !attachment) || loading) return;
+    const trimmedMessage = textToSend.trim();
     const attachmentSnapshot = attachment;
     const userImage = attachmentSnapshot?.file
       ? URL.createObjectURL(attachmentSnapshot.file)
@@ -859,6 +902,44 @@ export default function CapturePage({
     }
   };
 
+  const handleCachedRecommendation = (text: string, cached: { response: string; messageUid: string | null }) => {
+    const responseId = `${Date.now()}`;
+    setHideRecommendations(true);
+    setUserScrolledUp(false);
+
+    typingStartedRef.current.add(responseId);
+
+    setResponses((prev) => [
+      ...prev,
+      {
+        id: responseId,
+        input: { text, attachment: null, imageUrl: null },
+        output: { title: '', intro: cached.response, body: [] },
+        language: activeLanguage,
+        feedback: null,
+        messageUid: cached.messageUid,
+      },
+    ]);
+
+    setTypingState((prev) => ({
+      ...prev,
+      [responseId]: { title: '', intro: cached.response, body: [] },
+    }));
+    setTypingComplete((prev) => new Set(prev).add(responseId));
+
+    logConversation({
+      input: { text, attachment: null },
+      output: { title: '', intro: cached.response, body: [] },
+      language: activeLanguage,
+      createdAt: new Date().toISOString(),
+    });
+
+    requestAnimationFrame(() => {
+      const container = captureBodyRef.current;
+      if (container) container.scrollTop = container.scrollHeight;
+    });
+  };
+
   const handleRecommendationClick = (text: string) => {
     console.log("chip_send", { value: text });
     setHideRecommendations(true);
@@ -1010,9 +1091,12 @@ export default function CapturePage({
               restaurantName={selectedRestaurant?.name}
               recommendations={currentSuggestions.chips?.slice(0, 3)}
               onRecommendationClick={(text) => {
-                setMessage(text);
-                setHideRecommendations(true);
-                requestAnimationFrame(() => textareaRef.current?.focus());
+                const cached = recommendCacheRef.current[text];
+                if (cached) {
+                  handleCachedRecommendation(text, cached);
+                } else {
+                  handleSend(text);
+                }
               }}
             />
           )}

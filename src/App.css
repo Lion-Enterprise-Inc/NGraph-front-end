@@ -388,6 +388,13 @@ body {
   box-shadow: none;
 }
 
+.page.capture-page {
+  height: 100vh;
+  height: 100dvh;
+  min-height: unset;
+  overflow: hidden;
+}
+
 .browser-shell {
   width: 100%;
   display: flex;
@@ -873,7 +880,7 @@ body {
 
 .chat-send.primary,
 .chat-dock-send.active {
-  background: #FFFFFF;
+  background: #10a37f;
   box-shadow: none;
   transform: translateY(-1px);
 }
@@ -1016,6 +1023,7 @@ body {
   width: 100%;
   flex: 1;
   overflow-y: auto;
+  overscroll-behavior-y: contain;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -5040,13 +5048,13 @@ textarea.form-input {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 13px 18px;
+  padding: 14px 18px;
   background: var(--color-surface-chip);
   border: 1px solid var(--color-border);
   border-radius: 12px;
-  color: var(--color-text-secondary);
-  font-size: 13px;
-  white-space: nowrap;
+  color: rgba(255,255,255,0.82);
+  font-size: 15px;
+  white-space: normal;
   font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Hiragino Kaku Gothic ProN", sans-serif;
   font-weight: 400;
   line-height: 1.4;

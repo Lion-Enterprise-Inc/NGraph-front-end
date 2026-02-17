@@ -228,7 +228,7 @@ export default function ChatDock({
             disabled={!sendEnabled}
             onClick={onSend}
           >
-            <ArrowUp size={18} strokeWidth={2.5} color={sendEnabled ? "#000" : "rgba(255,255,255,0.4)"} />
+            <ArrowUp size={18} strokeWidth={2.5} color={sendEnabled ? "#fff" : "rgba(255,255,255,0.4)"} />
           </button>
         </div>
       </div>
