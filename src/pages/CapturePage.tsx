@@ -1032,8 +1032,6 @@ export default function CapturePage({
           })
         }
         onLanguage={openLanguageModal ?? openLanguageModalFromContext}
-        restaurantName={selectedRestaurant?.name}
-        restaurantNameRomaji={activeLanguage !== 'ja' ? selectedRestaurant?.name_romaji : undefined}
       />
 
       <div
