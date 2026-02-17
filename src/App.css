@@ -645,11 +645,13 @@ body {
 }
 
 .capture-main.hero-stack {
-  position: absolute;
-  top: 41%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   width: 100%;
+  padding-bottom: 60px;
 }
 
 .explore-title,
