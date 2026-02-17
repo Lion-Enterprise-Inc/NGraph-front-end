@@ -324,7 +324,7 @@ export default function StoresPage() {
               新規レストランを登録
             </button>
             <div>
-              <span style={{ fontSize: '24px', fontWeight: 700, color: '#667eea' }}>{stores.length}</span>
+              <span style={{ fontSize: '24px', fontWeight: 700, color: '#10a37f' }}>{stores.length}</span>
               <span style={{ color: '#94A3B8', marginLeft: '5px' }}>レストラン</span>
             </div>
           </div>
@@ -401,7 +401,6 @@ export default function StoresPage() {
                   className="btn btn-danger btn-small"
                   onClick={() => handleDeleteStore(store.uid, store.name)}
                   title="レストランを削除"
-                  style={{ background: '#dc3545', color: 'white' }}
                 >
                   削除
                 </button>
@@ -572,7 +571,7 @@ export default function StoresPage() {
 
         .btn {
           border: none;
-          border-radius: 6px;
+          border-radius: 8px;
           padding: 8px 16px;
           font-weight: 600;
           font-size: 13px;
@@ -581,30 +580,33 @@ export default function StoresPage() {
         }
 
         .btn-primary {
-          background: linear-gradient(135deg, #2563eb, #7c3aed);
+          background: #10a37f;
           color: white;
-          text-shadow: 0 1px 2px rgba(0,0,0,0.3);
-          border-radius: 14px;
-          box-shadow: 0 20px 40px rgba(79, 70, 229, 0.26);
+          border-radius: 10px;
+          box-shadow: 0 4px 12px rgba(16, 163, 127, 0.25);
         }
 
         .btn-primary:hover {
-          background: linear-gradient(135deg, #1d4ed8, #6d28d9);
-          box-shadow: 0 24px 48px rgba(79, 70, 229, 0.35);
-          transform: translateY(-2px);
+          background: #0d8a6a;
+          box-shadow: 0 6px 16px rgba(16, 163, 127, 0.35);
+          transform: translateY(-1px);
         }
 
         .btn-secondary {
-          background: #6c757d;
-          color: white;
+          background: rgba(255,255,255,0.06);
+          color: var(--muted);
+          border: 1px solid var(--border);
         }
 
         .btn-secondary:hover {
-          background: #5a6268;
+          background: rgba(255,255,255,0.1);
+          color: var(--text);
         }
 
         .btn-secondary.active {
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          background: rgba(16, 163, 127, 0.15);
+          color: #34d399;
+          border-color: rgba(16, 163, 127, 0.3);
         }
 
         .btn-small {
@@ -612,22 +614,31 @@ export default function StoresPage() {
           font-size: 12px;
         }
 
+        .btn-danger {
+          background: rgba(239, 68, 68, 0.15) !important;
+          color: #f87171 !important;
+          border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
+        .btn-danger:hover {
+          background: rgba(239, 68, 68, 0.25) !important;
+        }
+
         #storeListContainer {
           display: grid;
           grid-template-columns: repeat(auto-fill, minmax(350px, 400px));
-          gap: 20px;
+          gap: 16px;
           width: 100%;
           max-width: none;
         }
 
-        /* Store Card Compact - matching HTML exactly */
         .store-card-compact {
           background: var(--bg-surface);
           border: 1px solid var(--border);
-          border-radius: 8px;
-          padding: 16px;
+          border-radius: 12px;
+          padding: 18px;
           margin-bottom: 0;
-          transition: all 0.3s;
+          transition: all 0.25s ease;
           display: flex;
           flex-direction: column;
           gap: 12px;
@@ -635,9 +646,9 @@ export default function StoresPage() {
         }
 
         .store-card-compact:hover {
-          border-color: #DB461C;
-          box-shadow: 0 2px 8px rgba(219, 70, 28, 0.15);
-          transform: translateY(-1px);
+          border-color: rgba(16, 163, 127, 0.4);
+          box-shadow: 0 4px 16px rgba(16, 163, 127, 0.1);
+          transform: translateY(-2px);
         }
 
         .store-info-compact {
@@ -661,7 +672,7 @@ export default function StoresPage() {
 
         .store-code-compact {
           font-size: 12px;
-          color: #6b7280;
+          color: var(--muted);
           margin-bottom: 2px;
         }
 
@@ -679,11 +690,11 @@ export default function StoresPage() {
         }
 
         .store-id-badge {
-          font-size: 12px;
+          font-size: 11px;
           font-weight: 600;
-          color: #1f2937;
-          background: #e0f2fe;
-          border: 1px solid #bae6fd;
+          color: #34d399;
+          background: rgba(16, 163, 127, 0.1);
+          border: 1px solid rgba(16, 163, 127, 0.2);
           padding: 2px 8px;
           border-radius: 9999px;
           letter-spacing: 0.5px;
@@ -697,13 +708,13 @@ export default function StoresPage() {
         }
 
         .badge-success {
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-          color: white;
+          background: rgba(16, 163, 127, 0.15);
+          color: #34d399;
         }
 
         .store-update-compact {
           font-size: 11px;
-          color: #9ca3af;
+          color: var(--muted);
         }
 
         .store-metrics-compact {
@@ -722,7 +733,7 @@ export default function StoresPage() {
           display: block;
           font-size: 18px;
           font-weight: 700;
-          color: #667eea;
+          color: #10a37f;
         }
 
         .metric-label {
@@ -758,8 +769,9 @@ export default function StoresPage() {
 
         .modal-content {
           background: var(--bg-surface);
-          border-radius: 12px;
-          padding: 24px;
+          border: 1px solid var(--border);
+          border-radius: 16px;
+          padding: 28px;
           max-width: 800px;
           width: 100%;
           max-height: 90vh;
@@ -771,7 +783,7 @@ export default function StoresPage() {
           justify-content: space-between;
           align-items: center;
           margin-bottom: 20px;
-          border-bottom: 2px solid var(--border);
+          border-bottom: 1px solid var(--border);
           padding-bottom: 15px;
         }
 
@@ -803,14 +815,15 @@ export default function StoresPage() {
           width: 100%;
           padding: 10px;
           border: 1px solid var(--border);
-          border-radius: 6px;
+          border-radius: 8px;
           font-size: 14px;
-          transition: border 0.3s;
+          transition: border 0.2s ease;
         }
 
         .form-input:focus {
           outline: none;
-          border-color: #667eea;
+          border-color: #10a37f;
+          box-shadow: 0 0 0 2px rgba(16, 163, 127, 0.15);
         }
 
         @media (max-width: 768px) {
