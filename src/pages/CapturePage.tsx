@@ -26,6 +26,7 @@ import { recordVisit } from "../utils/storage";
 type ApiRestaurant = {
   uid: string
   name: string
+  name_romaji?: string | null
   description?: string
   is_active: boolean
   slug: string
@@ -285,6 +286,7 @@ export default function CapturePage({
               setRestaurantData({
                 uid: data.result.uid,
                 name: data.result.name,
+                name_romaji: data.result.name_romaji,
                 slug: data.result.slug,
                 is_active: data.result.is_active,
                 logo_url: data.result.logo_url,
@@ -1089,6 +1091,7 @@ export default function CapturePage({
               }}
               restaurantLogo={selectedRestaurant?.logo_url}
               restaurantName={selectedRestaurant?.name}
+              restaurantNameRomaji={activeLanguage !== 'ja' ? selectedRestaurant?.name_romaji : undefined}
               recommendations={currentSuggestions.chips?.slice(0, 3)}
               onRecommendationClick={(text) => {
                 const cached = recommendCacheRef.current[text];

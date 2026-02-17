@@ -7,6 +7,7 @@ type CameraPromptProps = {
   onCamera?: () => void
   restaurantLogo?: string | null
   restaurantName?: string
+  restaurantNameRomaji?: string | null
   recommendations?: string[]
   onRecommendationClick?: (text: string) => void
 }
@@ -18,6 +19,7 @@ export default function CameraPrompt({
   onCamera,
   restaurantLogo,
   restaurantName,
+  restaurantNameRomaji,
   recommendations,
   onRecommendationClick,
 }: CameraPromptProps) {
@@ -26,6 +28,9 @@ export default function CameraPrompt({
       <h1 className="store-home-name">
         {restaurantName || heading}
       </h1>
+      {restaurantNameRomaji && (
+        <p className="store-home-romaji">{restaurantNameRomaji}</p>
+      )}
       <p className="store-home-sub">
         {restaurantName ? '何からお手伝いしますか？' : sub}
       </p>
