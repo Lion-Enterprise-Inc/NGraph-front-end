@@ -1,6 +1,6 @@
 'use client'
 
-import { X, Plus, ArrowRight } from 'lucide-react'
+import { X, Plus } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useChatHistory } from '../hooks/useChatHistory'
 import { getUiCopy } from '../i18n/uiCopy'
@@ -71,13 +71,6 @@ export default function HistoryDrawer({
         </div>
 
         <div className="sidebar-footer">
-          <button
-            className="sidebar-hub-btn"
-            onClick={() => { router.push('/'); onClose?.(); }}
-          >
-            <ArrowRight size={14} strokeWidth={2} />
-            他のお店を見る
-          </button>
           <div className="sidebar-powered">Powered by NGraph</div>
         </div>
       </aside>
