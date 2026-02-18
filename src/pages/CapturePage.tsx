@@ -167,6 +167,7 @@ export default function CapturePage({
 }: CapturePageProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const restaurantSlug = searchParams?.get("restaurant");
   const [restaurantData, setRestaurantData] = useState<ApiRestaurant | null>(null);
   const [restaurantLoading, setRestaurantLoading] = useState(false);
   const {
@@ -184,7 +185,24 @@ export default function CapturePage({
   const [attachment, setAttachment] = useState<Attachment | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const appliedAttachmentRef = useRef(false);
-  const [responses, setResponses] = useState<ResponseItem[]>([]);
+  const threadUidRef = useRef<string | null>(null);
+  const [responses, setResponses] = useState<ResponseItem[]>(() => {
+    // sessionStorageから復元（ページ遷移しても残る）
+    if (typeof window === 'undefined') return [];
+    try {
+      const key = `ngraph_responses_${restaurantSlug || 'default'}`;
+      const saved = sessionStorage.getItem(key);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        // blob URLは復元できないのでnullに
+        return parsed.map((r: ResponseItem) => ({
+          ...r,
+          input: { ...r.input, imageUrl: null },
+        }));
+      }
+    } catch {}
+    return [];
+  });
   const [loading, setLoading] = useState(false);
   const loadingTimerRef = useRef<number | null>(null);
   const responseImagesRef = useRef<string[]>([]);
@@ -197,10 +215,48 @@ export default function CapturePage({
     Record<string, { title: string; intro: string; body: string[] }>
   >({});
   const [typingComplete, setTypingComplete] = useState<Set<string>>(new Set());
+  // 復元されたレスポンスはタイピングアニメーションをスキップ
+  const restoredIdsRef = useRef<Set<string>>(new Set(responses.map(r => r.id)));
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
   const [showScrollButton, setShowScrollButton] = useState(false);
   const [userScrolledUp, setUserScrolledUp] = useState(false);
   const [expandedCards, setExpandedCards] = useState<Record<string, Set<number>>>({});
+
+  // responsesをsessionStorageに自動保存
+  useEffect(() => {
+    if (responses.length === 0) return;
+    try {
+      const key = `ngraph_responses_${restaurantSlug || 'default'}`;
+      sessionStorage.setItem(key, JSON.stringify(responses));
+    } catch {}
+  }, [responses, restaurantSlug]);
+
+  // thread_uid復元 + 復元レスポンスのタイピング状態セット
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const key = `ngraph_threadUid_${restaurantSlug || 'default'}`;
+      const saved = sessionStorage.getItem(key);
+      if (saved) threadUidRef.current = saved;
+    } catch {}
+    // 復元されたレスポンスのタイピングを完了状態にする
+    if (restoredIdsRef.current.size > 0) {
+      const restoredTyping: Record<string, { title: string; intro: string; body: string[] }> = {};
+      const restoredComplete = new Set<string>();
+      responses.forEach(r => {
+        if (restoredIdsRef.current.has(r.id) && r.output) {
+          restoredTyping[r.id] = { title: r.output.title, intro: r.output.intro, body: r.output.body };
+          restoredComplete.add(r.id);
+          typingStartedRef.current.add(r.id);
+        }
+      });
+      if (Object.keys(restoredTyping).length > 0) {
+        setTypingState(prev => ({ ...prev, ...restoredTyping }));
+        setTypingComplete(prev => new Set([...prev, ...restoredComplete]));
+        setHideRecommendations(true);
+      }
+    }
+  }, [restaurantSlug]);
 
   const handleCopyCode = async (code: string) => {
     try {
@@ -235,7 +291,6 @@ export default function CapturePage({
   const sendEnabled = message.trim().length > 0 || Boolean(attachment);
   const fromHome = searchParams?.get("from") === "home" || defaultFromHome;
   const fromRestaurant = searchParams?.get("from") === "restaurant";
-  const restaurantSlug = searchParams?.get("restaurant");
   const isInStore = searchParams?.get("source") === "qr";
   const isNfgMode = searchParams?.get("nfg") === "true";
   
@@ -798,7 +853,11 @@ export default function CapturePage({
           const streamResponse = await fetch(`${apiBaseUrl}/public-chat/${encodeURIComponent(restaurantSlugForApi)}/stream`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ message: requestText, in_store: isInStore }),
+            body: JSON.stringify({
+              message: requestText,
+              in_store: isInStore,
+              thread_uid: threadUidRef.current,
+            }),
           });
 
           if (streamResponse.ok && streamResponse.body) {
@@ -824,6 +883,13 @@ export default function CapturePage({
                 if (!line.startsWith('data: ')) continue;
                 try {
                   const data = JSON.parse(line.slice(6));
+                  if (data.type === 'start' && data.thread_uid) {
+                    threadUidRef.current = data.thread_uid;
+                    try {
+                      const tKey = `ngraph_threadUid_${restaurantSlug || 'default'}`;
+                      sessionStorage.setItem(tKey, data.thread_uid);
+                    } catch {}
+                  }
                   if (data.type === 'content') {
                     if (firstToken) {
                       firstToken = false;
@@ -1008,30 +1074,25 @@ export default function CapturePage({
   };
 
   const handleNewChat = () => {
-    // Clear all chat responses
     setResponses([]);
-    // Clear message input
     setMessage("");
-    // Clear attachment
     setAttachment(null);
-    // Reset loading state
     setLoading(false);
-    // Clear hide recommendations
     setHideRecommendations(false);
-    // Reset scroll states
     setUserScrolledUp(false);
     setShowScrollButton(false);
-    // Reset typing state
     setIsTypingActive(false);
     setTypingComplete(new Set());
-    // Clear feedback states
-    responses.forEach(response => {
-      if (response.feedback) {
-        setResponses(prev => prev.map(item => 
-          item.id === response.id ? { ...item, feedback: null } : item
-        ));
-      }
-    });
+    setTypingState({});
+    // スレッドとセッションストレージをリセット
+    threadUidRef.current = null;
+    restoredIdsRef.current = new Set();
+    try {
+      const key = `ngraph_responses_${restaurantSlug || 'default'}`;
+      const tKey = `ngraph_threadUid_${restaurantSlug || 'default'}`;
+      sessionStorage.removeItem(key);
+      sessionStorage.removeItem(tKey);
+    } catch {}
   };
 
   // Sync handleNewChat to AppContext for sidebar
