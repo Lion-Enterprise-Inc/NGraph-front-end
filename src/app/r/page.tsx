@@ -33,8 +33,8 @@ export default function ShortCodeRedirect() {
         }
         const params = new URLSearchParams(window.location.search)
         const table = params.get('t')
-        // Use url_slug (shortCode) directly — BE accepts both slug and url_slug
-        const url = `/capture?restaurant=${shortCode}&source=qr${table ? `&t=${table}` : ''}`
+        const restaurantParam = data.result.url_slug || data.result.slug
+        const url = `/capture?restaurant=${encodeURIComponent(restaurantParam)}&source=qr${table ? `&t=${table}` : ''}`
         router.replace(url)
       } catch {
         setError(true)
