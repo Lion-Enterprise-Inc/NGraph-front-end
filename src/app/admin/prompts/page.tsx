@@ -13,6 +13,12 @@ const tones = [
   { value: 'professional', label: 'プロフェッショナル（専門的）' },
 ]
 
+const DEFAULT_RECOMMEND_TEXTS = [
+  '{name}の看板料理は何ですか？',
+  '{name}に行くのに最適な時間は？',
+  '食事制限に対応していますか？',
+]
+
 const BASE_PROMPT_DISPLAY = `【基本ルール（編集不可）】
 1. レストランの情報・メニュー・おすすめについてお客様をサポート
 2. ツールを使って正確な情報を提供（メニュー一覧、詳細、アレルギー検索）
@@ -318,34 +324,65 @@ export default function PromptsPage() {
             <p style={{ color: '#94A3B8', fontSize: '13px', marginBottom: '12px' }}>
               チャット画面のサジェストボタンに表示されるテキストを設定します（最大3つ）。
             </p>
-            {recommendTexts.map((text, i) => (
-              <div key={i} style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
-                <input
-                  className="form-control"
-                  value={text}
-                  onChange={(e) => {
-                    const updated = [...recommendTexts]
-                    updated[i] = e.target.value
-                    setRecommendTexts(updated)
-                  }}
-                  placeholder={`テキスト ${i + 1}`}
-                />
+            {recommendTexts.length === 0 ? (
+              <>
+                <div style={{ padding: '12px', background: '#1E293B', borderRadius: '6px', marginBottom: '12px' }}>
+                  <div style={{ fontSize: '12px', color: '#64748B', marginBottom: '8px' }}>現在のデフォルト（自動表示中）:</div>
+                  {DEFAULT_RECOMMEND_TEXTS.map((t, i) => (
+                    <div key={i} style={{ fontSize: '14px', color: '#94A3B8', padding: '4px 0' }}>
+                      {i + 1}. {t.replace('{name}', selectedRestaurant?.name || '')}
+                    </div>
+                  ))}
+                </div>
                 <button
-                  className="btn btn-danger"
-                  onClick={() => setRecommendTexts(recommendTexts.filter((_, idx) => idx !== i))}
-                  style={{ flexShrink: 0 }}
+                  className="btn btn-secondary"
+                  onClick={() => setRecommendTexts(
+                    DEFAULT_RECOMMEND_TEXTS.map(t => t.replace('{name}', selectedRestaurant?.name || ''))
+                  )}
                 >
-                  削除
+                  カスタマイズ
                 </button>
-              </div>
-            ))}
-            {recommendTexts.length < 3 && (
-              <button
-                className="btn btn-secondary"
-                onClick={() => setRecommendTexts([...recommendTexts, ''])}
-              >
-                + 追加
-              </button>
+              </>
+            ) : (
+              <>
+                {recommendTexts.map((text, i) => (
+                  <div key={i} style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
+                    <input
+                      className="form-control"
+                      value={text}
+                      onChange={(e) => {
+                        const updated = [...recommendTexts]
+                        updated[i] = e.target.value
+                        setRecommendTexts(updated)
+                      }}
+                      placeholder={`テキスト ${i + 1}`}
+                    />
+                    <button
+                      className="btn btn-danger"
+                      onClick={() => setRecommendTexts(recommendTexts.filter((_, idx) => idx !== i))}
+                      style={{ flexShrink: 0 }}
+                    >
+                      削除
+                    </button>
+                  </div>
+                ))}
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  {recommendTexts.length < 3 && (
+                    <button
+                      className="btn btn-secondary"
+                      onClick={() => setRecommendTexts([...recommendTexts, ''])}
+                    >
+                      + 追加
+                    </button>
+                  )}
+                  <button
+                    className="btn btn-secondary"
+                    onClick={() => setRecommendTexts([])}
+                  >
+                    デフォルトに戻す
+                  </button>
+                </div>
+              </>
             )}
           </div>
 
