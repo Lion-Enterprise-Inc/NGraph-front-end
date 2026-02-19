@@ -14,9 +14,10 @@ const LANG_BADGES: Record<string, string> = {
 interface CaptureHeaderProps {
   onMenu: () => void
   onLanguage: () => void
+  restaurantName?: string | null
 }
 
-export default function CaptureHeader({ onMenu, onLanguage }: CaptureHeaderProps) {
+export default function CaptureHeader({ onMenu, onLanguage, restaurantName }: CaptureHeaderProps) {
   const { language } = useAppContext()
   const copy = getUiCopy(language)
   const badge = LANG_BADGES[language] || language.slice(0, 2).toUpperCase()
@@ -26,7 +27,11 @@ export default function CaptureHeader({ onMenu, onLanguage }: CaptureHeaderProps
       <button className="icon-button" type="button" aria-label={copy.captureHeader.menu} onClick={onMenu}>
         <Menu size={22} strokeWidth={1.75} color="rgba(255,255,255,0.9)" />
       </button>
-      <div style={{ flex: 1 }} />
+      <div className="capture-header-center">
+        {restaurantName && (
+          <span className="capture-header-name">{restaurantName}</span>
+        )}
+      </div>
       <button className="header-lang-badge" type="button" onClick={onLanguage}>
         {badge}
       </button>
