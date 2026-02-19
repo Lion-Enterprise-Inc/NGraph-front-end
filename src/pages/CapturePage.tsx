@@ -400,7 +400,7 @@ export default function CapturePage({
         const resp = await fetch(`${apiBaseUrl}/public-chat/${encodeURIComponent(slug)}/stream`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message: jaText, in_store: isInStore, language: activeLanguage }),
+          body: JSON.stringify({ message: activeLanguage === 'ja' ? jaText : text, in_store: isInStore, language: activeLanguage }),
           signal: controller.signal,
         });
         if (resp.ok && resp.body) {
@@ -1292,14 +1292,11 @@ export default function CapturePage({
               recommendations={currentSuggestions.chips?.slice(0, 3)}
               onRecommendationClick={(text) => {
                 const cached = recommendCacheRef.current[text];
-                // Resolve Japanese original for API (chips may be translated)
-                const jaTexts = selectedRestaurant?.recommend_texts_ja || selectedRestaurant?.recommend_texts;
-                const idx = selectedRestaurant?.recommend_texts?.indexOf(text) ?? -1;
-                const jaText = (idx >= 0 && jaTexts?.[idx]) ? jaTexts[idx] : text;
                 if (cached) {
                   handleCachedRecommendation(text, cached);
                 } else {
-                  handleSend(jaText);
+                  // Send text as-is (translated for non-ja, original for ja)
+                  handleSend(text);
                 }
               }}
             />
