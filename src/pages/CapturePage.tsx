@@ -388,6 +388,7 @@ export default function CapturePage({
   // Pre-fetch recommend text responses for instant display
   useEffect(() => {
     if (!restaurantData?.recommend_texts?.length) return;
+    const controller = new AbortController();
     const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://dev-backend.ngraph.jp/api';
     const slug = restaurantData.slug;
     const jaTexts = restaurantData.recommend_texts_ja || restaurantData.recommend_texts;
@@ -400,6 +401,7 @@ export default function CapturePage({
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ message: jaText, in_store: isInStore, language: activeLanguage }),
+          signal: controller.signal,
         });
         if (resp.ok && resp.body) {
           const reader = resp.body.getReader();
@@ -426,8 +428,9 @@ export default function CapturePage({
             recommendCacheRef.current[text] = { response: fullText, messageUid };
           }
         }
-      } catch { /* silent */ }
+      } catch { /* silent — includes AbortError */ }
     });
+    return () => controller.abort();
   }, [restaurantData, activeLanguage]);
 
   const copy = useMemo(() => getUiCopy(activeLanguage), [activeLanguage]);
