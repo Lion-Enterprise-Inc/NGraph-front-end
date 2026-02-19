@@ -5032,11 +5032,11 @@ textarea.form-input {
 }
 
 .store-home-romaji {
-  font-size: 14px;
-  color: rgba(255,255,255,0.4);
+  font-size: 22px;
+  color: var(--color-text);
   margin: 4px 0 0;
-  letter-spacing: 0.03em;
-  font-weight: 400;
+  letter-spacing: 0.01em;
+  font-weight: 600;
 }
 
 .store-home-sub {

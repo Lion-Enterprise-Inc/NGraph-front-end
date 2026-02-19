@@ -393,7 +393,7 @@ export default function CapturePage({
         const resp = await fetch(`${apiBaseUrl}/public-chat/${encodeURIComponent(slug)}/stream`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message: jaText, in_store: isInStore }),
+          body: JSON.stringify({ message: jaText, in_store: isInStore, language: activeLanguage }),
         });
         if (resp.ok && resp.body) {
           const reader = resp.body.getReader();
@@ -422,7 +422,7 @@ export default function CapturePage({
         }
       } catch { /* silent */ }
     });
-  }, [restaurantData]);
+  }, [restaurantData, activeLanguage]);
 
   const copy = useMemo(() => getUiCopy(activeLanguage), [activeLanguage]);
   
@@ -1135,6 +1135,7 @@ export default function CapturePage({
     // スレッドとセッションストレージをリセット
     threadUidRef.current = null;
     restoredIdsRef.current = new Set();
+    recommendCacheRef.current = {};
     try {
       const key = `ngraph_responses_${restaurantSlug || 'default'}`;
       const tKey = `ngraph_threadUid_${restaurantSlug || 'default'}`;
@@ -1532,7 +1533,11 @@ export default function CapturePage({
                               key={item.num}
                               className="quick-reply-chip"
                               type="button"
-                              onClick={() => handleSend(`${item.num}の${item.name}について詳しく教えて`)}
+                              onClick={() => handleSend(
+                                activeLanguage === 'ja'
+                                  ? `${item.num}の${item.name}について詳しく教えて`
+                                  : `Tell me more about #${item.num} ${item.name}`
+                              )}
                             >
                               {item.num}. {item.name}
                             </button>
