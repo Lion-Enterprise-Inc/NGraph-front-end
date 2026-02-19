@@ -14,6 +14,7 @@ import Tesseract from "tesseract.js";
 import { FeedbackApi, type VisionMenuItem } from "../services/api";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import remarkBreaks from "remark-breaks";
 import rehypeHighlight from "rehype-highlight";
 import { User, Bot, ChevronDown, Copy, Sparkles, ThumbsUp, ThumbsDown } from "lucide-react";
 import CaptureHeader from "../components/CaptureHeader";
@@ -1429,7 +1430,7 @@ export default function CapturePage({
                         {typingState[response.id]?.intro && (
                           <div className="assistant-intro">
                             <ReactMarkdown
-                              remarkPlugins={[remarkGfm]}
+                              remarkPlugins={[remarkGfm, remarkBreaks]}
                               rehypePlugins={[rehypeHighlight]}
                               components={{
                                 p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
@@ -1446,7 +1447,7 @@ export default function CapturePage({
                         {response.output.body.map((line, index) => (
                           <div key={`${line}-${index}`} className="assistant-line">
                             <ReactMarkdown
-                              remarkPlugins={[remarkGfm]}
+                              remarkPlugins={[remarkGfm, remarkBreaks]}
                               rehypePlugins={[rehypeHighlight]}
                               components={{
                                 p: ({ children }) => <p className="mb-3 last:mb-0">{children}</p>,
