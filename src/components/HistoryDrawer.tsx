@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect } from 'react'
 import { X, Plus } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useChatHistory } from '../hooks/useChatHistory'
@@ -22,7 +23,11 @@ export default function HistoryDrawer({
   const router = useRouter()
   const { language } = useAppContext()
   const copy = getUiCopy(language)
-  const { threads } = useChatHistory(restaurantSlug ?? null)
+  const { threads, refresh } = useChatHistory(restaurantSlug ?? null)
+
+  useEffect(() => {
+    if (open) refresh()
+  }, [open])
 
   const tagline = (copy.history as any).brandTagline
     || "Data infrastructure for authentic food knowledge."

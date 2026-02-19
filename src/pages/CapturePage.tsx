@@ -21,7 +21,7 @@ import CameraPrompt from "../components/CameraPrompt";
 import ChatDock from "../components/ChatDock";
 import { useAppContext } from "../components/AppProvider";
 import { getUiCopy, type LanguageCode } from "../i18n/uiCopy";
-import { recordVisit } from "../utils/storage";
+import { recordVisit, saveThread, getThreads } from "../utils/storage";
 
 type ApiRestaurant = {
   uid: string
@@ -857,6 +857,7 @@ export default function CapturePage({
               message: requestText,
               in_store: isInStore,
               thread_uid: threadUidRef.current,
+              language: activeLanguage,
             }),
           });
 
@@ -943,6 +944,21 @@ export default function CapturePage({
             );
             setIsTypingActive(false);
             setTypingComplete((prev) => new Set(prev).add(responseId));
+
+            // Save to history drawer (localStorage)
+            if (threadUidRef.current && restaurantSlug) {
+              try {
+                const existing = getThreads(restaurantSlug).find(
+                  (t) => t.thread_uid === threadUidRef.current
+                );
+                saveThread(restaurantSlug, {
+                  thread_uid: threadUidRef.current!,
+                  title: existing?.title || requestText.slice(0, 50),
+                  preview: streamedText.replace(/\*\*/g, '').slice(0, 100),
+                  updatedAt: new Date().toISOString(),
+                });
+              } catch {}
+            }
           } else {
             throw new Error(`Stream API failed: ${streamResponse.status}`);
           }
