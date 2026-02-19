@@ -38,6 +38,21 @@ type ApiRestaurant = {
   updated_at: string
 };
 
+// Extract numbered menu items from AI response for quick reply chips
+function extractNumberedItems(text: string): { num: string; name: string }[] {
+  const items: { num: string; name: string }[] = [];
+  // Match patterns like "1. **料理名**" or "1. 料理名 —"
+  const regex = /^\s*(\d+)\.\s+\*{0,2}([^*\n—–\-]+?)\*{0,2}\s*(?:[—–\-]|$)/gm;
+  let match;
+  while ((match = regex.exec(text)) !== null) {
+    const name = match[2].trim();
+    if (name.length > 0 && items.length < 5) {
+      items.push({ num: match[1], name });
+    }
+  }
+  return items;
+}
+
 // Helper function to render text with bold formatting and proper structure
 const renderBoldText = (text: string) => {
   // Split by double newlines to get paragraphs
@@ -1506,6 +1521,25 @@ export default function CapturePage({
                         )}
                       </div>
                     </div>
+                    {typingComplete.has(response.id) && (() => {
+                      const fullText = [response.output?.intro, ...(response.output?.body || [])].filter(Boolean).join('\n');
+                      const items = extractNumberedItems(fullText);
+                      if (items.length < 2) return null;
+                      return (
+                        <div className="quick-reply-chips">
+                          {items.map((item) => (
+                            <button
+                              key={item.num}
+                              className="quick-reply-chip"
+                              type="button"
+                              onClick={() => handleSend(`${item.num}の${item.name}について詳しく教えて`)}
+                            >
+                              {item.num}. {item.name}
+                            </button>
+                          ))}
+                        </div>
+                      );
+                    })()}
                   </div>
                 </div>
               ) : null}
