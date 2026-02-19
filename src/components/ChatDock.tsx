@@ -7,7 +7,7 @@ import {
   type ChangeEvent,
   type RefObject,
 } from "react";
-import { Camera, ArrowUp, ImagePlus } from "lucide-react";
+import { Camera, ArrowUp, Square, ImagePlus } from "lucide-react";
 import { getUiCopy } from "../i18n/uiCopy";
 import { useAppContext } from "./AppProvider";
 
@@ -24,6 +24,8 @@ type ChatDockProps = {
   onFocus?: () => void;
   onChange: (event: ChangeEvent<HTMLTextAreaElement>) => void;
   onSend: () => void;
+  isStreaming?: boolean;
+  onStop?: () => void;
   onAttachment?: (file: File) => void;
   onAttachmentCamera?: (file: File) => void;
   onOpenCamera?: () => void;
@@ -38,6 +40,8 @@ export default function ChatDock({
   onFocus,
   onChange,
   onSend,
+  isStreaming,
+  onStop,
   onAttachment,
   onAttachmentCamera,
   onOpenCamera,
@@ -206,19 +210,30 @@ export default function ChatDock({
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault();
-                onSend();
+                if (!isStreaming) onSend();
               }
             }}
           />
-          <button
-            className={`chat-dock-send${sendEnabled ? " active" : ""}`}
-            type="button"
-            aria-label={copy.chat.sendMessage}
-            disabled={!sendEnabled}
-            onClick={() => onSend()}
-          >
-            <ArrowUp size={18} strokeWidth={2.5} color={sendEnabled ? "#fff" : "rgba(255,255,255,0.4)"} />
-          </button>
+          {isStreaming ? (
+            <button
+              className="chat-dock-send active"
+              type="button"
+              aria-label="Stop"
+              onClick={() => onStop?.()}
+            >
+              <Square size={14} strokeWidth={0} fill="#fff" />
+            </button>
+          ) : (
+            <button
+              className={`chat-dock-send${sendEnabled ? " active" : ""}`}
+              type="button"
+              aria-label={copy.chat.sendMessage}
+              disabled={!sendEnabled}
+              onClick={() => onSend()}
+            >
+              <ArrowUp size={18} strokeWidth={2.5} color={sendEnabled ? "#fff" : "rgba(255,255,255,0.4)"} />
+            </button>
+          )}
         </div>
       </div>
 

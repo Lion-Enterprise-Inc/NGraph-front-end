@@ -206,6 +206,7 @@ export default function CapturePage({
   });
   const [loading, setLoading] = useState(false);
   const loadingTimerRef = useRef<number | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
   const responseImagesRef = useRef<string[]>([]);
   const threadRef = useRef<HTMLElement | null>(null);
   const captureBodyRef = useRef<HTMLDivElement | null>(null);
@@ -849,8 +850,11 @@ export default function CapturePage({
       } else {
         // Text only → SSE streaming chat
         const requestText = trimmedMessage;
+        let streamedText = '';
         try {
           const restaurantSlugForApi = selectedRestaurant?.slug || 'default';
+          const abortController = new AbortController();
+          abortControllerRef.current = abortController;
           const streamResponse = await fetch(`${apiBaseUrl}/public-chat/${encodeURIComponent(restaurantSlugForApi)}/stream`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -860,6 +864,7 @@ export default function CapturePage({
               thread_uid: threadUidRef.current,
               language: activeLanguage,
             }),
+            signal: abortController.signal,
           });
 
           if (streamResponse.ok && streamResponse.body) {
@@ -868,7 +873,6 @@ export default function CapturePage({
             // Prevent startTyping useEffect from running on this response
             typingStartedRef.current.add(responseId);
 
-            let streamedText = '';
             let firstToken = true;
             const reader = streamResponse.body.getReader();
             const decoder = new TextDecoder();
@@ -938,6 +942,7 @@ export default function CapturePage({
 
             output = { title: '', intro: streamedText, body: [] };
             // Clear streaming flag, set output, and mark complete together
+            abortControllerRef.current = null;
             setResponses((prev) =>
               prev.map((item) =>
                 item.id === responseId ? { ...item, output, streaming: false } : item
@@ -963,19 +968,29 @@ export default function CapturePage({
           } else {
             throw new Error(`Stream API failed: ${streamResponse.status}`);
           }
-        } catch (apiError) {
+        } catch (apiError: any) {
+          abortControllerRef.current = null;
           console.log("chat_api_error", apiError);
           setLoading(false);
           setIsTypingActive(false);
-          const fallbackResponse = await generateChatResponse(requestText, selectedRestaurant);
-          output = { title: '', intro: fallbackResponse, body: [] };
-          // typingStartedRef already has responseId from stream path, so startTyping won't run.
-          // Set typingState and typingComplete directly.
-          setTypingState((prev) => ({
-            ...prev,
-            [responseId]: { title: '', intro: fallbackResponse, body: [] },
-          }));
-          setTypingComplete((prev) => new Set(prev).add(responseId));
+          // If user aborted, keep what we have so far
+          if (apiError?.name === 'AbortError') {
+            output = { title: '', intro: streamedText || '', body: [] };
+            setResponses((prev) =>
+              prev.map((item) =>
+                item.id === responseId ? { ...item, output, streaming: false } : item
+              )
+            );
+            setTypingComplete((prev) => new Set(prev).add(responseId));
+          } else {
+            const fallbackResponse = await generateChatResponse(requestText, selectedRestaurant);
+            output = { title: '', intro: fallbackResponse, body: [] };
+            setTypingState((prev) => ({
+              ...prev,
+              [responseId]: { title: '', intro: fallbackResponse, body: [] },
+            }));
+            setTypingComplete((prev) => new Set(prev).add(responseId));
+          }
         }
       }
 
@@ -1490,6 +1505,8 @@ export default function CapturePage({
           setMessage(event.target.value)
         }
         onSend={handleSend}
+        isStreaming={loading || isTypingActive}
+        onStop={() => abortControllerRef.current?.abort()}
         onAttachment={(file) => handleAttachment(file ?? null, "library")}
         onAttachmentCamera={(file) => handleAttachment(file ?? null, "camera")}
         onOpenCamera={() => {
