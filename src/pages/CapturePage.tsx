@@ -46,7 +46,7 @@ function extractNumberedItems(text: string): { num: string; name: string }[] {
   let match;
   while ((match = regex.exec(text)) !== null) {
     const name = match[2].trim();
-    if (name.length > 0 && items.length < 5) {
+    if (name.length > 0 && items.length < 6) {
       items.push({ num: match[1], name });
     }
   }
