@@ -59,11 +59,19 @@ export default function CameraPrompt({
   const { language } = useAppContext()
   const copy = getUiCopy(language)
 
+  // Split brand name and branch name (e.g. "蟹と海鮮ぼんた くるふ福井駅前店")
+  const nameParts = (restaurantName || '').split(/\s+/);
+  const brandName = nameParts[0] || heading;
+  const branchName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : null;
+
   return (
     <div className="store-home">
       <h1 className="store-home-name">
-        {restaurantName || heading}
+        {brandName}
       </h1>
+      {branchName && (
+        <p className="store-home-branch">{branchName}</p>
+      )}
       {restaurantNameRomaji && (
         <p className="store-home-romaji">{restaurantNameRomaji}</p>
       )}
