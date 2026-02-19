@@ -197,7 +197,7 @@ function BasicInfoContent() {
         formDataToSend.append('logo', logoFile)
       }
 
-      const token = localStorage.getItem('access_token')
+      const token = sessionStorage.getItem('access_token')
       const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://15.207.22.103:8000'
       
       const response = await fetch(`${apiBaseUrl}/restaurants/${restaurant.uid}`, {
@@ -250,7 +250,7 @@ function BasicInfoContent() {
 
     setIsScraping(true)
     try {
-      const token = localStorage.getItem('access_token')
+      const token = sessionStorage.getItem('access_token')
       const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://15.207.22.103:8000'
 
       const res = await fetch(`${apiBaseUrl}/restaurants/${restaurant.uid}/scrape-info`, {
@@ -314,7 +314,7 @@ function BasicInfoContent() {
 
     setIsSearching(true)
     try {
-      const token = localStorage.getItem('access_token')
+      const token = sessionStorage.getItem('access_token')
       const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://15.207.22.103:8000'
 
       const res = await fetch(`${apiBaseUrl}/restaurants/${restaurant.uid}/search-info`, {

@@ -15,7 +15,7 @@ function StoreDashboard() {
     const fetchRestaurant = async () => {
       try {
         setRestaurantLoading(true)
-        const userStr = localStorage.getItem('user')
+        const userStr = sessionStorage.getItem('user')
         if (!userStr) {
           setRestaurantError('ユーザーデータが見つかりません')
           return
@@ -355,12 +355,12 @@ export default function AdminDashboardPage() {
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    const isLoggedIn = localStorage.getItem('admin_logged_in')
+    const isLoggedIn = sessionStorage.getItem('admin_logged_in')
     if (!isLoggedIn) {
       router.push('/admin/login')
       return
     }
-    const savedUserType = localStorage.getItem('admin_user_type')
+    const savedUserType = sessionStorage.getItem('admin_user_type')
     if (savedUserType === 'admin' || savedUserType === 'store') {
       setUserType(savedUserType)
     }

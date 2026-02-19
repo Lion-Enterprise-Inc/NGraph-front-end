@@ -20,14 +20,14 @@ export default function AccountPage() {
   const toast = useToast()
 
   useEffect(() => {
-    const savedEmail = localStorage.getItem('admin_user_email')
+    const savedEmail = sessionStorage.getItem('admin_user_email')
     if (savedEmail) setEmail(savedEmail)
     if (user?.email) setEmail(user.email)
     setIsLoading(false)
   }, [user])
 
   const handleUpdateEmail = () => {
-    localStorage.setItem('admin_user_email', email)
+    sessionStorage.setItem('admin_user_email', email)
     toast('success', 'メールアドレスを保存しました')
   }
 

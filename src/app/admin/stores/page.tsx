@@ -232,7 +232,7 @@ export default function StoresPage() {
 
     setIsStoreSearching(true)
     try {
-      const token = localStorage.getItem('access_token')
+      const token = sessionStorage.getItem('access_token')
       const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://15.207.22.103:8000'
 
       const query = [newStore.name, newStore.address, newStore.phone].filter(s => s.trim()).join(' ')

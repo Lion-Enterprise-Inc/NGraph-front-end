@@ -150,26 +150,26 @@ export interface RestaurantListResponse {
   status_code: number;
 }
 
-// Token management
+// Token management — sessionStorage so each tab has its own session
 export const TokenService = {
   getAccessToken: (): string | null => {
     if (typeof window === 'undefined') return null;
-    return localStorage.getItem('access_token');
+    return sessionStorage.getItem('access_token');
   },
 
   setAccessToken: (token: string): void => {
     if (typeof window === 'undefined') return;
-    localStorage.setItem('access_token', token);
+    sessionStorage.setItem('access_token', token);
   },
 
   removeAccessToken: (): void => {
     if (typeof window === 'undefined') return;
-    localStorage.removeItem('access_token');
+    sessionStorage.removeItem('access_token');
   },
 
   getUser: (): User | null => {
     if (typeof window === 'undefined') return null;
-    const userStr = localStorage.getItem('user');
+    const userStr = sessionStorage.getItem('user');
     if (!userStr) return null;
     try {
       return JSON.parse(userStr);
@@ -180,22 +180,21 @@ export const TokenService = {
 
   setUser: (user: User): void => {
     if (typeof window === 'undefined') return;
-    localStorage.setItem('user', JSON.stringify(user));
+    sessionStorage.setItem('user', JSON.stringify(user));
   },
 
   removeUser: (): void => {
     if (typeof window === 'undefined') return;
-    localStorage.removeItem('user');
+    sessionStorage.removeItem('user');
   },
 
   clearAll: (): void => {
     TokenService.removeAccessToken();
     TokenService.removeUser();
-    // Also clear legacy keys
     if (typeof window !== 'undefined') {
-      localStorage.removeItem('admin_logged_in');
-      localStorage.removeItem('admin_user_type');
-      localStorage.removeItem('admin_user_email');
+      sessionStorage.removeItem('admin_logged_in');
+      sessionStorage.removeItem('admin_user_type');
+      sessionStorage.removeItem('admin_user_email');
     }
   },
 
@@ -741,13 +740,12 @@ export const AuthApi = {
       TokenService.setAccessToken(response.result.access_token);
       TokenService.setUser(response.result.user);
 
-      // Also set legacy keys for backward compatibility
+      // Also set legacy keys
       if (typeof window !== 'undefined') {
-        localStorage.setItem('admin_logged_in', 'true');
-        localStorage.setItem('admin_user_email', response.result.user.email);
-        // Map role to legacy user type
+        sessionStorage.setItem('admin_logged_in', 'true');
+        sessionStorage.setItem('admin_user_email', response.result.user.email);
         const userType = (response.result.user.role === 'platform_owner' || response.result.user.role === 'superadmin') ? 'admin' : 'store';
-        localStorage.setItem('admin_user_type', userType);
+        sessionStorage.setItem('admin_user_type', userType);
       }
     }
 

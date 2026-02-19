@@ -27,19 +27,19 @@ export default function AdminLayout({ children, title }: Props) {
     
     if (!token || !storedUser) {
       // Fallback to legacy check for backward compatibility
-      const isLoggedIn = localStorage.getItem('admin_logged_in')
+      const isLoggedIn = sessionStorage.getItem('admin_logged_in')
       if (!isLoggedIn) {
         router.push('/admin/login')
         return
       }
-      
+
       // Use legacy data
-      const savedUserType = localStorage.getItem('admin_user_type')
+      const savedUserType = sessionStorage.getItem('admin_user_type')
       if (savedUserType === 'store' || savedUserType === 'admin') {
         setUserType(savedUserType)
       }
-      
-      const savedEmail = localStorage.getItem('admin_user_email')
+
+      const savedEmail = sessionStorage.getItem('admin_user_email')
       if (savedEmail) {
         setUserEmail(savedEmail)
       }
