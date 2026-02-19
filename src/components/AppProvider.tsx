@@ -31,6 +31,8 @@ type AppContextValue = {
   setRestaurantSlug: (slug: string | null) => void;
   onNewChat: (() => void) | null;
   setOnNewChat: (fn: (() => void) | null) => void;
+  onSelectThread: ((threadUid: string) => void) | null;
+  setOnSelectThread: (fn: ((threadUid: string) => void) | null) => void;
 };
 
 const AppContext = createContext<AppContextValue | undefined>(undefined);
@@ -61,6 +63,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     useState<PendingAttachment | null>(null);
   const [restaurantSlug, setRestaurantSlug] = useState<string | null>(null);
   const [onNewChat, setOnNewChat] = useState<(() => void) | null>(null);
+  const [onSelectThread, setOnSelectThread] = useState<((threadUid: string) => void) | null>(null);
 
   const setLanguage = (code: string, source = "unknown") => {
     setLanguageState(code);
@@ -121,6 +124,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
           setRestaurantSlug,
           onNewChat,
           setOnNewChat,
+          onSelectThread,
+          setOnSelectThread,
         }}
       >
         {children}
@@ -138,6 +143,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           onClose={() => setDrawerOpen(false)}
           restaurantSlug={restaurantSlug}
           onNewChat={onNewChat ?? undefined}
+          onSelectThread={onSelectThread ?? undefined}
         />
       </AppContext.Provider>
       </ToastProvider>

@@ -1822,6 +1822,18 @@ body {
   animation: grain-move 1.2s ease-in-out infinite;
 }
 
+.loading-logo-spin {
+  width: 20px;
+  height: 20px;
+  animation: logo-spin 1.2s linear infinite;
+  opacity: 0.6;
+}
+
+@keyframes logo-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
 .loader-text {
   font-size: 13px;
   color: var(--color-text-secondary);

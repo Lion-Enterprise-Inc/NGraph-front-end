@@ -178,6 +178,7 @@ export default function CapturePage({
     setPendingAttachment,
     setRestaurantSlug: setCtxSlug,
     setOnNewChat,
+    setOnSelectThread,
   } = useAppContext();
   const activeLanguage = contextLanguage ?? language ?? "ja";
   const [message, setMessage] = useState("");
@@ -1111,11 +1112,32 @@ export default function CapturePage({
     } catch {}
   };
 
-  // Sync handleNewChat to AppContext for sidebar
+  const handleSelectThread = (threadUid: string) => {
+    // Clear current responses and switch to selected thread
+    setResponses([]);
+    setMessage("");
+    setAttachment(null);
+    setLoading(false);
+    setHideRecommendations(false);
+    setIsTypingActive(false);
+    setTypingComplete(new Set());
+    setTypingState({});
+    restoredIdsRef.current = new Set();
+    threadUidRef.current = threadUid;
+    try {
+      const key = `ngraph_responses_${restaurantSlug || 'default'}`;
+      const tKey = `ngraph_threadUid_${restaurantSlug || 'default'}`;
+      sessionStorage.removeItem(key);
+      sessionStorage.setItem(tKey, threadUid);
+    } catch {}
+  };
+
+  // Sync handleNewChat + handleSelectThread to AppContext for sidebar
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     setOnNewChat(() => handleNewChat);
-    return () => setOnNewChat(null);
+    setOnSelectThread(() => handleSelectThread);
+    return () => { setOnNewChat(null); setOnSelectThread(null); };
   }, []);
 
   return (
@@ -1434,7 +1456,7 @@ export default function CapturePage({
               <div className="chat-content">
                 <div className="chat-message-wrapper">
                   <div className="chat-bubble chat-bubble-assistant chat-loading-bubble">
-                    <span className="loader-text">考え中</span>
+                    <img src="/ngraph-logo.svg" alt="" className="loading-logo-spin" />
                     <span className="typing-indicator">
                       <span />
                       <span />

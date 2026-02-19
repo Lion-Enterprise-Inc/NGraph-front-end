@@ -12,6 +12,7 @@ type HistoryDrawerProps = {
   onClose?: () => void
   restaurantSlug?: string | null
   onNewChat?: () => void
+  onSelectThread?: (threadUid: string) => void
 }
 
 export default function HistoryDrawer({
@@ -19,6 +20,7 @@ export default function HistoryDrawer({
   onClose,
   restaurantSlug,
   onNewChat,
+  onSelectThread,
 }: HistoryDrawerProps) {
   const router = useRouter()
   const { language } = useAppContext()
@@ -65,7 +67,14 @@ export default function HistoryDrawer({
             <p className="sidebar-empty">まだ会話がありません</p>
           ) : (
             threads.map(t => (
-              <div key={t.thread_uid} className="sidebar-thread-item">
+              <div
+                key={t.thread_uid}
+                className="sidebar-thread-item"
+                onClick={() => {
+                  onSelectThread?.(t.thread_uid)
+                  onClose?.()
+                }}
+              >
                 <div className="sidebar-thread-title">{t.title || t.preview}</div>
                 <div className="sidebar-thread-date">
                   {new Date(t.updatedAt).toLocaleDateString('ja-JP', { month: 'short', day: 'numeric' })}
