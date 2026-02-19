@@ -1127,13 +1127,13 @@ export default function CapturePage({
     } catch {}
   };
 
-  const handleSelectThread = (threadUid: string) => {
-    // Clear current responses and switch to selected thread
+  const handleSelectThread = async (threadUid: string) => {
+    // Clear current state
     setResponses([]);
     setMessage("");
     setAttachment(null);
-    setLoading(false);
-    setHideRecommendations(false);
+    setLoading(true);
+    setHideRecommendations(true);
     setIsTypingActive(false);
     setTypingComplete(new Set());
     setTypingState({});
@@ -1145,6 +1145,43 @@ export default function CapturePage({
       sessionStorage.removeItem(key);
       sessionStorage.setItem(tKey, threadUid);
     } catch {}
+
+    // Fetch thread messages from BE
+    try {
+      const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://dev-backend.ngraph.jp/api';
+      const resp = await fetch(`${apiBaseUrl}/public-chat/thread/${encodeURIComponent(threadUid)}/messages`);
+      if (resp.ok) {
+        const msgs: { user_message: string; ai_response: string; uid: string }[] = await resp.json();
+        const restored: ResponseItem[] = msgs.map((m) => {
+          const id = m.uid || `${Date.now()}-${Math.random()}`;
+          return {
+            id,
+            input: { text: m.user_message, attachment: null, imageUrl: null },
+            output: { title: '', intro: m.ai_response, body: [] },
+            language: activeLanguage,
+            feedback: null,
+            messageUid: m.uid,
+          };
+        });
+        const ids = new Set(restored.map((r) => r.id));
+        restoredIdsRef.current = ids;
+        // Set typing state as complete for all restored messages
+        const restoredTyping: Record<string, { title: string; intro: string; body: string[] }> = {};
+        restored.forEach((r) => {
+          if (r.output) {
+            restoredTyping[r.id] = { title: '', intro: r.output.intro, body: [] };
+            typingStartedRef.current.add(r.id);
+          }
+        });
+        setTypingState((prev) => ({ ...prev, ...restoredTyping }));
+        setTypingComplete(new Set(ids));
+        setResponses(restored);
+      }
+    } catch (err) {
+      console.log("thread_load_error", err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Sync handleNewChat + handleSelectThread to AppContext for sidebar

@@ -1363,7 +1363,7 @@ body {
   margin: 0 0 0.875rem 0;
   color: rgba(255,255,255,0.82);
   line-height: 1.7;
-  font-size: 1rem;
+  font-size: 1.0625rem;
 }
 
 .chat-bubble-assistant p:last-child {
