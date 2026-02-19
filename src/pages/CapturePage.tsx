@@ -1456,7 +1456,6 @@ export default function CapturePage({
               <div className="chat-content">
                 <div className="chat-message-wrapper">
                   <div className="chat-bubble chat-bubble-assistant chat-loading-bubble">
-                    <img src="/ngraph-logo.svg" alt="" className="loading-logo-spin" />
                     <span className="typing-indicator">
                       <span />
                       <span />
