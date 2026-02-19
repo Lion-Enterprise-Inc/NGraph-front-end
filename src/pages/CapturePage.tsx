@@ -38,6 +38,12 @@ type ApiRestaurant = {
   updated_at: string
 };
 
+// Prevent ReactMarkdown from converting "1. text" into <ol><li>
+// by escaping the dot: "1\. text" renders as plain "1. text"
+function escapeNumberedLists(text: string): string {
+  return text.replace(/^(\d+)\. /gm, '$1\\. ');
+}
+
 // Extract numbered menu items from AI response for quick reply chips
 function extractNumberedItems(text: string): { num: string; name: string }[] {
   const items: { num: string; name: string }[] = [];
@@ -1456,7 +1462,7 @@ export default function CapturePage({
                                 li: ({ children }) => <li className="menu-item">{children}</li>,
                               }}
                             >
-                              {typingState[response.id]?.intro ?? ""}
+                              {escapeNumberedLists(typingState[response.id]?.intro ?? "")}
                             </ReactMarkdown>
                           </div>
                         )}
@@ -1494,7 +1500,7 @@ export default function CapturePage({
                                 blockquote: ({ children }) => <blockquote className="border-l-4 border-gray-300 pl-4 italic text-gray-700 mb-3">{children}</blockquote>,
                               }}
                             >
-                              {typingState[response.id]?.body?.[index] ?? ""}
+                              {escapeNumberedLists(typingState[response.id]?.body?.[index] ?? "")}
                             </ReactMarkdown>
                           </div>
                         ))}
