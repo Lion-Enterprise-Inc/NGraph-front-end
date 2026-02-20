@@ -661,61 +661,6 @@ function MenuListContent() {
         </div>
       )}
 
-      {verificationQueue.length > 0 && (
-        <div style={{ background: 'var(--bg-surface)', borderRadius: 12, padding: 20, marginBottom: 16, border: '1px solid var(--border)', boxShadow: '0 1px 3px rgba(0,0,0,0.3)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-            <span style={{ fontSize: 16, fontWeight: 600, color: 'var(--text)' }}>データ確認キュー</span>
-            <span style={{ fontSize: 13, color: '#94A3B8', background: '#1E293B', padding: '4px 12px', borderRadius: 12 }}>残り{verificationQueue.length}件</span>
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {verificationQueue.map((q, idx) => (
-              <div key={`${q.menu_uid}-${q.field}-${idx}`} style={{ padding: 16, background: '#1E293B', borderRadius: 8, border: '1px solid #334155' }}>
-                <div style={{ fontSize: 14, fontWeight: 600, color: '#F8FAFC', marginBottom: 8 }}>{q.question}</div>
-                {q.current_value && (Array.isArray(q.current_value) ? q.current_value.length > 0 : q.current_value) && (
-                  <div style={{ fontSize: 13, color: '#94A3B8', marginBottom: 12 }}>
-                    現在: {Array.isArray(q.current_value) ? q.current_value.join(', ') : String(q.current_value)}
-                  </div>
-                )}
-                {correctingItem?.menu_uid === q.menu_uid && correctingItem?.field === q.field ? (
-                  <div style={{ display: 'flex', gap: 8 }}>
-                    <input type="text" value={correctionText} onChange={e => setCorrectionText(e.target.value)} placeholder="正しい値を入力"
-                      style={{ flex: 1, padding: '8px 12px', background: '#0F172A', border: '1px solid #475569', borderRadius: 6, color: '#F8FAFC', fontSize: 14 }} />
-                    <button disabled={verifyingField === q.field} onClick={async () => {
-                      setVerifyingField(q.field)
-                      try {
-                        let val: any = correctionText
-                        if (q.field === 'ingredients' || q.field === 'allergens') val = correctionText.split(',').map((s: string) => s.trim()).filter(Boolean)
-                        await VerificationApi.verify({ menu_uid: q.menu_uid, field: q.field, action: 'correct', corrected_value: val })
-                        setVerificationQueue(prev => prev.filter(item => !(item.menu_uid === q.menu_uid && item.field === q.field)))
-                        setCorrectingItem(null); setCorrectionText('')
-                        refreshMenus()
-                      } catch (e) { console.error(e) }
-                      setVerifyingField(null)
-                    }} style={{ padding: '8px 16px', background: '#3B82F6', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>送信</button>
-                    <button onClick={() => { setCorrectingItem(null); setCorrectionText('') }}
-                      style={{ padding: '8px 12px', background: 'transparent', color: '#94A3B8', border: '1px solid #475569', borderRadius: 6, cursor: 'pointer', fontSize: 13 }}>取消</button>
-                  </div>
-                ) : (
-                  <div style={{ display: 'flex', gap: 8 }}>
-                    <button disabled={verifyingField === q.field} onClick={async () => {
-                      setVerifyingField(q.field)
-                      try {
-                        await VerificationApi.verify({ menu_uid: q.menu_uid, field: q.field, action: 'confirm' })
-                        setVerificationQueue(prev => prev.filter(item => !(item.menu_uid === q.menu_uid && item.field === q.field)))
-                        refreshMenus()
-                      } catch (e) { console.error(e) }
-                      setVerifyingField(null)
-                    }} style={{ padding: '8px 20px', background: '#10B981', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>はい</button>
-                    <button onClick={() => { setCorrectingItem({ menu_uid: q.menu_uid, field: q.field }); setCorrectionText(Array.isArray(q.current_value) ? q.current_value.join(', ') : String(q.current_value || '')) }}
-                      style={{ padding: '8px 20px', background: 'transparent', color: '#F59E0B', border: '1px solid #F59E0B', borderRadius: 6, cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>修正する</button>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
       <div className="card">
         <div className="card-title">📋 メニュー・商品管理</div>
 
@@ -743,6 +688,25 @@ function MenuListContent() {
           onBulkApprove={handleBulkApprove}
           onAddNew={() => setShowAddModal(true)}
           onFetchFromSource={handleFetchFromSource}
+          verificationQueue={verificationQueue}
+          verifyingField={verifyingField}
+          correctingItem={correctingItem}
+          correctionText={correctionText}
+          onCorrectionTextChange={setCorrectionText}
+          onVerify={async (menuUid, field, action, correctedValue) => {
+            setVerifyingField(field)
+            try {
+              await VerificationApi.verify({ menu_uid: menuUid, field, action, corrected_value: correctedValue })
+              setVerificationQueue(prev => prev.filter(item => !(item.menu_uid === menuUid && item.field === field)))
+              refreshMenus()
+            } catch (e) { console.error(e) }
+            setVerifyingField(null)
+          }}
+          onStartCorrection={(menuUid, field, currentValue) => {
+            setCorrectingItem({ menu_uid: menuUid, field })
+            setCorrectionText(Array.isArray(currentValue) ? currentValue.join(', ') : String(currentValue || ''))
+          }}
+          onCancelCorrection={() => { setCorrectingItem(null); setCorrectionText('') }}
         />
       </div>
 
