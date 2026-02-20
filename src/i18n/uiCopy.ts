@@ -148,6 +148,7 @@ const uiCopy = {
       aboutCuisine: "Tell me about {cuisine} cuisine",
       bestTime: "What's the signature dish here?",
       dietaryOptions: "Show me the menu",
+      googleReview: "Review",
     },
     qrScanner: {
       title: "Scan QR Code",
@@ -268,6 +269,7 @@ const uiCopy = {
       aboutCuisine: "{cuisine}料理について教えてください",
       bestTime: "このお店の看板料理はなに？",
       dietaryOptions: "メニュー表をだして",
+      googleReview: "クチコミ",
     },
     qrScanner: {
       title: "QRコードをスキャン",
@@ -388,6 +390,7 @@ const uiCopy = {
       aboutCuisine: "{cuisine} 요리에 대해 알려주세요",
       bestTime: "이 가게 대표 요리는 뭐예요?",
       dietaryOptions: "메뉴판 보여줘",
+      googleReview: "리뷰",
     },
     qrScanner: {
       title: "QR 코드 스캔",
@@ -508,6 +511,7 @@ const uiCopy = {
       aboutCuisine: "告诉我关于{cuisine}菜的信息",
       bestTime: "这家店的招牌菜是什么？",
       dietaryOptions: "给我看菜单",
+      googleReview: "评价",
     },
   },
   "zh-Hant": {
@@ -615,6 +619,7 @@ const uiCopy = {
       aboutCuisine: "告訴我關於{cuisine}菜的資訊",
       bestTime: "這家店的招牌菜是什麼？",
       dietaryOptions: "給我看菜單",
+      googleReview: "評價",
     },
   },
   es: {
@@ -721,6 +726,7 @@ const uiCopy = {
       aboutCuisine: "Cuéntame sobre la cocina {cuisine}",
       bestTime: "¿Cuál es el plato estrella?",
       dietaryOptions: "Muéstrame el menú",
+      googleReview: "Reseña",
     },
   },
   fr: {
@@ -827,6 +833,7 @@ const uiCopy = {
       aboutCuisine: "Parlez-moi de la cuisine {cuisine}",
       bestTime: "Quel est le plat phare ?",
       dietaryOptions: "Montrez-moi le menu",
+      googleReview: "Avis",
     },
   },
   de: {
@@ -933,6 +940,7 @@ const uiCopy = {
       aboutCuisine: "Erzähl mir über die {cuisine}-Küche",
       bestTime: "Was ist das Spezialgericht?",
       dietaryOptions: "Zeig mir die Speisekarte",
+      googleReview: "Bewertung",
     },
   },
   it: {
@@ -1039,6 +1047,7 @@ const uiCopy = {
       aboutCuisine: "Raccontami della cucina {cuisine}",
       bestTime: "Qual è il piatto forte?",
       dietaryOptions: "Mostrami il menu",
+      googleReview: "Recensione",
     },
   },
   pt: {
@@ -1145,6 +1154,7 @@ const uiCopy = {
       aboutCuisine: "Conte-me sobre a culinária {cuisine}",
       bestTime: "Qual é o prato especial?",
       dietaryOptions: "Mostre-me o cardápio",
+      googleReview: "Avaliação",
     },
   },
   ru: {
@@ -1251,6 +1261,7 @@ const uiCopy = {
       aboutCuisine: "Расскажите о кухне {cuisine}",
       bestTime: "Какое фирменное блюдо?",
       dietaryOptions: "Покажите меню",
+      googleReview: "Отзыв",
     },
   },
   th: {
@@ -1357,6 +1368,7 @@ const uiCopy = {
       aboutCuisine: "บอกเกี่ยวกับอาหาร {cuisine}",
       bestTime: "เมนูเด็ดคืออะไร?",
       dietaryOptions: "ขอดูเมนูหน่อย",
+      googleReview: "รีวิว",
     },
   },
   vi: {
@@ -1463,6 +1475,7 @@ const uiCopy = {
       aboutCuisine: "Hãy cho biết về ẩm thực {cuisine}",
       bestTime: "Món đặc trưng là gì?",
       dietaryOptions: "Cho tôi xem thực đơn",
+      googleReview: "Đánh giá",
     },
   },
   id: {
@@ -1569,6 +1582,7 @@ const uiCopy = {
       aboutCuisine: "Ceritakan tentang masakan {cuisine}",
       bestTime: "Apa menu andalannya?",
       dietaryOptions: "Tampilkan menu",
+      googleReview: "Ulasan",
     },
   },
   ms: {
@@ -1675,6 +1689,7 @@ const uiCopy = {
       aboutCuisine: "Beritahu saya tentang masakan {cuisine}",
       bestTime: "Apa hidangan istimewa?",
       dietaryOptions: "Tunjukkan menu",
+      googleReview: "Ulasan",
     },
   },
   ar: {
@@ -1781,6 +1796,7 @@ const uiCopy = {
       aboutCuisine: "أخبرني عن مطبخ {cuisine}",
       bestTime: "ما هو الطبق المميز؟",
       dietaryOptions: "أرني القائمة",
+      googleReview: "تقييم",
     },
   },
   hi: {
@@ -1887,6 +1903,7 @@ const uiCopy = {
       aboutCuisine: "{cuisine} व्यंजन के बारे में बताएं",
       bestTime: "यहाँ की खास डिश क्या है?",
       dietaryOptions: "मेन्यू दिखाओ",
+      googleReview: "समीक्षा",
     },
   },
   tr: {
@@ -1993,6 +2010,7 @@ const uiCopy = {
       aboutCuisine: "{cuisine} mutfağı hakkında bilgi ver",
       bestTime: "Özel yemek ne?",
       dietaryOptions: "Menüyü göster",
+      googleReview: "Yorum",
     },
   },
   bn: {
@@ -2099,6 +2117,7 @@ const uiCopy = {
       aboutCuisine: "{cuisine} রন্ধনপ্রণালী সম্পর্কে বলুন",
       bestTime: "বিশেষ খাবার কী?",
       dietaryOptions: "মেন্যু দেখাও",
+      googleReview: "রিভিউ",
     },
   },
   my: {
@@ -2205,6 +2224,7 @@ const uiCopy = {
       aboutCuisine: "{cuisine} အစားအစာအကြောင်း ပြောပြပါ",
       bestTime: "အထူးဟင်းလျာကဘာလဲ?",
       dietaryOptions: "မီနူးပြပါ",
+      googleReview: "သုံးသပ်ချက်",
     },
   },
   tl: {
@@ -2311,6 +2331,7 @@ const uiCopy = {
       aboutCuisine: "Sabihin sa akin tungkol sa lutuing {cuisine}",
       bestTime: "Ano ang espesyal na pagkain?",
       dietaryOptions: "Ipakita ang menu",
+      googleReview: "Review",
     },
   },
   lo: {
@@ -2417,6 +2438,7 @@ const uiCopy = {
       aboutCuisine: "ບອກກ່ຽວກັບອາຫານ {cuisine}",
       bestTime: "ອາຫານພິເສດແມ່ນຫຍັງ?",
       dietaryOptions: "ສະແດງເມນູ",
+      googleReview: "ລີວິວ",
     },
   },
   km: {
@@ -2523,6 +2545,7 @@ const uiCopy = {
       aboutCuisine: "ប្រាប់ខ្ញុំអំពីម្ហូប {cuisine}",
       bestTime: "មុខម្ហូបពិសេសគឺជាអ្វី?",
       dietaryOptions: "បង្ហាញមីនុយ",
+      googleReview: "វាយតម្លៃ",
     },
   },
   ne: {
@@ -2629,6 +2652,7 @@ const uiCopy = {
       aboutCuisine: "{cuisine} खानाको बारेमा बताउनुहोस्",
       bestTime: "विशेष परिकार के हो?",
       dietaryOptions: "मेनु देखाउनुस्",
+      googleReview: "समीक्षा",
     },
   },
   mn: {
@@ -2735,6 +2759,7 @@ const uiCopy = {
       aboutCuisine: "{cuisine} хоолны тухай хэлнэ үү",
       bestTime: "Онцгой хоол юу вэ?",
       dietaryOptions: "Цэсийг харуулна уу",
+      googleReview: "Сэтгэгдэл",
     },
   },
   fa: {
@@ -2841,6 +2866,7 @@ const uiCopy = {
       aboutCuisine: "درباره غذاهای {cuisine} بگویید",
       bestTime: "غذای ویژه چیست؟",
       dietaryOptions: "منو را نشان بده",
+      googleReview: "نظر",
     },
   },
   uk: {
@@ -2947,6 +2973,7 @@ const uiCopy = {
       aboutCuisine: "Розкажіть про кухню {cuisine}",
       bestTime: "Яка фірмова страва?",
       dietaryOptions: "Покажіть меню",
+      googleReview: "Відгук",
     },
   },
   pl: {
@@ -3053,6 +3080,7 @@ const uiCopy = {
       aboutCuisine: "Opowiedz mi o kuchni {cuisine}",
       bestTime: "Jakie jest danie firmowe?",
       dietaryOptions: "Pokaż menu",
+      googleReview: "Opinia",
     },
   },
 } as const;

@@ -1444,7 +1444,7 @@ export default function CapturePage({
                             aria-label="Google Review"
                           >
                             <Star size={16} />
-                            <span>クチコミ</span>
+                            <span>{copy.restaurant.googleReview}</span>
                           </a>
                         )}
                       </div>
@@ -1546,7 +1546,7 @@ export default function CapturePage({
                                   aria-label="Google Review"
                                 >
                                   <Star size={16} />
-                                  <span>クチコミ</span>
+                                  <span>{copy.restaurant.googleReview}</span>
                                 </a>
                               )}
                             </div>
