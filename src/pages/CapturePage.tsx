@@ -16,7 +16,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import remarkBreaks from "remark-breaks";
 import rehypeHighlight from "rehype-highlight";
-import { User, Bot, ChevronDown, Copy, Sparkles, ThumbsUp, ThumbsDown, Star } from "lucide-react";
+import { User, Bot, ChevronDown, Copy, Share2, Sparkles, ThumbsUp, ThumbsDown, Star } from "lucide-react";
 import CaptureHeader from "../components/CaptureHeader";
 import CameraPrompt from "../components/CameraPrompt";
 import ChatDock from "../components/ChatDock";
@@ -1132,6 +1132,30 @@ export default function CapturePage({
     });
   };
 
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  const handleCopyResponse = (id: string) => {
+    const response = responses.find((item) => item.id === id);
+    if (!response?.output) return;
+    const text = [response.output.title, response.output.intro, ...(response.output.body || [])].filter(Boolean).join('\n');
+    navigator.clipboard.writeText(text).then(() => {
+      setCopiedId(id);
+      setTimeout(() => setCopiedId(null), 2000);
+    });
+  };
+
+  const handleShare = () => {
+    const url = window.location.href;
+    if (navigator.share) {
+      navigator.share({ title: restaurantData?.name || 'NGraph', url }).catch(() => {});
+    } else {
+      navigator.clipboard.writeText(url).then(() => {
+        setCopiedId('__share__');
+        setTimeout(() => setCopiedId(null), 2000);
+      });
+    }
+  };
+
   const handleNewChat = () => {
     setResponses([]);
     setMessage("");
@@ -1439,12 +1463,30 @@ export default function CapturePage({
                         >
                           <ThumbsDown size={16} />
                         </button>
+                        <button
+                          className="feedback-btn action-btn"
+                          type="button"
+                          onClick={() => handleCopyResponse(response.id)}
+                          aria-label="Copy"
+                        >
+                          <Copy size={16} />
+                          <span>{copiedId === response.id ? copy.feedback.copied : copy.feedback.copy}</span>
+                        </button>
+                        <button
+                          className="feedback-btn action-btn"
+                          type="button"
+                          onClick={handleShare}
+                          aria-label="Share"
+                        >
+                          <Share2 size={16} />
+                          <span>{copiedId === '__share__' ? copy.feedback.copied : copy.feedback.share}</span>
+                        </button>
                         {restaurantData?.google_review_url && response.id === responses[responses.length - 1]?.id && responses.length >= 2 && (
                           <a
                             href={restaurantData.google_review_url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="feedback-btn review-btn"
+                            className="feedback-btn action-btn"
                             aria-label="Google Review"
                           >
                             <Star size={16} />
@@ -1541,12 +1583,30 @@ export default function CapturePage({
                               >
                                 <ThumbsDown size={16} />
                               </button>
+                              <button
+                                className="feedback-btn action-btn"
+                                type="button"
+                                onClick={() => handleCopyResponse(response.id)}
+                                aria-label="Copy"
+                              >
+                                <Copy size={16} />
+                                <span>{copiedId === response.id ? copy.feedback.copied : copy.feedback.copy}</span>
+                              </button>
+                              <button
+                                className="feedback-btn action-btn"
+                                type="button"
+                                onClick={handleShare}
+                                aria-label="Share"
+                              >
+                                <Share2 size={16} />
+                                <span>{copiedId === '__share__' ? copy.feedback.copied : copy.feedback.share}</span>
+                              </button>
                               {restaurantData?.google_review_url && response.id === responses[responses.length - 1]?.id && responses.length >= 2 && (
                                 <a
                                   href={restaurantData.google_review_url}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="feedback-btn review-btn"
+                                  className="feedback-btn action-btn"
                                   aria-label="Google Review"
                                 >
                                   <Star size={16} />

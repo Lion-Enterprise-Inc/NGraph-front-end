@@ -161,6 +161,11 @@ const uiCopy = {
       aiBadge: "AI Estimated",
       confidence: "Confidence",
     },
+    feedback: {
+      copy: "Copy",
+      copied: "Copied!",
+      share: "Share",
+    },
     qrScanner: {
       title: "Scan QR Code",
       close: "Close",
@@ -292,6 +297,11 @@ const uiCopy = {
       vadBadge: "VAD 店主確認済み",
       aiBadge: "AI推測",
       confidence: "信頼度",
+    },
+    feedback: {
+      copy: "コピー",
+      copied: "コピー済み",
+      share: "シェア",
     },
     qrScanner: {
       title: "QRコードをスキャン",
@@ -3128,6 +3138,9 @@ export const getUiCopy = (language?: string): UiCopy => {
   }
   if (!('nfg' in copy)) {
     result.nfg = uiCopy.en.nfg;
+  }
+  if (!('feedback' in copy)) {
+    result.feedback = uiCopy.en.feedback;
   }
   return result as UiCopy;
 };
