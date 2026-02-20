@@ -11,6 +11,12 @@ import {
   type Restaurant,
 } from '../../../services/api'
 
+const LANG_LABELS: Record<string, string> = {
+  ja: '日本語', en: 'English', zh: '中文', 'zh-Hans': '简体中文', 'zh-TW': '繁體中文',
+  ko: '한국어', th: 'ไทย', vi: 'Tiếng Việt', fr: 'Français', es: 'Español',
+  pt: 'Português', de: 'Deutsch', it: 'Italiano', ru: 'Русский', id: 'Indonesia',
+}
+
 const TOPIC_COLORS: Record<string, { bg: string; color: string }> = {
   'メニュー・料理': { bg: 'rgba(59,130,246,0.15)', color: '#60A5FA' },
   'アレルゲン': { bg: 'rgba(239,68,68,0.15)', color: '#F87171' },
@@ -177,6 +183,21 @@ export default function ConversationsPage() {
               <span style={{ color: 'var(--muted)' }}>開始: </span>
               <span>{formatDate(detail.created_at)}</span>
             </div>
+            {(() => {
+              const langCounts: Record<string, number> = {}
+              detail.messages.forEach(m => { if (m.lang) langCounts[m.lang] = (langCounts[m.lang] || 0) + 1 })
+              const entries = Object.entries(langCounts).sort((a, b) => b[1] - a[1])
+              if (entries.length === 0) return null
+              return (
+                <div style={{ display: 'flex', gap: 4 }}>
+                  {entries.map(([lang, count]) => (
+                    <span key={lang} style={{ background: 'rgba(59,130,246,0.15)', color: '#60A5FA', padding: '2px 8px', borderRadius: 6, fontSize: 12 }}>
+                      {LANG_LABELS[lang] || lang}: {count}
+                    </span>
+                  ))}
+                </div>
+              )
+            })()}
             {currentConv?.events && (
               <div style={{ display: 'flex', gap: 8 }}>
                 {currentConv.events.copy > 0 && (
@@ -246,7 +267,12 @@ export default function ConversationsPage() {
                   </div>
                 </div>
               )}
-              <div style={{ fontSize: 11, color: 'var(--muted)', textAlign: 'center' }}>
+              <div style={{ fontSize: 11, color: 'var(--muted)', textAlign: 'center', display: 'flex', gap: 8, justifyContent: 'center' }}>
+                {msg.lang && msg.lang !== 'ja' && (
+                  <span style={{ background: 'rgba(59,130,246,0.15)', color: '#60A5FA', padding: '1px 6px', borderRadius: 4 }}>
+                    {LANG_LABELS[msg.lang] || msg.lang}
+                  </span>
+                )}
                 {formatDate(msg.created_at)}
               </div>
             </div>
@@ -318,6 +344,7 @@ export default function ConversationsPage() {
                   <th style={{ textAlign: 'left', padding: '10px 12px', borderBottom: '1px solid var(--border)' }}>店舗</th>
                   <th style={{ textAlign: 'left', padding: '10px 12px', borderBottom: '1px solid var(--border)' }}>要約</th>
                   <th style={{ textAlign: 'center', padding: '10px 12px', borderBottom: '1px solid var(--border)', width: 100 }}>トピック</th>
+                  <th style={{ textAlign: 'center', padding: '10px 12px', borderBottom: '1px solid var(--border)', width: 80 }}>言語</th>
                   <th style={{ textAlign: 'center', padding: '10px 12px', borderBottom: '1px solid var(--border)', width: 60 }}>件数</th>
                   <th style={{ textAlign: 'center', padding: '10px 12px', borderBottom: '1px solid var(--border)', width: 60 }}>👍</th>
                   <th style={{ textAlign: 'center', padding: '10px 12px', borderBottom: '1px solid var(--border)', width: 60 }}>👎</th>
@@ -359,6 +386,20 @@ export default function ConversationsPage() {
                         }}>
                           {c.topic || 'その他'}
                         </span>
+                      </td>
+                      <td style={{ padding: '10px 12px', borderBottom: '1px solid var(--border)', textAlign: 'center' }}>
+                        {(() => {
+                          const langs = c.langs || {}
+                          const entries = Object.entries(langs).sort((a, b) => b[1] - a[1])
+                          if (entries.length === 0) return <span style={{ color: 'var(--muted)', fontSize: 11 }}>-</span>
+                          const primary = entries[0][0]
+                          const label = LANG_LABELS[primary] || primary
+                          return (
+                            <span style={{ fontSize: 11, fontWeight: 500 }} title={entries.map(([l, c]) => `${LANG_LABELS[l] || l}: ${c}`).join(', ')}>
+                              {label}{entries.length > 1 && <span style={{ color: 'var(--muted)' }}> +{entries.length - 1}</span>}
+                            </span>
+                          )
+                        })()}
                       </td>
                       <td style={{ padding: '10px 12px', borderBottom: '1px solid var(--border)', textAlign: 'center' }}>
                         {c.message_count}

@@ -846,6 +846,7 @@ export interface ConversationListItem {
   updated_at: string;
   topic?: string;
   events?: { copy: number; share: number; review: number };
+  langs?: Record<string, number>;
 }
 
 export interface ConversationMessage {
@@ -854,6 +855,7 @@ export interface ConversationMessage {
   ai_response: string | null;
   images: string[] | null;
   feedback: 'good' | 'bad' | null;
+  lang?: string | null;
   created_at: string;
 }
 
