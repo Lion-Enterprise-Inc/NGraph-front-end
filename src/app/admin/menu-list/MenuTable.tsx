@@ -1,7 +1,6 @@
 'use client'
 
 import { DISH_CATEGORIES } from '../../../services/api'
-import type { VerificationQuestion } from '../../../services/api'
 import type { MenuItem } from './page'
 
 interface MenuTableProps {
@@ -28,14 +27,6 @@ interface MenuTableProps {
   onBulkApprove: () => void
   onAddNew: () => void
   onFetchFromSource: () => void
-  verificationQueue?: VerificationQuestion[]
-  verifyingField?: string | null
-  correctingItem?: { menu_uid: string; field: string } | null
-  correctionText?: string
-  onCorrectionTextChange?: (text: string) => void
-  onVerify?: (menuUid: string, field: string, action: 'confirm' | 'correct', correctedValue?: any) => void
-  onStartCorrection?: (menuUid: string, field: string, currentValue: any) => void
-  onCancelCorrection?: () => void
 }
 
 export default function MenuTable({
@@ -43,15 +34,8 @@ export default function MenuTable({
   searchQuery, filter, countAll, countVerified, countWarning,
   isLoading, error,
   onSearchChange, onFilterChange, onItemsPerPageChange, onPageChange,
-  onPreview, onEdit, onDelete, onApprove, onBulkApprove, onAddNew, onFetchFromSource,
-  verificationQueue = [], verifyingField, correctingItem, correctionText = '',
-  onCorrectionTextChange, onVerify, onStartCorrection, onCancelCorrection
+  onPreview, onEdit, onDelete, onApprove, onBulkApprove, onAddNew, onFetchFromSource
 }: MenuTableProps) {
-  const questionsByMenu: Record<string, VerificationQuestion[]> = {}
-  for (const q of verificationQueue) {
-    if (!questionsByMenu[q.menu_uid]) questionsByMenu[q.menu_uid] = []
-    questionsByMenu[q.menu_uid].push(q)
-  }
   return (
     <>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
@@ -166,7 +150,6 @@ export default function MenuTable({
                 const confidenceColor = confidence >= 75 ? '#28a745' : confidence >= 40 ? '#ffc107' : '#dc3545'
                 const confidenceLabel = confidence >= 75 ? 'OK' : confidence >= 40 ? '確認推奨' : '要修正'
                 const rowNum = (currentPage - 1) * itemsPerPage + index + 1
-                const itemQuestions = questionsByMenu[item.uid] || []
                 return (
                   <tr key={item.uid}>
                     <td style={{ textAlign: 'center', fontWeight: 600, color: '#94A3B8', fontSize: '13px' }}>{rowNum}</td>
@@ -186,34 +169,6 @@ export default function MenuTable({
                           <div style={{ fontSize: '10px', color: 'var(--muted)', marginBottom: '2px' }}>
                             🥘 {item.ingredients?.length > 0 ? item.ingredients.map(ing => ing.name).join(', ') : '原材料なし'}
                           </div>
-                          {itemQuestions.length > 0 && onVerify && (
-                            <div style={{ marginTop: 6, padding: '6px 8px', background: '#1a1a2e', borderRadius: 4, border: '1px solid #334155' }}>
-                              {itemQuestions.map((q) => (
-                                <div key={q.field} style={{ marginBottom: itemQuestions.indexOf(q) < itemQuestions.length - 1 ? 6 : 0 }}>
-                                  <div style={{ fontSize: 11, color: '#F59E0B', marginBottom: 4 }}>{q.question}</div>
-                                  {correctingItem?.menu_uid === q.menu_uid && correctingItem?.field === q.field ? (
-                                    <div style={{ display: 'flex', gap: 4 }}>
-                                      <input type="text" value={correctionText} onChange={e => onCorrectionTextChange?.(e.target.value)} placeholder="正しい値を入力"
-                                        style={{ flex: 1, padding: '3px 6px', background: '#0F172A', border: '1px solid #475569', borderRadius: 3, color: '#F8FAFC', fontSize: 11 }} />
-                                      <button disabled={verifyingField === q.field} onClick={() => {
-                                        let val: any = correctionText
-                                        if (q.field === 'ingredients' || q.field === 'allergens') val = correctionText.split(',').map((s: string) => s.trim()).filter(Boolean)
-                                        onVerify(q.menu_uid, q.field, 'correct', val)
-                                      }} style={{ padding: '3px 8px', background: '#3B82F6', color: '#fff', border: 'none', borderRadius: 3, cursor: 'pointer', fontSize: 10, fontWeight: 600 }}>送信</button>
-                                      <button onClick={() => onCancelCorrection?.()} style={{ padding: '3px 6px', background: 'transparent', color: '#94A3B8', border: '1px solid #475569', borderRadius: 3, cursor: 'pointer', fontSize: 10 }}>取消</button>
-                                    </div>
-                                  ) : (
-                                    <div style={{ display: 'flex', gap: 4 }}>
-                                      <button disabled={verifyingField === q.field} onClick={() => onVerify(q.menu_uid, q.field, 'confirm')}
-                                        style={{ padding: '2px 10px', background: '#10B981', color: '#fff', border: 'none', borderRadius: 3, cursor: 'pointer', fontSize: 10, fontWeight: 600 }}>はい</button>
-                                      <button onClick={() => onStartCorrection?.(q.menu_uid, q.field, q.current_value)}
-                                        style={{ padding: '2px 10px', background: 'transparent', color: '#F59E0B', border: '1px solid #F59E0B', borderRadius: 3, cursor: 'pointer', fontSize: 10, fontWeight: 600 }}>修正</button>
-                                    </div>
-                                  )}
-                                </div>
-                              ))}
-                            </div>
-                          )}
                         </div>
                       </div>
                     </td>

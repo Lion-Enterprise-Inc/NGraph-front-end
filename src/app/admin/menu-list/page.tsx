@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import AdminLayout from '../../../components/admin/AdminLayout'
 import { useToast } from '../../../components/admin/Toast'
-import { MenuApi, Menu, MenuCreate, MenuUpdate, Ingredient, AllergenApi, Allergen, AllergenListResponse, ScrapingApi, apiClient, CookingMethodApi, RestrictionApi, CookingMethod, Restriction, VisionApi, VisionMenuItem, DISH_CATEGORIES, VerificationApi, VerificationQuestion } from '../../../services/api'
+import { MenuApi, Menu, MenuCreate, MenuUpdate, Ingredient, AllergenApi, Allergen, AllergenListResponse, ScrapingApi, apiClient, CookingMethodApi, RestrictionApi, CookingMethod, Restriction, VisionApi, VisionMenuItem, DISH_CATEGORIES } from '../../../services/api'
 import { useAuth } from '../../../contexts/AuthContext'
 import MenuTable from './MenuTable'
 import MenuFormModal from './MenuFormModal'
@@ -95,11 +95,7 @@ function MenuListContent() {
   const [showVisionApproval, setShowVisionApproval] = useState(false)
   const [showTextModal, setShowTextModal] = useState(false)
   const [pasteText, setPasteText] = useState('')
-  const [verificationQueue, setVerificationQueue] = useState<VerificationQuestion[]>([])
   const [avgConfidence, setAvgConfidence] = useState<number | null>(null)
-  const [verifyingField, setVerifyingField] = useState<string | null>(null)
-  const [correctingItem, setCorrectingItem] = useState<{ menu_uid: string; field: string } | null>(null)
-  const [correctionText, setCorrectionText] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
   const cameraInputRef = useRef<HTMLInputElement>(null)
 
@@ -326,23 +322,11 @@ function MenuListContent() {
   }, [fetchData, currentPage])
 
   useEffect(() => {
-    if (!restaurant?.uid) return
-    const fetchVerification = async () => {
-      try {
-        const res = await VerificationApi.getQueue(restaurant.uid)
-        setVerificationQueue(res.result || [])
-      } catch { setVerificationQueue([]) }
-      try {
-        const menuRes = await apiClient.get(`/menus/?restaurant_uid=${restaurant.uid}&page=1&size=200`) as any
-        const items = menuRes.result?.items || []
-        if (items.length > 0) {
-          const total = items.reduce((s: number, m: any) => s + (m.confidence_score || 0), 0)
-          setAvgConfidence(Math.round(total / items.length))
-        }
-      } catch { /* ignore */ }
+    if (menuItems.length > 0) {
+      const total = menuItems.reduce((s, m) => s + m.confidenceScore, 0)
+      setAvgConfidence(Math.round(total / menuItems.length))
     }
-    fetchVerification()
-  }, [restaurant?.uid])
+  }, [menuItems])
 
   const handlePageChange = (page: number) => {
     if (page >= 1 && page <= totalPages) {
@@ -688,25 +672,6 @@ function MenuListContent() {
           onBulkApprove={handleBulkApprove}
           onAddNew={() => setShowAddModal(true)}
           onFetchFromSource={handleFetchFromSource}
-          verificationQueue={verificationQueue}
-          verifyingField={verifyingField}
-          correctingItem={correctingItem}
-          correctionText={correctionText}
-          onCorrectionTextChange={setCorrectionText}
-          onVerify={async (menuUid, field, action, correctedValue) => {
-            setVerifyingField(field)
-            try {
-              await VerificationApi.verify({ menu_uid: menuUid, field, action, corrected_value: correctedValue })
-              setVerificationQueue(prev => prev.filter(item => !(item.menu_uid === menuUid && item.field === field)))
-              refreshMenus()
-            } catch (e) { console.error(e) }
-            setVerifyingField(null)
-          }}
-          onStartCorrection={(menuUid, field, currentValue) => {
-            setCorrectingItem({ menu_uid: menuUid, field })
-            setCorrectionText(Array.isArray(currentValue) ? currentValue.join(', ') : String(currentValue || ''))
-          }}
-          onCancelCorrection={() => { setCorrectingItem(null); setCorrectionText('') }}
         />
       </div>
 
