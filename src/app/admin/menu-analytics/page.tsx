@@ -382,8 +382,8 @@ export default function MenuAnalyticsPage() {
         {/* Row 2: Menu Composition + Protein */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 16 }}>
           <div style={cardStyle}>
-            <SectionTitle>メニュー構成</SectionTitle>
-            <DonutChart data={compositionData} />
+            <SectionTitle>フード構成</SectionTitle>
+            <DonutChart data={compositionData} centerLabel="フード" />
           </div>
           <div style={cardStyle}>
             <SectionTitle>素材別分布</SectionTitle>
