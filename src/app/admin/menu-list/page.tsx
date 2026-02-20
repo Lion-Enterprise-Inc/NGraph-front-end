@@ -25,6 +25,7 @@ export interface MenuItem {
   cookingMethods: CookingMethod[]
   restrictions: Restriction[]
   confidenceScore: number
+  verificationRank: string | null
   dataSource: string | null
   narrative: Record<string, any> | null
   serving: Record<string, any> | null
@@ -260,6 +261,7 @@ function MenuListContent() {
             cookingMethods: menu.cooking_methods || [],
             restrictions: menu.restrictions || [],
             confidenceScore: menu.confidence_score || 0,
+            verificationRank: menu.verification_rank || null,
             dataSource: menu.data_source || null,
             narrative: menu.narrative || null,
             serving: menu.serving || null,

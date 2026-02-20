@@ -60,6 +60,9 @@ export default function PreviewModal({ isOpen, onClose, item, onEdit }: PreviewM
 
   const confidence = item.confidenceScore
   const confidenceColor = confidence >= 75 ? '#10B981' : confidence >= 50 ? '#F59E0B' : '#EF4444'
+  const rank = item.verificationRank
+  const rankColor = rank === 'S' ? '#EF4444' : rank === 'A' ? '#F59E0B' : rank === 'B' ? '#3B82F6' : rank === 'C' ? '#10B981' : '#64748B'
+  const rankLabel = rank === 'S' ? '要確認' : rank === 'A' ? '要確認' : rank === 'B' ? '確認推奨' : rank === 'C' ? '確認不要' : '未判定'
 
   const narrative = item.narrative || {}
   const serving = item.serving || {}
@@ -92,8 +95,14 @@ export default function PreviewModal({ isOpen, onClose, item, onEdit }: PreviewM
           </div>
         </div>
 
-        {/* Confidence */}
+        {/* Confidence + Rank */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20, padding: 12, background: '#0F172A', borderRadius: 8 }}>
+          {rank && (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: 48 }}>
+              <span style={{ fontSize: 24, fontWeight: 800, color: rankColor, lineHeight: 1 }}>{rank}</span>
+              <span style={{ fontSize: 9, color: rankColor, marginTop: 2 }}>{rankLabel}</span>
+            </div>
+          )}
           <div style={{ flex: 1 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
               <span style={{ fontSize: 13, color: '#94A3B8' }}>データ信頼度</span>

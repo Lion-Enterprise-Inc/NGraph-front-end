@@ -149,6 +149,8 @@ export default function MenuTable({
                 const confidence = item.confidenceScore
                 const confidenceColor = confidence >= 75 ? '#28a745' : confidence >= 40 ? '#ffc107' : '#dc3545'
                 const confidenceLabel = confidence >= 75 ? 'OK' : confidence >= 40 ? '確認推奨' : '要修正'
+                const rank = item.verificationRank
+                const rkColor = rank === 'S' ? '#EF4444' : rank === 'A' ? '#F59E0B' : rank === 'B' ? '#3B82F6' : rank === 'C' ? '#10B981' : ''
                 const rowNum = (currentPage - 1) * itemsPerPage + index + 1
                 return (
                   <tr key={item.uid}>
@@ -175,13 +177,15 @@ export default function MenuTable({
                     <td style={{ textAlign: 'center', fontWeight: 600, color: '#28a745', fontSize: '14px' }}>¥{item.price.toLocaleString()}</td>
                     <td style={{ textAlign: 'center' }}>
                       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
+                        {rank && (
+                          <span style={{ fontSize: '13px', fontWeight: 800, color: rkColor }}>{rank}</span>
+                        )}
                         <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                           <div style={{ width: '50px', height: '4px', background: '#e9ecef', borderRadius: '2px', overflow: 'hidden' }}>
                             <div style={{ width: `${confidence}%`, height: '100%', background: confidenceColor }}></div>
                           </div>
                           <span style={{ fontSize: '11px', fontWeight: 600, color: confidenceColor }}>{confidence}%</span>
                         </div>
-                        <span style={{ fontSize: '9px', fontWeight: 600, color: confidenceColor }}>{confidenceLabel}</span>
                       </div>
                     </td>
                     <td style={{ textAlign: 'center' }}>
@@ -216,6 +220,8 @@ export default function MenuTable({
           ) : items.map((item, index) => {
             const confidence = item.confidenceScore
             const confidenceColor = confidence >= 75 ? '#28a745' : confidence >= 40 ? '#ffc107' : '#dc3545'
+            const mRank = item.verificationRank
+            const mRkColor = mRank === 'S' ? '#EF4444' : mRank === 'A' ? '#F59E0B' : mRank === 'B' ? '#3B82F6' : mRank === 'C' ? '#10B981' : ''
             const rowNum = (currentPage - 1) * itemsPerPage + index + 1
             return (
               <div key={item.uid} className="mobile-card">
@@ -236,6 +242,7 @@ export default function MenuTable({
                 </div>
                 <div style={{ fontSize: '12px', color: 'var(--muted)', marginBottom: '8px' }}>
                   📂 {DISH_CATEGORIES[item.category] || item.category}
+                  {mRank && <span style={{ marginLeft: '8px', fontWeight: 800, color: mRkColor }}>{mRank}</span>}
                   <span style={{ marginLeft: '8px' }}>
                     <span style={{ color: confidenceColor, fontWeight: 600 }}>{confidence}%</span>
                   </span>

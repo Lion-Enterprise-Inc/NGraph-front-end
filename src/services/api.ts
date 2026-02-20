@@ -492,6 +492,7 @@ export interface Menu {
   image_url: string | null;
   data_source: string | null;
   confidence_score: number;
+  verification_rank: string | null;
   field_confidence: Record<string, number> | null;
   nfg_version: string | null;
   valid_from: string | null;
