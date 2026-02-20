@@ -23,6 +23,15 @@ const PALETTE = [
   '#84CC16', '#A855F7', '#22D3EE', '#FB923C', '#E879F9',
 ]
 
+function topNWithOther(items: Array<{ label: string; value: number; color?: string }>, n: number = 5) {
+  if (items.length <= n + 1) return items.map((d, i) => ({ ...d, color: d.color || PALETTE[i % PALETTE.length] }))
+  const top = items.slice(0, n)
+  const otherSum = items.slice(n).reduce((s, d) => s + d.value, 0)
+  const result = top.map((d, i) => ({ ...d, color: d.color || PALETTE[i % PALETTE.length] }))
+  if (otherSum > 0) result.push({ label: 'その他', value: otherSum, color: '#64748B' })
+  return result
+}
+
 function SummaryCard({ label, value, sub }: { label: string; value: string | number; sub?: string }) {
   return (
     <div style={{
@@ -258,13 +267,14 @@ export default function MenuAnalyticsPage() {
     color: RANK_COLORS[r],
   }))
 
-  const cookingData = data.cooking_method_distribution.map((d, i) => ({
-    label: d.name_jp,
-    value: d.count,
-    color: PALETTE[i % PALETTE.length],
-  }))
+  const categoryData = topNWithOther(
+    data.category_distribution.map(d => ({ label: d.label, value: d.count }))
+  )
 
-  const catMax = Math.max(...data.category_distribution.map(d => d.count), 1)
+  const cookingData = topNWithOther(
+    data.cooking_method_distribution.map(d => ({ label: d.name_jp, value: d.count }))
+  )
+
   const priceMax = Math.max(...data.price_ranges.map(d => d.count), 1)
   const ingMax = data.top_ingredients.length ? Math.max(...data.top_ingredients.map(d => d.count)) : 1
   const algMax = data.allergen_coverage.top_allergens.length ? Math.max(...data.allergen_coverage.top_allergens.map(d => d.count)) : 1
@@ -272,6 +282,8 @@ export default function MenuAnalyticsPage() {
 
   const totalAllergenMenus = data.allergen_coverage.with_allergens + data.allergen_coverage.without_allergens
   const allergenPct = totalAllergenMenus > 0 ? Math.round((data.allergen_coverage.with_allergens / totalAllergenMenus) * 100) : 0
+
+  const tasteData = data.taste_profile_distribution.filter(d => d.count > 0)
 
   return (
     <AdminLayout title="メニュー分析">
@@ -310,11 +322,11 @@ export default function MenuAnalyticsPage() {
           <SummaryCard label="平均完成度" value={`${data.avg_confidence}%`} />
         </div>
 
-        {/* Row: Rank + Cooking Methods */}
+        {/* Row: Category + Cooking Methods */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 16 }}>
           <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: 20 }}>
-            <SectionTitle>確認優先度</SectionTitle>
-            <DonutChart data={rankData} />
+            <SectionTitle>カテゴリ構成</SectionTitle>
+            <DonutChart data={categoryData} />
           </div>
           <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: 20 }}>
             <SectionTitle>調理法分布</SectionTitle>
@@ -322,17 +334,12 @@ export default function MenuAnalyticsPage() {
           </div>
         </div>
 
-        {/* Category Distribution */}
-        <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: 20 }}>
-          <SectionTitle>カテゴリ構成</SectionTitle>
-          <HorizontalBar
-            items={data.category_distribution.map(d => ({
-              label: d.label,
-              count: d.count,
-              sub: `¥${d.avg_price.toLocaleString()}`,
-            }))}
-            maxCount={catMax}
-          />
+        {/* Rank Distribution */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 16 }}>
+          <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: 20 }}>
+            <SectionTitle>確認優先度</SectionTitle>
+            <DonutChart data={rankData} />
+          </div>
         </div>
 
         {/* Price Ranges */}
@@ -358,7 +365,7 @@ export default function MenuAnalyticsPage() {
           <SectionTitle>味覚プロファイル</SectionTitle>
           <div style={{ display: 'flex', justifyContent: 'center' }}>
             <RadarChart
-              data={data.taste_profile_distribution.map(d => ({ label: d.name_jp, value: d.count }))}
+              data={tasteData.map(d => ({ label: d.name_jp, value: d.count }))}
               size={300}
             />
           </div>
