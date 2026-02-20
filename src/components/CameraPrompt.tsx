@@ -79,18 +79,6 @@ export default function CameraPrompt({
         {restaurantName ? (STORE_GREETINGS[language] || STORE_GREETINGS.en) : sub}
       </p>
 
-      <div className="store-home-chips">
-        {recommendations?.map((text, i) => (
-          <button
-            key={i}
-            className="store-home-chip"
-            onClick={() => onRecommendationClick?.(text)}
-          >
-            {text}
-          </button>
-        ))}
-      </div>
-
       <button
         className="camera-scan-btn"
         onClick={onCamera}
@@ -103,6 +91,18 @@ export default function CameraPrompt({
           <span className="camera-scan-hint">{copy.hero.sub}</span>
         </div>
       </button>
+
+      <div className="store-home-chips">
+        {recommendations?.map((text, i) => (
+          <button
+            key={i}
+            className="store-home-chip"
+            onClick={() => onRecommendationClick?.(text)}
+          >
+            {text}
+          </button>
+        ))}
+      </div>
     </div>
   )
 }

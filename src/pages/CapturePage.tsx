@@ -451,8 +451,8 @@ export default function CapturePage({
 
       // Default restaurant-specific suggestions
       const chips = [
-        copy.restaurant.signatureDish.replace('{name}', displayName),
-        copy.restaurant.bestTime.replace('{name}', displayName),
+        copy.restaurant.signatureDish,
+        copy.restaurant.bestTime,
         copy.restaurant.dietaryOptions
       ];
 
