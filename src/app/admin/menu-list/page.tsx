@@ -97,6 +97,7 @@ function MenuListContent() {
   const [showTextModal, setShowTextModal] = useState(false)
   const [pasteText, setPasteText] = useState('')
   const [avgConfidence, setAvgConfidence] = useState<number | null>(null)
+  const [rankCounts, setRankCounts] = useState<{S: number, A: number, B: number, C: number, none: number}>({S: 0, A: 0, B: 0, C: 0, none: 0})
   const fileInputRef = useRef<HTMLInputElement>(null)
   const cameraInputRef = useRef<HTMLInputElement>(null)
 
@@ -327,6 +328,16 @@ function MenuListContent() {
     if (menuItems.length > 0) {
       const total = menuItems.reduce((s, m) => s + m.confidenceScore, 0)
       setAvgConfidence(Math.round(total / menuItems.length))
+      const counts = {S: 0, A: 0, B: 0, C: 0, none: 0}
+      menuItems.forEach(m => {
+        const r = m.verificationRank
+        if (r === 'S') counts.S++
+        else if (r === 'A') counts.A++
+        else if (r === 'B') counts.B++
+        else if (r === 'C') counts.C++
+        else counts.none++
+      })
+      setRankCounts(counts)
     }
   }, [menuItems])
 
@@ -635,17 +646,30 @@ function MenuListContent() {
 
   return (
     <AdminLayout title="メニュー一覧">
-      {avgConfidence !== null && (
-        <div style={{ background: 'var(--bg-surface)', borderRadius: 12, padding: 20, marginBottom: 16, border: '1px solid var(--border)', boxShadow: '0 1px 3px rgba(0,0,0,0.3)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-            <span style={{ fontSize: 16, fontWeight: 600, color: 'var(--text)' }}>データ完成度</span>
-            <span style={{ fontSize: 24, fontWeight: 700, color: avgConfidence >= 80 ? '#10B981' : avgConfidence >= 50 ? '#F59E0B' : '#EF4444' }}>{avgConfidence}%</span>
+      {menuItems.length > 0 && (() => {
+        const total = menuItems.length
+        const pctS = Math.round(rankCounts.S / total * 100)
+        const pctA = Math.round(rankCounts.A / total * 100)
+        const pctB = Math.round(rankCounts.B / total * 100)
+        const pctC = Math.round(rankCounts.C / total * 100)
+        return (
+          <div style={{ background: 'var(--bg-surface)', borderRadius: 12, padding: 20, marginBottom: 16, border: '1px solid var(--border)', boxShadow: '0 1px 3px rgba(0,0,0,0.3)' }}>
+            <div style={{ fontSize: 16, fontWeight: 600, color: 'var(--text)', marginBottom: 12 }}>確認優先度</div>
+            <div style={{ height: 16, background: '#1E293B', borderRadius: 8, overflow: 'hidden', display: 'flex' }}>
+              {pctS > 0 && <div style={{ width: `${pctS}%`, height: '100%', background: '#EF4444' }} />}
+              {pctA > 0 && <div style={{ width: `${pctA}%`, height: '100%', background: '#F59E0B' }} />}
+              {pctB > 0 && <div style={{ width: `${pctB}%`, height: '100%', background: '#3B82F6' }} />}
+              {pctC > 0 && <div style={{ width: `${pctC}%`, height: '100%', background: '#10B981' }} />}
+            </div>
+            <div style={{ display: 'flex', gap: 16, marginTop: 10, flexWrap: 'wrap' }}>
+              <span style={{ fontSize: 13 }}><span style={{ color: '#EF4444', fontWeight: 700 }}>S</span><span style={{ color: '#94A3B8' }}> 必ず確認 </span><span style={{ fontWeight: 600, color: '#EF4444' }}>{rankCounts.S}</span></span>
+              <span style={{ fontSize: 13 }}><span style={{ color: '#F59E0B', fontWeight: 700 }}>A</span><span style={{ color: '#94A3B8' }}> 要確認 </span><span style={{ fontWeight: 600, color: '#F59E0B' }}>{rankCounts.A}</span></span>
+              <span style={{ fontSize: 13 }}><span style={{ color: '#3B82F6', fontWeight: 700 }}>B</span><span style={{ color: '#94A3B8' }}> 確認推奨 </span><span style={{ fontWeight: 600, color: '#3B82F6' }}>{rankCounts.B}</span></span>
+              <span style={{ fontSize: 13 }}><span style={{ color: '#10B981', fontWeight: 700 }}>C</span><span style={{ color: '#94A3B8' }}> 確認不要 </span><span style={{ fontWeight: 600, color: '#10B981' }}>{rankCounts.C}</span></span>
+            </div>
           </div>
-          <div style={{ height: 12, background: '#1E293B', borderRadius: 6, overflow: 'hidden' }}>
-            <div style={{ height: '100%', width: `${avgConfidence}%`, background: avgConfidence >= 80 ? '#10B981' : avgConfidence >= 50 ? '#F59E0B' : '#EF4444', borderRadius: 6, transition: 'width 0.5s ease' }} />
-          </div>
-        </div>
-      )}
+        )
+      })()}
 
       <div className="card">
         <div className="card-title">📋 メニュー・商品管理</div>
