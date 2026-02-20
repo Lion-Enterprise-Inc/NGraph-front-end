@@ -6,6 +6,7 @@ import AdminLayout from '../../../components/admin/AdminLayout'
 import { apiClient, BUSINESS_TYPES } from '../../../services/api'
 import { useAuth } from '../../../contexts/AuthContext'
 import { useToast } from '../../../components/admin/Toast'
+import { FormField, FormInput, FormSelect, FormTextarea, FormGrid } from '../../../components/admin/ui'
 
 type TabType = 'basic'
 
@@ -191,7 +192,7 @@ function BasicInfoContent() {
       addIfPresent('instagram_url', formData.instagramUrl)
       addIfPresent('tabelog_url', formData.tabelogUrl)
       addIfPresent('gurunavi_url', formData.gurunaviUrl)
-      
+
       // Add logo file if selected
       if (logoFile) {
         formDataToSend.append('logo', logoFile)
@@ -199,7 +200,7 @@ function BasicInfoContent() {
 
       const token = sessionStorage.getItem('access_token')
       const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://15.207.22.103:8000'
-      
+
       const response = await fetch(`${apiBaseUrl}/restaurants/${restaurant.uid}`, {
         method: 'PUT',
         headers: {
@@ -219,17 +220,17 @@ function BasicInfoContent() {
       if (fileInputRef.current) {
         fileInputRef.current.value = ''
       }
-      
+
       // Update formData with new logo_url from response
       if (result.result?.logo_url) {
         setFormData(prev => ({ ...prev, logoUrl: result.result.logo_url }))
       }
-      
+
       // Re-fetch restaurant data to ensure we have the latest
       if (user?.uid) {
         await fetchRestaurantData(user.uid)
       }
-      
+
       toast('success', 'レストラン情報を保存しました')
     } catch (error) {
       console.error('Failed to save restaurant:', error)
@@ -377,7 +378,7 @@ function BasicInfoContent() {
   }
 
   const tabs = [
-    { key: 'basic', label: '📍 基本情報' },
+    { key: 'basic', label: '基本情報' },
   ]
 
   return (
@@ -398,15 +399,15 @@ function BasicInfoContent() {
         <div className="tab-content">
           {restaurantLoading ? (
             <div className="inner-card" style={{ textAlign: 'center', padding: '40px' }}>
-              <div style={{ fontSize: '18px', marginBottom: '16px' }}>🏪 レストラン情報を読み込み中...</div>
+              <div style={{ fontSize: '18px', marginBottom: '16px' }}>レストラン情報を読み込み中...</div>
               <div style={{ color: '#94A3B8' }}>情報を取得しています</div>
             </div>
           ) : restaurantError ? (
             <div className="inner-card" style={{ textAlign: 'center', padding: '40px' }}>
-              <div style={{ fontSize: '18px', marginBottom: '16px', color: '#dc2626' }}>❌ エラー</div>
+              <div style={{ fontSize: '18px', marginBottom: '16px', color: '#dc2626' }}>エラー</div>
               <div style={{ color: '#94A3B8', marginBottom: '20px' }}>{restaurantError}</div>
-              <button 
-                className="btn btn-primary" 
+              <button
+                className="btn btn-primary"
                 onClick={() => window.location.reload()}
               >
                 再読み込み
@@ -414,268 +415,229 @@ function BasicInfoContent() {
             </div>
           ) : activeTab === 'basic' && (
             <div className="inner-card">
-              <div className="card-title">📍 基本情報</div>
 
-              {/* Logo Upload Section */}
-              <div className="form-group">
-                <label className="form-label">ロゴ</label>
-                <div className="logo-upload-section">
-                  {(logoPreview || (formData.logoUrl && !logoFile)) ? (
-                    <div className="logo-preview-container">
-                      {logoPreview ? (
-                        <img src={logoPreview} alt="Restaurant logo" className="logo-preview" />
-                      ) : formData.logoUrl?.toLowerCase().endsWith('.pdf') ? (
+              {/* Section 1: 基本情報 */}
+              <div className="section-card">
+                <div className="card-title">基本情報</div>
+
+                <FormField label="レストラン名" required>
+                  <FormInput type="text" name="storeName" value={formData.storeName} onChange={handleChange} />
+                </FormField>
+
+                <FormGrid cols={2}>
+                  <FormField label="電話番号">
+                    <FormInput type="tel" name="phone" value={formData.phone} onChange={handleChange} />
+                  </FormField>
+                  <FormField label="住所">
+                    <FormInput type="text" name="address" value={formData.address} onChange={handleChange} />
+                  </FormField>
+                </FormGrid>
+
+                <FormField label="業種">
+                  <FormSelect name="storeType" value={formData.storeType} onChange={handleChange}>
+                    <option value="">選択してください</option>
+                    {Object.entries(BUSINESS_TYPES).map(([key, label]) => (
+                      <option key={key} value={key}>{label}</option>
+                    ))}
+                  </FormSelect>
+                </FormField>
+
+                {/* Logo Upload */}
+                <FormField label="ロゴ">
+                  <div className="logo-upload-section">
+                    {(logoPreview || (formData.logoUrl && !logoFile)) ? (
+                      <div className="logo-preview-container">
+                        {logoPreview ? (
+                          <img src={logoPreview} alt="Restaurant logo" className="logo-preview" />
+                        ) : formData.logoUrl?.toLowerCase().endsWith('.pdf') ? (
+                          <div className="logo-placeholder" style={{ border: '2px solid #e5e7eb', background: '#fef2f2' }}>
+                            <span style={{ fontSize: '32px' }}>PDF</span>
+                            <span style={{ fontSize: '11px' }}>PDF</span>
+                          </div>
+                        ) : (
+                          <img src={formData.logoUrl} alt="Restaurant logo" className="logo-preview" />
+                        )}
+                        <button
+                          type="button"
+                          className="logo-remove-btn"
+                          onClick={handleRemoveLogo}
+                        >
+                          x
+                        </button>
+                      </div>
+                    ) : logoFile && !logoPreview ? (
+                      <div className="logo-preview-container">
                         <div className="logo-placeholder" style={{ border: '2px solid #e5e7eb', background: '#fef2f2' }}>
-                          <span style={{ fontSize: '32px' }}>📄</span>
+                          <span style={{ fontSize: '32px' }}>PDF</span>
                           <span style={{ fontSize: '11px' }}>PDF</span>
                         </div>
-                      ) : (
-                        <img src={formData.logoUrl} alt="Restaurant logo" className="logo-preview" />
-                      )}
-                      <button
-                        type="button"
-                        className="logo-remove-btn"
-                        onClick={handleRemoveLogo}
-                      >
-                        ✕
-                      </button>
-                    </div>
-                  ) : logoFile && !logoPreview ? (
-                    <div className="logo-preview-container">
-                      <div className="logo-placeholder" style={{ border: '2px solid #e5e7eb', background: '#fef2f2' }}>
-                        <span style={{ fontSize: '32px' }}>📄</span>
-                        <span style={{ fontSize: '11px' }}>PDF</span>
+                        <button
+                          type="button"
+                          className="logo-remove-btn"
+                          onClick={handleRemoveLogo}
+                        >
+                          x
+                        </button>
                       </div>
+                    ) : (
+                      <div className="logo-placeholder">
+                        <span>Logo</span>
+                        <span>ロゴなし</span>
+                      </div>
+                    )}
+                    <div className="logo-input-group">
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*,.pdf"
+                        onChange={handleLogoFileChange}
+                        style={{ display: 'none' }}
+                        id="logo-file-input"
+                      />
                       <button
                         type="button"
-                        className="logo-remove-btn"
-                        onClick={handleRemoveLogo}
+                        className="btn btn-secondary"
+                        onClick={() => {
+                          if (fileInputRef.current) {
+                            fileInputRef.current.value = ''
+                            fileInputRef.current.click()
+                          }
+                        }}
+                        style={{ marginBottom: '8px' }}
                       >
-                        ✕
+                        {(logoPreview || formData.logoUrl || logoFile) ? 'ロゴを変更' : 'ロゴを選択'}
+                      </button>
+                      {logoFile && (
+                        <p className="logo-file-name">選択中: {logoFile.name}</p>
+                      )}
+                      <p className="logo-hint">※ 画像またはPDFをアップロード（最大5MB）</p>
+                    </div>
+                  </div>
+                </FormField>
+              </div>
+
+              {/* Section 2: AI情報取得 */}
+              <div className="section-card">
+                <div className="card-title">AI情報取得</div>
+                <p style={{ color: '#94A3B8', marginBottom: '16px', fontSize: '13px' }}>
+                  店名で検索すると、食べログ・Googleマップ・公式HPなどから情報を自動取得します
+                </p>
+                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '20px' }}>
+                  <button
+                    className="btn btn-primary"
+                    onClick={() => handleSearchInfo(false)}
+                    disabled={isSearching || isScraping}
+                  >
+                    {isSearching ? '検索中...' : '店名で情報を検索'}
+                  </button>
+                  <button
+                    className="btn btn-secondary"
+                    onClick={() => handleSearchInfo(true)}
+                    disabled={isSearching || isScraping}
+                  >
+                    {isSearching ? '検索中...' : 'メニューも一緒に検索'}
+                  </button>
+                </div>
+
+                <details style={{ marginBottom: '16px' }}>
+                  <summary style={{ cursor: 'pointer', color: '#94A3B8', fontSize: '13px' }}>URL指定で取得（従来方式）</summary>
+                  <div style={{ padding: '12px 0' }}>
+                    <FormField label="情報取得用URL">
+                      <FormInput type="url" name="menuScrapingUrl" placeholder="https://tabelog.com/..." value={formData.menuScrapingUrl} onChange={handleChange} />
+                    </FormField>
+                    <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                      <button className="btn btn-secondary" onClick={() => handleScrapeInfo(false)} disabled={isScraping || isSearching}>
+                        {isScraping ? '取得中...' : 'URLから店舗情報を取得'}
+                      </button>
+                      <button className="btn btn-secondary" onClick={() => handleScrapeInfo(true)} disabled={isScraping || isSearching}>
+                        {isScraping ? '取得中...' : 'URLからメニューも取得'}
                       </button>
                     </div>
-                  ) : (
-                    <div className="logo-placeholder">
-                      <span>🏪</span>
-                      <span>ロゴなし</span>
-                    </div>
-                  )}
-                  <div className="logo-input-group">
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept="image/*,.pdf"
-                      onChange={handleLogoFileChange}
-                      style={{ display: 'none' }}
-                      id="logo-file-input"
-                    />
-                    <button
-                      type="button"
-                      className="btn btn-secondary"
-                      onClick={() => {
-                        if (fileInputRef.current) {
-                          fileInputRef.current.value = ''
-                          fileInputRef.current.click()
-                        }
-                      }}
-                      style={{ marginBottom: '8px' }}
-                    >
-                      {(logoPreview || formData.logoUrl || logoFile) ? '🔄 ロゴを変更' : '📁 ロゴを選択'}
-                    </button>
-                    {logoFile && (
-                      <p className="logo-file-name">選択中: {logoFile.name}</p>
-                    )}
-                    <p className="logo-hint">※ 画像またはPDFをアップロード（最大5MB）</p>
                   </div>
-                </div>
+                </details>
               </div>
 
-              <div className="form-group">
-                <label className="form-label">レストラン名 *</label>
-                <input type="text" name="storeName" className="form-input" value={formData.storeName} onChange={handleChange} />
-              </div>
-              <div className="form-group">
-                <label className="form-label">電話番号</label>
-                <input type="tel" name="phone" className="form-input" value={formData.phone} onChange={handleChange} />
-              </div>
-              <div className="form-group">
-                <label className="form-label">住所</label>
-                <input type="text" name="address" className="form-input" value={formData.address} onChange={handleChange} />
-              </div>
-              <div className="form-group">
-                <label className="form-label">業種</label>
-                <select name="storeType" className="form-input" value={formData.storeType} onChange={handleChange}>
-                  <option value="">選択してください</option>
-                  {Object.entries(BUSINESS_TYPES).map(([key, label]) => (
-                    <option key={key} value={key}>{label}</option>
-                  ))}
-                </select>
+              {/* Section 3: 詳細情報 */}
+              <div className="section-card">
+                <div className="card-title">詳細情報</div>
+
+                <FormField label="レストラン紹介">
+                  <FormTextarea name="description" placeholder="レストランの特徴や魅力を入力してください" value={formData.description} onChange={handleChange} rows={4} />
+                </FormField>
+
+                <FormGrid cols={2}>
+                  <FormField label="営業時間">
+                    <FormInput type="text" name="businessHours" value={formData.businessHours} onChange={handleChange} />
+                  </FormField>
+                  <FormField label="定休日">
+                    <FormInput type="text" name="holidays" value={formData.holidays} onChange={handleChange} />
+                  </FormField>
+                  <FormField label="座席数">
+                    <FormInput type="text" name="seats" placeholder="例: 50席" value={formData.seats} onChange={handleChange} />
+                  </FormField>
+                  <FormField label="予算">
+                    <FormInput type="text" name="budget" placeholder="例: ¥3,000〜¥4,000" value={formData.budget} onChange={handleChange} />
+                  </FormField>
+                  <FormField label="駐車場">
+                    <FormInput type="text" name="parking" placeholder="例: 有（10台）" value={formData.parking} onChange={handleChange} />
+                  </FormField>
+                  <FormField label="支払い方法">
+                    <FormInput type="text" name="payment" placeholder="例: カード可、電子マネー可" value={formData.payment} onChange={handleChange} />
+                  </FormField>
+                  <FormField label="最寄り駅・アクセス">
+                    <FormInput type="text" name="accessInfo" placeholder="例: JR福井駅 徒歩5分" value={formData.accessInfo} onChange={handleChange} />
+                  </FormField>
+                  <FormField label="予約URL">
+                    <FormInput type="url" name="reservationUrl" placeholder="https://..." value={formData.reservationUrl} onChange={handleChange} />
+                  </FormField>
+                </FormGrid>
+
+                <FormField label="特徴・こだわり">
+                  <FormTextarea name="features" placeholder="例: 地元食材使用、個室あり" value={formData.features} onChange={handleChange} rows={3} />
+                </FormField>
               </div>
 
-              <div className="section-divider" />
+              {/* Section 4: 外部リンク・評価 */}
+              <div className="section-card">
+                <div className="card-title">外部リンク・評価</div>
 
-              <div className="card-title">🔍 AI情報取得</div>
-              <p style={{ color: '#94A3B8', marginBottom: '16px', fontSize: '13px' }}>
-                店名で検索すると、食べログ・Googleマップ・公式HPなどから情報を自動取得します
-              </p>
-              <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '20px' }}>
-                <button
-                  className="btn btn-primary"
-                  onClick={() => handleSearchInfo(false)}
-                  disabled={isSearching || isScraping}
-                >
-                  {isSearching ? '⏳ 検索中...' : '🔍 店名で情報を検索'}
-                </button>
-                <button
-                  className="btn btn-secondary"
-                  onClick={() => handleSearchInfo(true)}
-                  disabled={isSearching || isScraping}
-                >
-                  {isSearching ? '⏳ 検索中...' : '🍽️ メニューも一緒に検索'}
-                </button>
+                <FormGrid cols={2}>
+                  <FormField label="公式HP">
+                    <FormInput type="url" name="officialWebsite" placeholder="https://..." value={formData.officialWebsite} onChange={handleChange} />
+                  </FormField>
+                  <FormField label="Googleマップ">
+                    <FormInput type="url" name="googleBusinessProfile" placeholder="https://maps.google.com/..." value={formData.googleBusinessProfile} onChange={handleChange} />
+                  </FormField>
+                  <FormField label="食べログ">
+                    <FormInput type="url" name="tabelogUrl" placeholder="https://tabelog.com/..." value={formData.tabelogUrl} onChange={handleChange} />
+                  </FormField>
+                  <FormField label="ぐるなび">
+                    <FormInput type="url" name="gurunaviUrl" placeholder="https://r.gnavi.co.jp/..." value={formData.gurunaviUrl} onChange={handleChange} />
+                  </FormField>
+                  <FormField label="Instagram">
+                    <FormInput type="url" name="instagramUrl" placeholder="https://instagram.com/..." value={formData.instagramUrl} onChange={handleChange} />
+                  </FormField>
+                  <div />
+                  <FormField label="Google評価">
+                    <FormInput type="number" name="googleRating" placeholder="例: 3.8" step="0.1" min="0" max="5" value={formData.googleRating} onChange={handleChange} />
+                  </FormField>
+                  <FormField label="食べログ評価">
+                    <FormInput type="number" name="tabelogRating" placeholder="例: 3.45" step="0.01" min="0" max="5" value={formData.tabelogRating} onChange={handleChange} />
+                  </FormField>
+                </FormGrid>
               </div>
 
-              <details style={{ marginBottom: '16px' }}>
-                <summary style={{ cursor: 'pointer', color: '#94A3B8', fontSize: '13px' }}>URL指定で取得（従来方式）</summary>
-                <div style={{ padding: '12px 0' }}>
-                  <div className="form-group">
-                    <label className="form-label">情報取得用URL</label>
-                    <input type="url" name="menuScrapingUrl" className="form-input" placeholder="https://tabelog.com/..." value={formData.menuScrapingUrl} onChange={handleChange} />
-                  </div>
-                  <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-                    <button className="btn btn-secondary" onClick={() => handleScrapeInfo(false)} disabled={isScraping || isSearching}>
-                      {isScraping ? '⏳ 取得中...' : 'URLから店舗情報を取得'}
-                    </button>
-                    <button className="btn btn-secondary" onClick={() => handleScrapeInfo(true)} disabled={isScraping || isSearching}>
-                      {isScraping ? '⏳ 取得中...' : 'URLからメニューも取得'}
-                    </button>
-                  </div>
-                </div>
-              </details>
-
-              <div className="section-divider" />
-
-              <div className="card-title">📝 詳細情報</div>
-              <div className="form-group">
-                <label className="form-label">レストラン紹介</label>
-                <textarea name="description" className="form-input" placeholder="レストランの特徴や魅力を入力してください" value={formData.description} onChange={handleChange} rows={4} />
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                <div className="form-group">
-                  <label className="form-label">営業時間</label>
-                  <input type="text" name="businessHours" className="form-input" value={formData.businessHours} onChange={handleChange} />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">定休日</label>
-                  <input type="text" name="holidays" className="form-input" value={formData.holidays} onChange={handleChange} />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">座席数</label>
-                  <input type="text" name="seats" className="form-input" placeholder="例: 50席" value={formData.seats} onChange={handleChange} />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">予算</label>
-                  <input type="text" name="budget" className="form-input" placeholder="例: ¥3,000～¥4,000" value={formData.budget} onChange={handleChange} />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">駐車場</label>
-                  <input type="text" name="parking" className="form-input" placeholder="例: 有（10台）" value={formData.parking} onChange={handleChange} />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">支払い方法</label>
-                  <input type="text" name="payment" className="form-input" placeholder="例: カード可、電子マネー可" value={formData.payment} onChange={handleChange} />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">最寄り駅・アクセス</label>
-                  <input type="text" name="accessInfo" className="form-input" placeholder="例: JR福井駅 徒歩5分" value={formData.accessInfo} onChange={handleChange} />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">予約URL</label>
-                  <input type="url" name="reservationUrl" className="form-input" placeholder="https://..." value={formData.reservationUrl} onChange={handleChange} />
-                </div>
-              </div>
-              <div className="form-group">
-                <label className="form-label">特徴・こだわり</label>
-                <textarea name="features" className="form-input" placeholder="例: 地元食材使用、個室あり" value={formData.features} onChange={handleChange} rows={3} />
-              </div>
-
-              <div className="section-divider" />
-
-              <div className="card-title">🔗 外部リンク・評価</div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                <div className="form-group">
-                  <label className="form-label">公式HP</label>
-                  <input type="url" name="officialWebsite" className="form-input" placeholder="https://..." value={formData.officialWebsite} onChange={handleChange} />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">Googleマップ</label>
-                  <input type="url" name="googleBusinessProfile" className="form-input" placeholder="https://maps.google.com/..." value={formData.googleBusinessProfile} onChange={handleChange} />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">食べログ</label>
-                  <input type="url" name="tabelogUrl" className="form-input" placeholder="https://tabelog.com/..." value={formData.tabelogUrl} onChange={handleChange} />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">ぐるなび</label>
-                  <input type="url" name="gurunaviUrl" className="form-input" placeholder="https://r.gnavi.co.jp/..." value={formData.gurunaviUrl} onChange={handleChange} />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">Instagram</label>
-                  <input type="url" name="instagramUrl" className="form-input" placeholder="https://instagram.com/..." value={formData.instagramUrl} onChange={handleChange} />
-                </div>
-                <div className="form-group" />
-                <div className="form-group">
-                  <label className="form-label">Google評価</label>
-                  <input type="number" name="googleRating" className="form-input" placeholder="例: 3.8" step="0.1" min="0" max="5" value={formData.googleRating} onChange={handleChange} />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">食べログ評価</label>
-                  <input type="number" name="tabelogRating" className="form-input" placeholder="例: 3.45" step="0.01" min="0" max="5" value={formData.tabelogRating} onChange={handleChange} />
-                </div>
-              </div>
             </div>
           )}
 
         </div>
 
-        {/* Global Save Button - Visible on all tabs */}
+        {/* Global Save Button */}
         <div style={{ display: 'flex', justifyContent: 'center', marginTop: '20px', paddingTop: '20px', borderTop: '1px solid var(--border)' }}>
           <button className="btn btn-primary" onClick={handleSave} disabled={isSaving} style={{ padding: '12px 24px', fontSize: '16px' }}>
-            {isSaving ? '⏳ 保存中...' : '💾 すべての変更を保存'}
+            {isSaving ? '保存中...' : 'すべての変更を保存'}
           </button>
         </div>
-
-        {/* Business Plan Upgrade - Always Visible - Commented out to hide */}
-        {/*
-        <div className="upgrade-card">
-          <div className="upgrade-header">
-            <div className="upgrade-icon">✨</div>
-            <div className="upgrade-badge">おすすめ</div>
-          </div>
-          <h3 className="upgrade-title">ビジネスプラン（¥3,980/月）でさらに高度な設定が可能</h3>
-          <div className="upgrade-features">
-            <div className="upgrade-feature">
-              <span className="feature-icon">🎨</span>
-              <span>AIエディタでプロンプトを完全にカスタマイズ</span>
-            </div>
-            <div className="upgrade-feature">
-              <span className="feature-icon">👋</span>
-              <span>初めの挨拶をカスタマイズ可能</span>
-            </div>
-            <div className="upgrade-feature">
-              <span className="feature-icon">📚</span>
-              <span>メニュー情報を詳細に学習させる</span>
-            </div>
-            <div className="upgrade-feature">
-              <span className="feature-icon">⚙️</span>
-              <span>応答パターンを細かく調整</span>
-            </div>
-          </div>
-          <button className="upgrade-btn" onClick={() => window.location.href = '/admin/account'}>
-            プラン詳細を確認 →
-          </button>
-        </div>
-        */}
       </div>
 
       <style jsx>{`
@@ -721,35 +683,21 @@ function BasicInfoContent() {
           border: 1px solid var(--border);
           border-radius: 12px;
         }
+        .section-card {
+          padding: 20px;
+          margin-bottom: 20px;
+          background: var(--bg-surface);
+          border: 1px solid var(--border);
+          border-radius: 10px;
+        }
+        .section-card:last-child {
+          margin-bottom: 0;
+        }
         .card-title {
           font-size: 16px;
           font-weight: 600;
           margin-bottom: 16px;
           color: var(--text);
-        }
-        .form-group {
-          margin-bottom: 16px;
-        }
-        .form-label {
-          display: block;
-          margin-bottom: 6px;
-          font-weight: 500;
-          color: var(--muted);
-          font-size: 14px;
-        }
-        .form-input {
-          width: 100%;
-          padding: 10px;
-          border: 1px solid var(--border-strong);
-          border-radius: 6px;
-          font-size: 14px;
-          transition: border 0.3s;
-          background: var(--bg-input);
-          color: var(--text);
-        }
-        .form-input:focus {
-          outline: none;
-          border-color: var(--primary);
         }
         .btn {
           border: none;
@@ -775,101 +723,6 @@ function BasicInfoContent() {
         }
         .btn-secondary:hover {
           background: var(--border-strong);
-        }
-        .upgrade-card {
-          margin-top: 24px;
-          padding: 24px;
-          background: linear-gradient(135deg, #f0f4ff 0%, #faf5ff 100%);
-          border: 2px solid #e0e7ff;
-          border-radius: 16px;
-          position: relative;
-          overflow: hidden;
-        }
-        .upgrade-card::before {
-          content: '';
-          position: absolute;
-          top: 0;
-          right: 0;
-          width: 150px;
-          height: 150px;
-          background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
-          border-radius: 0 0 0 100%;
-        }
-        .upgrade-header {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          margin-bottom: 16px;
-        }
-        .upgrade-icon {
-          font-size: 32px;
-        }
-        .upgrade-badge {
-          background: linear-gradient(135deg, #667eea, #764ba2);
-          color: white;
-          padding: 4px 12px;
-          border-radius: 20px;
-          font-size: 12px;
-          font-weight: 600;
-        }
-        .upgrade-title {
-          font-size: 18px;
-          font-weight: 700;
-          color: #1f2937;
-          margin: 0 0 20px 0;
-        }
-        .upgrade-features {
-          display: grid;
-          grid-template-columns: repeat(2, 1fr);
-          gap: 12px;
-          margin-bottom: 20px;
-        }
-        .upgrade-feature {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          padding: 12px 16px;
-          background: white;
-          border-radius: 10px;
-          font-size: 14px;
-          color: #374151;
-          box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-        }
-        .feature-icon {
-          font-size: 18px;
-        }
-        .upgrade-btn {
-          display: inline-flex;
-          align-items: center;
-          gap: 8px;
-          padding: 14px 28px;
-          background: linear-gradient(135deg, #667eea, #764ba2);
-          color: white;
-          border: none;
-          border-radius: 12px;
-          font-size: 15px;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.3s ease;
-          box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-        }
-        .upgrade-btn:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
-        }
-        @media (max-width: 768px) {
-          .upgrade-features {
-            grid-template-columns: 1fr;
-          }
-        }
-        @media (max-width: 640px) {
-          div[style*="grid-template-columns: 1fr 1fr"] {
-            grid-template-columns: 1fr !important;
-          }
-        }
-        .section-divider {
-          border-top: 1px solid var(--border);
-          margin: 24px 0;
         }
         .logo-upload-section {
           display: flex;

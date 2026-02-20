@@ -943,4 +943,31 @@ export const EventApi = {
   },
 };
 
+// Verification API (Phase 1 ゲーミフィケーション)
+export interface VerificationQuestion {
+  menu_uid: string;
+  menu_name: string;
+  field: string;
+  question: string;
+  current_value: any;
+  priority: number;
+}
+
+export interface VerifyRequest {
+  menu_uid: string;
+  field: string;
+  action: 'confirm' | 'correct';
+  corrected_value?: any;
+}
+
+export const VerificationApi = {
+  getQueue: async (restaurantUid?: string): Promise<{ result: VerificationQuestion[]; message: string; status_code: number }> => {
+    const params = restaurantUid ? `?restaurant_uid=${restaurantUid}` : '';
+    return apiClient.get(`/admin/verification-queue${params}`);
+  },
+  verify: async (data: VerifyRequest): Promise<{ result: any; message: string; status_code: number }> => {
+    return apiClient.post('/admin/verify', data);
+  },
+};
+
 export default apiClient;

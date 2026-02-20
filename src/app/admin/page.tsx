@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import AdminLayout from '../../components/admin/AdminLayout'
-import { apiClient } from '../../services/api'
+import { apiClient, VerificationApi } from '../../services/api'
+import type { VerificationQuestion } from '../../services/api'
 
 const LANG_COLORS: Record<string, string> = {
   ja: '#3B82F6',
@@ -102,6 +103,11 @@ function StoreDashboard() {
   const [eventStats, setEventStats] = useState<any>(null)
   const [messageStats, setMessageStats] = useState<any>(null)
   const [sessionStats, setSessionStats] = useState<any>(null)
+  const [avgConfidence, setAvgConfidence] = useState<number | null>(null)
+  const [verificationQueue, setVerificationQueue] = useState<VerificationQuestion[]>([])
+  const [verifyingField, setVerifyingField] = useState<string | null>(null)
+  const [correctingItem, setCorrectingItem] = useState<VerificationQuestion | null>(null)
+  const [correctionText, setCorrectionText] = useState('')
 
   useEffect(() => {
     const fetchRestaurant = async () => {
@@ -122,13 +128,25 @@ function StoreDashboard() {
         const response = await apiClient.get(`/restaurants/detail-by-user/${user.uid}`) as { result: any; message: string; status_code: number }
         setRestaurant(response.result)
 
-        // Fetch menu count
+        // Fetch menu count + average confidence
         if (response.result?.uid) {
           try {
-            const menuResponse = await apiClient.get(`/menus/?restaurant_uid=${response.result.uid}&page=1&size=1`) as any
+            const menuResponse = await apiClient.get(`/menus/?restaurant_uid=${response.result.uid}&page=1&size=200`) as any
+            const items = menuResponse.result?.items || []
             setMenuCount(menuResponse.result?.total ?? 0)
+            if (items.length > 0) {
+              const totalConf = items.reduce((sum: number, m: any) => sum + (m.confidence_score || 0), 0)
+              setAvgConfidence(Math.round(totalConf / items.length))
+            }
           } catch {
             setMenuCount(0)
+          }
+          // Fetch verification queue
+          try {
+            const vRes = await VerificationApi.getQueue(response.result.uid)
+            setVerificationQueue(vRes.result || [])
+          } catch {
+            setVerificationQueue([])
           }
         }
       } catch (error) {
@@ -225,6 +243,188 @@ function StoreDashboard() {
                 </div>
               </div>
             </div>
+
+            {avgConfidence !== null && (
+              <div className="card" style={{ marginBottom: '16px' }}>
+                <div className="card-title">データ完成度</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                  <div style={{ flex: 1 }}>
+                    <div style={{
+                      height: 24,
+                      borderRadius: 12,
+                      background: '#1E293B',
+                      overflow: 'hidden',
+                      position: 'relative',
+                    }}>
+                      <div style={{
+                        height: '100%',
+                        width: `${avgConfidence}%`,
+                        borderRadius: 12,
+                        background: avgConfidence >= 80 ? 'linear-gradient(90deg, #10B981, #34D399)' :
+                          avgConfidence >= 50 ? 'linear-gradient(90deg, #F59E0B, #FBBF24)' :
+                            'linear-gradient(90deg, #EF4444, #F87171)',
+                        transition: 'width 0.5s ease',
+                      }} />
+                    </div>
+                  </div>
+                  <div style={{ fontSize: 24, fontWeight: 700, color: avgConfidence >= 80 ? '#10B981' : avgConfidence >= 50 ? '#F59E0B' : '#EF4444', minWidth: 60, textAlign: 'right' }}>
+                    {avgConfidence}%
+                  </div>
+                </div>
+                <div style={{ fontSize: 12, color: '#94A3B8', marginTop: 8 }}>
+                  全メニューの平均信頼度スコア。確認キューに回答するとスコアが上がります。
+                </div>
+              </div>
+            )}
+
+            {verificationQueue.length > 0 && (
+              <div className="card" style={{ marginBottom: '16px' }}>
+                <div className="card-title">確認キュー（残り{verificationQueue.length}件）</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  {verificationQueue.map((q, idx) => (
+                    <div key={`${q.menu_uid}-${q.field}-${idx}`} style={{
+                      padding: 16,
+                      background: '#1E293B',
+                      borderRadius: 8,
+                      border: '1px solid #334155',
+                    }}>
+                      <div style={{ fontSize: 14, fontWeight: 600, color: '#F8FAFC', marginBottom: 8 }}>
+                        {q.question}
+                      </div>
+                      {q.current_value && (
+                        <div style={{ fontSize: 13, color: '#94A3B8', marginBottom: 12 }}>
+                          現在の値: {Array.isArray(q.current_value) ? q.current_value.join(', ') : String(q.current_value)}
+                        </div>
+                      )}
+
+                      {correctingItem?.menu_uid === q.menu_uid && correctingItem?.field === q.field ? (
+                        <div style={{ display: 'flex', gap: 8 }}>
+                          <input
+                            type="text"
+                            value={correctionText}
+                            onChange={e => setCorrectionText(e.target.value)}
+                            placeholder="正しい値を入力"
+                            style={{
+                              flex: 1,
+                              padding: '8px 12px',
+                              background: '#0F172A',
+                              border: '1px solid #475569',
+                              borderRadius: 6,
+                              color: '#F8FAFC',
+                              fontSize: 14,
+                            }}
+                          />
+                          <button
+                            disabled={verifyingField === q.field}
+                            onClick={async () => {
+                              setVerifyingField(q.field)
+                              try {
+                                let val: any = correctionText
+                                if (q.field === 'ingredients' || q.field === 'allergens') {
+                                  val = correctionText.split(',').map(s => s.trim()).filter(Boolean)
+                                }
+                                await VerificationApi.verify({ menu_uid: q.menu_uid, field: q.field, action: 'correct', corrected_value: val })
+                                setVerificationQueue(prev => prev.filter(item => !(item.menu_uid === q.menu_uid && item.field === q.field)))
+                                setCorrectingItem(null)
+                                setCorrectionText('')
+                                // Refresh confidence
+                                if (restaurant?.uid) {
+                                  const menuResponse = await apiClient.get(`/menus/?restaurant_uid=${restaurant.uid}&page=1&size=200`) as any
+                                  const items = menuResponse.result?.items || []
+                                  if (items.length > 0) {
+                                    const totalConf = items.reduce((sum: number, m: any) => sum + (m.confidence_score || 0), 0)
+                                    setAvgConfidence(Math.round(totalConf / items.length))
+                                  }
+                                }
+                              } catch (e) { console.error(e) }
+                              setVerifyingField(null)
+                            }}
+                            style={{
+                              padding: '8px 16px',
+                              background: '#3B82F6',
+                              color: '#fff',
+                              border: 'none',
+                              borderRadius: 6,
+                              cursor: 'pointer',
+                              fontSize: 13,
+                              fontWeight: 600,
+                            }}
+                          >
+                            送信
+                          </button>
+                          <button
+                            onClick={() => { setCorrectingItem(null); setCorrectionText('') }}
+                            style={{
+                              padding: '8px 12px',
+                              background: 'transparent',
+                              color: '#94A3B8',
+                              border: '1px solid #475569',
+                              borderRadius: 6,
+                              cursor: 'pointer',
+                              fontSize: 13,
+                            }}
+                          >
+                            取消
+                          </button>
+                        </div>
+                      ) : (
+                        <div style={{ display: 'flex', gap: 8 }}>
+                          <button
+                            disabled={verifyingField === q.field}
+                            onClick={async () => {
+                              setVerifyingField(q.field)
+                              try {
+                                await VerificationApi.verify({ menu_uid: q.menu_uid, field: q.field, action: 'confirm' })
+                                setVerificationQueue(prev => prev.filter(item => !(item.menu_uid === q.menu_uid && item.field === q.field)))
+                                if (restaurant?.uid) {
+                                  const menuResponse = await apiClient.get(`/menus/?restaurant_uid=${restaurant.uid}&page=1&size=200`) as any
+                                  const items = menuResponse.result?.items || []
+                                  if (items.length > 0) {
+                                    const totalConf = items.reduce((sum: number, m: any) => sum + (m.confidence_score || 0), 0)
+                                    setAvgConfidence(Math.round(totalConf / items.length))
+                                  }
+                                }
+                              } catch (e) { console.error(e) }
+                              setVerifyingField(null)
+                            }}
+                            style={{
+                              padding: '8px 20px',
+                              background: '#10B981',
+                              color: '#fff',
+                              border: 'none',
+                              borderRadius: 6,
+                              cursor: 'pointer',
+                              fontSize: 13,
+                              fontWeight: 600,
+                            }}
+                          >
+                            はい
+                          </button>
+                          <button
+                            onClick={() => {
+                              setCorrectingItem(q)
+                              setCorrectionText(Array.isArray(q.current_value) ? q.current_value.join(', ') : String(q.current_value || ''))
+                            }}
+                            style={{
+                              padding: '8px 20px',
+                              background: 'transparent',
+                              color: '#F59E0B',
+                              border: '1px solid #F59E0B',
+                              borderRadius: 6,
+                              cursor: 'pointer',
+                              fontSize: 13,
+                              fontWeight: 600,
+                            }}
+                          >
+                            修正する
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <div className="card" style={{ width: '100%', maxWidth: 'none' }}>
               <div className="card-title">イベントログ統計</div>
