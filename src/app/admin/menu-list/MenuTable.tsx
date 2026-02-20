@@ -133,7 +133,7 @@ export default function MenuTable({
                 <th style={{ width: '4%', textAlign: 'center' }}>No.</th>
                 <th style={{ width: '33%' }}>メニュー詳細</th>
                 <th style={{ width: '10%', textAlign: 'center' }}>価格</th>
-                <th style={{ width: '10%', textAlign: 'center' }}>信頼度</th>
+                <th style={{ width: '10%', textAlign: 'center' }}>完成度</th>
                 <th style={{ width: '10%', textAlign: 'center' }}>ステータス</th>
                 <th style={{ width: '33%', textAlign: 'center' }}>操作</th>
               </tr>

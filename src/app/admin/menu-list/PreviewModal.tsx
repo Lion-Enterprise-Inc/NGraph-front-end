@@ -105,7 +105,7 @@ export default function PreviewModal({ isOpen, onClose, item, onEdit }: PreviewM
           )}
           <div style={{ flex: 1 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-              <span style={{ fontSize: 13, color: '#94A3B8' }}>データ信頼度</span>
+              <span style={{ fontSize: 13, color: '#94A3B8' }}>データ完成度</span>
               <span style={{ fontSize: 15, fontWeight: 700, color: confidenceColor }}>{confidence}%</span>
             </div>
             <div style={{ height: 6, background: '#1E293B', borderRadius: 3, overflow: 'hidden' }}>
