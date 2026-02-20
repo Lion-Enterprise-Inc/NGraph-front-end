@@ -101,6 +101,7 @@ function StoreDashboard() {
   const [menuCount, setMenuCount] = useState<number | null>(null)
   const [eventStats, setEventStats] = useState<any>(null)
   const [messageStats, setMessageStats] = useState<any>(null)
+  const [sessionStats, setSessionStats] = useState<any>(null)
 
   useEffect(() => {
     const fetchRestaurant = async () => {
@@ -155,9 +156,18 @@ function StoreDashboard() {
         setMessageStats(null)
       }
     }
+    const fetchSessionStats = async () => {
+      try {
+        const res = await apiClient.get('/admin/session-stats') as { result: any }
+        setSessionStats(res.result)
+      } catch {
+        setSessionStats(null)
+      }
+    }
     fetchRestaurant()
     fetchEventStats()
     fetchMessageStats()
+    fetchSessionStats()
   }, [])
 
   return (
@@ -253,6 +263,24 @@ function StoreDashboard() {
                 <LangBar dist={messageStats.lang_distribution} />
               </div>
             )}
+
+            {sessionStats && sessionStats.total_sessions > 0 && (
+              <div className="card" style={{ marginTop: '16px' }}>
+                <div className="card-title">セッション統計</div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '16px' }}>
+                  <div style={{ padding: '16px', background: '#1E293B', borderRadius: '8px', textAlign: 'center' }}>
+                    <div style={{ fontSize: '14px', color: '#94A3B8', marginBottom: '4px' }}>セッション数</div>
+                    <div style={{ fontSize: '24px', fontWeight: 700, color: '#3B82F6' }}>{sessionStats.total_sessions}</div>
+                  </div>
+                  <div style={{ padding: '16px', background: '#1E293B', borderRadius: '8px', textAlign: 'center' }}>
+                    <div style={{ fontSize: '14px', color: '#94A3B8', marginBottom: '4px' }}>平均滞在</div>
+                    <div style={{ fontSize: '24px', fontWeight: 700, color: '#10B981' }}>
+                      {sessionStats.avg_duration >= 60 ? `${Math.floor(sessionStats.avg_duration / 60)}分` : `${sessionStats.avg_duration}秒`}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </>
         ) : null}
       </section>
@@ -320,6 +348,7 @@ function AdminDashboard() {
   const [eventStats, setEventStats] = useState<any>(null)
   const [topicData, setTopicData] = useState<Record<string, number> | null>(null)
   const [messageStats, setMessageStats] = useState<any>(null)
+  const [sessionStats, setSessionStats] = useState<any>(null)
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -358,10 +387,19 @@ function AdminDashboard() {
         setMessageStats(null)
       }
     }
+    const fetchSessionStats = async () => {
+      try {
+        const res = await apiClient.get('/admin/session-stats') as { result: any }
+        setSessionStats(res.result)
+      } catch {
+        setSessionStats(null)
+      }
+    }
     fetchStats()
     fetchEventStats()
     fetchTopics()
     fetchMessageStats()
+    fetchSessionStats()
   }, [])
 
   if (loading) {
@@ -468,6 +506,61 @@ function AdminDashboard() {
         <div className="card">
           <div className="card-title">トピック分布</div>
           <TopicPieChart data={topicData} />
+        </div>
+      )}
+
+      {sessionStats && sessionStats.total_sessions > 0 && (
+        <div className="card">
+          <div className="card-title">セッション統計</div>
+          <div className="stats-grid">
+            <div className="stat-card">
+              <div className="stat-label">総セッション数</div>
+              <div className="stat-value" style={{ color: '#3B82F6' }}>{sessionStats.total_sessions}</div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-label">平均滞在時間</div>
+              <div className="stat-value" style={{ color: '#10B981' }}>
+                {sessionStats.avg_duration >= 60 ? `${Math.floor(sessionStats.avg_duration / 60)}分${sessionStats.avg_duration % 60}秒` : `${sessionStats.avg_duration}秒`}
+              </div>
+            </div>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 24, marginTop: 16 }}>
+            {sessionStats.referrer_distribution && Object.keys(sessionStats.referrer_distribution).length > 0 && (
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 600, color: '#E2E8F0', marginBottom: 8 }}>流入元</div>
+                {Object.entries(sessionStats.referrer_distribution as Record<string, number>).sort((a: [string, number], b: [string, number]) => b[1] - a[1]).map(([ref, count]) => (
+                  <div key={ref} style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: 13, borderBottom: '1px solid var(--border)' }}>
+                    <span style={{ color: '#E2E8F0' }}>{ref}</span>
+                    <span style={{ color: '#94A3B8' }}>{count as number}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+            {sessionStats.screen_distribution && Object.keys(sessionStats.screen_distribution).length > 0 && (
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 600, color: '#E2E8F0', marginBottom: 8 }}>画面サイズ</div>
+                {(() => {
+                  const entries = Object.entries(sessionStats.screen_distribution as Record<string, number>).sort((a, b) => b[1] - a[1])
+                  const total = entries.reduce((s, [, v]) => s + v, 0)
+                  const colors: Record<string, string> = { Mobile: '#3B82F6', Tablet: '#F59E0B', Desktop: '#8B5CF6' }
+                  return (
+                    <>
+                      <div style={{ display: 'flex', height: 20, borderRadius: 6, overflow: 'hidden', background: '#1E293B' }}>
+                        {entries.map(([size, count]) => (
+                          <div key={size} title={`${size}: ${count}`} style={{ width: `${(count / total) * 100}%`, background: colors[size] || '#64748B', minWidth: 2 }} />
+                        ))}
+                      </div>
+                      <div style={{ display: 'flex', gap: 12, marginTop: 4 }}>
+                        {entries.map(([size, count]) => (
+                          <span key={size} style={{ fontSize: 11, color: colors[size] || '#64748B' }}>{size}: {count}</span>
+                        ))}
+                      </div>
+                    </>
+                  )
+                })()}
+              </div>
+            )}
+          </div>
         </div>
       )}
 

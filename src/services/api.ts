@@ -912,7 +912,7 @@ export const FeedbackApi = {
 
 // Event tracking API (public, no auth, fire-and-forget)
 export const EventApi = {
-  log: (params: { restaurant_slug: string; event: string; message_uid?: string | null; thread_uid?: string | null; lang?: string }) => {
+  log: (params: { restaurant_slug: string; event: string; message_uid?: string | null; thread_uid?: string | null; lang?: string; meta?: Record<string, any> }) => {
     fetch(`${API_BASE_URL}/public-chat/events`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -922,8 +922,24 @@ export const EventApi = {
         message_uid: params.message_uid || undefined,
         thread_uid: params.thread_uid || undefined,
         lang: params.lang,
+        meta: params.meta,
       }),
     }).catch(() => {});
+  },
+  beacon: (params: { restaurant_slug: string; event: string; meta?: Record<string, any>; lang?: string }) => {
+    const data = JSON.stringify({
+      restaurant_slug: params.restaurant_slug,
+      event: params.event,
+      lang: params.lang,
+      meta: params.meta,
+    });
+    if (navigator.sendBeacon) {
+      navigator.sendBeacon(`${API_BASE_URL}/public-chat/events`, new Blob([data], { type: 'application/json' }));
+    } else {
+      fetch(`${API_BASE_URL}/public-chat/events`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: data, keepalive: true,
+      }).catch(() => {});
+    }
   },
 };
 

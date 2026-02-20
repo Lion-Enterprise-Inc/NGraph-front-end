@@ -395,6 +395,47 @@ export default function CapturePage({
     }
   }, [isInStore, restaurantSlug, activeLanguage]);
 
+  // Session tracking: start + end (duration, referrer, screen size)
+  const sessionStartRef = useRef<number>(0);
+  const sessionLoggedRef = useRef(false);
+  useEffect(() => {
+    if (!restaurantSlug || sessionLoggedRef.current) return;
+    sessionLoggedRef.current = true;
+    sessionStartRef.current = Date.now();
+    EventApi.log({
+      restaurant_slug: restaurantSlug,
+      event: 'session_start',
+      lang: activeLanguage,
+      meta: {
+        referrer: document.referrer || null,
+        screen_width: window.innerWidth,
+        screen_height: window.innerHeight,
+      },
+    });
+
+    const handleEnd = () => {
+      if (!sessionStartRef.current) return;
+      const duration = Math.round((Date.now() - sessionStartRef.current) / 1000);
+      if (duration < 2) return;
+      EventApi.beacon({
+        restaurant_slug: restaurantSlug,
+        event: 'session_end',
+        lang: activeLanguage,
+        meta: { duration_seconds: duration },
+      });
+      sessionStartRef.current = 0;
+    };
+
+    const handleVisibility = () => { if (document.visibilityState === 'hidden') handleEnd(); };
+    document.addEventListener('visibilitychange', handleVisibility);
+    window.addEventListener('beforeunload', handleEnd);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibility);
+      window.removeEventListener('beforeunload', handleEnd);
+      handleEnd();
+    };
+  }, [restaurantSlug]);
+
   // Pre-fetch recommend text responses for instant display
   useEffect(() => {
     if (!restaurantData?.recommend_texts?.length) return;
