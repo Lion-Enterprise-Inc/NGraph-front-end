@@ -11,7 +11,7 @@ import {
 import { useRouter, useSearchParams } from "next/navigation";
 import { mockRestaurants, mockScanResponse, type Restaurant } from "../api/mockApi";
 import Tesseract from "tesseract.js";
-import { FeedbackApi, type VisionMenuItem } from "../services/api";
+import { FeedbackApi, EventApi, type VisionMenuItem } from "../services/api";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import remarkBreaks from "remark-breaks";
@@ -53,7 +53,7 @@ function extractNumberedItems(text: string): { num: string; name: string }[] {
   let match;
   while ((match = regex.exec(text)) !== null) {
     const name = match[2].trim();
-    if (name.length > 0 && items.length < 6) {
+    if (name.length > 0 && items.length < 12) {
       items.push({ num: match[1], name });
     }
   }
@@ -317,6 +317,7 @@ export default function CapturePage({
   const fromHome = searchParams?.get("from") === "home" || defaultFromHome;
   const fromRestaurant = searchParams?.get("from") === "restaurant";
   const isInStore = searchParams?.get("source") === "qr";
+  const scanLoggedRef = useRef(false);
   const isNfgMode = searchParams?.get("nfg") === "true";
   
   const selectedRestaurant = restaurantData;
@@ -386,6 +387,13 @@ export default function CapturePage({
   useEffect(() => {
     if (restaurantSlug) setCtxSlug(restaurantSlug);
   }, [restaurantSlug, setCtxSlug]);
+
+  useEffect(() => {
+    if (isInStore && restaurantSlug && !scanLoggedRef.current) {
+      scanLoggedRef.current = true;
+      EventApi.log({ restaurant_slug: restaurantSlug, event: 'scan', lang: activeLanguage });
+    }
+  }, [isInStore, restaurantSlug, activeLanguage]);
 
   // Pre-fetch recommend text responses for instant display
   useEffect(() => {
@@ -1142,6 +1150,9 @@ export default function CapturePage({
       setCopiedId(id);
       setTimeout(() => setCopiedId(null), 2000);
     });
+    if (restaurantSlug) {
+      EventApi.log({ restaurant_slug: restaurantSlug, event: 'copy', message_uid: response.messageUid, thread_uid: threadUidRef.current, lang: activeLanguage });
+    }
   };
 
   const handleShare = () => {
@@ -1153,6 +1164,9 @@ export default function CapturePage({
         setCopiedId('__share__');
         setTimeout(() => setCopiedId(null), 2000);
       });
+    }
+    if (restaurantSlug) {
+      EventApi.log({ restaurant_slug: restaurantSlug, event: 'share', thread_uid: threadUidRef.current, lang: activeLanguage });
     }
   };
 
@@ -1488,6 +1502,11 @@ export default function CapturePage({
                             rel="noopener noreferrer"
                             className="feedback-btn action-btn"
                             aria-label="Google Review"
+                            onClick={() => {
+                              if (restaurantSlug) {
+                                EventApi.log({ restaurant_slug: restaurantSlug, event: 'review', message_uid: response.messageUid, thread_uid: threadUidRef.current, lang: activeLanguage });
+                              }
+                            }}
                           >
                             <Star size={16} />
                             <span>{copy.restaurant.googleReview}</span>
@@ -1608,6 +1627,11 @@ export default function CapturePage({
                                   rel="noopener noreferrer"
                                   className="feedback-btn action-btn"
                                   aria-label="Google Review"
+                                  onClick={() => {
+                                    if (restaurantSlug) {
+                                      EventApi.log({ restaurant_slug: restaurantSlug, event: 'review', message_uid: response.messageUid, thread_uid: threadUidRef.current, lang: activeLanguage });
+                                    }
+                                  }}
                                 >
                                   <Star size={16} />
                                   <span>{copy.restaurant.googleReview}</span>

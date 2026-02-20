@@ -86,7 +86,7 @@ export default function AdminLayout({ children, title }: Props) {
   ]
 
   const navItems = userType === 'store' ? restaurantNavItems : platformOwnerNavItems
-  const pageTitle = title ?? (userType === 'store' ? 'レストラン管理システム' : 'プラットフォームオーナー管理システム')
+  const pageTitle = title ?? (userType === 'store' ? 'レストラン管理システム' : 'プラットフォーム管理システム')
 
   const handleLogout = () => {
     // Clear all auth data using the API service
@@ -231,7 +231,7 @@ export default function AdminLayout({ children, title }: Props) {
             {userType === 'store' ? (
               <>🍽️ {user?.restaurant_slug || 'レストランビュー'}</>
             ) : (
-              <>👑 プラットフォームオーナービュー</>
+              <>👑 プラットフォームビュー</>
             )}
           </div>
 

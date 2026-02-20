@@ -844,6 +844,8 @@ export interface ConversationListItem {
   bad_count: number;
   created_at: string;
   updated_at: string;
+  topic?: string;
+  events?: { copy: number; share: number; review: number };
 }
 
 export interface ConversationMessage {
@@ -902,6 +904,23 @@ export const ConversationApi = {
 export const FeedbackApi = {
   submit: async (messageUid: string, rating: 'good' | 'bad'): Promise<{ message: string; status_code: number }> => {
     return apiClient.post('/public-chat/feedback', { message_uid: messageUid, rating });
+  },
+};
+
+// Event tracking API (public, no auth, fire-and-forget)
+export const EventApi = {
+  log: (params: { restaurant_slug: string; event: string; message_uid?: string | null; thread_uid?: string | null; lang?: string }) => {
+    fetch(`${API_BASE_URL}/public-chat/events`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        restaurant_slug: params.restaurant_slug,
+        event: params.event,
+        message_uid: params.message_uid || undefined,
+        thread_uid: params.thread_uid || undefined,
+        lang: params.lang,
+      }),
+    }).catch(() => {});
   },
 };
 

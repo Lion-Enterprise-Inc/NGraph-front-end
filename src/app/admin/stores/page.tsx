@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import AdminLayout from '../../../components/admin/AdminLayout'
 import { useToast } from '../../../components/admin/Toast'
-import { RestaurantApi, UserApi, UserListItem, CreateRestaurantRequest, Restaurant, BUSINESS_TYPES } from '../../../services/api'
+import { RestaurantApi, UserApi, UserListItem, CreateRestaurantRequest, Restaurant, BUSINESS_TYPES, apiClient } from '../../../services/api'
 
 // Store type for UI display
 interface StoreDisplay {
@@ -34,11 +34,22 @@ export default function StoresPage() {
   const [restaurantOwners, setRestaurantOwners] = useState<UserListItem[]>([])
   const [loadingOwners, setLoadingOwners] = useState(false)
   const [totalRestaurants, setTotalRestaurants] = useState(0)
+  const [restaurantStats, setRestaurantStats] = useState<Record<string, { menu_count: number; verified_count: number; scan_count: number; lang_distribution: Record<string, number> }>>({})
 
   // Fetch restaurants from API on mount
   useEffect(() => {
     fetchRestaurants()
+    fetchRestaurantStats()
   }, [])
+
+  const fetchRestaurantStats = async () => {
+    try {
+      const res = await apiClient.get('/admin/restaurant-stats') as { result: any }
+      setRestaurantStats(res.result || {})
+    } catch {
+      // silent
+    }
+  }
 
   const fetchRestaurants = async () => {
     setLoading(true)
@@ -388,7 +399,39 @@ export default function StoresPage() {
                   <span className="metric-value">{store.menuCount}</span>
                   <span className="metric-label">メニュー</span>
                 </div>
+                <div className="metric-item">
+                  <span className="metric-value" style={{ color: '#10B981' }}>{restaurantStats[store.uid]?.verified_count ?? '-'}</span>
+                  <span className="metric-label">承認済</span>
+                </div>
+                <div className="metric-item">
+                  <span className="metric-value" style={{ color: '#06B6D4' }}>{restaurantStats[store.uid]?.scan_count ?? '-'}</span>
+                  <span className="metric-label">QRスキャン</span>
+                </div>
               </div>
+              {(() => {
+                const ld = restaurantStats[store.uid]?.lang_distribution
+                if (!ld || Object.keys(ld).length === 0) return null
+                const entries = Object.entries(ld).sort((a, b) => b[1] - a[1])
+                const total = entries.reduce((s, [, v]) => s + v, 0)
+                if (total === 0) return null
+                const langColors: Record<string, string> = { ja: '#3B82F6', en: '#10B981', zh: '#EF4444', ko: '#8B5CF6' }
+                return (
+                  <div style={{ padding: '0 4px' }}>
+                    <div style={{ display: 'flex', height: 8, borderRadius: 4, overflow: 'hidden', background: '#1E293B' }}>
+                      {entries.map(([lang, count]) => (
+                        <div key={lang} style={{ width: `${(count / total) * 100}%`, background: langColors[lang] || '#64748B', minWidth: 2 }} />
+                      ))}
+                    </div>
+                    <div style={{ display: 'flex', gap: 8, marginTop: 4, flexWrap: 'wrap' }}>
+                      {entries.map(([lang, count]) => (
+                        <span key={lang} style={{ fontSize: 10, color: langColors[lang] || '#64748B' }}>
+                          {lang}: {count}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )
+              })()}
 
               <div className="store-actions-compact">
                 <button className="btn btn-primary btn-small" onClick={() => router.push(`/admin/basic-info?uid=${store.uid}`)} title="基本情報を管理">

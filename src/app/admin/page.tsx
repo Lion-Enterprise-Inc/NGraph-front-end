@@ -5,11 +5,101 @@ import { useRouter } from 'next/navigation'
 import AdminLayout from '../../components/admin/AdminLayout'
 import { apiClient } from '../../services/api'
 
+const LANG_COLORS: Record<string, string> = {
+  ja: '#3B82F6',
+  en: '#10B981',
+  zh: '#EF4444',
+  ko: '#8B5CF6',
+}
+
+const TOPIC_COLORS: Record<string, string> = {
+  'メニュー・料理': '#3B82F6',
+  'アレルゲン': '#EF4444',
+  '店舗情報': '#10B981',
+  'ドリンク': '#8B5CF6',
+  'おすすめ': '#F59E0B',
+  'その他': '#94A3B8',
+}
+
+function LangBar({ dist }: { dist: Record<string, number> | null | undefined }) {
+  if (!dist) return null
+  const entries = Object.entries(dist).sort((a, b) => b[1] - a[1])
+  const total = entries.reduce((s, [, v]) => s + v, 0)
+  if (total === 0) return null
+
+  return (
+    <div style={{ marginTop: 12 }}>
+      <div style={{ fontSize: 12, color: '#94A3B8', marginBottom: 6 }}>言語分布</div>
+      <div style={{ display: 'flex', height: 20, borderRadius: 6, overflow: 'hidden', background: '#1E293B' }}>
+        {entries.map(([lang, count]) => {
+          const pct = (count / total) * 100
+          const color = LANG_COLORS[lang] || '#64748B'
+          return (
+            <div
+              key={lang}
+              title={`${lang}: ${count} (${pct.toFixed(1)}%)`}
+              style={{ width: `${pct}%`, background: color, minWidth: pct > 0 ? 2 : 0 }}
+            />
+          )
+        })}
+      </div>
+      <div style={{ display: 'flex', gap: 12, marginTop: 4, flexWrap: 'wrap' }}>
+        {entries.map(([lang, count]) => (
+          <span key={lang} style={{ fontSize: 11, color: LANG_COLORS[lang] || '#64748B' }}>
+            {lang}: {count}
+          </span>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function TopicPieChart({ data }: { data: Record<string, number> | null }) {
+  if (!data) return null
+  const entries = Object.entries(data).filter(([, v]) => v > 0)
+  const total = entries.reduce((s, [, v]) => s + v, 0)
+  if (total === 0) return null
+
+  const items = entries.map(([topic, count]) => ({
+    topic,
+    count,
+    pct: (count / total) * 100,
+    color: TOPIC_COLORS[topic] || '#64748B',
+  }))
+
+  const gradient = items.map((e, i) => {
+    const start = items.slice(0, i).reduce((s, x) => s + x.pct, 0)
+    return `${e.color} ${start}% ${start + e.pct}%`
+  }).join(', ')
+
+  return (
+    <div style={{ display: 'flex', gap: 24, alignItems: 'center', flexWrap: 'wrap' }}>
+      <div style={{
+        width: 160,
+        height: 160,
+        borderRadius: '50%',
+        background: `conic-gradient(${gradient})`,
+        flexShrink: 0,
+      }} />
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+        {items.map((e) => (
+          <div key={e.topic} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13 }}>
+            <div style={{ width: 12, height: 12, borderRadius: 3, background: e.color, flexShrink: 0 }} />
+            <span style={{ color: '#E2E8F0' }}>{e.topic}</span>
+            <span style={{ color: '#94A3B8' }}>{e.count} ({e.pct.toFixed(0)}%)</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 function StoreDashboard() {
   const [restaurant, setRestaurant] = useState<any>(null)
   const [restaurantLoading, setRestaurantLoading] = useState(true)
   const [restaurantError, setRestaurantError] = useState('')
   const [menuCount, setMenuCount] = useState<number | null>(null)
+  const [eventStats, setEventStats] = useState<any>(null)
 
   useEffect(() => {
     const fetchRestaurant = async () => {
@@ -47,7 +137,17 @@ function StoreDashboard() {
       }
     }
 
+    const fetchEventStats = async () => {
+      try {
+        const res = await apiClient.get('/admin/event-stats') as { result: any }
+        setEventStats(res.result)
+      } catch {
+        setEventStats({ good: 0, bad: 0, copy: 0, share: 0, review: 0, scan: 0, total: 0 })
+      }
+    }
+
     fetchRestaurant()
+    fetchEventStats()
   }, [])
 
   return (
@@ -107,39 +207,34 @@ function StoreDashboard() {
             </div>
 
             <div className="card" style={{ width: '100%', maxWidth: 'none' }}>
-              <div className="card-title">集客効果</div>
-              <div className="dashboard-metrics" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px', width: '100%', maxWidth: 'none' }}>
-                <div className="stat-card" style={{
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
-                  textAlign: 'center',
-                  padding: '16px',
-                  minHeight: '160px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  justifyContent: 'flex-start',
-                  alignItems: 'center',
-                  borderRadius: '12px',
-                  border: '1px solid #1E293B'
-                }}>
-                  <div className="stat-label" style={{ fontSize: '18px', fontWeight: 600, color: '#F8FAFC', marginBottom: '16px' }}>QRスキャン数</div>
-                  <div className="stat-value" style={{ fontSize: '42px', fontWeight: 700, color: '#667eea', margin: '12px 0' }}>0</div>
-                </div>
-                <div className="stat-card" style={{
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
-                  textAlign: 'center',
-                  padding: '16px',
-                  minHeight: '160px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  justifyContent: 'flex-start',
-                  alignItems: 'center',
-                  borderRadius: '12px',
-                  border: '1px solid #1E293B'
-                }}>
-                  <div className="stat-label" style={{ fontSize: '18px', fontWeight: 600, color: '#F8FAFC', marginBottom: '16px' }}>質問数</div>
-                  <div className="stat-value" style={{ fontSize: '42px', fontWeight: 700, color: '#667eea', margin: '12px 0' }}>0</div>
-                </div>
+              <div className="card-title">イベントログ統計</div>
+              <div className="dashboard-metrics" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '16px', width: '100%', maxWidth: 'none' }}>
+                {[
+                  { label: 'Good', key: 'good', color: '#10B981' },
+                  { label: 'Bad', key: 'bad', color: '#EF4444' },
+                  { label: 'Copy', key: 'copy', color: '#3B82F6' },
+                  { label: 'Share', key: 'share', color: '#8B5CF6' },
+                  { label: 'Review', key: 'review', color: '#F59E0B' },
+                  { label: 'Scan', key: 'scan', color: '#06B6D4' },
+                ].map(item => (
+                  <div key={item.key} className="stat-card" style={{
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+                    textAlign: 'center',
+                    padding: '16px',
+                    minHeight: '120px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    borderRadius: '12px',
+                    border: '1px solid #1E293B'
+                  }}>
+                    <div className="stat-label" style={{ fontSize: '16px', fontWeight: 600, color: '#F8FAFC', marginBottom: '12px' }}>{item.label}</div>
+                    <div className="stat-value" style={{ fontSize: '36px', fontWeight: 700, color: item.color }}>{eventStats?.[item.key] ?? '-'}</div>
+                  </div>
+                ))}
               </div>
+              <LangBar dist={eventStats?.lang_distribution} />
             </div>
           </>
         ) : null}
@@ -205,6 +300,8 @@ function AdminDashboard() {
   const [stats, setStats] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [eventStats, setEventStats] = useState<any>(null)
+  const [topicData, setTopicData] = useState<Record<string, number> | null>(null)
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -219,7 +316,25 @@ function AdminDashboard() {
         setLoading(false)
       }
     }
+    const fetchEventStats = async () => {
+      try {
+        const res = await apiClient.get('/admin/event-stats') as { result: any }
+        setEventStats(res.result)
+      } catch {
+        setEventStats({ good: 0, bad: 0, copy: 0, share: 0, review: 0, scan: 0, total: 0 })
+      }
+    }
+    const fetchTopics = async () => {
+      try {
+        const res = await apiClient.get('/admin/conversation-topics') as { result: any }
+        setTopicData(res.result)
+      } catch {
+        setTopicData(null)
+      }
+    }
     fetchStats()
+    fetchEventStats()
+    fetchTopics()
   }, [])
 
   if (loading) {
@@ -257,8 +372,16 @@ function AdminDashboard() {
             <div className="stat-value">{stats?.total_menus ?? 0}</div>
           </div>
           <div className="stat-card">
+            <div className="stat-label">承認済メニュー数</div>
+            <div className="stat-value" style={{ color: '#10B981' }}>{stats?.total_verified_menus ?? 0}</div>
+          </div>
+          <div className="stat-card">
             <div className="stat-label">ユーザー数</div>
             <div className="stat-value">{stats?.total_users ?? 0}</div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-label">総QRスキャン数</div>
+            <div className="stat-value" style={{ color: '#06B6D4' }}>{stats?.total_qr_scans ?? 0}</div>
           </div>
         </div>
       </div>
@@ -292,6 +415,32 @@ function AdminDashboard() {
               </div>
             )}
           </div>
+        </div>
+      )}
+
+      <div className="card">
+        <div className="card-title">イベントログ統計（全店舗合計）</div>
+        <div className="stats-grid">
+          {[
+            { label: 'Good', key: 'good', color: '#10B981' },
+            { label: 'Bad', key: 'bad', color: '#EF4444' },
+            { label: 'Copy', key: 'copy', color: '#3B82F6' },
+            { label: 'Share', key: 'share', color: '#8B5CF6' },
+            { label: 'Review', key: 'review', color: '#F59E0B' },
+            { label: 'Scan', key: 'scan', color: '#06B6D4' },
+          ].map(item => (
+            <div key={item.key} className="stat-card">
+              <div className="stat-label">{item.label}</div>
+              <div className="stat-value" style={{ color: item.color }}>{eventStats?.[item.key] ?? '-'}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {topicData && Object.keys(topicData).length > 0 && (
+        <div className="card">
+          <div className="card-title">トピック分布</div>
+          <TopicPieChart data={topicData} />
         </div>
       )}
 
@@ -401,7 +550,7 @@ export default function AdminDashboardPage() {
   }
 
   return (
-    <AdminLayout title={userType === 'store' ? 'NGraph レストラン管理システム' : 'NGraph プラットフォームオーナー管理システム'}>
+    <AdminLayout title={userType === 'store' ? 'NGraph レストラン管理システム' : 'NGraph プラットフォーム管理システム'}>
       <div className="dashboard">
         {userType === 'store' ? <StoreDashboard /> : <AdminDashboard />}
       </div>

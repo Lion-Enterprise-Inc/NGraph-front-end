@@ -11,6 +11,15 @@ import {
   type Restaurant,
 } from '../../../services/api'
 
+const TOPIC_COLORS: Record<string, { bg: string; color: string }> = {
+  'メニュー・料理': { bg: 'rgba(59,130,246,0.15)', color: '#60A5FA' },
+  'アレルゲン': { bg: 'rgba(239,68,68,0.15)', color: '#F87171' },
+  '店舗情報': { bg: 'rgba(16,185,129,0.15)', color: '#34D399' },
+  'ドリンク': { bg: 'rgba(139,92,246,0.15)', color: '#A78BFA' },
+  'おすすめ': { bg: 'rgba(245,158,11,0.15)', color: '#FBBF24' },
+  'その他': { bg: 'rgba(148,163,184,0.15)', color: '#94A3B8' },
+}
+
 export default function ConversationsPage() {
   const [conversations, setConversations] = useState<ConversationListItem[]>([])
   const [restaurants, setRestaurants] = useState<Restaurant[]>([])
@@ -23,6 +32,7 @@ export default function ConversationsPage() {
   // Detail view
   const [detail, setDetail] = useState<ConversationDetail | null>(null)
   const [detailLoading, setDetailLoading] = useState(false)
+  const [currentIndex, setCurrentIndex] = useState(-1)
 
   const toast = useToast()
 
@@ -60,9 +70,10 @@ export default function ConversationsPage() {
     fetchConversations(1, restaurantUid)
   }
 
-  const openDetail = async (threadUid: string) => {
+  const openDetail = async (threadUid: string, index: number) => {
     try {
       setDetailLoading(true)
+      setCurrentIndex(index)
       const res = await ConversationApi.getDetail(threadUid)
       setDetail(res.result)
     } catch {
@@ -72,19 +83,27 @@ export default function ConversationsPage() {
     }
   }
 
+  const navigateDetail = (direction: -1 | 1) => {
+    const newIndex = currentIndex + direction
+    if (newIndex < 0 || newIndex >= conversations.length) return
+    openDetail(conversations[newIndex].thread_uid, newIndex)
+  }
+
   const formatDate = (dateStr: string | null) => {
     if (!dateStr) return '-'
     const d = new Date(dateStr)
     return d.toLocaleDateString('ja-JP', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
   }
 
+  const currentConv = currentIndex >= 0 ? conversations[currentIndex] : null
+
   // Detail view
   if (detail) {
     return (
       <AdminLayout title="会話ログ詳細">
-        <div style={{ marginBottom: 16 }}>
+        <div style={{ marginBottom: 16, display: 'flex', gap: 8, alignItems: 'center' }}>
           <button
-            onClick={() => setDetail(null)}
+            onClick={() => { setDetail(null); setCurrentIndex(-1) }}
             style={{
               background: 'var(--bg-hover)',
               color: 'var(--text)',
@@ -97,6 +116,41 @@ export default function ConversationsPage() {
           >
             ← 一覧に戻る
           </button>
+          <button
+            disabled={currentIndex <= 0}
+            onClick={() => navigateDetail(-1)}
+            style={{
+              background: 'var(--bg-hover)',
+              color: 'var(--text)',
+              border: '1px solid var(--border-strong)',
+              borderRadius: 8,
+              padding: '8px 16px',
+              cursor: currentIndex <= 0 ? 'not-allowed' : 'pointer',
+              opacity: currentIndex <= 0 ? 0.5 : 1,
+              fontSize: 14,
+            }}
+          >
+            ← 前へ
+          </button>
+          <span style={{ fontSize: 13, color: 'var(--muted)' }}>
+            {currentIndex + 1} / {conversations.length}
+          </span>
+          <button
+            disabled={currentIndex >= conversations.length - 1}
+            onClick={() => navigateDetail(1)}
+            style={{
+              background: 'var(--bg-hover)',
+              color: 'var(--text)',
+              border: '1px solid var(--border-strong)',
+              borderRadius: 8,
+              padding: '8px 16px',
+              cursor: currentIndex >= conversations.length - 1 ? 'not-allowed' : 'pointer',
+              opacity: currentIndex >= conversations.length - 1 ? 0.5 : 1,
+              fontSize: 14,
+            }}
+          >
+            次へ →
+          </button>
         </div>
 
         <div style={{
@@ -106,7 +160,7 @@ export default function ConversationsPage() {
           padding: 20,
           marginBottom: 20,
         }}>
-          <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap', fontSize: 14 }}>
+          <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap', fontSize: 14, alignItems: 'center' }}>
             <div>
               <span style={{ color: 'var(--muted)' }}>店舗: </span>
               <span style={{ fontWeight: 600 }}>{detail.restaurant_name || '-'}</span>
@@ -123,6 +177,25 @@ export default function ConversationsPage() {
               <span style={{ color: 'var(--muted)' }}>開始: </span>
               <span>{formatDate(detail.created_at)}</span>
             </div>
+            {currentConv?.events && (
+              <div style={{ display: 'flex', gap: 8 }}>
+                {currentConv.events.copy > 0 && (
+                  <span style={{ background: 'rgba(59,130,246,0.15)', color: '#60A5FA', padding: '2px 8px', borderRadius: 6, fontSize: 12 }}>
+                    Copy {currentConv.events.copy}
+                  </span>
+                )}
+                {currentConv.events.share > 0 && (
+                  <span style={{ background: 'rgba(139,92,246,0.15)', color: '#A78BFA', padding: '2px 8px', borderRadius: 6, fontSize: 12 }}>
+                    Share {currentConv.events.share}
+                  </span>
+                )}
+                {currentConv.events.review > 0 && (
+                  <span style={{ background: 'rgba(245,158,11,0.15)', color: '#FBBF24', padding: '2px 8px', borderRadius: 6, fontSize: 12 }}>
+                    Review {currentConv.events.review}
+                  </span>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
@@ -244,46 +317,76 @@ export default function ConversationsPage() {
                 <tr>
                   <th style={{ textAlign: 'left', padding: '10px 12px', borderBottom: '1px solid var(--border)' }}>店舗</th>
                   <th style={{ textAlign: 'left', padding: '10px 12px', borderBottom: '1px solid var(--border)' }}>要約</th>
+                  <th style={{ textAlign: 'center', padding: '10px 12px', borderBottom: '1px solid var(--border)', width: 100 }}>トピック</th>
                   <th style={{ textAlign: 'center', padding: '10px 12px', borderBottom: '1px solid var(--border)', width: 60 }}>件数</th>
                   <th style={{ textAlign: 'center', padding: '10px 12px', borderBottom: '1px solid var(--border)', width: 60 }}>👍</th>
                   <th style={{ textAlign: 'center', padding: '10px 12px', borderBottom: '1px solid var(--border)', width: 60 }}>👎</th>
+                  <th style={{ textAlign: 'center', padding: '10px 12px', borderBottom: '1px solid var(--border)', width: 120 }}>アクション</th>
                   <th style={{ textAlign: 'right', padding: '10px 12px', borderBottom: '1px solid var(--border)', width: 120 }}>日時</th>
                 </tr>
               </thead>
               <tbody>
-                {conversations.map((c) => (
-                  <tr
-                    key={c.thread_uid}
-                    onClick={() => openDetail(c.thread_uid)}
-                    style={{ cursor: 'pointer' }}
-                  >
-                    <td style={{ padding: '10px 12px', borderBottom: '1px solid var(--border)', fontWeight: 500 }}>
-                      {c.restaurant_name}
-                    </td>
-                    <td style={{
-                      padding: '10px 12px',
-                      borderBottom: '1px solid var(--border)',
-                      maxWidth: 300,
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap',
-                    }}>
-                      {c.summary || '(要約なし)'}
-                    </td>
-                    <td style={{ padding: '10px 12px', borderBottom: '1px solid var(--border)', textAlign: 'center' }}>
-                      {c.message_count}
-                    </td>
-                    <td style={{ padding: '10px 12px', borderBottom: '1px solid var(--border)', textAlign: 'center', color: 'var(--success)' }}>
-                      {c.good_count > 0 ? c.good_count : '-'}
-                    </td>
-                    <td style={{ padding: '10px 12px', borderBottom: '1px solid var(--border)', textAlign: 'center', color: 'var(--error)' }}>
-                      {c.bad_count > 0 ? c.bad_count : '-'}
-                    </td>
-                    <td style={{ padding: '10px 12px', borderBottom: '1px solid var(--border)', textAlign: 'right', fontSize: 13, color: 'var(--muted)' }}>
-                      {formatDate(c.updated_at)}
-                    </td>
-                  </tr>
-                ))}
+                {conversations.map((c, idx) => {
+                  const topicStyle = TOPIC_COLORS[c.topic || 'その他'] || TOPIC_COLORS['その他']
+                  return (
+                    <tr
+                      key={c.thread_uid}
+                      onClick={() => openDetail(c.thread_uid, idx)}
+                      style={{ cursor: 'pointer' }}
+                    >
+                      <td style={{ padding: '10px 12px', borderBottom: '1px solid var(--border)', fontWeight: 500 }}>
+                        {c.restaurant_name}
+                      </td>
+                      <td style={{
+                        padding: '10px 12px',
+                        borderBottom: '1px solid var(--border)',
+                        maxWidth: 250,
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                      }}>
+                        {c.summary || '(要約なし)'}
+                      </td>
+                      <td style={{ padding: '10px 12px', borderBottom: '1px solid var(--border)', textAlign: 'center' }}>
+                        <span style={{
+                          background: topicStyle.bg,
+                          color: topicStyle.color,
+                          padding: '2px 8px',
+                          borderRadius: 6,
+                          fontSize: 11,
+                          fontWeight: 600,
+                          whiteSpace: 'nowrap',
+                        }}>
+                          {c.topic || 'その他'}
+                        </span>
+                      </td>
+                      <td style={{ padding: '10px 12px', borderBottom: '1px solid var(--border)', textAlign: 'center' }}>
+                        {c.message_count}
+                      </td>
+                      <td style={{ padding: '10px 12px', borderBottom: '1px solid var(--border)', textAlign: 'center', color: 'var(--success)' }}>
+                        {c.good_count > 0 ? c.good_count : '-'}
+                      </td>
+                      <td style={{ padding: '10px 12px', borderBottom: '1px solid var(--border)', textAlign: 'center', color: 'var(--error)' }}>
+                        {c.bad_count > 0 ? c.bad_count : '-'}
+                      </td>
+                      <td style={{ padding: '10px 12px', borderBottom: '1px solid var(--border)', textAlign: 'center' }}>
+                        {c.events ? (
+                          <div style={{ display: 'flex', gap: 4, justifyContent: 'center', fontSize: 11 }}>
+                            {c.events.copy > 0 && <span style={{ color: '#60A5FA' }}>C:{c.events.copy}</span>}
+                            {c.events.share > 0 && <span style={{ color: '#A78BFA' }}>S:{c.events.share}</span>}
+                            {c.events.review > 0 && <span style={{ color: '#FBBF24' }}>R:{c.events.review}</span>}
+                            {!c.events.copy && !c.events.share && !c.events.review && <span style={{ color: 'var(--muted)' }}>-</span>}
+                          </div>
+                        ) : (
+                          <span style={{ color: 'var(--muted)' }}>-</span>
+                        )}
+                      </td>
+                      <td style={{ padding: '10px 12px', borderBottom: '1px solid var(--border)', textAlign: 'right', fontSize: 13, color: 'var(--muted)' }}>
+                        {formatDate(c.updated_at)}
+                      </td>
+                    </tr>
+                  )
+                })}
               </tbody>
             </table>
           </div>
