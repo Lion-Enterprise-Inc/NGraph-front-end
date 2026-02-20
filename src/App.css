@@ -1775,6 +1775,25 @@ body {
   background: rgba(239, 68, 68, 0.1);
 }
 
+.feedback-btn.review-btn {
+  width: auto;
+  gap: 4px;
+  padding: 0 8px;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.5);
+  text-decoration: none;
+  margin-left: 4px;
+}
+
+.feedback-btn.review-btn:hover {
+  color: #facc15;
+  background: rgba(250, 204, 21, 0.1);
+}
+
+.feedback-btn.review-btn span {
+  white-space: nowrap;
+}
+
 .chat-loading-spinner {
   display: flex;
   align-items: center;

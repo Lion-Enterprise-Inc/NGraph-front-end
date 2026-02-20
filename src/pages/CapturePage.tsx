@@ -16,7 +16,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import remarkBreaks from "remark-breaks";
 import rehypeHighlight from "rehype-highlight";
-import { User, Bot, ChevronDown, Copy, Sparkles, ThumbsUp, ThumbsDown } from "lucide-react";
+import { User, Bot, ChevronDown, Copy, Sparkles, ThumbsUp, ThumbsDown, Star } from "lucide-react";
 import CaptureHeader from "../components/CaptureHeader";
 import CameraPrompt from "../components/CameraPrompt";
 import ChatDock from "../components/ChatDock";
@@ -34,6 +34,7 @@ type ApiRestaurant = {
   logo_url?: string | null
   recommend_texts?: string[] | null
   recommend_texts_ja?: string[] | null
+  google_review_url?: string | null
   created_at: string
   updated_at: string
 };
@@ -343,6 +344,7 @@ export default function CapturePage({
                 logo_url: data.result.logo_url,
                 recommend_texts: data.result.recommend_texts,
                 recommend_texts_ja: data.result.recommend_texts_ja,
+                google_review_url: data.result.google_review_url || null,
                 created_at: '',
                 updated_at: ''
               });
@@ -1433,6 +1435,18 @@ export default function CapturePage({
                         >
                           <ThumbsDown size={16} />
                         </button>
+                        {restaurantData?.google_review_url && response.id === responses[responses.length - 1]?.id && responses.length >= 2 && (
+                          <a
+                            href={restaurantData.google_review_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="feedback-btn review-btn"
+                            aria-label="Google Review"
+                          >
+                            <Star size={16} />
+                            <span>クチコミ</span>
+                          </a>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -1523,6 +1537,18 @@ export default function CapturePage({
                               >
                                 <ThumbsDown size={16} />
                               </button>
+                              {restaurantData?.google_review_url && response.id === responses[responses.length - 1]?.id && responses.length >= 2 && (
+                                <a
+                                  href={restaurantData.google_review_url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="feedback-btn review-btn"
+                                  aria-label="Google Review"
+                                >
+                                  <Star size={16} />
+                                  <span>クチコミ</span>
+                                </a>
+                              )}
                             </div>
                           </div>
                         )}
