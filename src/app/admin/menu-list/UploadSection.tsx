@@ -318,12 +318,14 @@ export default function UploadSection({
           cursor: pointer;
           transition: all 0.2s;
           font-size: 14px;
-          color: #374151;
+          color: #E2E8F0;
+          font-weight: 500;
         }
 
         .upload-btn:hover {
           border-color: #667eea;
-          background: #f0f4ff;
+          background: rgba(102, 126, 234, 0.15);
+          color: #F8FAFC;
         }
 
         .upload-icon {
