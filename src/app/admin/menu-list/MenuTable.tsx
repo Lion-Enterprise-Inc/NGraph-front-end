@@ -133,7 +133,7 @@ export default function MenuTable({
                 <th style={{ width: '4%', textAlign: 'center' }}>No.</th>
                 <th style={{ width: '33%' }}>メニュー詳細</th>
                 <th style={{ width: '10%', textAlign: 'center' }}>価格</th>
-                <th style={{ width: '10%', textAlign: 'center' }}>完成度</th>
+                <th style={{ width: '10%', textAlign: 'center' }}>確認</th>
                 <th style={{ width: '10%', textAlign: 'center' }}>ステータス</th>
                 <th style={{ width: '33%', textAlign: 'center' }}>操作</th>
               </tr>
@@ -176,17 +176,11 @@ export default function MenuTable({
                     </td>
                     <td style={{ textAlign: 'center', fontWeight: 600, color: '#28a745', fontSize: '14px' }}>¥{item.price.toLocaleString()}</td>
                     <td style={{ textAlign: 'center' }}>
-                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
-                        {rank && (
-                          <span style={{ fontSize: '13px', fontWeight: 800, color: rkColor }}>{rank}</span>
-                        )}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                          <div style={{ width: '50px', height: '4px', background: '#e9ecef', borderRadius: '2px', overflow: 'hidden' }}>
-                            <div style={{ width: `${confidence}%`, height: '100%', background: confidenceColor }}></div>
-                          </div>
-                          <span style={{ fontSize: '11px', fontWeight: 600, color: confidenceColor }}>{confidence}%</span>
-                        </div>
-                      </div>
+                      {rank ? (
+                        <span style={{ fontSize: '15px', fontWeight: 800, color: rkColor }}>{rank}</span>
+                      ) : (
+                        <span style={{ fontSize: '11px', color: '#94A3B8' }}>-</span>
+                      )}
                     </td>
                     <td style={{ textAlign: 'center' }}>
                       {item.status ? (
@@ -243,9 +237,6 @@ export default function MenuTable({
                 <div style={{ fontSize: '12px', color: 'var(--muted)', marginBottom: '8px' }}>
                   📂 {DISH_CATEGORIES[item.category] || item.category}
                   {mRank && <span style={{ marginLeft: '8px', fontWeight: 800, color: mRkColor }}>{mRank}</span>}
-                  <span style={{ marginLeft: '8px' }}>
-                    <span style={{ color: confidenceColor, fontWeight: 600 }}>{confidence}%</span>
-                  </span>
                 </div>
                 <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                   {!item.status && (
