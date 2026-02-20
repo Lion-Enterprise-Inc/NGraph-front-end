@@ -1349,14 +1349,18 @@ export default function CapturePage({
                             >
                               <div className="nfg-card-title-row">
                                 <span className="nfg-card-number">{idx + 1}.</span>
-                                <span className="nfg-card-name">{vi.name_jp}</span>
+                                <span className="nfg-card-name">
+                                  {activeLanguage !== 'ja' && vi.name_en ? vi.name_en : vi.name_jp}
+                                </span>
                                 {vi.price > 0 && (
                                   <span className="nfg-card-price">¥{vi.price.toLocaleString()}</span>
                                 )}
                                 <span className={`nfg-card-chevron${expanded ? ' expanded' : ''}`}>▼</span>
                               </div>
-                              {vi.name_en && (
-                                <div className="nfg-card-name-en">{vi.name_en}</div>
+                              {(activeLanguage !== 'ja' ? vi.name_jp : vi.name_en) && (
+                                <div className="nfg-card-name-en">
+                                  {activeLanguage !== 'ja' ? vi.name_jp : vi.name_en}
+                                </div>
                               )}
                             </div>
                             <div className={`nfg-card-body${expanded ? ' expanded' : ''}`}>
@@ -1366,49 +1370,49 @@ export default function CapturePage({
                               <div className="nfg-card-fields">
                                 {vi.ingredients?.length > 0 && (
                                   <div className="nfg-field">
-                                    <span className="nfg-field-label">主な材料</span>
-                                    <span className="nfg-field-value">{vi.ingredients.join('、')}</span>
+                                    <span className="nfg-field-label">{copy.nfg.ingredients}</span>
+                                    <span className="nfg-field-value">{vi.ingredients.join(activeLanguage === 'ja' ? '、' : ', ')}</span>
                                   </div>
                                 )}
                                 {vi.allergens?.length > 0 && (
                                   <div className="nfg-field nfg-field-allergen">
-                                    <span className="nfg-field-label">アレルゲン</span>
-                                    <span className="nfg-field-value">{vi.allergens.join('、')}</span>
+                                    <span className="nfg-field-label">{copy.nfg.allergens}</span>
+                                    <span className="nfg-field-value">{vi.allergens.join(activeLanguage === 'ja' ? '、' : ', ')}</span>
                                   </div>
                                 )}
                                 {vi.restrictions && vi.restrictions.length > 0 && (
                                   <div className="nfg-field">
-                                    <span className="nfg-field-label">食事制約</span>
-                                    <span className="nfg-field-value">{vi.restrictions.join('、')}</span>
+                                    <span className="nfg-field-label">{copy.nfg.restrictions}</span>
+                                    <span className="nfg-field-value">{vi.restrictions.join(activeLanguage === 'ja' ? '、' : ', ')}</span>
                                   </div>
                                 )}
                                 {vi.flavor_profile && (
                                   <div className="nfg-field">
-                                    <span className="nfg-field-label">味の特徴</span>
+                                    <span className="nfg-field-label">{copy.nfg.flavorProfile}</span>
                                     <span className="nfg-field-value">{vi.flavor_profile}</span>
                                   </div>
                                 )}
                                 {vi.estimated_calories && (
                                   <div className="nfg-field">
-                                    <span className="nfg-field-label">推定カロリー</span>
+                                    <span className="nfg-field-label">{copy.nfg.calories}</span>
                                     <span className="nfg-field-value">{vi.estimated_calories}</span>
                                   </div>
                                 )}
                                 {vi.tax_note && (
                                   <div className="nfg-field">
-                                    <span className="nfg-field-label">税表記</span>
+                                    <span className="nfg-field-label">{copy.nfg.taxNote}</span>
                                     <span className="nfg-field-value">{vi.tax_note}</span>
                                   </div>
                                 )}
                               </div>
                               <div className="nfg-card-badge-row">
                                 {vi.source === 'db' ? (
-                                  <span className="nfg-badge nfg-badge-db">VAD 店主確認済み</span>
+                                  <span className="nfg-badge nfg-badge-db">{copy.nfg.vadBadge}</span>
                                 ) : (
-                                  <span className="nfg-badge nfg-badge-ai">AI推測</span>
+                                  <span className="nfg-badge nfg-badge-ai">{copy.nfg.aiBadge}</span>
                                 )}
                                 {vi.confidence != null && vi.confidence > 0 && (
-                                  <span className="nfg-badge nfg-badge-confidence">信頼度 {vi.confidence}%</span>
+                                  <span className="nfg-badge nfg-badge-confidence">{copy.nfg.confidence} {vi.confidence}%</span>
                                 )}
                               </div>
                             </div>

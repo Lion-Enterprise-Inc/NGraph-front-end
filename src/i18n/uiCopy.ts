@@ -150,6 +150,17 @@ const uiCopy = {
       dietaryOptions: "Show me the menu",
       googleReview: "Review",
     },
+    nfg: {
+      ingredients: "Ingredients",
+      allergens: "Allergens",
+      restrictions: "Dietary Restrictions",
+      flavorProfile: "Flavor Profile",
+      calories: "Est. Calories",
+      taxNote: "Tax",
+      vadBadge: "VAD Verified",
+      aiBadge: "AI Estimated",
+      confidence: "Confidence",
+    },
     qrScanner: {
       title: "Scan QR Code",
       close: "Close",
@@ -270,6 +281,17 @@ const uiCopy = {
       bestTime: "このお店の看板料理はなに？",
       dietaryOptions: "メニュー表をだして",
       googleReview: "クチコミ",
+    },
+    nfg: {
+      ingredients: "主な材料",
+      allergens: "アレルゲン",
+      restrictions: "食事制約",
+      flavorProfile: "味の特徴",
+      calories: "推定カロリー",
+      taxNote: "税表記",
+      vadBadge: "VAD 店主確認済み",
+      aiBadge: "AI推測",
+      confidence: "信頼度",
     },
     qrScanner: {
       title: "QRコードをスキャン",
@@ -3099,14 +3121,15 @@ const normalizeLanguage = (code?: string) => {
 export const getUiCopy = (language?: string): UiCopy => {
   const normalized = normalizeLanguage(language);
   const copy = uiCopy[normalized];
-  // Provide fallback for qrScanner if not present in the language
+  // Provide fallback for missing sections
+  const result = { ...copy } as Record<string, unknown>;
   if (!('qrScanner' in copy)) {
-    return {
-      ...copy,
-      qrScanner: uiCopy.en.qrScanner,
-    } as UiCopy;
+    result.qrScanner = uiCopy.en.qrScanner;
   }
-  return copy as UiCopy;
+  if (!('nfg' in copy)) {
+    result.nfg = uiCopy.en.nfg;
+  }
+  return result as UiCopy;
 };
 
 export const getLanguageLabel = (code?: string) => {
