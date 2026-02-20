@@ -133,7 +133,7 @@ export default function MenuTable({
                 <th style={{ width: '4%', textAlign: 'center' }}>No.</th>
                 <th style={{ width: '33%' }}>メニュー詳細</th>
                 <th style={{ width: '10%', textAlign: 'center' }}>価格</th>
-                <th style={{ width: '10%', textAlign: 'center' }}>確認</th>
+                <th style={{ width: '10%', textAlign: 'center' }}>確認優先度</th>
                 <th style={{ width: '10%', textAlign: 'center' }}>ステータス</th>
                 <th style={{ width: '33%', textAlign: 'center' }}>操作</th>
               </tr>
@@ -151,6 +151,7 @@ export default function MenuTable({
                 const confidenceLabel = confidence >= 75 ? 'OK' : confidence >= 40 ? '確認推奨' : '要修正'
                 const rank = item.verificationRank
                 const rkColor = rank === 'S' ? '#EF4444' : rank === 'A' ? '#F59E0B' : rank === 'B' ? '#3B82F6' : rank === 'C' ? '#10B981' : ''
+                const rkLabel = rank === 'S' ? '必ず確認' : rank === 'A' ? '要確認' : rank === 'B' ? '確認推奨' : rank === 'C' ? '確認不要' : ''
                 const rowNum = (currentPage - 1) * itemsPerPage + index + 1
                 return (
                   <tr key={item.uid}>
@@ -177,7 +178,10 @@ export default function MenuTable({
                     <td style={{ textAlign: 'center', fontWeight: 600, color: '#28a745', fontSize: '14px' }}>¥{item.price.toLocaleString()}</td>
                     <td style={{ textAlign: 'center' }}>
                       {rank ? (
-                        <span style={{ fontSize: '15px', fontWeight: 800, color: rkColor }}>{rank}</span>
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                          <span style={{ fontSize: '15px', fontWeight: 800, color: rkColor }}>{rank}</span>
+                          <span style={{ fontSize: '9px', color: rkColor }}>{rkLabel}</span>
+                        </div>
                       ) : (
                         <span style={{ fontSize: '11px', color: '#94A3B8' }}>-</span>
                       )}
@@ -216,6 +220,7 @@ export default function MenuTable({
             const confidenceColor = confidence >= 75 ? '#28a745' : confidence >= 40 ? '#ffc107' : '#dc3545'
             const mRank = item.verificationRank
             const mRkColor = mRank === 'S' ? '#EF4444' : mRank === 'A' ? '#F59E0B' : mRank === 'B' ? '#3B82F6' : mRank === 'C' ? '#10B981' : ''
+            const mRkLabel = mRank === 'S' ? '必ず確認' : mRank === 'A' ? '要確認' : mRank === 'B' ? '確認推奨' : mRank === 'C' ? '確認不要' : ''
             const rowNum = (currentPage - 1) * itemsPerPage + index + 1
             return (
               <div key={item.uid} className="mobile-card">
@@ -236,7 +241,7 @@ export default function MenuTable({
                 </div>
                 <div style={{ fontSize: '12px', color: 'var(--muted)', marginBottom: '8px' }}>
                   📂 {DISH_CATEGORIES[item.category] || item.category}
-                  {mRank && <span style={{ marginLeft: '8px', fontWeight: 800, color: mRkColor }}>{mRank}</span>}
+                  {mRank && <span style={{ marginLeft: '8px', fontWeight: 800, color: mRkColor }}>{mRank} <span style={{ fontWeight: 400, fontSize: '10px' }}>{mRkLabel}</span></span>}
                 </div>
                 <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                   {!item.status && (

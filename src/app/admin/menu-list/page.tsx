@@ -269,6 +269,12 @@ function MenuListContent() {
             priceDetail: menu.price_detail || null
           }))
           setMenuItems(menus)
+
+          // rank分布（API全件ベース）
+          const rs = menusResponse.result?.rank_summary
+          if (rs) {
+            setRankCounts({ S: rs.S || 0, A: rs.A || 0, B: rs.B || 0, C: rs.C || 0, none: 0 })
+          }
         } catch (menuErr) {
           setMenuItems([])
           setTotalItems(0)
@@ -328,16 +334,6 @@ function MenuListContent() {
     if (menuItems.length > 0) {
       const total = menuItems.reduce((s, m) => s + m.confidenceScore, 0)
       setAvgConfidence(Math.round(total / menuItems.length))
-      const counts = {S: 0, A: 0, B: 0, C: 0, none: 0}
-      menuItems.forEach(m => {
-        const r = m.verificationRank
-        if (r === 'S') counts.S++
-        else if (r === 'A') counts.A++
-        else if (r === 'B') counts.B++
-        else if (r === 'C') counts.C++
-        else counts.none++
-      })
-      setRankCounts(counts)
     }
   }, [menuItems])
 
@@ -646,8 +642,8 @@ function MenuListContent() {
 
   return (
     <AdminLayout title="メニュー一覧">
-      {menuItems.length > 0 && (() => {
-        const total = menuItems.length
+      {(rankCounts.S + rankCounts.A + rankCounts.B + rankCounts.C) > 0 && (() => {
+        const total = rankCounts.S + rankCounts.A + rankCounts.B + rankCounts.C
         const pctS = Math.round(rankCounts.S / total * 100)
         const pctA = Math.round(rankCounts.A / total * 100)
         const pctB = Math.round(rankCounts.B / total * 100)

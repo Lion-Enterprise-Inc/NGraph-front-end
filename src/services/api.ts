@@ -142,6 +142,7 @@ export interface PaginatedResult<T> {
   next: string | null;
   previous: string | null;
   items: T[];
+  rank_summary?: { S: number; A: number; B: number; C: number };
 }
 
 export interface RestaurantListResponse {
