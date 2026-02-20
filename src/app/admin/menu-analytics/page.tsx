@@ -35,12 +35,12 @@ function topNWithOther(items: Array<{ label: string; value: number; color?: stri
 function SummaryCard({ label, value, sub }: { label: string; value: string | number; sub?: string }) {
   return (
     <div style={{
-      background: 'var(--bg-surface)',
+      background: 'linear-gradient(135deg, var(--bg-surface), rgba(59,130,246,0.03))',
       border: '1px solid var(--border)',
       borderRadius: 'var(--radius)',
       padding: '20px',
     }}>
-      <div style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 4 }}>{label}</div>
+      <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{label}</div>
       <div style={{ fontSize: 28, fontWeight: 700, color: 'var(--text)' }}>{value}</div>
       {sub && <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 4 }}>{sub}</div>}
     </div>
@@ -50,93 +50,100 @@ function SummaryCard({ label, value, sub }: { label: string; value: string | num
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
     <h2 style={{
-      fontSize: 16,
+      fontSize: 14,
       fontWeight: 600,
-      color: 'var(--text)',
-      marginBottom: 12,
-      paddingBottom: 8,
-      borderBottom: '1px solid var(--border)',
+      color: 'var(--muted)',
+      marginBottom: 16,
+      textTransform: 'uppercase',
+      letterSpacing: '0.5px',
     }}>{children}</h2>
   )
 }
 
-function HorizontalBar({ items, maxCount }: { items: Array<{ label: string; count: number; sub?: string }>; maxCount: number }) {
-  if (!items.length) return <div style={{ color: 'var(--muted)', fontSize: 13 }}>データなし</div>
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-      {items.map((item, i) => (
-        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <div style={{ width: 100, fontSize: 13, color: 'var(--text-body)', flexShrink: 0, textAlign: 'right' }}>
-            {item.label}
-          </div>
-          <div style={{ flex: 1, background: 'var(--bg-hover)', borderRadius: 4, height: 24, position: 'relative', overflow: 'hidden' }}>
-            <div style={{
-              width: `${maxCount > 0 ? (item.count / maxCount) * 100 : 0}%`,
-              height: '100%',
-              background: `linear-gradient(90deg, ${PALETTE[i % PALETTE.length]}cc, ${PALETTE[i % PALETTE.length]})`,
-              borderRadius: 4,
-              transition: 'width 0.5s ease',
-              minWidth: item.count > 0 ? 2 : 0,
-            }} />
-          </div>
-          <div style={{ width: 40, fontSize: 13, color: 'var(--muted)', textAlign: 'right', flexShrink: 0 }}>
-            {item.count}
-          </div>
-          {item.sub && (
-            <div style={{ width: 70, fontSize: 11, color: 'var(--muted)', textAlign: 'right', flexShrink: 0 }}>
-              {item.sub}
-            </div>
-          )}
-        </div>
-      ))}
-    </div>
-  )
-}
-
-function DonutChart({ data, size = 180 }: { data: Array<{ label: string; value: number; color: string }>; size?: number }) {
+function DonutChart({ data, size = 200, centerLabel }: { data: Array<{ label: string; value: number; color: string }>; size?: number; centerLabel?: string }) {
   const total = data.reduce((s, d) => s + d.value, 0)
   if (total === 0) return <div style={{ color: 'var(--muted)', fontSize: 13 }}>データなし</div>
 
-  let cumulative = 0
-  const gradientParts = data.map(d => {
-    const start = (cumulative / total) * 360
-    cumulative += d.value
-    const end = (cumulative / total) * 360
-    return `${d.color} ${start}deg ${end}deg`
+  const thickness = size * 0.18
+  const radius = (size - thickness) / 2
+  const cx = size / 2
+  const cy = size / 2
+  const gap = data.length > 1 ? 1.5 : 0
+
+  let cumAngle = -90
+
+  const arcs = data.map((d) => {
+    const angle = (d.value / total) * 360
+    const startAngle = cumAngle + gap / 2
+    const endAngle = cumAngle + angle - gap / 2
+    cumAngle += angle
+
+    const startRad = (startAngle * Math.PI) / 180
+    const endRad = (endAngle * Math.PI) / 180
+    const largeArc = angle - gap > 180 ? 1 : 0
+
+    const x1 = cx + radius * Math.cos(startRad)
+    const y1 = cy + radius * Math.sin(startRad)
+    const x2 = cx + radius * Math.cos(endRad)
+    const y2 = cy + radius * Math.sin(endRad)
+
+    return {
+      d: `M ${x1} ${y1} A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2}`,
+      color: d.color,
+    }
   })
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 24, flexWrap: 'wrap' }}>
-      <div style={{
-        width: size,
-        height: size,
-        borderRadius: '50%',
-        background: `conic-gradient(${gradientParts.join(', ')})`,
-        position: 'relative',
-        flexShrink: 0,
-      }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 28, flexWrap: 'wrap' }}>
+      <div style={{ position: 'relative', width: size, height: size, flexShrink: 0 }}>
+        <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+          <circle cx={cx} cy={cy} r={radius} fill="none" stroke="var(--bg-hover)" strokeWidth={thickness} opacity={0.3} />
+          {arcs.map((arc, i) => (
+            <path key={i} d={arc.d} fill="none" stroke={arc.color} strokeWidth={thickness} strokeLinecap="round" />
+          ))}
+        </svg>
         <div style={{
           position: 'absolute',
-          inset: size * 0.25,
-          borderRadius: '50%',
-          background: 'var(--bg-surface)',
+          inset: 0,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           flexDirection: 'column',
         }}>
-          <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--text)' }}>{total}</div>
-          <div style={{ fontSize: 11, color: 'var(--muted)' }}>品目</div>
+          <div style={{ fontSize: 24, fontWeight: 700, color: 'var(--text)' }}>{total}</div>
+          <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 2 }}>{centerLabel || '品目'}</div>
         </div>
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-        {data.map((d, i) => (
-          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <div style={{ width: 12, height: 12, borderRadius: 3, background: d.color, flexShrink: 0 }} />
-            <span style={{ fontSize: 13, color: 'var(--text-body)' }}>{d.label}</span>
-            <span style={{ fontSize: 13, color: 'var(--muted)', marginLeft: 'auto' }}>{d.value}</span>
-          </div>
-        ))}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, minWidth: 140 }}>
+        {data.map((d, i) => {
+          const pct = Math.round((d.value / total) * 100)
+          return (
+            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div style={{
+                width: 10,
+                height: 10,
+                borderRadius: '50%',
+                background: d.color,
+                flexShrink: 0,
+                boxShadow: `0 0 6px ${d.color}66`,
+              }} />
+              <span style={{ fontSize: 13, color: 'var(--text-body)', flex: 1 }}>{d.label}</span>
+              <span style={{ fontSize: 12, color: 'var(--muted)', fontVariantNumeric: 'tabular-nums' }}>
+                {d.value}
+              </span>
+              <span style={{
+                fontSize: 11,
+                color: d.color,
+                fontWeight: 600,
+                width: 36,
+                textAlign: 'right',
+                fontVariantNumeric: 'tabular-nums',
+              }}>
+                {pct}%
+              </span>
+            </div>
+          )
+        })}
       </div>
     </div>
   )
@@ -175,8 +182,14 @@ function RadarChart({ data, size = 240 }: { data: Array<{ label: string; value: 
 
   return (
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ maxWidth: '100%' }}>
+      <defs>
+        <linearGradient id="radarFill" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#3B82F6" stopOpacity="0.25" />
+          <stop offset="100%" stopColor="#06B6D4" stopOpacity="0.1" />
+        </linearGradient>
+      </defs>
       {gridLines.map((pts, i) => (
-        <polygon key={i} points={pts} fill="none" stroke="var(--border-strong)" strokeWidth={0.5} opacity={0.5} />
+        <polygon key={i} points={pts} fill="none" stroke="var(--border-strong)" strokeWidth={0.5} opacity={0.4} />
       ))}
       {data.map((_, i) => {
         const angle = i * angleStep - Math.PI / 2
@@ -184,19 +197,19 @@ function RadarChart({ data, size = 240 }: { data: Array<{ label: string; value: 
           <line key={i}
             x1={cx} y1={cy}
             x2={cx + r * Math.cos(angle)} y2={cy + r * Math.sin(angle)}
-            stroke="var(--border-strong)" strokeWidth={0.5} opacity={0.3}
+            stroke="var(--border-strong)" strokeWidth={0.5} opacity={0.25}
           />
         )
       })}
       <polygon
         points={dataPoints.join(' ')}
-        fill="rgba(59, 130, 246, 0.2)"
+        fill="url(#radarFill)"
         stroke="#3B82F6"
         strokeWidth={2}
       />
       {dataPoints.map((pt, i) => {
         const [x, y] = pt.split(',').map(Number)
-        return <circle key={i} cx={x} cy={y} r={3} fill="#3B82F6" />
+        return <circle key={i} cx={x} cy={y} r={3.5} fill="#3B82F6" stroke="var(--bg-surface)" strokeWidth={1.5} />
       })}
       {labelPositions.map((lp, i) => (
         <text key={i} x={lp.x} y={lp.y}
@@ -206,6 +219,13 @@ function RadarChart({ data, size = 240 }: { data: Array<{ label: string; value: 
       ))}
     </svg>
   )
+}
+
+const cardStyle = {
+  background: 'var(--bg-surface)',
+  border: '1px solid var(--border)',
+  borderRadius: 'var(--radius)',
+  padding: '24px',
 }
 
 export default function MenuAnalyticsPage() {
@@ -275,27 +295,49 @@ export default function MenuAnalyticsPage() {
     data.cooking_method_distribution.map(d => ({ label: d.name_jp, value: d.count }))
   )
 
-  const priceMax = Math.max(...data.price_ranges.map(d => d.count), 1)
-  const ingMax = data.top_ingredients.length ? Math.max(...data.top_ingredients.map(d => d.count)) : 1
-  const algMax = data.allergen_coverage.top_allergens.length ? Math.max(...data.allergen_coverage.top_allergens.map(d => d.count)) : 1
-  const calMax = data.calorie_distribution.length ? Math.max(...data.calorie_distribution.map(d => d.count)) : 1
+  const priceData = topNWithOther(
+    data.price_ranges.map(d => ({ label: `${d.range}円`, value: d.count }))
+  )
+
+  const ingredientData = topNWithOther(
+    data.top_ingredients.slice(0, 10).map(d => ({ label: d.name, value: d.count })),
+    7
+  )
+
+  const allergenDonutData = topNWithOther(
+    data.allergen_coverage.top_allergens.map(d => ({ label: d.name_jp, value: d.count })),
+    6
+  )
+
+  const calorieData = topNWithOther(
+    data.calorie_distribution.map(d => ({ label: d.name_jp, value: d.count }))
+  )
+
+  const tasteData = data.taste_profile_distribution.filter(d => d.count > 0)
+
+  const proteinData = topNWithOther(
+    (data.protein_distribution || []).filter(d => d.count > 0).map(d => ({ label: d.label, value: d.count }))
+  )
+
+  const compositionData = topNWithOther(
+    (data.menu_composition || []).filter(d => d.count > 0).map(d => ({ label: d.label, value: d.count }))
+  )
+
+  const drinkDonutData = topNWithOther(
+    (data.drink_breakdown || []).filter(d => d.count > 0).map(d => ({ label: d.label, value: d.count }))
+  )
 
   const totalAllergenMenus = data.allergen_coverage.with_allergens + data.allergen_coverage.without_allergens
   const allergenPct = totalAllergenMenus > 0 ? Math.round((data.allergen_coverage.with_allergens / totalAllergenMenus) * 100) : 0
 
-  const tasteData = data.taste_profile_distribution.filter(d => d.count > 0)
-  const proteinData = (data.protein_distribution || []).filter(d => d.count > 0)
-  const compositionData = (data.menu_composition || []).filter(d => d.count > 0)
-  const drinkData = (data.drink_breakdown || []).filter(d => d.count > 0)
-
   return (
     <AdminLayout title="メニュー分析">
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
 
         {/* Restaurant Selector (admin only) */}
         {isAdmin && restaurants.length > 0 && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <label style={{ fontSize: 14, color: 'var(--muted)', flexShrink: 0 }}>店舗:</label>
+            <label style={{ fontSize: 13, color: 'var(--muted)', flexShrink: 0 }}>店舗:</label>
             <select
               value={selectedUid}
               onChange={e => setSelectedUid(e.target.value)}
@@ -318,53 +360,89 @@ export default function MenuAnalyticsPage() {
         )}
 
         {/* Summary Cards */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 12 }}>
           <SummaryCard label="総メニュー数" value={data.total_menus} />
           <SummaryCard label="提供中" value={data.active_menus} />
           <SummaryCard label="平均価格" value={`¥${data.avg_price.toLocaleString()}`} />
           <SummaryCard label="平均完成度" value={`${data.avg_confidence}%`} />
         </div>
 
-        {/* Row: Category + Cooking Methods */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 16 }}>
-          <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: 20 }}>
+        {/* Row 1: Category + Cooking */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 16 }}>
+          <div style={cardStyle}>
             <SectionTitle>カテゴリ構成</SectionTitle>
             <DonutChart data={categoryData} />
           </div>
-          <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: 20 }}>
+          <div style={cardStyle}>
             <SectionTitle>調理法分布</SectionTitle>
             <DonutChart data={cookingData} />
           </div>
         </div>
 
-        {/* Rank Distribution */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 16 }}>
-          <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: 20 }}>
+        {/* Row 2: Menu Composition + Protein */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 16 }}>
+          <div style={cardStyle}>
+            <SectionTitle>メニュー構成</SectionTitle>
+            <DonutChart data={compositionData} />
+          </div>
+          <div style={cardStyle}>
+            <SectionTitle>素材別分布</SectionTitle>
+            <DonutChart data={proteinData} />
+          </div>
+        </div>
+
+        {/* Row 3: Price + Rank */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 16 }}>
+          <div style={cardStyle}>
+            <SectionTitle>価格帯分布</SectionTitle>
+            <DonutChart data={priceData} centerLabel="全品" />
+          </div>
+          <div style={cardStyle}>
             <SectionTitle>確認優先度</SectionTitle>
             <DonutChart data={rankData} />
           </div>
         </div>
 
-        {/* Price Ranges */}
-        <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: 20 }}>
-          <SectionTitle>価格帯分布</SectionTitle>
-          <HorizontalBar
-            items={data.price_ranges.map(d => ({ label: `${d.range}円`, count: d.count }))}
-            maxCount={priceMax}
-          />
-        </div>
-
-        {/* Top Ingredients */}
-        <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: 20 }}>
-          <SectionTitle>食材 TOP{Math.min(data.top_ingredients.length, 15)}</SectionTitle>
-          <HorizontalBar
-            items={data.top_ingredients.slice(0, 15).map(d => ({ label: d.name, count: d.count }))}
-            maxCount={ingMax}
-          />
+        {/* Row 4: Ingredients + Allergens */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 16 }}>
+          <div style={cardStyle}>
+            <SectionTitle>食材 TOP{Math.min(ingredientData.length, 8)}</SectionTitle>
+            <DonutChart data={ingredientData} />
+          </div>
+          <div style={cardStyle}>
+            <SectionTitle>アレルゲン情報</SectionTitle>
+            <div style={{ marginBottom: 16 }}>
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                fontSize: 13,
+                color: 'var(--muted)',
+                marginBottom: 6,
+              }}>
+                <span>登録済み {data.allergen_coverage.with_allergens}品</span>
+                <span>{allergenPct}%</span>
+              </div>
+              <div style={{
+                height: 6,
+                background: 'var(--bg-hover)',
+                borderRadius: 3,
+                overflow: 'hidden',
+              }}>
+                <div style={{
+                  width: `${allergenPct}%`,
+                  height: '100%',
+                  background: 'linear-gradient(90deg, #10B981, #06B6D4)',
+                  borderRadius: 3,
+                  transition: 'width 0.5s ease',
+                }} />
+              </div>
+            </div>
+            <DonutChart data={allergenDonutData} size={160} />
+          </div>
         </div>
 
         {/* Taste Profile Radar */}
-        <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: 20 }}>
+        <div style={cardStyle}>
           <SectionTitle>味覚プロファイル</SectionTitle>
           <div style={{ display: 'flex', justifyContent: 'center' }}>
             <RadarChart
@@ -374,62 +452,20 @@ export default function MenuAnalyticsPage() {
           </div>
         </div>
 
-        {/* Protein / Composition / Drink Radar Charts */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 16 }}>
-          <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: 20 }}>
-            <SectionTitle>素材別分布</SectionTitle>
-            <div style={{ display: 'flex', justifyContent: 'center' }}>
-              <RadarChart data={proteinData.map(d => ({ label: d.label, value: d.count }))} size={280} />
-            </div>
-          </div>
-          <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: 20 }}>
-            <SectionTitle>メニュー構成</SectionTitle>
-            <div style={{ display: 'flex', justifyContent: 'center' }}>
-              <RadarChart data={compositionData.map(d => ({ label: d.label, value: d.count }))} size={280} />
-            </div>
-          </div>
-        </div>
-
-        {/* Drink Breakdown */}
-        {drinkData.length > 0 && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 16 }}>
-            <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: 20 }}>
+        {/* Row 5: Drinks + Calorie */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 16 }}>
+          {drinkDonutData.length > 0 && (
+            <div style={cardStyle}>
               <SectionTitle>ドリンク内訳</SectionTitle>
-              <div style={{ display: 'flex', justifyContent: 'center' }}>
-                <RadarChart data={drinkData.map(d => ({ label: d.label, value: d.count }))} size={280} />
-              </div>
+              <DonutChart data={drinkDonutData} />
             </div>
-          </div>
-        )}
-
-        {/* Allergen Coverage */}
-        <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: 20 }}>
-          <SectionTitle>アレルゲン情報</SectionTitle>
-          <div style={{ marginBottom: 16 }}>
-            <div style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 6 }}>
-              アレルゲン登録済み: {data.allergen_coverage.with_allergens}品 / 未登録: {data.allergen_coverage.without_allergens}品 ({allergenPct}%)
+          )}
+          {calorieData.length > 0 && (
+            <div style={cardStyle}>
+              <SectionTitle>カロリー帯分布</SectionTitle>
+              <DonutChart data={calorieData} />
             </div>
-            <div style={{ height: 20, background: 'var(--bg-hover)', borderRadius: 4, overflow: 'hidden', display: 'flex' }}>
-              <div style={{
-                width: `${allergenPct}%`,
-                background: 'linear-gradient(90deg, #10B981, #06B6D4)',
-                transition: 'width 0.5s ease',
-              }} />
-            </div>
-          </div>
-          <HorizontalBar
-            items={data.allergen_coverage.top_allergens.map(d => ({ label: d.name_jp, count: d.count }))}
-            maxCount={algMax}
-          />
-        </div>
-
-        {/* Calorie Distribution */}
-        <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: 20 }}>
-          <SectionTitle>カロリー帯分布</SectionTitle>
-          <HorizontalBar
-            items={data.calorie_distribution.map(d => ({ label: d.name_jp, count: d.count }))}
-            maxCount={calMax}
-          />
+          )}
         </div>
 
       </div>
