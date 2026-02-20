@@ -1,0 +1,35 @@
+/* Admin Common Styles */
+/* Breakpoints: sm=640px, md=768px, lg=1024px */
+
+/* Form Grid */
+.admin-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+@media (max-width: 768px) {
+  .admin-form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Section Card */
+.admin-section-card {
+  padding: 20px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  margin-bottom: 24px;
+}
+
+.admin-section-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  color: var(--text);
+}
+
+.admin-section-divider {
+  border-top: 1px solid var(--border);
+  margin: 24px 0;
+}
