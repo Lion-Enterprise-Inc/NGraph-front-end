@@ -996,6 +996,9 @@ export interface MenuAnalyticsData {
   };
   calorie_distribution: Array<{ name_jp: string; count: number }>;
   rank_distribution: Record<string, number>;
+  protein_distribution: Array<{ label: string; count: number }>;
+  menu_composition: Array<{ label: string; count: number }>;
+  drink_breakdown: Array<{ label: string; count: number }>;
 }
 
 export default apiClient;

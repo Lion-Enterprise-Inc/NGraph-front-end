@@ -284,6 +284,9 @@ export default function MenuAnalyticsPage() {
   const allergenPct = totalAllergenMenus > 0 ? Math.round((data.allergen_coverage.with_allergens / totalAllergenMenus) * 100) : 0
 
   const tasteData = data.taste_profile_distribution.filter(d => d.count > 0)
+  const proteinData = (data.protein_distribution || []).filter(d => d.count > 0)
+  const compositionData = (data.menu_composition || []).filter(d => d.count > 0)
+  const drinkData = (data.drink_breakdown || []).filter(d => d.count > 0)
 
   return (
     <AdminLayout title="メニュー分析">
@@ -370,6 +373,34 @@ export default function MenuAnalyticsPage() {
             />
           </div>
         </div>
+
+        {/* Protein / Composition / Drink Radar Charts */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 16 }}>
+          <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: 20 }}>
+            <SectionTitle>素材別分布</SectionTitle>
+            <div style={{ display: 'flex', justifyContent: 'center' }}>
+              <RadarChart data={proteinData.map(d => ({ label: d.label, value: d.count }))} size={280} />
+            </div>
+          </div>
+          <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: 20 }}>
+            <SectionTitle>メニュー構成</SectionTitle>
+            <div style={{ display: 'flex', justifyContent: 'center' }}>
+              <RadarChart data={compositionData.map(d => ({ label: d.label, value: d.count }))} size={280} />
+            </div>
+          </div>
+        </div>
+
+        {/* Drink Breakdown */}
+        {drinkData.length > 0 && (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 16 }}>
+            <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: 20 }}>
+              <SectionTitle>ドリンク内訳</SectionTitle>
+              <div style={{ display: 'flex', justifyContent: 'center' }}>
+                <RadarChart data={drinkData.map(d => ({ label: d.label, value: d.count }))} size={280} />
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Allergen Coverage */}
         <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: 20 }}>
