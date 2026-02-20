@@ -353,28 +353,11 @@ export default function CapturePage({
               return;
             }
           }
-          // Fallback if API fails
-          console.log('Public API failed, using slug as fallback');
-          setRestaurantData({
-            uid: '',
-            name: restaurantSlug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' '),
-            slug: restaurantSlug,
-            is_active: true,
-            logo_url: null,
-            created_at: '',
-            updated_at: ''
-          });
+          console.log('Restaurant not found:', restaurantSlug);
+          setRestaurantData(null);
         } catch (error) {
           console.error('Failed to fetch restaurant:', error);
-          setRestaurantData({
-            uid: '',
-            name: restaurantSlug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' '),
-            slug: restaurantSlug,
-            is_active: true,
-            logo_url: null,
-            created_at: '',
-            updated_at: ''
-          });
+          setRestaurantData(null);
         } finally {
           setRestaurantLoading(false);
         }
@@ -1332,7 +1315,24 @@ export default function CapturePage({
               : ""
           }`}
         >
-          {restaurantLoading ? (
+          {!restaurantLoading && !restaurantData && restaurantSlug ? (
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              height: '300px',
+              gap: '12px',
+            }}>
+              <div style={{ fontSize: '48px' }}>🔍</div>
+              <div style={{ fontSize: '16px', color: 'rgba(255,255,255,0.7)', textAlign: 'center' }}>
+                レストランが見つかりませんでした
+              </div>
+              <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.4)', textAlign: 'center' }}>
+                URLを確認してください
+              </div>
+            </div>
+          ) : restaurantLoading ? (
             <div style={{
               display: 'flex',
               flexDirection: 'column',
