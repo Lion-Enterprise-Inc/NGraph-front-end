@@ -100,6 +100,7 @@ function StoreDashboard() {
   const [restaurantError, setRestaurantError] = useState('')
   const [menuCount, setMenuCount] = useState<number | null>(null)
   const [eventStats, setEventStats] = useState<any>(null)
+  const [messageStats, setMessageStats] = useState<any>(null)
 
   useEffect(() => {
     const fetchRestaurant = async () => {
@@ -146,8 +147,17 @@ function StoreDashboard() {
       }
     }
 
+    const fetchMessageStats = async () => {
+      try {
+        const res = await apiClient.get('/admin/message-stats') as { result: any }
+        setMessageStats(res.result)
+      } catch {
+        setMessageStats(null)
+      }
+    }
     fetchRestaurant()
     fetchEventStats()
+    fetchMessageStats()
   }, [])
 
   return (
@@ -236,6 +246,13 @@ function StoreDashboard() {
               </div>
               <LangBar dist={eventStats?.lang_distribution} />
             </div>
+
+            {messageStats && messageStats.lang_distribution && Object.keys(messageStats.lang_distribution).length > 0 && (
+              <div className="card" style={{ marginTop: '16px' }}>
+                <div className="card-title">チャット利用統計（{messageStats.total_messages}メッセージ）</div>
+                <LangBar dist={messageStats.lang_distribution} />
+              </div>
+            )}
           </>
         ) : null}
       </section>
@@ -302,6 +319,7 @@ function AdminDashboard() {
   const [error, setError] = useState('')
   const [eventStats, setEventStats] = useState<any>(null)
   const [topicData, setTopicData] = useState<Record<string, number> | null>(null)
+  const [messageStats, setMessageStats] = useState<any>(null)
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -332,9 +350,18 @@ function AdminDashboard() {
         setTopicData(null)
       }
     }
+    const fetchMessageStats = async () => {
+      try {
+        const res = await apiClient.get('/admin/message-stats') as { result: any }
+        setMessageStats(res.result)
+      } catch {
+        setMessageStats(null)
+      }
+    }
     fetchStats()
     fetchEventStats()
     fetchTopics()
+    fetchMessageStats()
   }, [])
 
   if (loading) {
@@ -441,6 +468,50 @@ function AdminDashboard() {
         <div className="card">
           <div className="card-title">トピック分布</div>
           <TopicPieChart data={topicData} />
+        </div>
+      )}
+
+      {messageStats && (messageStats.lang_distribution && Object.keys(messageStats.lang_distribution).length > 0 || messageStats.device_distribution && Object.keys(messageStats.device_distribution).length > 0) && (
+        <div className="card">
+          <div className="card-title">チャット利用統計（全{messageStats.total_messages}メッセージ）</div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 24 }}>
+            {messageStats.lang_distribution && Object.keys(messageStats.lang_distribution).length > 0 && (
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 600, color: '#E2E8F0', marginBottom: 12 }}>使用言語分布</div>
+                <LangBar dist={messageStats.lang_distribution} />
+              </div>
+            )}
+            {messageStats.device_distribution && Object.keys(messageStats.device_distribution).length > 0 && (
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 600, color: '#E2E8F0', marginBottom: 12 }}>デバイス分布</div>
+                {(() => {
+                  const entries = Object.entries(messageStats.device_distribution as Record<string, number>).sort((a, b) => b[1] - a[1])
+                  const total = entries.reduce((s, [, v]) => s + v, 0)
+                  const deviceColors: Record<string, string> = { iPhone: '#3B82F6', iPad: '#06B6D4', Android: '#10B981', 'Android Tablet': '#34D399', PC: '#8B5CF6' }
+                  return (
+                    <>
+                      <div style={{ display: 'flex', height: 20, borderRadius: 6, overflow: 'hidden', background: '#1E293B', marginTop: 12 }}>
+                        {entries.map(([device, count]) => {
+                          const pct = (count / total) * 100
+                          return (
+                            <div key={device} title={`${device}: ${count} (${pct.toFixed(1)}%)`}
+                              style={{ width: `${pct}%`, background: deviceColors[device] || '#64748B', minWidth: pct > 0 ? 2 : 0 }} />
+                          )
+                        })}
+                      </div>
+                      <div style={{ display: 'flex', gap: 12, marginTop: 4, flexWrap: 'wrap' }}>
+                        {entries.map(([device, count]) => (
+                          <span key={device} style={{ fontSize: 11, color: deviceColors[device] || '#64748B' }}>
+                            {device}: {count}
+                          </span>
+                        ))}
+                      </div>
+                    </>
+                  )
+                })()}
+              </div>
+            )}
+          </div>
         </div>
       )}
 
