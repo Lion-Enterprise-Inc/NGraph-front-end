@@ -17,6 +17,21 @@ const LANG_LABELS: Record<string, string> = {
   pt: 'Português', de: 'Deutsch', it: 'Italiano', ru: 'Русский', id: 'Indonesia',
 }
 
+function parseUA(ua: string): string {
+  let device = 'PC'
+  if (/iPhone/.test(ua)) device = 'iPhone'
+  else if (/iPad/.test(ua)) device = 'iPad'
+  else if (/Android/.test(ua)) device = /Mobile/.test(ua) ? 'Android' : 'Android Tablet'
+
+  let browser = ''
+  if (/CriOS|Chrome/.test(ua) && !/Edg/.test(ua)) browser = 'Chrome'
+  else if (/Safari/.test(ua) && !/Chrome/.test(ua)) browser = 'Safari'
+  else if (/Edg/.test(ua)) browser = 'Edge'
+  else if (/Firefox/.test(ua)) browser = 'Firefox'
+
+  return browser ? `${device} / ${browser}` : device
+}
+
 const TOPIC_COLORS: Record<string, { bg: string; color: string }> = {
   'メニュー・料理': { bg: 'rgba(59,130,246,0.15)', color: '#60A5FA' },
   'アレルゲン': { bg: 'rgba(239,68,68,0.15)', color: '#F87171' },
@@ -183,6 +198,12 @@ export default function ConversationsPage() {
               <span style={{ color: 'var(--muted)' }}>開始: </span>
               <span>{formatDate(detail.created_at)}</span>
             </div>
+            {detail.user_agent && (
+              <div title={detail.user_agent}>
+                <span style={{ color: 'var(--muted)' }}>端末: </span>
+                <span>{parseUA(detail.user_agent)}</span>
+              </div>
+            )}
             {(() => {
               const langCounts: Record<string, number> = {}
               detail.messages.forEach(m => { if (m.lang) langCounts[m.lang] = (langCounts[m.lang] || 0) + 1 })

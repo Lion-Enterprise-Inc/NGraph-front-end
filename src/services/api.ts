@@ -866,6 +866,7 @@ export interface ConversationDetail {
   summary: string | null;
   created_at: string;
   updated_at: string;
+  user_agent?: string | null;
   messages: ConversationMessage[];
 }
 
