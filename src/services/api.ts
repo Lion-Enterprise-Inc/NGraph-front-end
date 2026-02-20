@@ -972,4 +972,30 @@ export const VerificationApi = {
   },
 };
 
+export const MenuAnalyticsApi = {
+  get: async (restaurantUid?: string): Promise<{ result: MenuAnalyticsData; message: string; status_code: number }> => {
+    const params = restaurantUid ? `?restaurant_uid=${restaurantUid}` : '';
+    return apiClient.get(`/admin/menu-analytics${params}`);
+  },
+};
+
+export interface MenuAnalyticsData {
+  total_menus: number;
+  active_menus: number;
+  avg_price: number;
+  avg_confidence: number;
+  category_distribution: Array<{ category: string; label: string; count: number; avg_price: number }>;
+  price_ranges: Array<{ range: string; count: number }>;
+  top_ingredients: Array<{ name: string; count: number }>;
+  cooking_method_distribution: Array<{ name_jp: string; count: number }>;
+  taste_profile_distribution: Array<{ name_jp: string; count: number }>;
+  allergen_coverage: {
+    with_allergens: number;
+    without_allergens: number;
+    top_allergens: Array<{ name_jp: string; count: number }>;
+  };
+  calorie_distribution: Array<{ name_jp: string; count: number }>;
+  rank_distribution: Record<string, number>;
+}
+
 export default apiClient;
