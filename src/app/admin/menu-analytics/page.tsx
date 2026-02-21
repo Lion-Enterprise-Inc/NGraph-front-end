@@ -417,51 +417,33 @@ export default function MenuAnalyticsPage() {
           <SummaryCard label="平均完成度" value={`${data.avg_confidence}%`} />
         </div>
 
-        {/* Row 1: Category + Cooking */}
+        {/* ── メニュー構成 ── */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 20 }}>
           <div style={cardStyle}>
             <SectionTitle>カテゴリ構成</SectionTitle>
             <DonutChart data={categoryData} />
           </div>
           <div style={cardStyle}>
-            <SectionTitle>調理法分布</SectionTitle>
-            <DonutChart data={cookingData} />
-          </div>
-        </div>
-
-        {/* Row 2: Menu Composition + Protein */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 20 }}>
-          <div style={cardStyle}>
             <SectionTitle>フード構成</SectionTitle>
             <DonutChart data={compositionData} centerLabel="フード" />
           </div>
-          <div style={cardStyle}>
-            <SectionTitle>素材別分布</SectionTitle>
-            <DonutChart data={proteinData} />
-          </div>
         </div>
+        {drinkDonutData.length > 0 && (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 20 }}>
+            <div style={cardStyle}>
+              <SectionTitle>ドリンク内訳</SectionTitle>
+              <DonutChart data={drinkDonutData} />
+            </div>
+          </div>
+        )}
 
-        {/* Row 3: Price (Bar) + Rank (Donut) */}
+        {/* ── 価格分析 ── */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 20 }}>
           <div style={cardStyle}>
             <SectionTitle>価格帯分布（全体）</SectionTitle>
             <HorizontalBarChart data={priceData} />
           </div>
-          <div style={cardStyle}>
-            <SectionTitle>確認優先度</SectionTitle>
-            <DonutChart data={rankData} />
-            <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 6 }}>
-              {['S', 'A', 'B', 'C'].map(r => (
-                <div key={r} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11, color: 'var(--muted)' }}>
-                  <span style={{ fontWeight: 700, color: RANK_COLORS[r], width: 14 }}>{r}</span>
-                  <span>{RANK_HINTS[r]}</span>
-                </div>
-              ))}
-            </div>
-          </div>
         </div>
-
-        {/* Category Price Ranges */}
         {(data.category_price_ranges || []).length > 0 && (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 20 }}>
             {(data.category_price_ranges || []).slice(0, 6).map(cp => {
@@ -480,11 +462,52 @@ export default function MenuAnalyticsPage() {
           </div>
         )}
 
-        {/* Row 4: Ingredients + Allergens */}
+        {/* ── 食材・調理・味覚 ── */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 20 }}>
+          <div style={cardStyle}>
+            <SectionTitle>素材別分布</SectionTitle>
+            <DonutChart data={proteinData} />
+          </div>
           <div style={cardStyle}>
             <SectionTitle>食材 TOP{Math.min(ingredientData.length, 8)}</SectionTitle>
             <DonutChart data={ingredientData} />
+          </div>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 20 }}>
+          <div style={cardStyle}>
+            <SectionTitle>調理法分布</SectionTitle>
+            <DonutChart data={cookingData} />
+          </div>
+          {calorieData.length > 0 && (
+            <div style={cardStyle}>
+              <SectionTitle>カロリー帯分布</SectionTitle>
+              <DonutChart data={calorieData} />
+            </div>
+          )}
+        </div>
+        <div style={cardStyle}>
+          <SectionTitle>味覚プロファイル</SectionTitle>
+          <div style={{ display: 'flex', justifyContent: 'center' }}>
+            <RadarChart
+              data={tasteData.map(d => ({ label: d.name_jp, value: d.count }))}
+              size={300}
+            />
+          </div>
+        </div>
+
+        {/* ── 安全管理 ── */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 20 }}>
+          <div style={cardStyle}>
+            <SectionTitle>確認優先度</SectionTitle>
+            <DonutChart data={rankData} />
+            <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 6 }}>
+              {['S', 'A', 'B', 'C'].map(r => (
+                <div key={r} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11, color: 'var(--muted)' }}>
+                  <span style={{ fontWeight: 700, color: RANK_COLORS[r], width: 14 }}>{r}</span>
+                  <span>{RANK_HINTS[r]}</span>
+                </div>
+              ))}
+            </div>
           </div>
           <div style={cardStyle}>
             <SectionTitle>アレルゲン情報</SectionTitle>
@@ -516,33 +539,6 @@ export default function MenuAnalyticsPage() {
             </div>
             <DonutChart data={allergenDonutData} size={160} />
           </div>
-        </div>
-
-        {/* Taste Profile Radar */}
-        <div style={cardStyle}>
-          <SectionTitle>味覚プロファイル</SectionTitle>
-          <div style={{ display: 'flex', justifyContent: 'center' }}>
-            <RadarChart
-              data={tasteData.map(d => ({ label: d.name_jp, value: d.count }))}
-              size={300}
-            />
-          </div>
-        </div>
-
-        {/* Row 5: Drinks + Calorie */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 20 }}>
-          {drinkDonutData.length > 0 && (
-            <div style={cardStyle}>
-              <SectionTitle>ドリンク内訳</SectionTitle>
-              <DonutChart data={drinkDonutData} />
-            </div>
-          )}
-          {calorieData.length > 0 && (
-            <div style={cardStyle}>
-              <SectionTitle>カロリー帯分布</SectionTitle>
-              <DonutChart data={calorieData} />
-            </div>
-          )}
         </div>
 
       </div>
