@@ -5423,10 +5423,24 @@ textarea.form-input {
 
 /* ===== NFG Card Styles ===== */
 .nfg-cards-container {
+  position: relative;
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
+  padding-left: 20px;
+}
+.nfg-cards-container::before {
+  content: 'NGraph';
+  position: absolute;
+  left: 2px;
+  top: 50%;
+  transform: translateY(-50%) rotate(-90deg);
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: rgba(255,255,255,0.08);
+  font-weight: 700;
+  pointer-events: none;
 }
 
 .nfg-cards-header {
@@ -5439,7 +5453,7 @@ textarea.form-input {
 .nfg-card {
   background: rgba(255,255,255,0.04);
   border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 12px;
+  border-radius: 8px;
   overflow: hidden;
   transition: border-color 0.2s;
 }
@@ -5517,7 +5531,7 @@ textarea.form-input {
 .nfg-card-body.expanded {
   max-height: 600px;
   padding: 0 14px 14px;
-  border-top: 1px solid rgba(255,255,255,0.06);
+  border-top: 1px solid rgba(255,255,255,0.04);
 }
 
 .nfg-card-desc {

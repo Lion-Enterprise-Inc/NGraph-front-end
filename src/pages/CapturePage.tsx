@@ -311,8 +311,8 @@ export default function CapturePage({
   const isCardExpanded = (responseId: string, cardIndex: number, totalItems: number) => {
     const expanded = expandedCards[responseId];
     if (expanded) return expanded.has(cardIndex);
-    // デフォルト: 1-2品なら全展開、3品以上なら最初の1品だけ展開
-    return totalItems <= 2 || cardIndex === 0;
+    // デフォルト: 1-2品なら全展開、3品以上なら全折りたたみ
+    return totalItems <= 2;
   };
 
   const [isTypingActive, setIsTypingActive] = useState(false);
