@@ -7,7 +7,7 @@ import { MenuAnalyticsApi, MenuAnalyticsData, TokenService, RestaurantApi, Resta
 const RANK_COLORS: Record<string, string> = {
   S: '#EF4444',
   A: '#F59E0B',
-  B: '#3B82F6',
+  B: '#4A9EFF',
   C: '#10B981',
 }
 const RANK_LABELS: Record<string, string> = {
@@ -18,10 +18,12 @@ const RANK_LABELS: Record<string, string> = {
 }
 
 const PALETTE = [
-  '#3B82F6', '#06B6D4', '#8B5CF6', '#10B981', '#F59E0B',
-  '#EF4444', '#EC4899', '#14B8A6', '#F97316', '#6366F1',
-  '#84CC16', '#A855F7', '#22D3EE', '#FB923C', '#E879F9',
+  '#4A9EFF', '#36B5FF', '#5B7FFF', '#2DD4A8', '#FFB547',
+  '#FF6B8A', '#A78BFA', '#38BDF8', '#FF8F47', '#818CF8',
+  '#34D399', '#C084FC', '#22D3EE', '#FB923C', '#F472B6',
 ]
+
+const MONO = "'SF Mono', 'Cascadia Code', 'Consolas', 'Monaco', monospace"
 
 function topNWithOther(items: Array<{ label: string; value: number; color?: string }>, n: number = 5) {
   if (items.length <= n + 1) return items.map((d, i) => ({ ...d, color: d.color || PALETTE[i % PALETTE.length] }))
@@ -35,14 +37,14 @@ function topNWithOther(items: Array<{ label: string; value: number; color?: stri
 function SummaryCard({ label, value, sub }: { label: string; value: string | number; sub?: string }) {
   return (
     <div style={{
-      background: 'linear-gradient(135deg, var(--bg-surface), rgba(59,130,246,0.03))',
+      background: 'linear-gradient(135deg, var(--bg-surface), rgba(74,158,255,0.04))',
       border: '1px solid var(--border)',
       borderRadius: 'var(--radius)',
-      padding: '20px',
+      padding: '24px 28px',
     }}>
-      <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{label}</div>
-      <div style={{ fontSize: 28, fontWeight: 700, color: 'var(--text)' }}>{value}</div>
-      {sub && <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 4 }}>{sub}</div>}
+      <div style={{ fontSize: 11, color: 'var(--muted)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.8px', fontWeight: 500 }}>{label}</div>
+      <div style={{ fontSize: 36, fontWeight: 800, color: 'var(--text)', fontFamily: MONO, lineHeight: 1.1 }}>{value}</div>
+      {sub && <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 6 }}>{sub}</div>}
     </div>
   )
 }
@@ -50,12 +52,12 @@ function SummaryCard({ label, value, sub }: { label: string; value: string | num
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
     <h2 style={{
-      fontSize: 14,
+      fontSize: 13,
       fontWeight: 600,
       color: 'var(--muted)',
-      marginBottom: 16,
+      marginBottom: 20,
       textTransform: 'uppercase',
-      letterSpacing: '0.5px',
+      letterSpacing: '0.6px',
     }}>{children}</h2>
   )
 }
@@ -94,7 +96,7 @@ function DonutChart({ data, size = 200, centerLabel }: { data: Array<{ label: st
   })
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 28, flexWrap: 'wrap' }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 32, flexWrap: 'wrap' }}>
       <div style={{ position: 'relative', width: size, height: size, flexShrink: 0 }}>
         <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
           <circle cx={cx} cy={cy} r={radius} fill="none" stroke="var(--bg-hover)" strokeWidth={thickness} opacity={0.3} />
@@ -110,8 +112,8 @@ function DonutChart({ data, size = 200, centerLabel }: { data: Array<{ label: st
           justifyContent: 'center',
           flexDirection: 'column',
         }}>
-          <div style={{ fontSize: 24, fontWeight: 700, color: 'var(--text)' }}>{total}</div>
-          <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 2 }}>{centerLabel || '品目'}</div>
+          <div style={{ fontSize: 26, fontWeight: 800, color: 'var(--text)', fontFamily: MONO }}>{total}</div>
+          <div style={{ fontSize: 10, color: 'var(--muted)', marginTop: 2 }}>{centerLabel || '品目'}</div>
         </div>
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8, minWidth: 140 }}>
@@ -128,7 +130,7 @@ function DonutChart({ data, size = 200, centerLabel }: { data: Array<{ label: st
                 boxShadow: `0 0 6px ${d.color}66`,
               }} />
               <span style={{ fontSize: 13, color: 'var(--text-body)', flex: 1 }}>{d.label}</span>
-              <span style={{ fontSize: 12, color: 'var(--muted)', fontVariantNumeric: 'tabular-nums' }}>
+              <span style={{ fontSize: 12, color: 'var(--muted)', fontFamily: MONO, fontVariantNumeric: 'tabular-nums' }}>
                 {d.value}
               </span>
               <span style={{
@@ -137,6 +139,7 @@ function DonutChart({ data, size = 200, centerLabel }: { data: Array<{ label: st
                 fontWeight: 600,
                 width: 36,
                 textAlign: 'right',
+                fontFamily: MONO,
                 fontVariantNumeric: 'tabular-nums',
               }}>
                 {pct}%
@@ -145,6 +148,44 @@ function DonutChart({ data, size = 200, centerLabel }: { data: Array<{ label: st
           )
         })}
       </div>
+    </div>
+  )
+}
+
+function HorizontalBarChart({ data }: { data: Array<{ label: string; value: number; color: string }> }) {
+  const maxVal = Math.max(...data.map(d => d.value), 1)
+  const total = data.reduce((s, d) => s + d.value, 0)
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+      {data.map((d, i) => {
+        const pct = total > 0 ? Math.round((d.value / total) * 100) : 0
+        const barWidth = (d.value / maxVal) * 100
+        return (
+          <div key={i}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+              <span style={{ fontSize: 13, color: 'var(--text-body)' }}>{d.label}</span>
+              <span style={{ fontSize: 12, color: 'var(--muted)', fontFamily: MONO, fontVariantNumeric: 'tabular-nums' }}>
+                {d.value}品 ({pct}%)
+              </span>
+            </div>
+            <div style={{
+              height: 8,
+              background: 'var(--bg-hover)',
+              borderRadius: 4,
+              overflow: 'hidden',
+            }}>
+              <div style={{
+                width: `${barWidth}%`,
+                height: '100%',
+                background: `linear-gradient(90deg, ${d.color}, ${d.color}CC)`,
+                borderRadius: 4,
+                transition: 'width 0.5s ease',
+              }} />
+            </div>
+          </div>
+        )
+      })}
     </div>
   )
 }
@@ -184,8 +225,8 @@ function RadarChart({ data, size = 240 }: { data: Array<{ label: string; value: 
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ maxWidth: '100%' }}>
       <defs>
         <linearGradient id="radarFill" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#3B82F6" stopOpacity="0.25" />
-          <stop offset="100%" stopColor="#06B6D4" stopOpacity="0.1" />
+          <stop offset="0%" stopColor="#4A9EFF" stopOpacity="0.25" />
+          <stop offset="100%" stopColor="#36B5FF" stopOpacity="0.1" />
         </linearGradient>
       </defs>
       {gridLines.map((pts, i) => (
@@ -204,12 +245,12 @@ function RadarChart({ data, size = 240 }: { data: Array<{ label: string; value: 
       <polygon
         points={dataPoints.join(' ')}
         fill="url(#radarFill)"
-        stroke="#3B82F6"
+        stroke="#4A9EFF"
         strokeWidth={2}
       />
       {dataPoints.map((pt, i) => {
         const [x, y] = pt.split(',').map(Number)
-        return <circle key={i} cx={x} cy={y} r={3.5} fill="#3B82F6" stroke="var(--bg-surface)" strokeWidth={1.5} />
+        return <circle key={i} cx={x} cy={y} r={3.5} fill="#4A9EFF" stroke="var(--bg-surface)" strokeWidth={1.5} />
       })}
       {labelPositions.map((lp, i) => (
         <text key={i} x={lp.x} y={lp.y}
@@ -221,11 +262,11 @@ function RadarChart({ data, size = 240 }: { data: Array<{ label: string; value: 
   )
 }
 
-const cardStyle = {
+const cardStyle: React.CSSProperties = {
   background: 'var(--bg-surface)',
   border: '1px solid var(--border)',
   borderRadius: 'var(--radius)',
-  padding: '24px',
+  padding: '28px',
 }
 
 export default function MenuAnalyticsPage() {
@@ -295,9 +336,11 @@ export default function MenuAnalyticsPage() {
     data.cooking_method_distribution.map(d => ({ label: d.name_jp, value: d.count }))
   )
 
-  const priceData = topNWithOther(
-    data.price_ranges.map(d => ({ label: `${d.range}円`, value: d.count }))
-  )
+  const priceData = data.price_ranges.map((d, i) => ({
+    label: `${d.range}円`,
+    value: d.count,
+    color: PALETTE[i % PALETTE.length],
+  }))
 
   const ingredientData = topNWithOther(
     data.top_ingredients.slice(0, 10).map(d => ({ label: d.name, value: d.count })),
@@ -332,7 +375,7 @@ export default function MenuAnalyticsPage() {
 
   return (
     <AdminLayout title="メニュー分析">
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
 
         {/* Restaurant Selector (admin only) */}
         {isAdmin && restaurants.length > 0 && (
@@ -360,7 +403,7 @@ export default function MenuAnalyticsPage() {
         )}
 
         {/* Summary Cards */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 12 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 16 }}>
           <SummaryCard label="総メニュー数" value={data.total_menus} />
           <SummaryCard label="提供中" value={data.active_menus} />
           <SummaryCard label="平均価格" value={`¥${data.avg_price.toLocaleString()}`} />
@@ -368,7 +411,7 @@ export default function MenuAnalyticsPage() {
         </div>
 
         {/* Row 1: Category + Cooking */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 16 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 20 }}>
           <div style={cardStyle}>
             <SectionTitle>カテゴリ構成</SectionTitle>
             <DonutChart data={categoryData} />
@@ -380,7 +423,7 @@ export default function MenuAnalyticsPage() {
         </div>
 
         {/* Row 2: Menu Composition + Protein */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 16 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 20 }}>
           <div style={cardStyle}>
             <SectionTitle>フード構成</SectionTitle>
             <DonutChart data={compositionData} centerLabel="フード" />
@@ -391,11 +434,11 @@ export default function MenuAnalyticsPage() {
           </div>
         </div>
 
-        {/* Row 3: Price + Rank */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 16 }}>
+        {/* Row 3: Price (Bar) + Rank (Donut) */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 20 }}>
           <div style={cardStyle}>
             <SectionTitle>価格帯分布</SectionTitle>
-            <DonutChart data={priceData} centerLabel="全品" />
+            <HorizontalBarChart data={priceData} />
           </div>
           <div style={cardStyle}>
             <SectionTitle>確認優先度</SectionTitle>
@@ -404,7 +447,7 @@ export default function MenuAnalyticsPage() {
         </div>
 
         {/* Row 4: Ingredients + Allergens */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 16 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 20 }}>
           <div style={cardStyle}>
             <SectionTitle>食材 TOP{Math.min(ingredientData.length, 8)}</SectionTitle>
             <DonutChart data={ingredientData} />
@@ -419,8 +462,8 @@ export default function MenuAnalyticsPage() {
                 color: 'var(--muted)',
                 marginBottom: 6,
               }}>
-                <span>登録済み {data.allergen_coverage.with_allergens}品</span>
-                <span>{allergenPct}%</span>
+                <span>登録済み <span style={{ fontFamily: MONO }}>{data.allergen_coverage.with_allergens}</span>品</span>
+                <span style={{ fontFamily: MONO }}>{allergenPct}%</span>
               </div>
               <div style={{
                 height: 6,
@@ -431,7 +474,7 @@ export default function MenuAnalyticsPage() {
                 <div style={{
                   width: `${allergenPct}%`,
                   height: '100%',
-                  background: 'linear-gradient(90deg, #10B981, #06B6D4)',
+                  background: 'linear-gradient(90deg, #4A9EFF, #36B5FF)',
                   borderRadius: 3,
                   transition: 'width 0.5s ease',
                 }} />
@@ -453,7 +496,7 @@ export default function MenuAnalyticsPage() {
         </div>
 
         {/* Row 5: Drinks + Calorie */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 16 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 20 }}>
           {drinkDonutData.length > 0 && (
             <div style={cardStyle}>
               <SectionTitle>ドリンク内訳</SectionTitle>
