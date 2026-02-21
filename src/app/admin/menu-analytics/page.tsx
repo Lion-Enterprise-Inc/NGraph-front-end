@@ -62,7 +62,8 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
   )
 }
 
-function DonutChart({ data, size = 200, centerLabel }: { data: Array<{ label: string; value: number; color: string }>; size?: number; centerLabel?: string }) {
+function DonutChart({ data: rawData, size = 200, centerLabel }: { data: Array<{ label: string; value: number; color: string }>; size?: number; centerLabel?: string }) {
+  const data = [...rawData].sort((a, b) => b.value - a.value)
   const total = data.reduce((s, d) => s + d.value, 0)
   if (total === 0) return <div style={{ color: 'var(--muted)', fontSize: 13 }}>データなし</div>
 
