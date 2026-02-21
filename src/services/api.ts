@@ -460,6 +460,9 @@ export const DISH_CATEGORIES: Record<string, string> = {
   soba: 'そば・うどん',
   tempura: '天ぷら',
   yakitori: '焼き鳥',
+  steamed: '蒸し物',
+  vinegared: '酢の物',
+  chinmi: '珍味',
   salad: 'サラダ',
   soup: 'スープ',
   side: '一品料理',
@@ -501,6 +504,7 @@ export interface Menu {
   narrative: Record<string, any> | null;
   serving: Record<string, any> | null;
   price_detail: Record<string, any> | null;
+  featured_tags: string[] | null;
   created_at: string;
   updated_at: string;
 }
@@ -524,6 +528,7 @@ export interface MenuCreate {
   narrative?: Record<string, any> | null;
   serving?: Record<string, any> | null;
   price_detail?: Record<string, any> | null;
+  featured_tags?: string[] | null;
 }
 
 export interface MenuUpdate {
@@ -544,6 +549,7 @@ export interface MenuUpdate {
   narrative?: Record<string, any> | null;
   serving?: Record<string, any> | null;
   price_detail?: Record<string, any> | null;
+  featured_tags?: string[] | null;
 }
 
 export interface MenuListResponse {

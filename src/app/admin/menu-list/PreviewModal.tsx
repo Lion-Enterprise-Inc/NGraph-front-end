@@ -248,6 +248,15 @@ export default function PreviewModal({ isOpen, onClose, item, onEdit }: PreviewM
           </Section>
         )}
 
+        {/* Featured Tags */}
+        {item.featuredTags && item.featuredTags.length > 0 && (
+          <Section title="特集タグ">
+            <div style={{ display: 'flex', flexWrap: 'wrap' }}>
+              {item.featuredTags.map(tag => <Tag key={tag} label={tag} color="#7C3AED" />)}
+            </div>
+          </Section>
+        )}
+
         {/* Taste Profile Radar */}
         {item.tasteProfiles && item.tasteProfiles.length > 0 && (
           <Section title="味覚プロファイル">

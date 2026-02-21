@@ -353,6 +353,21 @@ export default function MenuFormModal({
             </div>
 
             <div style={{ marginBottom: '20px', borderTop: '1px solid #1E293B', paddingTop: '16px' }}>
+              <h4 style={{ fontSize: '15px', fontWeight: 600, marginBottom: '12px', color: '#374151' }}>🏷️ 特集タグ</h4>
+              <div className="form-group">
+                <input type="text" className="form-input"
+                  value={(isEdit ? (editItem!.featuredTags || []) : (newMenu as any).featuredTags || []).join(', ')}
+                  onChange={(e) => {
+                    const tags = e.target.value.split(/[,、]/).map(t => t.trim()).filter(Boolean)
+                    setField('featuredTags', tags.length > 0 ? tags : null)
+                  }}
+                  placeholder="人気, 店長おすすめ, 季節限定（カンマ区切り）"
+                />
+                <div style={{ fontSize: 11, color: '#94A3B8', marginTop: 4 }}>カンマ区切りで入力。チャットAIが「おすすめは？」に活用します</div>
+              </div>
+            </div>
+
+            <div style={{ marginBottom: '20px', borderTop: '1px solid #1E293B', paddingTop: '16px' }}>
               <h4 style={{ fontSize: '15px', fontWeight: 600, marginBottom: '12px', color: '#374151' }}>💰 価格詳細</h4>
               <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                 <div className="form-group" style={{ flex: 1 }}>

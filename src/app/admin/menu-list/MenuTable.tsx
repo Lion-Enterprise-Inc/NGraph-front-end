@@ -219,10 +219,13 @@ export default function MenuTable({
                       <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
                         <div style={{ width: '40px', height: '30px', background: '#1E293B', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', color: '#94A3B8', flexShrink: 0, marginTop: '2px' }}>📄</div>
                         <div style={{ flex: 1 }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '2px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '2px', flexWrap: 'wrap' }}>
                             {itemIsNew && (
                               <span style={{ display: 'inline-block', padding: '1px 5px', background: '#7C3AED', color: '#F5F3FF', borderRadius: 4, fontSize: 9, fontWeight: 700, letterSpacing: 0.5 }}>NEW</span>
                             )}
+                            {item.featuredTags?.map(tag => (
+                              <span key={tag} style={{ display: 'inline-block', padding: '1px 6px', background: '#D97706', color: '#FFF', borderRadius: 4, fontSize: 9, fontWeight: 600 }}>{tag}</span>
+                            ))}
                             <span style={{ fontWeight: 600, color: 'var(--text)', fontSize: '14px' }}>🇯🇵 {item.name}</span>
                           </div>
                           {item.nameEn && (
@@ -291,10 +294,13 @@ export default function MenuTable({
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: '11px', color: '#94A3B8', marginBottom: '2px' }}>#{rowNum}</div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
                       {itemIsNew && (
                         <span style={{ display: 'inline-block', padding: '1px 5px', background: '#7C3AED', color: '#F5F3FF', borderRadius: 4, fontSize: 9, fontWeight: 700, letterSpacing: 0.5 }}>NEW</span>
                       )}
+                      {item.featuredTags?.map(tag => (
+                        <span key={tag} style={{ display: 'inline-block', padding: '1px 6px', background: '#D97706', color: '#FFF', borderRadius: 4, fontSize: 9, fontWeight: 600 }}>{tag}</span>
+                      ))}
                       <span style={{ fontWeight: 600, fontSize: '15px', color: 'var(--text)' }}>{item.name}</span>
                     </div>
                     {item.nameEn && <div style={{ fontSize: '12px', color: 'var(--muted)', fontStyle: 'italic' }}>{item.nameEn}</div>}

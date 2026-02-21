@@ -31,6 +31,7 @@ export interface MenuItem {
   serving: Record<string, any> | null
   priceDetail: Record<string, any> | null
   tasteProfiles: Array<{ uid: string; name_jp: string }> | null
+  featuredTags: string[] | null
   createdAt: string | null
 }
 
@@ -272,6 +273,7 @@ function MenuListContent() {
             serving: menu.serving || null,
             priceDetail: menu.price_detail || null,
             tasteProfiles: menu.taste_profiles || null,
+            featuredTags: menu.featured_tags || null,
             createdAt: menu.created_at || null
           }))
           setMenuItems(menus)
@@ -582,7 +584,8 @@ function MenuListContent() {
         status: editItem.status,
         narrative: editItem.narrative,
         serving: editItem.serving,
-        price_detail: editItem.priceDetail
+        price_detail: editItem.priceDetail,
+        featured_tags: editItem.featuredTags
       }
 
       await MenuApi.update(editItem.uid, updateData)
