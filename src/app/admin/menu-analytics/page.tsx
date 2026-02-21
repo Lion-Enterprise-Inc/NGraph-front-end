@@ -438,7 +438,7 @@ export default function MenuAnalyticsPage() {
         {/* Row 3: Price (Bar) + Rank (Donut) */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 20 }}>
           <div style={cardStyle}>
-            <SectionTitle>価格帯分布</SectionTitle>
+            <SectionTitle>価格帯分布（全体）</SectionTitle>
             <HorizontalBarChart data={priceData} />
           </div>
           <div style={cardStyle}>
@@ -446,6 +446,25 @@ export default function MenuAnalyticsPage() {
             <DonutChart data={rankData} />
           </div>
         </div>
+
+        {/* Category Price Ranges */}
+        {(data.category_price_ranges || []).length > 0 && (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 20 }}>
+            {(data.category_price_ranges || []).slice(0, 6).map(cp => {
+              const cpData = cp.ranges.map((r, i) => ({
+                label: `${r.range}円`,
+                value: r.count,
+                color: PALETTE[i % PALETTE.length],
+              }))
+              return (
+                <div key={cp.category} style={cardStyle}>
+                  <SectionTitle>価格帯：{cp.label}</SectionTitle>
+                  <HorizontalBarChart data={cpData} />
+                </div>
+              )
+            })}
+          </div>
+        )}
 
         {/* Row 4: Ingredients + Allergens */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 20 }}>

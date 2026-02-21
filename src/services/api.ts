@@ -999,6 +999,7 @@ export interface MenuAnalyticsData {
   protein_distribution: Array<{ label: string; count: number }>;
   menu_composition: Array<{ label: string; count: number }>;
   drink_breakdown: Array<{ label: string; count: number }>;
+  category_price_ranges: Array<{ category: string; label: string; ranges: Array<{ range: string; count: number }> }>;
 }
 
 export default apiClient;
