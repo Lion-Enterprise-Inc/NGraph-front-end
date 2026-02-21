@@ -997,9 +997,12 @@ export default function CapturePage({
                     console.log("sse_error", data.message);
                     throw new Error(data.message || 'Server error');
                   } else if (data.type === 'done' && data.message_uid) {
+                    const nfgItems = data.nfg_items as VisionMenuItem[] | undefined;
                     setResponses((prev) =>
                       prev.map((item) =>
-                        item.id === responseId ? { ...item, messageUid: data.message_uid } : item
+                        item.id === responseId
+                          ? { ...item, messageUid: data.message_uid, ...(nfgItems?.length ? { visionItems: nfgItems } : {}) }
+                          : item
                       )
                     );
                   }
@@ -1427,9 +1430,31 @@ export default function CapturePage({
               </div>
 
               {response.output && response.visionItems && response.visionItems.length > 0 ? (
-                /* NFGカード表示 */
+                /* NFGカード表示（チャット応答テキスト + カード） */
                 <div className="chat-row chat-row-assistant">
                   <div className="chat-content">
+                    {/* チャットからのNFGカード: テキスト導入文があれば先に表示 */}
+                    {typingState[response.id]?.intro && (
+                      <div className="chat-message-wrapper" style={{ marginBottom: 8 }}>
+                        <div className="chat-bubble chat-bubble-assistant">
+                          <div className="assistant-intro">
+                            <ReactMarkdown
+                              remarkPlugins={[remarkGfm, remarkBreaks]}
+                              rehypePlugins={[rehypeHighlight]}
+                              components={{
+                                p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
+                                strong: ({ children }) => <strong className="font-semibold text-gray-900">{children}</strong>,
+                                ul: ({ children }) => <ul className="menu-list">{children}</ul>,
+                                ol: ({ children }) => <ol className="menu-list numbered">{children}</ol>,
+                                li: ({ children }) => <li className="menu-item">{children}</li>,
+                              }}
+                            >
+                              {escapeNumberedLists(typingState[response.id]?.intro ?? "")}
+                            </ReactMarkdown>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                     <div className="nfg-cards-container">
                       <div className="nfg-cards-header">
                         {response.output.title}
