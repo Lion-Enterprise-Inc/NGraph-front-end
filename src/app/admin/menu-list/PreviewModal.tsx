@@ -2,6 +2,7 @@
 
 import { DISH_CATEGORIES } from '../../../services/api'
 import type { MenuItem } from './page'
+import { getMissingFields } from './menuHelpers'
 
 interface PreviewModalProps {
   isOpen: boolean
@@ -121,14 +122,7 @@ export default function PreviewModal({ isOpen, onClose, item, onEdit }: PreviewM
   const narrativeEntries = Object.entries(narrative).filter(([, v]) => v)
   const servingEntries = Object.entries(serving).filter(([, v]) => v)
 
-  const missingFields: string[] = []
-  if (!item.nameEn) missingFields.push('英語名')
-  if (!item.description) missingFields.push('説明文')
-  if (!item.ingredients || item.ingredients.length === 0) missingFields.push('原材料')
-  if (!item.allergens || item.allergens.length === 0) missingFields.push('アレルゲン')
-  if (narrativeEntries.length === 0) missingFields.push('ナラティブ')
-  if (servingEntries.length === 0) missingFields.push('提供情報')
-  if (!item.cookingMethods || item.cookingMethods.length === 0) missingFields.push('調理法')
+  const missingFields = getMissingFields(item).map(f => f.label)
 
   return (
     <div className="modal active">

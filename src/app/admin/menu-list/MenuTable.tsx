@@ -2,6 +2,21 @@
 
 import { DISH_CATEGORIES } from '../../../services/api'
 import type { MenuItem } from './page'
+import { getMissingFields } from './menuHelpers'
+
+const SORT_OPTIONS = [
+  { value: 'default', label: 'デフォルト' },
+  { value: 'rank', label: '確認優先度' },
+  { value: 'created', label: '登録日' },
+  { value: 'price', label: '価格' },
+  { value: 'name', label: '名前' },
+]
+
+function isNew(createdAt: string | null): boolean {
+  if (!createdAt) return false
+  const diff = Date.now() - new Date(createdAt).getTime()
+  return diff < 7 * 24 * 60 * 60 * 1000
+}
 
 interface MenuTableProps {
   items: MenuItem[]
@@ -16,12 +31,16 @@ interface MenuTableProps {
   countWarning: number
   isLoading: boolean
   error: string
+  sortKey: string
+  sortDir: 'asc' | 'desc'
+  onSortChange: (key: string, dir: 'asc' | 'desc') => void
   onSearchChange: (q: string) => void
   onFilterChange: (f: string) => void
   onItemsPerPageChange: (n: number) => void
   onPageChange: (p: number) => void
   onPreview: (item: MenuItem) => void
   onEdit: (item: MenuItem) => void
+  onEditWithTab: (item: MenuItem, tab: string) => void
   onDelete: (uid: string) => void
   onApprove: (item: MenuItem) => void
   onBulkApprove: () => void
@@ -29,12 +48,38 @@ interface MenuTableProps {
   onFetchFromSource: () => void
 }
 
+function HintBadges({ item, onEditWithTab }: { item: MenuItem; onEditWithTab: (item: MenuItem, tab: string) => void }) {
+  const missing = getMissingFields(item)
+  if (missing.length === 0) return null
+  const show = missing.slice(0, 3)
+  const rest = missing.length - show.length
+  return (
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '3px', marginTop: '3px' }}>
+      {show.map(f => (
+        <span
+          key={f.label}
+          onClick={(e) => { e.stopPropagation(); onEditWithTab(item, f.tab) }}
+          style={{ display: 'inline-block', padding: '1px 6px', background: 'rgba(239,68,68,0.15)', color: '#FCA5A5', borderRadius: 8, fontSize: 10, cursor: 'pointer', border: '1px solid rgba(239,68,68,0.3)' }}
+        >
+          {f.label}
+        </span>
+      ))}
+      {rest > 0 && (
+        <span style={{ display: 'inline-block', padding: '1px 6px', background: 'rgba(239,68,68,0.1)', color: '#FCA5A5', borderRadius: 8, fontSize: 10 }}>
+          +{rest}
+        </span>
+      )}
+    </div>
+  )
+}
+
 export default function MenuTable({
   items, currentPage, itemsPerPage, totalItems, totalPages,
   searchQuery, filter, countAll, countVerified, countWarning,
   isLoading, error,
+  sortKey, sortDir, onSortChange,
   onSearchChange, onFilterChange, onItemsPerPageChange, onPageChange,
-  onPreview, onEdit, onDelete, onApprove, onBulkApprove, onAddNew, onFetchFromSource
+  onPreview, onEdit, onEditWithTab, onDelete, onApprove, onBulkApprove, onAddNew, onFetchFromSource
 }: MenuTableProps) {
   return (
     <>
@@ -69,8 +114,8 @@ export default function MenuTable({
         </div>
       </div>
 
-      {/* フィルターと表示件数 */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+      {/* フィルター・ソート・表示件数 */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', flexWrap: 'wrap', gap: '8px' }}>
         <div className="filter-buttons" style={{ display: 'flex', gap: '8px' }}>
           <button className={`filter-btn ${filter === 'all' ? 'active' : ''}`} onClick={() => onFilterChange('all')} style={{ padding: '6px 12px', fontSize: '13px' }}>
             全て ({countAll})
@@ -83,7 +128,23 @@ export default function MenuTable({
           </button>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <label style={{ fontSize: '13px', color: '#94A3B8' }}>表示件数:</label>
+          <label style={{ fontSize: '13px', color: '#94A3B8' }}>並び替え:</label>
+          <select
+            value={sortKey}
+            onChange={(e) => onSortChange(e.target.value, e.target.value === 'rank' ? 'asc' : sortDir)}
+            style={{ padding: '4px 8px', border: '1px solid #ddd', borderRadius: '4px', fontSize: '13px' }}
+          >
+            {SORT_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+          </select>
+          {sortKey !== 'default' && (
+            <button
+              onClick={() => onSortChange(sortKey, sortDir === 'asc' ? 'desc' : 'asc')}
+              style={{ padding: '4px 8px', border: '1px solid #ddd', borderRadius: '4px', fontSize: '13px', background: 'var(--bg-surface)', cursor: 'pointer', color: 'var(--text)' }}
+            >
+              {sortDir === 'asc' ? '↑ 昇順' : '↓ 降順'}
+            </button>
+          )}
+          <label style={{ fontSize: '13px', color: '#94A3B8', marginLeft: '8px' }}>表示件数:</label>
           <select
             value={itemsPerPage}
             onChange={(e) => onItemsPerPageChange(Number(e.target.value))}
@@ -146,21 +207,24 @@ export default function MenuTable({
                   </td>
                 </tr>
               ) : items.map((item, index) => {
-                const confidence = item.confidenceScore
-                const confidenceColor = confidence >= 75 ? '#28a745' : confidence >= 40 ? '#ffc107' : '#dc3545'
-                const confidenceLabel = confidence >= 75 ? 'OK' : confidence >= 40 ? '確認推奨' : '要修正'
                 const rank = item.verificationRank
                 const rkColor = rank === 'S' ? '#EF4444' : rank === 'A' ? '#F59E0B' : rank === 'B' ? '#3B82F6' : rank === 'C' ? '#10B981' : ''
                 const rkLabel = rank === 'S' ? '必ず確認' : rank === 'A' ? '要確認' : rank === 'B' ? '確認推奨' : rank === 'C' ? '確認不要' : ''
                 const rowNum = (currentPage - 1) * itemsPerPage + index + 1
+                const itemIsNew = isNew(item.createdAt)
                 return (
                   <tr key={item.uid}>
                     <td style={{ textAlign: 'center', fontWeight: 600, color: '#94A3B8', fontSize: '13px' }}>{rowNum}</td>
                     <td>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <div style={{ width: '40px', height: '30px', background: '#1E293B', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', color: '#94A3B8' }}>📄</div>
+                      <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                        <div style={{ width: '40px', height: '30px', background: '#1E293B', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', color: '#94A3B8', flexShrink: 0, marginTop: '2px' }}>📄</div>
                         <div style={{ flex: 1 }}>
-                          <div style={{ fontWeight: 600, color: 'var(--text)', marginBottom: '2px', fontSize: '14px' }}>🇯🇵 {item.name}</div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '2px' }}>
+                            {itemIsNew && (
+                              <span style={{ display: 'inline-block', padding: '1px 5px', background: '#7C3AED', color: '#F5F3FF', borderRadius: 4, fontSize: 9, fontWeight: 700, letterSpacing: 0.5 }}>NEW</span>
+                            )}
+                            <span style={{ fontWeight: 600, color: 'var(--text)', fontSize: '14px' }}>🇯🇵 {item.name}</span>
+                          </div>
                           {item.nameEn && (
                             <div style={{ fontSize: '12px', color: 'var(--muted)', marginBottom: '2px', fontStyle: 'italic' }}>
                               🇬🇧 {item.nameEn}
@@ -172,6 +236,7 @@ export default function MenuTable({
                           <div style={{ fontSize: '10px', color: 'var(--muted)', marginBottom: '2px' }}>
                             🥘 {item.ingredients?.length > 0 ? item.ingredients.map(ing => ing.name).join(', ') : '原材料なし'}
                           </div>
+                          <HintBadges item={item} onEditWithTab={onEditWithTab} />
                         </div>
                       </div>
                     </td>
@@ -216,18 +281,22 @@ export default function MenuTable({
               メニューがありません。「手動で新規追加」ボタンからメニューを追加してください。
             </div>
           ) : items.map((item, index) => {
-            const confidence = item.confidenceScore
-            const confidenceColor = confidence >= 75 ? '#28a745' : confidence >= 40 ? '#ffc107' : '#dc3545'
             const mRank = item.verificationRank
             const mRkColor = mRank === 'S' ? '#EF4444' : mRank === 'A' ? '#F59E0B' : mRank === 'B' ? '#3B82F6' : mRank === 'C' ? '#10B981' : ''
             const mRkLabel = mRank === 'S' ? '必ず確認' : mRank === 'A' ? '要確認' : mRank === 'B' ? '確認推奨' : mRank === 'C' ? '確認不要' : ''
             const rowNum = (currentPage - 1) * itemsPerPage + index + 1
+            const itemIsNew = isNew(item.createdAt)
             return (
               <div key={item.uid} className="mobile-card">
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: '11px', color: '#94A3B8', marginBottom: '2px' }}>#{rowNum}</div>
-                    <div style={{ fontWeight: 600, fontSize: '15px', color: 'var(--text)' }}>{item.name}</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      {itemIsNew && (
+                        <span style={{ display: 'inline-block', padding: '1px 5px', background: '#7C3AED', color: '#F5F3FF', borderRadius: 4, fontSize: 9, fontWeight: 700, letterSpacing: 0.5 }}>NEW</span>
+                      )}
+                      <span style={{ fontWeight: 600, fontSize: '15px', color: 'var(--text)' }}>{item.name}</span>
+                    </div>
                     {item.nameEn && <div style={{ fontSize: '12px', color: 'var(--muted)', fontStyle: 'italic' }}>{item.nameEn}</div>}
                   </div>
                   <div style={{ textAlign: 'right' }}>
@@ -239,11 +308,12 @@ export default function MenuTable({
                     )}
                   </div>
                 </div>
-                <div style={{ fontSize: '12px', color: 'var(--muted)', marginBottom: '8px' }}>
+                <div style={{ fontSize: '12px', color: 'var(--muted)', marginBottom: '4px' }}>
                   📂 {DISH_CATEGORIES[item.category] || item.category}
                   {mRank && <span style={{ marginLeft: '8px', fontWeight: 800, color: mRkColor }}>{mRank} <span style={{ fontWeight: 400, fontSize: '10px' }}>{mRkLabel}</span></span>}
                 </div>
-                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                <HintBadges item={item} onEditWithTab={onEditWithTab} />
+                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginTop: '8px' }}>
                   {!item.status && (
                     <button className="btn-action btn-approve" onClick={() => onApprove(item)}>✓ 承認</button>
                   )}

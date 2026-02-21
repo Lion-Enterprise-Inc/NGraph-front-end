@@ -564,11 +564,13 @@ export const MenuApi = {
     return apiClient.post<MenuResponse>('/menus/', data);
   },
 
-  getAll: async (restaurantUid?: string, page: number = 1, size: number = 100): Promise<MenuListResponse> => {
+  getAll: async (restaurantUid?: string, page: number = 1, size: number = 100, sort?: string, order?: string): Promise<MenuListResponse> => {
     const params = new URLSearchParams();
     if (restaurantUid) params.append('restaurant_uid', restaurantUid);
     params.append('page', page.toString());
     params.append('size', size.toString());
+    if (sort) params.append('sort', sort);
+    if (order) params.append('order', order);
     return apiClient.get<MenuListResponse>(`/menus/?${params.toString()}`);
   },
 

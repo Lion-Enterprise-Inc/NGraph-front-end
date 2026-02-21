@@ -31,6 +31,7 @@ export interface MenuItem {
   serving: Record<string, any> | null
   priceDetail: Record<string, any> | null
   tasteProfiles: Array<{ uid: string; name_jp: string }> | null
+  createdAt: string | null
 }
 
 export default function MenuListPage() {
@@ -49,6 +50,8 @@ function MenuListContent() {
   const isAdminViewing = !!(uidParam && user && (user.role === 'superadmin' || user.role === 'platform_owner'))
   const [searchQuery, setSearchQuery] = useState('')
   const [filter, setFilter] = useState('all')
+  const [sortKey, setSortKey] = useState('default')
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc')
   const [itemsPerPage, setItemsPerPage] = useState(30)
   const [showAddModal, setShowAddModal] = useState(false)
   const [showFetchModal, setShowFetchModal] = useState(false)
@@ -242,7 +245,7 @@ function MenuListContent() {
 
       if (restaurantData?.uid) {
         try {
-          const menusResponse = await MenuApi.getAll(restaurantData.uid, page, itemsPerPage)
+          const menusResponse = await MenuApi.getAll(restaurantData.uid, page, itemsPerPage, sortKey !== 'default' ? sortKey : undefined, sortKey !== 'default' ? sortDir : undefined)
           const items = menusResponse.result?.items || []
           const total = menusResponse.result?.total || 0
 
@@ -268,7 +271,8 @@ function MenuListContent() {
             narrative: menu.narrative || null,
             serving: menu.serving || null,
             priceDetail: menu.price_detail || null,
-            tasteProfiles: menu.taste_profiles || null
+            tasteProfiles: menu.taste_profiles || null,
+            createdAt: menu.created_at || null
           }))
           setMenuItems(menus)
 
@@ -326,7 +330,7 @@ function MenuListContent() {
     } finally {
       setIsLoading(false)
     }
-  }, [authLoading, user, itemsPerPage, isAdminViewing, uidParam])
+  }, [authLoading, user, itemsPerPage, isAdminViewing, uidParam, sortKey, sortDir])
 
   useEffect(() => {
     fetchData(currentPage)
@@ -545,14 +549,14 @@ function MenuListContent() {
     setShowPreviewModal(true)
   }
 
-  const handleEdit = (item: MenuItem) => {
+  const handleEdit = (item: MenuItem, tab: string = 'basic') => {
     setEditItem({...item})
     setEditIngredientsText(item.ingredients?.map(ing => ing.name).join(', ') || '')
     setEditSelectedAllergenUids(item.allergens?.map(allergen => allergen.uid) || [])
     setEditSelectedCookingMethodUids(item.cookingMethods?.map(cm => cm.uid) || [])
     setEditSelectedRestrictionUids(item.restrictions?.map(r => r.uid) || [])
     setShowEditModal(true)
-    setActiveTab('basic')
+    setActiveTab(tab)
   }
 
   const handleSaveEdit = async () => {
@@ -685,12 +689,16 @@ function MenuListContent() {
           countWarning={countWarning}
           isLoading={isLoading}
           error={error}
+          sortKey={sortKey}
+          sortDir={sortDir}
+          onSortChange={(key, dir) => { setSortKey(key); setSortDir(dir); setCurrentPage(1); }}
           onSearchChange={setSearchQuery}
           onFilterChange={setFilter}
           onItemsPerPageChange={(n) => { setItemsPerPage(n); setCurrentPage(1); }}
           onPageChange={handlePageChange}
           onPreview={handlePreview}
           onEdit={handleEdit}
+          onEditWithTab={handleEdit}
           onDelete={handleDelete}
           onApprove={handleApprove}
           onBulkApprove={handleBulkApprove}

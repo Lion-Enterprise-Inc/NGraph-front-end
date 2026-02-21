@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useMemo } from 'react'
 import AdminLayout from '../../../components/admin/AdminLayout'
 import { MenuAnalyticsApi, MenuAnalyticsData, TokenService, RestaurantApi, Restaurant } from '../../../services/api'
 
@@ -31,6 +31,9 @@ const PALETTE = [
 
 const MONO = "'SF Mono', 'Cascadia Code', 'Consolas', 'Monaco', monospace"
 
+// レーダーに表示する味覚（分かりやすいものだけ）
+const TASTE_DISPLAY = ['甘味', '酸味', '塩味', '苦味', '旨味', '辛味', 'コク', 'さっぱり', 'まろやか', '香ばしい']
+
 function topNWithOther(items: Array<{ label: string; value: number; color?: string }>, n: number = 8) {
   if (items.length <= n + 1) return items.map((d, i) => ({ ...d, color: d.color || PALETTE[i % PALETTE.length] }))
   const top = items.slice(0, n)
@@ -38,6 +41,52 @@ function topNWithOther(items: Array<{ label: string; value: number; color?: stri
   const result = top.map((d, i) => ({ ...d, color: d.color || PALETTE[i % PALETTE.length] }))
   if (otherSum > 0) result.push({ label: 'その他', value: otherSum, color: '#64748B' })
   return result
+}
+
+function generateStoreCharacter(data: MenuAnalyticsData): string[] {
+  const lines: string[] = []
+
+  // 素材別の特徴
+  const protein = (data.protein_distribution || []).sort((a, b) => b.count - a.count)
+  const topProtein = protein.filter(p => p.count > 0).slice(0, 2)
+  if (topProtein.length > 0) {
+    const names = topProtein.map(p => p.label.replace('料理', '')).join('・')
+    lines.push(`${names}を中心とした品揃え`)
+  }
+
+  // ドリンクの特徴
+  const drinks = (data.drink_breakdown || []).filter(d => d.count > 0).sort((a, b) => b.count - a.count)
+  if (drinks.length > 0 && drinks[0].label !== 'ソフトドリンク') {
+    lines.push(`${drinks[0].label}の品揃えが充実`)
+  }
+
+  // 味覚の特徴
+  const tastes = data.taste_profile_distribution.filter(d => d.count > 0).sort((a, b) => b.count - a.count)
+  if (tastes.length >= 2) {
+    const topTastes = tastes.slice(0, 3).map(t => t.name_jp).join('・')
+    lines.push(`味の傾向: ${topTastes}`)
+  }
+
+  // 価格帯からターゲット層
+  const avgPrice = data.avg_price
+  if (avgPrice <= 1000) {
+    lines.push('手頃な価格帯 — 普段使いやファミリーに最適')
+  } else if (avgPrice <= 2000) {
+    lines.push('中価格帯 — 旅行者や郷土料理を楽しむ層に最適')
+  } else if (avgPrice <= 3500) {
+    lines.push('やや高価格帯 — 記念日や接待利用にも')
+  } else {
+    lines.push('高価格帯 — 本格的な食体験を求める層向け')
+  }
+
+  // フード構成の特徴
+  const composition = (data.menu_composition || []).filter(d => d.count > 0).sort((a, b) => b.count - a.count)
+  if (composition.length >= 2) {
+    const topCats = composition.slice(0, 3).map(c => c.label).join('・')
+    lines.push(`フードの中心: ${topCats}`)
+  }
+
+  return lines
 }
 
 function SummaryCard({ label, value, sub }: { label: string; value: string | number; sub?: string }) {
@@ -313,6 +362,8 @@ export default function MenuAnalyticsPage() {
     fetchData()
   }, [selectedUid, isAdmin, restaurants.length])
 
+  const storeCharacter = useMemo(() => data ? generateStoreCharacter(data) : [], [data])
+
   if (loading) {
     return (
       <AdminLayout title="メニュー分析">
@@ -351,7 +402,7 @@ export default function MenuAnalyticsPage() {
 
   const ingredientData = topNWithOther(
     data.top_ingredients.slice(0, 15).map(d => ({ label: d.name, value: d.count })),
-    10
+    8
   )
 
   const allergenDonutData = topNWithOther(
@@ -363,7 +414,9 @@ export default function MenuAnalyticsPage() {
     data.calorie_distribution.map(d => ({ label: d.name_jp, value: d.count }))
   )
 
-  const tasteData = data.taste_profile_distribution.filter(d => d.count > 0)
+  // 味覚プロファイル: 分かりやすいものだけ＆データがあるものに絞る
+  const tasteData = data.taste_profile_distribution
+    .filter(d => d.count > 0 && TASTE_DISPLAY.includes(d.name_jp))
 
   const proteinData = topNWithOther(
     (data.protein_distribution || []).filter(d => d.count > 0).map(d => ({ label: d.label, value: d.count }))
@@ -417,6 +470,25 @@ export default function MenuAnalyticsPage() {
           <SummaryCard label="平均完成度" value={`${data.avg_confidence}%`} />
         </div>
 
+        {/* ── 店舗の特徴 ── */}
+        {storeCharacter.length > 0 && (
+          <div style={{
+            ...cardStyle,
+            background: 'linear-gradient(135deg, var(--bg-surface), rgba(74,158,255,0.06))',
+            borderColor: 'rgba(74,158,255,0.2)',
+          }}>
+            <SectionTitle>この店舗の特徴</SectionTitle>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {storeCharacter.map((line, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <div style={{ width: 6, height: 6, borderRadius: '50%', background: PALETTE[i % PALETTE.length], flexShrink: 0 }} />
+                  <span style={{ fontSize: 14, color: 'var(--text)', lineHeight: 1.5 }}>{line}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* ── メニュー構成 ── */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 20 }}>
           <div style={cardStyle}>
@@ -434,31 +506,6 @@ export default function MenuAnalyticsPage() {
               <SectionTitle>ドリンク内訳</SectionTitle>
               <DonutChart data={drinkDonutData} />
             </div>
-          </div>
-        )}
-
-        {/* ── 価格分析 ── */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 20 }}>
-          <div style={cardStyle}>
-            <SectionTitle>価格帯分布（全体）</SectionTitle>
-            <HorizontalBarChart data={priceData} />
-          </div>
-        </div>
-        {(data.category_price_ranges || []).length > 0 && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 20 }}>
-            {(data.category_price_ranges || []).slice(0, 6).map(cp => {
-              const cpData = cp.ranges.map((r, i) => ({
-                label: `${r.range}円`,
-                value: r.count,
-                color: PALETTE[i % PALETTE.length],
-              }))
-              return (
-                <div key={cp.category} style={cardStyle}>
-                  <SectionTitle>価格帯：{cp.label}</SectionTitle>
-                  <HorizontalBarChart data={cpData} />
-                </div>
-              )
-            })}
           </div>
         )}
 
@@ -485,14 +532,28 @@ export default function MenuAnalyticsPage() {
             </div>
           )}
         </div>
+
+        {/* 味覚プロファイル */}
         <div style={cardStyle}>
           <SectionTitle>味覚プロファイル</SectionTitle>
-          <div style={{ display: 'flex', justifyContent: 'center' }}>
-            <RadarChart
-              data={tasteData.map(d => ({ label: d.name_jp, value: d.count }))}
-              size={300}
-            />
-          </div>
+          {tasteData.length >= 3 ? (
+            <div style={{ display: 'flex', justifyContent: 'center' }}>
+              <RadarChart
+                data={tasteData.map(d => ({ label: d.name_jp, value: d.count }))}
+                size={300}
+              />
+            </div>
+          ) : tasteData.length > 0 ? (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+              {tasteData.map((d, i) => (
+                <span key={i} style={{ padding: '4px 12px', background: '#1E3A5F', borderRadius: 12, fontSize: 13, color: '#F8FAFC' }}>
+                  {d.name_jp} ({d.count})
+                </span>
+              ))}
+            </div>
+          ) : (
+            <div style={{ color: 'var(--muted)', fontSize: 13 }}>データなし</div>
+          )}
         </div>
 
         {/* ── 安全管理 ── */}
@@ -540,6 +601,31 @@ export default function MenuAnalyticsPage() {
             <DonutChart data={allergenDonutData} size={160} />
           </div>
         </div>
+
+        {/* ── 価格分析（最下部） ── */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 20 }}>
+          <div style={cardStyle}>
+            <SectionTitle>価格帯分布（全体）</SectionTitle>
+            <DonutChart data={priceData} centerLabel="全品目" />
+          </div>
+        </div>
+        {(data.category_price_ranges || []).length > 0 && (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 20 }}>
+            {(data.category_price_ranges || []).slice(0, 6).map(cp => {
+              const cpData = cp.ranges.map((r, i) => ({
+                label: `${r.range}円`,
+                value: r.count,
+                color: PALETTE[i % PALETTE.length],
+              }))
+              return (
+                <div key={cp.category} style={cardStyle}>
+                  <SectionTitle>価格帯：{cp.label}</SectionTitle>
+                  <HorizontalBarChart data={cpData} />
+                </div>
+              )
+            })}
+          </div>
+        )}
 
       </div>
     </AdminLayout>
