@@ -1484,6 +1484,11 @@ export default function CapturePage({
                               )}
                             </div>
                             <div className={`nfg-card-body${expanded ? ' expanded' : ''}`}>
+                              {vi.image_url && (
+                                <div className="nfg-card-image">
+                                  <img src={vi.image_url} alt={vi.name_jp} loading="lazy" />
+                                </div>
+                              )}
                               {vi.description && (
                                 <div className="nfg-card-desc">{vi.description}</div>
                               )}

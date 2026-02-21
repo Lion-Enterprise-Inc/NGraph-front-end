@@ -5534,6 +5534,17 @@ textarea.form-input {
   border-top: 1px solid rgba(255,255,255,0.04);
 }
 
+.nfg-card-image {
+  padding-top: 10px;
+  text-align: center;
+}
+.nfg-card-image img {
+  max-width: 120px;
+  max-height: 120px;
+  object-fit: contain;
+  border-radius: 6px;
+}
+
 .nfg-card-desc {
   font-size: 13px;
   color: rgba(255,255,255,0.65);

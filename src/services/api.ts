@@ -640,6 +640,7 @@ export interface VisionMenuItem {
   flavor_profile?: string;
   estimated_calories?: string;
   tax_note?: string;
+  image_url?: string;
   source?: "db" | "ai";
   confidence?: number;
 }
