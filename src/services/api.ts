@@ -1010,4 +1010,45 @@ export interface MenuAnalyticsData {
   category_price_ranges: Array<{ category: string; label: string; ranges: Array<{ range: string; count: number }> }>;
 }
 
+// Nearby restaurants API (public, no auth)
+export interface NearbyRestaurant {
+  uid: string;
+  name: string;
+  slug: string;
+  logo_url: string | null;
+  distance_m: number;
+  address: string | null;
+}
+
+export const NearbyApi = {
+  search: async (lat: number, lng: number, radius: number = 500): Promise<{ result: NearbyRestaurant[] }> => {
+    const params = new URLSearchParams({ lat: String(lat), lng: String(lng), radius: String(radius) });
+    const resp = await fetch(`${API_BASE_URL}/restaurants/nearby?${params}`);
+    if (!resp.ok) throw new Error('Nearby search failed');
+    return resp.json();
+  },
+};
+
+// Contribution/Suggestion API (public, no auth)
+export interface SuggestionRequest {
+  menu_uid: string;
+  restaurant_uid: string;
+  field: string;
+  suggested_value: string;
+  reason?: string;
+  session_id: string;
+}
+
+export const ContributionApi = {
+  suggest: async (data: SuggestionRequest): Promise<{ result: any; message: string }> => {
+    const resp = await fetch(`${API_BASE_URL}/contributions/suggestions`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    if (!resp.ok) throw new Error('Suggestion failed');
+    return resp.json();
+  },
+};
+
 export default apiClient;

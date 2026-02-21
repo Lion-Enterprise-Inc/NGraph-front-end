@@ -11,7 +11,8 @@ import {
 import { useRouter, useSearchParams } from "next/navigation";
 import { mockRestaurants, mockScanResponse, type Restaurant } from "../api/mockApi";
 import Tesseract from "tesseract.js";
-import { FeedbackApi, EventApi, type VisionMenuItem } from "../services/api";
+import { FeedbackApi, EventApi, type VisionMenuItem, ContributionApi } from "../services/api";
+import SuggestionModal from "../components/SuggestionModal";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import remarkBreaks from "remark-breaks";
@@ -202,6 +203,7 @@ export default function CapturePage({
     setRestaurantSlug: setCtxSlug,
     setOnNewChat,
     setOnSelectThread,
+    geoLocation,
   } = useAppContext();
   const activeLanguage = contextLanguage ?? language ?? "ja";
   const [message, setMessage] = useState("");
@@ -246,6 +248,7 @@ export default function CapturePage({
   const [showScrollButton, setShowScrollButton] = useState(false);
   const [userScrolledUp, setUserScrolledUp] = useState(false);
   const [expandedCards, setExpandedCards] = useState<Record<string, Set<number>>>({});
+  const [suggestionTarget, setSuggestionTarget] = useState<{ name_jp: string; menu_uid?: string; restaurant_uid?: string } | null>(null);
 
   // responsesをsessionStorageに自動保存
   useEffect(() => {
@@ -840,6 +843,19 @@ export default function CapturePage({
           formData.append('image', attachmentSnapshot.file);
           if (selectedRestaurant?.slug) {
             formData.append('restaurant_slug', selectedRestaurant.slug);
+          }
+          formData.append('contribute', 'true');
+          if (geoLocation) {
+            formData.append('lat', String(geoLocation.lat));
+            formData.append('lng', String(geoLocation.lng));
+          }
+          {
+            let sid = localStorage.getItem('ngraph_session_id');
+            if (!sid) {
+              sid = crypto.randomUUID();
+              localStorage.setItem('ngraph_session_id', sid);
+            }
+            formData.append('session_id', sid);
           }
 
           const visionResponse = await fetch(`${apiBaseUrl}/menus/analyze-image`, {
@@ -1493,6 +1509,21 @@ export default function CapturePage({
                                 {vi.confidence != null && vi.confidence > 0 && (
                                   <span className="nfg-badge nfg-badge-confidence">{copy.nfg.confidence} {vi.confidence}%</span>
                                 )}
+                                <button
+                                  type="button"
+                                  className="nfg-badge"
+                                  style={{ marginLeft: 'auto', cursor: 'pointer', background: 'rgba(79,140,255,0.15)', color: '#4f8cff', border: '1px solid rgba(79,140,255,0.3)' }}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setSuggestionTarget({
+                                      name_jp: vi.name_jp,
+                                      menu_uid: (vi as any).menu_uid,
+                                      restaurant_uid: selectedRestaurant?.uid,
+                                    });
+                                  }}
+                                >
+                                  この情報を修正
+                                </button>
                               </div>
                             </div>
                           </div>
@@ -1767,6 +1798,13 @@ export default function CapturePage({
 
       <div onClick={(event) => event.stopPropagation()}>
       </div>
+
+      <SuggestionModal
+        open={!!suggestionTarget}
+        onClose={() => setSuggestionTarget(null)}
+        menuItem={suggestionTarget || { name_jp: '' }}
+        onSubmit={() => setSuggestionTarget(null)}
+      />
     </div>
   );
 }

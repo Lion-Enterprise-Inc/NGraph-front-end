@@ -33,6 +33,8 @@ type AppContextValue = {
   setOnNewChat: (fn: (() => void) | null) => void;
   onSelectThread: ((threadUid: string) => void) | null;
   setOnSelectThread: (fn: ((threadUid: string) => void) | null) => void;
+  geoLocation: { lat: number; lng: number } | null;
+  setGeoLocation: (loc: { lat: number; lng: number } | null) => void;
 };
 
 const AppContext = createContext<AppContextValue | undefined>(undefined);
@@ -64,6 +66,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [restaurantSlug, setRestaurantSlug] = useState<string | null>(null);
   const [onNewChat, setOnNewChat] = useState<(() => void) | null>(null);
   const [onSelectThread, setOnSelectThread] = useState<((threadUid: string) => void) | null>(null);
+  const [geoLocation, setGeoLocation] = useState<{ lat: number; lng: number } | null>(null);
+
+  useEffect(() => {
+    if (typeof navigator === 'undefined' || !navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(
+      (pos) => setGeoLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+      () => {},
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  }, []);
 
   const setLanguage = (code: string, source = "unknown") => {
     setLanguageState(code);
@@ -126,6 +138,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
           setOnNewChat,
           onSelectThread,
           setOnSelectThread,
+          geoLocation,
+          setGeoLocation,
         }}
       >
         {children}
