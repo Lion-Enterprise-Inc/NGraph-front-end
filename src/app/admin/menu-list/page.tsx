@@ -30,6 +30,7 @@ export interface MenuItem {
   narrative: Record<string, any> | null
   serving: Record<string, any> | null
   priceDetail: Record<string, any> | null
+  tasteProfiles: Array<{ uid: string; name_jp: string }> | null
 }
 
 export default function MenuListPage() {
@@ -266,7 +267,8 @@ function MenuListContent() {
             dataSource: menu.data_source || null,
             narrative: menu.narrative || null,
             serving: menu.serving || null,
-            priceDetail: menu.price_detail || null
+            priceDetail: menu.price_detail || null,
+            tasteProfiles: menu.taste_profiles || null
           }))
           setMenuItems(menus)
 

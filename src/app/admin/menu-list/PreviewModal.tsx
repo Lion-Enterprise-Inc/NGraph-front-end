@@ -55,6 +55,58 @@ function FieldRow({ label, value, missing }: { label: string; value?: string | n
   )
 }
 
+function TasteRadar({ profiles }: { profiles: Array<{ uid: string; name_jp: string }> }) {
+  const size = 180
+  const cx = size / 2
+  const cy = size / 2
+  const r = size * 0.35
+  const n = profiles.length
+  if (n < 3) {
+    return (
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+        {profiles.map(p => <Tag key={p.uid} label={p.name_jp} color="#1E3A5F" />)}
+      </div>
+    )
+  }
+  const angleStep = (2 * Math.PI) / n
+  const levels = [0.5, 1.0]
+  const gridLines = levels.map(level => {
+    const pts = Array.from({ length: n }, (_, i) => {
+      const angle = i * angleStep - Math.PI / 2
+      return `${cx + r * level * Math.cos(angle)},${cy + r * level * Math.sin(angle)}`
+    })
+    return pts.join(' ')
+  })
+  const dataPoints = profiles.map((_, i) => {
+    const angle = i * angleStep - Math.PI / 2
+    return `${cx + r * Math.cos(angle)},${cy + r * Math.sin(angle)}`
+  })
+  const labelPositions = profiles.map((p, i) => {
+    const angle = i * angleStep - Math.PI / 2
+    const lr = r + 22
+    return { x: cx + lr * Math.cos(angle), y: cy + lr * Math.sin(angle), label: p.name_jp }
+  })
+  return (
+    <div style={{ display: 'flex', justifyContent: 'center' }}>
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+        {gridLines.map((pts, i) => (
+          <polygon key={i} points={pts} fill="none" stroke="#334155" strokeWidth={0.5} />
+        ))}
+        <polygon points={dataPoints.join(' ')} fill="rgba(74,158,255,0.2)" stroke="#4A9EFF" strokeWidth={1.5} />
+        {dataPoints.map((pt, i) => {
+          const [x, y] = pt.split(',').map(Number)
+          return <circle key={i} cx={x} cy={y} r={2.5} fill="#4A9EFF" />
+        })}
+        {labelPositions.map((lp, i) => (
+          <text key={i} x={lp.x} y={lp.y} textAnchor="middle" dominantBaseline="middle" fill="#94A3B8" fontSize={10}>
+            {lp.label}
+          </text>
+        ))}
+      </svg>
+    </div>
+  )
+}
+
 export default function PreviewModal({ isOpen, onClose, item, onEdit }: PreviewModalProps) {
   if (!isOpen || !item) return null
 
@@ -199,6 +251,13 @@ export default function PreviewModal({ isOpen, onClose, item, onEdit }: PreviewM
                 <FieldRow key={key} label={SERVING_LABELS[key] || key} value={String(val)} />
               ))}
             </div>
+          </Section>
+        )}
+
+        {/* Taste Profile Radar */}
+        {item.tasteProfiles && item.tasteProfiles.length > 0 && (
+          <Section title="味覚プロファイル">
+            <TasteRadar profiles={item.tasteProfiles} />
           </Section>
         )}
 

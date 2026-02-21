@@ -16,6 +16,12 @@ const RANK_LABELS: Record<string, string> = {
   B: '確認推奨',
   C: '確認不要',
 }
+const RANK_HINTS: Record<string, string> = {
+  S: 'アレルゲン未確認・原材料不明 → 店主確認で降格',
+  A: 'AI推定のみ・一部未確認 → 原材料確認で降格',
+  B: '大部分確認済み → 提供情報追加でCへ',
+  C: '全データ確認済み',
+}
 
 const PALETTE = [
   '#4A9EFF', '#36B5FF', '#5B7FFF', '#2DD4A8', '#FFB547',
@@ -25,7 +31,7 @@ const PALETTE = [
 
 const MONO = "'SF Mono', 'Cascadia Code', 'Consolas', 'Monaco', monospace"
 
-function topNWithOther(items: Array<{ label: string; value: number; color?: string }>, n: number = 5) {
+function topNWithOther(items: Array<{ label: string; value: number; color?: string }>, n: number = 8) {
   if (items.length <= n + 1) return items.map((d, i) => ({ ...d, color: d.color || PALETTE[i % PALETTE.length] }))
   const top = items.slice(0, n)
   const otherSum = items.slice(n).reduce((s, d) => s + d.value, 0)
@@ -102,7 +108,7 @@ function DonutChart({ data: rawData, size = 200, centerLabel }: { data: Array<{ 
         <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
           <circle cx={cx} cy={cy} r={radius} fill="none" stroke="var(--bg-hover)" strokeWidth={thickness} opacity={0.3} />
           {arcs.map((arc, i) => (
-            <path key={i} d={arc.d} fill="none" stroke={arc.color} strokeWidth={thickness} strokeLinecap="round" />
+            <path key={i} d={arc.d} fill="none" stroke={arc.color} strokeWidth={thickness} strokeLinecap="butt" />
           ))}
         </svg>
         <div style={{
@@ -344,13 +350,13 @@ export default function MenuAnalyticsPage() {
   }))
 
   const ingredientData = topNWithOther(
-    data.top_ingredients.slice(0, 10).map(d => ({ label: d.name, value: d.count })),
-    7
+    data.top_ingredients.slice(0, 15).map(d => ({ label: d.name, value: d.count })),
+    10
   )
 
   const allergenDonutData = topNWithOther(
     data.allergen_coverage.top_allergens.map(d => ({ label: d.name_jp, value: d.count })),
-    6
+    10
   )
 
   const calorieData = topNWithOther(
@@ -444,6 +450,14 @@ export default function MenuAnalyticsPage() {
           <div style={cardStyle}>
             <SectionTitle>確認優先度</SectionTitle>
             <DonutChart data={rankData} />
+            <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 6 }}>
+              {['S', 'A', 'B', 'C'].map(r => (
+                <div key={r} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11, color: 'var(--muted)' }}>
+                  <span style={{ fontWeight: 700, color: RANK_COLORS[r], width: 14 }}>{r}</span>
+                  <span>{RANK_HINTS[r]}</span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
 
