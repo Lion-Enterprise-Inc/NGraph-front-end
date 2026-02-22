@@ -5,6 +5,70 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { Search } from 'lucide-react'
 import { ExploreApi, SearchRestaurant, NfgSearchRestaurant, CityCount, PlatformStats } from '../services/api'
 
+const MATRIX_CHARS = 'アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン0123456789ABCDEFNFGRAPH'
+
+function MatrixRain() {
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+
+  useEffect(() => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+
+    let animId: number
+    const fontSize = 14
+    let columns: number[] = []
+
+    const resize = () => {
+      canvas.width = canvas.offsetWidth
+      canvas.height = canvas.offsetHeight
+      const cols = Math.floor(canvas.width / fontSize)
+      columns = Array.from({ length: cols }, () => Math.random() * -canvas.height / fontSize)
+    }
+    resize()
+    window.addEventListener('resize', resize)
+
+    const draw = () => {
+      ctx.fillStyle = 'rgba(13, 17, 23, 0.06)'
+      ctx.fillRect(0, 0, canvas.width, canvas.height)
+
+      for (let i = 0; i < columns.length; i++) {
+        const char = MATRIX_CHARS[Math.floor(Math.random() * MATRIX_CHARS.length)]
+        const x = i * fontSize
+        const y = columns[i] * fontSize
+
+        // depth: some columns brighter, some dimmer
+        const depth = (i % 3 === 0) ? 0.25 : (i % 3 === 1) ? 0.12 : 0.06
+        ctx.fillStyle = `rgba(88, 166, 255, ${depth})`
+        ctx.font = `${fontSize}px 'SF Mono', 'Fira Code', monospace`
+        ctx.fillText(char, x, y)
+
+        columns[i] += 0.4 + Math.random() * 0.3
+
+        if (y > canvas.height && Math.random() > 0.98) {
+          columns[i] = 0
+        }
+      }
+
+      animId = requestAnimationFrame(draw)
+    }
+
+    // slow: ~20fps
+    const interval = setInterval(() => {
+      animId = requestAnimationFrame(draw)
+    }, 50)
+
+    return () => {
+      clearInterval(interval)
+      cancelAnimationFrame(animId)
+      window.removeEventListener('resize', resize)
+    }
+  }, [])
+
+  return <canvas ref={canvasRef} className="matrix-rain" />
+}
+
 const QUICK_TAPS = [
   '蟹', '海鮮', '寿司', '焼き鳥', 'ラーメン', 'そば', '居酒屋',
   'ランチ', 'コース', '接待',
@@ -111,6 +175,7 @@ export default function HomePage() {
 
   return (
     <div className={`explore-page ${!searched ? 'explore-landing' : ''}`}>
+      {!searched && <MatrixRain />}
       <div className={!searched ? 'explore-landing-center' : ''}>
         <header className="explore-header">
           <div className="explore-header-inner">
