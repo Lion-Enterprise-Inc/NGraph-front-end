@@ -5,16 +5,19 @@ type NearbyItem = {
   name: string;
   slug: string;
   logo_url: string | null;
-  distance_m: number;
+  distance_m?: number;
   address: string | null;
+  city?: string | null;
+  menu_count?: number;
 };
 
 type NearbyListProps = {
   items: NearbyItem[];
   onSelect: (slug: string) => void;
+  showDistance?: boolean;
 };
 
-export default function NearbyList({ items, onSelect }: NearbyListProps) {
+export default function NearbyList({ items, onSelect, showDistance = true }: NearbyListProps) {
   if (items.length === 0) {
     return (
       <div style={{ textAlign: 'center', padding: '32px 16px', color: 'rgba(255,255,255,0.5)' }}>
@@ -71,17 +74,29 @@ export default function NearbyList({ items, onSelect }: NearbyListProps) {
             <div style={{ fontSize: '15px', fontWeight: 600, color: 'rgba(255,255,255,0.9)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
               {item.name}
             </div>
-            {item.address && (
-              <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', marginTop: '2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                {item.address}
-              </div>
-            )}
+            <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', marginTop: '2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              {showDistance && item.distance_m != null ? (
+                <>
+                  {item.distance_m < 1000
+                    ? `${Math.round(item.distance_m)}m`
+                    : `${(item.distance_m / 1000).toFixed(1)}km`}
+                  {item.city && ` · ${item.city}`}
+                </>
+              ) : (
+                <>
+                  {item.city || item.address || ''}
+                  {item.menu_count != null && item.menu_count > 0 && ` · ${item.menu_count}品`}
+                </>
+              )}
+            </div>
           </div>
-          <div style={{ flexShrink: 0, fontSize: '13px', color: 'rgba(255,255,255,0.5)', fontWeight: 500 }}>
-            {item.distance_m < 1000
-              ? `${Math.round(item.distance_m)}m`
-              : `${(item.distance_m / 1000).toFixed(1)}km`}
-          </div>
+          {showDistance && item.distance_m != null && (
+            <div style={{ flexShrink: 0, fontSize: '13px', color: 'rgba(255,255,255,0.5)', fontWeight: 500 }}>
+              {item.distance_m < 1000
+                ? `${Math.round(item.distance_m)}m`
+                : `${(item.distance_m / 1000).toFixed(1)}km`}
+            </div>
+          )}
         </button>
       ))}
     </div>

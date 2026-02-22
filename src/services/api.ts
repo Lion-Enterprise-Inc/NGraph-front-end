@@ -1067,6 +1067,48 @@ export const NearbyApi = {
   },
 };
 
+// Explore / public search API (no auth)
+export interface SearchRestaurant {
+  uid: string;
+  name: string;
+  slug: string;
+  logo_url: string | null;
+  address: string | null;
+  city: string | null;
+  menu_count: number;
+}
+
+export interface CityCount {
+  city: string;
+  count: number;
+}
+
+export const ExploreApi = {
+  search: async (q: string = '', city: string = '', page: number = 1, size: number = 20): Promise<{
+    result: { total: number; page: number; size: number; pages: number; items: SearchRestaurant[] };
+  }> => {
+    const params = new URLSearchParams();
+    if (q) params.append('q', q);
+    if (city) params.append('city', city);
+    params.append('page', String(page));
+    params.append('size', String(size));
+    const resp = await fetch(`${API_BASE_URL}/restaurants/search?${params}`);
+    if (!resp.ok) throw new Error('Search failed');
+    return resp.json();
+  },
+  cities: async (): Promise<{ result: CityCount[] }> => {
+    const resp = await fetch(`${API_BASE_URL}/restaurants/cities`);
+    if (!resp.ok) throw new Error('Cities failed');
+    return resp.json();
+  },
+  nearby: async (lat: number, lng: number, radius: number = 500): Promise<{ result: NearbyRestaurant[] }> => {
+    const params = new URLSearchParams({ lat: String(lat), lng: String(lng), radius: String(radius) });
+    const resp = await fetch(`${API_BASE_URL}/restaurants/nearby?${params}`);
+    if (!resp.ok) throw new Error('Nearby search failed');
+    return resp.json();
+  },
+};
+
 // Contribution/Suggestion API (public, no auth)
 export interface SuggestionRequest {
   menu_uid: string;
