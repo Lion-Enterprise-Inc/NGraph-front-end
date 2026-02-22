@@ -5,7 +5,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { Search } from 'lucide-react'
 import { ExploreApi, SearchRestaurant, NfgSearchRestaurant, CityCount, PlatformStats } from '../services/api'
 
-const MATRIX_CHARS = 'ニコマコス倫理学中庸武士道茶の本論語と算盤サピエンス全史美食の美学禅と日本文化代表的日本人ダヴィンチ量子力学日本再興戦略料理の四面体NFGraph正解データ誠不完全実践知共同主観'
+const MATRIX_CHARS = 'ニコマコス倫理学中庸武士道茶の本論語と算盤サピエンス全史美食の美学禅と日本文化代表的日本人ダヴィンチ量子力学日本再興戦略料理の四面体NFGraph正解データ誠不完全実践知共同主観Plurality'
 
 function MatrixRain() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -19,42 +19,58 @@ function MatrixRain() {
     let animId: number
     const fontSize = 14
     let columns: number[] = []
+    let colFlip: boolean[] = []
 
     const resize = () => {
       canvas.width = canvas.offsetWidth
       canvas.height = canvas.offsetHeight
       const cols = Math.floor(canvas.width / fontSize)
       columns = Array.from({ length: cols }, () => Math.random() * -canvas.height / fontSize)
+      colFlip = Array.from({ length: cols }, () => Math.random() > 0.5)
     }
     resize()
     window.addEventListener('resize', resize)
 
     const draw = () => {
-      ctx.fillStyle = 'rgba(13, 17, 23, 0.06)'
+      ctx.fillStyle = 'rgba(13, 17, 23, 0.05)'
       ctx.fillRect(0, 0, canvas.width, canvas.height)
+
+      const cx = canvas.width / 2
+      const cy = canvas.height / 2
+      const radius = Math.min(canvas.width, canvas.height) * 0.38
 
       for (let i = 0; i < columns.length; i++) {
         const char = MATRIX_CHARS[Math.floor(Math.random() * MATRIX_CHARS.length)]
         const x = i * fontSize
         const y = columns[i] * fontSize
 
-        // depth: some columns brighter, some dimmer
-        const depth = (i % 3 === 0) ? 0.25 : (i % 3 === 1) ? 0.12 : 0.06
-        ctx.fillStyle = `rgba(88, 166, 255, ${depth})`
-        ctx.font = `${fontSize}px 'SF Mono', 'Fira Code', monospace`
-        ctx.fillText(char, x, y)
+        // radial fade: distance from center
+        const dx = (x - cx) / radius
+        const dy = (y - cy) / radius
+        const dist = Math.sqrt(dx * dx + dy * dy)
+        if (dist > 1.3) { columns[i] += 0.3; continue }
+        const radialFade = Math.max(0, 1 - dist * dist)
 
-        columns[i] += 0.4 + Math.random() * 0.3
+        const depth = (i % 4 === 0) ? 0.35 : (i % 4 === 1) ? 0.2 : (i % 4 === 2) ? 0.1 : 0.06
+        const alpha = depth * radialFade
+
+        ctx.save()
+        ctx.fillStyle = `rgba(16, 163, 127, ${alpha})`
+        ctx.font = `${fontSize}px 'SF Mono', 'Fira Code', monospace`
+        ctx.translate(x + fontSize / 2, y)
+        if (colFlip[i]) ctx.scale(-1, 1)
+        ctx.fillText(char, -fontSize / 2, 0)
+        ctx.restore()
+
+        columns[i] += 0.3 + Math.random() * 0.25
 
         if (y > canvas.height && Math.random() > 0.98) {
           columns[i] = 0
+          colFlip[i] = Math.random() > 0.5
         }
       }
-
-      animId = requestAnimationFrame(draw)
     }
 
-    // slow: ~20fps
     const interval = setInterval(() => {
       animId = requestAnimationFrame(draw)
     }, 50)
