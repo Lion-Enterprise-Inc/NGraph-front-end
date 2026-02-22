@@ -1083,7 +1083,20 @@ export interface CityCount {
   count: number;
 }
 
+export interface PlatformStats {
+  total_restaurants: number;
+  total_menus: number;
+  enriched_menus: number;
+  cities: number;
+  translated_menus: number;
+}
+
 export const ExploreApi = {
+  stats: async (): Promise<{ result: PlatformStats }> => {
+    const resp = await fetch(`${API_BASE_URL}/restaurants/stats`);
+    if (!resp.ok) throw new Error('Stats failed');
+    return resp.json();
+  },
   search: async (q: string = '', city: string = '', page: number = 1, size: number = 20): Promise<{
     result: { total: number; page: number; size: number; pages: number; items: SearchRestaurant[] };
   }> => {

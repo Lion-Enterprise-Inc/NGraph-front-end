@@ -4945,6 +4945,36 @@ textarea.form-input {
   margin: 0;
 }
 
+.explore-stats {
+  display: flex;
+  gap: 16px;
+  margin-top: 14px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.explore-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 48px;
+}
+
+.explore-stat-num {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--color-accent);
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+}
+
+.explore-stat-label {
+  font-size: 10px;
+  color: var(--color-text-muted);
+  margin-top: 2px;
+  letter-spacing: 0.02em;
+}
+
 .explore-body {
   max-width: 720px;
   margin: 0 auto;

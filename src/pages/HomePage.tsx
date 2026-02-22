@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { Search } from 'lucide-react'
-import { ExploreApi, SearchRestaurant, CityCount } from '../services/api'
+import { ExploreApi, SearchRestaurant, CityCount, PlatformStats } from '../services/api'
 
 export default function HomePage() {
   const router = useRouter()
@@ -15,6 +15,7 @@ export default function HomePage() {
   const [page, setPage] = useState(1)
   const [pages, setPages] = useState(1)
   const [loading, setLoading] = useState(true)
+  const [stats, setStats] = useState<PlatformStats | null>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout>>()
 
   const fetchRestaurants = useCallback(async (q: string, c: string, p: number) => {
@@ -33,6 +34,7 @@ export default function HomePage() {
 
   useEffect(() => {
     ExploreApi.cities().then(res => setCities(res.result)).catch(() => {})
+    ExploreApi.stats().then(res => setStats(res.result)).catch(() => {})
     fetchRestaurants('', '', 1)
   }, [fetchRestaurants])
 
@@ -66,6 +68,31 @@ export default function HomePage() {
             NGraph <span className="explore-badge">β</span> <span className="explore-region">＠FUKUI</span>
           </h1>
           <p className="explore-tagline">人もAIも読める、飲食店の正解データ</p>
+
+          {stats && (
+            <div className="explore-stats">
+              <div className="explore-stat">
+                <span className="explore-stat-num">{stats.total_restaurants.toLocaleString()}</span>
+                <span className="explore-stat-label">店舗</span>
+              </div>
+              <div className="explore-stat">
+                <span className="explore-stat-num">{stats.total_menus.toLocaleString()}</span>
+                <span className="explore-stat-label">メニュー</span>
+              </div>
+              <div className="explore-stat">
+                <span className="explore-stat-num">{stats.enriched_menus.toLocaleString()}</span>
+                <span className="explore-stat-label">NFG構造化</span>
+              </div>
+              <div className="explore-stat">
+                <span className="explore-stat-num">{stats.cities}</span>
+                <span className="explore-stat-label">都市</span>
+              </div>
+              <div className="explore-stat">
+                <span className="explore-stat-num">{stats.translated_menus.toLocaleString()}</span>
+                <span className="explore-stat-label">多言語</span>
+              </div>
+            </div>
+          )}
         </div>
       </header>
 
