@@ -60,6 +60,8 @@ export default function MenuFormModal({
   const getCategory = () => isEdit ? editItem!.category : newMenu.category
   const getDescription = () => isEdit ? (editItem!.description || '') : newMenu.description
   const getDescriptionEn = () => isEdit ? (editItem!.descriptionEn || '') : newMenu.descriptionEn
+  const getImageUrl = () => isEdit ? (editItem!.imageUrl || '') : ((newMenu as any).imageUrl || '')
+  const getProductUrl = () => isEdit ? (editItem!.productUrl || '') : ((newMenu as any).productUrl || '')
   const getIngredients = () => isEdit ? editIngredientsText : newMenu.ingredients
   const getNarrative = (key: string) => isEdit ? (editItem!.narrative?.[key] || '') : (newMenu.narrative[key] || '')
   const getServing = (key: string) => isEdit ? (editItem!.serving?.[key] || '') : (newMenu.serving[key] || '')
@@ -157,6 +159,25 @@ export default function MenuFormModal({
             <div className="form-group">
               <label className="form-label">料理の説明（英語）</label>
               <textarea className="form-input" value={getDescriptionEn()} onChange={(e) => setField('descriptionEn', e.target.value)} />
+            </div>
+            <div className="form-group">
+              <label className="form-label">商品画像URL</label>
+              <input type="url" className="form-input" value={getImageUrl()} onChange={(e) => setField('imageUrl', e.target.value || null)} placeholder="https://example.com/image.jpg" />
+              {getImageUrl() && (
+                <div style={{ marginTop: 8 }}>
+                  <img
+                    src={getImageUrl()}
+                    alt="商品画像プレビュー"
+                    style={{ maxWidth: 200, maxHeight: 150, borderRadius: 8, border: '1px solid var(--border)', objectFit: 'cover' }}
+                    onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
+                  />
+                </div>
+              )}
+            </div>
+            <div className="form-group">
+              <label className="form-label">商品ページURL</label>
+              <input type="url" className="form-input" value={getProductUrl()} onChange={(e) => setField('productUrl', e.target.value || null)} placeholder="https://example.com/product" />
+              <div style={{ fontSize: 11, color: '#94A3B8', marginTop: 4 }}>メーカーページ等のリンク（ドリンク商品向け）</div>
             </div>
             <button className="btn btn-primary" onClick={() => onTabChange('materials')}>次へ: 原材料設定 →</button>
           </div>

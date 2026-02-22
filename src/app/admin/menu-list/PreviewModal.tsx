@@ -129,6 +129,18 @@ export default function PreviewModal({ isOpen, onClose, item, onEdit }: PreviewM
       <div className="modal-content">
         <button className="modal-close" onClick={onClose}>&times;</button>
 
+        {/* Image */}
+        {item.imageUrl && (
+          <div style={{ marginBottom: 16, textAlign: 'center' }}>
+            <img
+              src={item.imageUrl}
+              alt={item.name}
+              style={{ maxWidth: '100%', maxHeight: 240, borderRadius: 10, objectFit: 'cover' }}
+              onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
+            />
+          </div>
+        )}
+
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20, paddingBottom: 16, borderBottom: '1px solid var(--border)' }}>
           <div>
@@ -169,6 +181,15 @@ export default function PreviewModal({ isOpen, onClose, item, onEdit }: PreviewM
             {item.status && <div style={{ color: '#10B981', marginTop: 2 }}>承認済み</div>}
           </div>
         </div>
+
+        {/* Product URL */}
+        {item.productUrl && (
+          <div style={{ marginBottom: 16 }}>
+            <a href={item.productUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: 13, color: '#667eea', textDecoration: 'none' }}>
+              商品ページを開く &rarr;
+            </a>
+          </div>
+        )}
 
         {/* Description */}
         <Section title="説明文">

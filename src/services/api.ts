@@ -494,6 +494,7 @@ export interface Menu {
   verified: boolean;
   verified_by: string | null;
   image_url: string | null;
+  product_url: string | null;
   data_source: string | null;
   confidence_score: number;
   verification_rank: string | null;
@@ -524,6 +525,8 @@ export interface MenuCreate {
   restriction_uids?: string[] | null;
   taste_profile_uids?: string[] | null;
   calorie_range_uid?: string | null;
+  image_url?: string | null;
+  product_url?: string | null;
   data_source?: string;
   narrative?: Record<string, any> | null;
   serving?: Record<string, any> | null;
@@ -545,6 +548,8 @@ export interface MenuUpdate {
   restriction_uids?: string[] | null;
   taste_profile_uids?: string[] | null;
   calorie_range_uid?: string | null;
+  image_url?: string | null;
+  product_url?: string | null;
   data_source?: string;
   narrative?: Record<string, any> | null;
   serving?: Record<string, any> | null;
