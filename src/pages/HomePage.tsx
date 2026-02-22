@@ -17,14 +17,14 @@ function MatrixRain() {
     if (!ctx) return
 
     let animId: number
-    const fontSize = 14
+    const fontSize = 11
     let columns: number[] = []
     let colFlip: boolean[] = []
 
     const resize = () => {
       canvas.width = canvas.offsetWidth
       canvas.height = canvas.offsetHeight
-      const cols = Math.floor(canvas.width / fontSize)
+      const cols = Math.floor(canvas.width / (fontSize * 1.8))
       columns = Array.from({ length: cols }, () => Math.random() * -canvas.height / fontSize)
       colFlip = Array.from({ length: cols }, () => Math.random() > 0.5)
     }
@@ -32,26 +32,26 @@ function MatrixRain() {
     window.addEventListener('resize', resize)
 
     const draw = () => {
-      ctx.fillStyle = 'rgba(13, 17, 23, 0.05)'
+      ctx.fillStyle = 'rgba(13, 17, 23, 0.04)'
       ctx.fillRect(0, 0, canvas.width, canvas.height)
 
       const cx = canvas.width / 2
       const cy = canvas.height / 2
-      const radius = Math.min(canvas.width, canvas.height) * 0.38
+      const radius = Math.min(canvas.width, canvas.height) * 0.35
 
+      const spacing = fontSize * 1.8
       for (let i = 0; i < columns.length; i++) {
         const char = MATRIX_CHARS[Math.floor(Math.random() * MATRIX_CHARS.length)]
-        const x = i * fontSize
+        const x = i * spacing
         const y = columns[i] * fontSize
 
-        // radial fade: distance from center
         const dx = (x - cx) / radius
         const dy = (y - cy) / radius
         const dist = Math.sqrt(dx * dx + dy * dy)
-        if (dist > 1.3) { columns[i] += 0.3; continue }
-        const radialFade = Math.max(0, 1 - dist * dist)
+        if (dist > 1.2) { columns[i] += 0.2; continue }
+        const radialFade = Math.max(0, 1 - dist * dist * 0.8)
 
-        const depth = (i % 4 === 0) ? 0.35 : (i % 4 === 1) ? 0.2 : (i % 4 === 2) ? 0.1 : 0.06
+        const depth = (i % 4 === 0) ? 0.14 : (i % 4 === 1) ? 0.09 : (i % 4 === 2) ? 0.05 : 0.03
         const alpha = depth * radialFade
 
         ctx.save()
@@ -62,9 +62,9 @@ function MatrixRain() {
         ctx.fillText(char, -fontSize / 2, 0)
         ctx.restore()
 
-        columns[i] += 0.3 + Math.random() * 0.25
+        columns[i] += 0.15 + Math.random() * 0.15
 
-        if (y > canvas.height && Math.random() > 0.98) {
+        if (y > canvas.height && Math.random() > 0.985) {
           columns[i] = 0
           colFlip[i] = Math.random() > 0.5
         }
@@ -73,7 +73,7 @@ function MatrixRain() {
 
     const interval = setInterval(() => {
       animId = requestAnimationFrame(draw)
-    }, 50)
+    }, 65)
 
     return () => {
       clearInterval(interval)
