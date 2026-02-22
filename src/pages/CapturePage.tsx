@@ -255,6 +255,7 @@ export default function CapturePage({
     if (typeof window === 'undefined') return new Set();
     try { return new Set(JSON.parse(localStorage.getItem('ngraph_liked_menus') || '[]')); } catch { return new Set(); }
   });
+  const [photoAdoptedCount, setPhotoAdoptedCount] = useState(0);
 
   // responsesをsessionStorageに自動保存
   useEffect(() => {
@@ -264,6 +265,19 @@ export default function CapturePage({
       sessionStorage.setItem(key, JSON.stringify(responses));
     } catch {}
   }, [responses, restaurantSlug]);
+
+  // photo adopted チェック
+  useEffect(() => {
+    if (!restaurantSlug) return;
+    const key = `ngraph_threadUid_${restaurantSlug || 'default'}`;
+    const tid = sessionStorage.getItem(key);
+    if (!tid) return;
+    const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://dev-backend.ngraph.jp/api';
+    fetch(`${apiBaseUrl}/public-chat/${restaurantSlug}/photo-adopted?thread_uid=${tid}`)
+      .then(r => r.json())
+      .then(d => { if (d.adopted_count > 0) setPhotoAdoptedCount(d.adopted_count); })
+      .catch(() => {});
+  }, [restaurantSlug]);
 
   // thread_uid復元 + 復元レスポンスのタイピング状態セット
   useEffect(() => {
@@ -1358,6 +1372,12 @@ export default function CapturePage({
             : null
         }
       />
+
+      {photoAdoptedCount > 0 && (
+        <div style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: '#fff', textAlign: 'center', padding: '6px 12px', fontSize: 12, fontWeight: 600 }}>
+          📸 あなたの写真が{photoAdoptedCount}品のNFGに採用されました
+        </div>
+      )}
 
       <div
         className="capture-body"
