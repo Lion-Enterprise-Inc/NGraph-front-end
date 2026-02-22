@@ -54,7 +54,8 @@ export default function HomePage() {
         setTotal(res.result.total)
         setPages(res.result.pages)
       }
-    } catch {
+    } catch (err) {
+      console.error('fetchRestaurants error:', err)
       setRestaurants([])
     } finally {
       setLoading(false)
