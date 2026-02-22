@@ -38,7 +38,7 @@ function BinaryField() {
         vx: Math.cos(angle) * speed,
         vy: Math.sin(angle) * speed,
         size,
-        alpha: 0.03 + Math.random() * 0.1,
+        alpha: 0.08 + Math.random() * 0.18,
         char: Math.random() > 0.5 ? '1' : '0',
         life: 0,
         maxLife: 300 + Math.random() * 400,
@@ -101,7 +101,7 @@ function BinaryField() {
           const ddy = particles[i].y - particles[j].y
           const d = Math.sqrt(ddx * ddx + ddy * ddy)
           if (d < SYNAPSE_DIST) {
-            const lineAlpha = Math.min(alphas[i], alphas[j]) * (1 - d / SYNAPSE_DIST) * 0.5
+            const lineAlpha = Math.min(alphas[i], alphas[j]) * (1 - d / SYNAPSE_DIST) * 0.7
             ctx.beginPath()
             ctx.moveTo(particles[i].x, particles[i].y - particles[i].size * 0.3)
             ctx.lineTo(particles[j].x, particles[j].y - particles[j].size * 0.3)
@@ -112,13 +112,17 @@ function BinaryField() {
         }
       }
 
-      // draw characters
+      // draw characters with glow
       for (let i = 0; i < particles.length; i++) {
         if (alphas[i] < 0.005) continue
         const p = particles[i]
+        ctx.save()
+        ctx.shadowColor = `rgba(16, 163, 127, ${alphas[i] * 0.8})`
+        ctx.shadowBlur = 8
         ctx.fillStyle = `rgba(16, 163, 127, ${alphas[i]})`
         ctx.font = `${p.size}px 'SF Mono', 'Fira Code', monospace`
         ctx.fillText(p.char, p.x, p.y)
+        ctx.restore()
       }
 
       animId = requestAnimationFrame(draw)
