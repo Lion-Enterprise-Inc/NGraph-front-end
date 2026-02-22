@@ -41,13 +41,7 @@ export default function HistoryDrawer({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="sidebar-brand">
-          <div className="sidebar-brand-left">
-            <img src="/ngraph-logo.svg" alt="NGraph" className="sidebar-brand-logo" />
-            <div className="sidebar-brand-info">
-              <span className="sidebar-brand-name">NGraph</span>
-              <span className="sidebar-brand-tagline">{tagline}</span>
-            </div>
-          </div>
+          <img src="/ngraph-text-logo.svg" alt="NGraph" className="sidebar-text-logo" />
           <button className="icon-button" type="button" onClick={onClose}>
             <X size={20} strokeWidth={1.75} color="rgba(255,255,255,0.6)" />
           </button>
@@ -85,7 +79,9 @@ export default function HistoryDrawer({
         </div>
 
         <div className="sidebar-footer">
-          <div className="sidebar-powered">Powered by NGraph</div>
+          <button className="sidebar-explore-btn" onClick={() => { router.push('/'); onClose?.(); }}>
+            他の店舗を見る
+          </button>
         </div>
       </aside>
     </div>

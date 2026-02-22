@@ -5729,6 +5729,28 @@ textarea.form-input {
   padding-bottom: 8px;
 }
 
+.sidebar-text-logo {
+  height: 36px;
+  width: auto;
+}
+
+.sidebar-explore-btn {
+  width: 100%;
+  padding: 10px;
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 6px;
+  color: var(--color-accent);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.sidebar-explore-btn:hover {
+  border-color: var(--color-accent);
+  background: rgba(16, 163, 127, 0.08);
+}
+
 /* ========== ShareSheet ========== */
 .share-sheet {
   padding: 16px 20px calc(20px + env(safe-area-inset-bottom, 0px));
