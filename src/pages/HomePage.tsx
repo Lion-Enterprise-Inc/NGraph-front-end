@@ -24,7 +24,7 @@ function BinaryField() {
 
     let animId: number
     let particles: Particle[] = []
-    const COUNT = 60
+    const COUNT = 35
     let pointer = { x: -9999, y: -9999, active: false }
 
     const onMove = (e: MouseEvent) => {
@@ -145,23 +145,27 @@ function BinaryField() {
         }
       }
 
-      // draw characters with glow
+      // draw characters
+      ctx.font = `11px 'SF Mono', 'Fira Code', monospace`
       for (let i = 0; i < particles.length; i++) {
         if (alphas[i] < 0.005) continue
         const p = particles[i]
-        ctx.save()
-        ctx.shadowColor = `rgba(16, 163, 127, ${alphas[i] * 0.8})`
-        ctx.shadowBlur = 8
         ctx.fillStyle = `rgba(16, 163, 127, ${alphas[i]})`
-        ctx.font = `${p.size}px 'SF Mono', 'Fira Code', monospace`
+        if (p.size !== 11) ctx.font = `${p.size}px 'SF Mono', 'Fira Code', monospace`
         ctx.fillText(p.char, p.x, p.y)
-        ctx.restore()
+        if (p.size !== 11) ctx.font = `11px 'SF Mono', 'Fira Code', monospace`
       }
 
-      animId = requestAnimationFrame(draw)
     }
 
-    animId = requestAnimationFrame(draw)
+    let last = 0
+    const loop = (time: number) => {
+      animId = requestAnimationFrame(loop)
+      if (time - last < 33) return // cap ~30fps
+      last = time
+      draw()
+    }
+    animId = requestAnimationFrame(loop)
 
     return () => {
       cancelAnimationFrame(animId)
@@ -217,21 +221,28 @@ export default function HomePage() {
     const el = pageRef.current
     if (!el) return
     const RADIUS = 120
-    const update = (px: number, py: number) => {
+    let rafPending = false
+    let lastPx = 0, lastPy = 0
+    const update = () => {
+      rafPending = false
       const glowEls = el.querySelectorAll<HTMLElement>('.glow-target')
       glowEls.forEach(g => {
         const rect = g.getBoundingClientRect()
         const cx = rect.left + rect.width / 2
         const cy = rect.top + rect.height / 2
-        const dist = Math.sqrt((px - cx) ** 2 + (py - cy) ** 2)
+        const dist = Math.sqrt((lastPx - cx) ** 2 + (lastPy - cy) ** 2)
         const intensity = Math.max(0, 1 - dist / RADIUS)
         g.style.setProperty('--glow', String(intensity))
       })
     }
-    const onMouse = (e: MouseEvent) => update(e.clientX, e.clientY)
+    const schedule = (px: number, py: number) => {
+      lastPx = px; lastPy = py
+      if (!rafPending) { rafPending = true; requestAnimationFrame(update) }
+    }
+    const onMouse = (e: MouseEvent) => schedule(e.clientX, e.clientY)
     const onTouch = (e: TouchEvent) => {
       const t = e.touches[0]
-      if (t) update(t.clientX, t.clientY)
+      if (t) schedule(t.clientX, t.clientY)
     }
     const onLeave = () => {
       const glowEls = el.querySelectorAll<HTMLElement>('.glow-target')
