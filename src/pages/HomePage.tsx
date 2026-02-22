@@ -25,6 +25,23 @@ function BinaryField() {
     let animId: number
     let particles: Particle[] = []
     const COUNT = 60
+    let pointer = { x: -9999, y: -9999, active: false }
+
+    const onMove = (e: MouseEvent) => {
+      const rect = canvas.getBoundingClientRect()
+      pointer = { x: e.clientX - rect.left, y: e.clientY - rect.top, active: true }
+    }
+    const onTouch = (e: TouchEvent) => {
+      const rect = canvas.getBoundingClientRect()
+      const t = e.touches[0]
+      if (t) pointer = { x: t.clientX - rect.left, y: t.clientY - rect.top, active: true }
+    }
+    const onLeave = () => { pointer.active = false }
+
+    document.addEventListener('mousemove', onMove)
+    document.addEventListener('touchmove', onTouch, { passive: true })
+    document.addEventListener('mouseleave', onLeave)
+    document.addEventListener('touchend', onLeave)
 
     const spawn = (w: number, h: number): Particle => {
       const angle = Math.random() * Math.PI * 2
@@ -70,6 +87,22 @@ function BinaryField() {
       // update & compute visible alpha
       for (let i = 0; i < particles.length; i++) {
         const p = particles[i]
+
+        // attract to pointer
+        if (pointer.active) {
+          const pdx = pointer.x - p.x
+          const pdy = pointer.y - p.y
+          const pdist = Math.sqrt(pdx * pdx + pdy * pdy)
+          if (pdist < 150 && pdist > 1) {
+            const force = 0.15 * (1 - pdist / 150)
+            p.vx += (pdx / pdist) * force
+            p.vy += (pdy / pdist) * force
+          }
+        }
+
+        // dampen velocity
+        p.vx *= 0.98
+        p.vy *= 0.98
         p.x += p.vx
         p.y += p.vy
         p.life++
@@ -133,6 +166,10 @@ function BinaryField() {
     return () => {
       cancelAnimationFrame(animId)
       window.removeEventListener('resize', resize)
+      document.removeEventListener('mousemove', onMove)
+      document.removeEventListener('touchmove', onTouch)
+      document.removeEventListener('mouseleave', onLeave)
+      document.removeEventListener('touchend', onLeave)
     }
   }, [])
 
