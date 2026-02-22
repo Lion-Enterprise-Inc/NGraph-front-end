@@ -98,6 +98,7 @@ function MenuListContent() {
   const [selectedRestrictionUids, setSelectedRestrictionUids] = useState<string[]>([])
   const [editSelectedCookingMethodUids, setEditSelectedCookingMethodUids] = useState<string[]>([])
   const [editSelectedRestrictionUids, setEditSelectedRestrictionUids] = useState<string[]>([])
+  const [pendingImageFile, setPendingImageFile] = useState<File | null>(null)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [visionResults, setVisionResults] = useState<VisionMenuItem[]>([])
   const [showVisionApproval, setShowVisionApproval] = useState(false)
@@ -416,13 +417,25 @@ function MenuListContent() {
         price_detail: Object.keys(priceDetailData).length > 0 ? priceDetailData : null
       }
 
-      await MenuApi.create(menuData)
+      const createResp = await MenuApi.create(menuData)
+
+      // 画像ファイルがpendingならアップロード
+      if (pendingImageFile && createResp.result?.uid) {
+        try {
+          await MenuApi.uploadImage(createResp.result.uid, pendingImageFile)
+        } catch (imgErr) {
+          console.error('Image upload failed:', imgErr)
+          toast('warning', 'メニューは追加しましたが、画像のアップロードに失敗しました')
+        }
+      }
+
       await refreshMenus()
 
       setNewMenu({ name: '', nameEn: '', price: '', category: '', description: '', descriptionEn: '', ingredients: '', narrative: { story: '', chef_note: '', tasting_note: '', pairing_suggestion: '', seasonal_note: '' }, serving: { size: '', availability: '' }, priceDetail: { currency: 'JPY', tax_included: true, tax_rate: 10 } })
       setSelectedAllergenUids([])
       setSelectedCookingMethodUids([])
       setSelectedRestrictionUids([])
+      setPendingImageFile(null)
       setShowAddModal(false)
       setActiveTab('basic')
       toast('success', 'メニューを追加しました！')
@@ -718,7 +731,7 @@ function MenuListContent() {
 
       <MenuFormModal
         isOpen={showAddModal}
-        onClose={() => setShowAddModal(false)}
+        onClose={() => { setShowAddModal(false); setPendingImageFile(null) }}
         mode="add"
         newMenu={newMenu}
         onNewMenuChange={setNewMenu}
@@ -745,6 +758,8 @@ function MenuListContent() {
         onSave={handleAddMenu}
         activeTab={activeTab}
         onTabChange={setActiveTab}
+        pendingImageFile={pendingImageFile}
+        onPendingImageFileChange={setPendingImageFile}
       />
 
       <MenuFormModal

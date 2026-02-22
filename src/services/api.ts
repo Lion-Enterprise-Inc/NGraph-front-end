@@ -595,6 +595,32 @@ export const MenuApi = {
 
   delete: async (menuUid: string): Promise<{ message: string; status_code: number }> => {
     return apiClient.delete(`/menus/${menuUid}`);
+  },
+
+  uploadImage: async (menuUid: string, file: File): Promise<{ image_url: string }> => {
+    const formData = new FormData();
+    formData.append('image', file);
+
+    const token = TokenService.getAccessToken();
+    const response = await fetch(`${API_BASE_URL}/menus/${menuUid}/upload-image`, {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+      },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      let errorMessage = 'Failed to upload image';
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.detail || errorMessage;
+      } catch {}
+      throw new Error(errorMessage);
+    }
+
+    return response.json();
   }
 };
 

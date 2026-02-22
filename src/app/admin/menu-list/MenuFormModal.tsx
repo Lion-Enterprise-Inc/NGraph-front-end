@@ -1,6 +1,7 @@
 'use client'
 
-import { Ingredient, Allergen, CookingMethod, Restriction, DISH_CATEGORIES } from '../../../services/api'
+import { useState, useRef } from 'react'
+import { Ingredient, Allergen, CookingMethod, Restriction, DISH_CATEGORIES, MenuApi } from '../../../services/api'
 import type { MenuItem } from './page'
 
 interface MenuFormModalProps {
@@ -32,6 +33,8 @@ interface MenuFormModalProps {
   onSave: () => void
   activeTab: string
   onTabChange: (tab: string) => void
+  pendingImageFile?: File | null
+  onPendingImageFileChange?: (file: File | null) => void
 }
 
 export default function MenuFormModal({
@@ -46,12 +49,65 @@ export default function MenuFormModal({
   editSelectedCookingMethodUids, onEditCookingMethodChange,
   editSelectedRestrictionUids, onEditRestrictionChange,
   allergens, cookingMethods, restrictions,
-  isSaving, onSave, activeTab, onTabChange
+  isSaving, onSave, activeTab, onTabChange,
+  pendingImageFile, onPendingImageFileChange
 }: MenuFormModalProps) {
+  const [isUploading, setIsUploading] = useState(false)
+  const [uploadError, setUploadError] = useState('')
+  const [dragOver, setDragOver] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
   if (!isOpen) return null
   if (mode === 'edit' && !editItem) return null
 
   const isEdit = mode === 'edit'
+
+  const ACCEPTED_TYPES = ['image/jpeg', 'image/png', 'image/webp']
+  const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB
+
+  const validateFile = (file: File): string | null => {
+    if (!ACCEPTED_TYPES.includes(file.type)) return 'jpg, png, webp のみ対応'
+    if (file.size > MAX_FILE_SIZE) return 'ファイルサイズは5MB以下'
+    return null
+  }
+
+  const handleImageFile = async (file: File) => {
+    const err = validateFile(file)
+    if (err) { setUploadError(err); return }
+    setUploadError('')
+
+    if (isEdit && editItem) {
+      // editモード: 即アップロード
+      setIsUploading(true)
+      try {
+        const resp = await MenuApi.uploadImage(editItem.uid, file)
+        onEditItemChange({ ...editItem, imageUrl: resp.image_url })
+      } catch (e: any) {
+        setUploadError(e.message || 'アップロードに失敗しました')
+      } finally {
+        setIsUploading(false)
+      }
+    } else {
+      // addモード: ファイルを保持、保存後にアップロード
+      onPendingImageFileChange?.(file)
+      // プレビュー用にlocal URLをセット
+      const localUrl = URL.createObjectURL(file)
+      onNewMenuChange({ ...newMenu, imageUrl: localUrl })
+    }
+  }
+
+  const handleFileDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    setDragOver(false)
+    const file = e.dataTransfer.files[0]
+    if (file) handleImageFile(file)
+  }
+
+  const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) handleImageFile(file)
+    e.target.value = ''
+  }
 
   // Shorthand getters/setters depending on mode
   const getName = () => isEdit ? editItem!.name : newMenu.name
@@ -110,6 +166,8 @@ export default function MenuFormModal({
   }
 
   const handleClose = () => {
+    setUploadError('')
+    onPendingImageFileChange?.(null)
     onTabChange('basic')
     onClose()
   }
@@ -161,10 +219,46 @@ export default function MenuFormModal({
               <textarea className="form-input" value={getDescriptionEn()} onChange={(e) => setField('descriptionEn', e.target.value)} />
             </div>
             <div className="form-group">
-              <label className="form-label">商品画像URL</label>
-              <input type="url" className="form-input" value={getImageUrl()} onChange={(e) => setField('imageUrl', e.target.value || null)} placeholder="https://example.com/image.jpg" />
+              <label className="form-label">商品画像</label>
+              <div
+                onDragOver={(e) => { e.preventDefault(); setDragOver(true) }}
+                onDragLeave={() => setDragOver(false)}
+                onDrop={handleFileDrop}
+                onClick={() => fileInputRef.current?.click()}
+                style={{
+                  border: `2px dashed ${dragOver ? '#667eea' : 'var(--border)'}`,
+                  borderRadius: 8,
+                  padding: '20px 16px',
+                  textAlign: 'center',
+                  cursor: 'pointer',
+                  background: dragOver ? 'rgba(102,126,234,0.05)' : 'transparent',
+                  transition: 'all 0.2s',
+                  marginBottom: 8
+                }}
+              >
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  style={{ display: 'none' }}
+                  onChange={handleFileInputChange}
+                />
+                {isUploading ? (
+                  <div style={{ color: '#667eea', fontSize: 14 }}>アップロード中...</div>
+                ) : (
+                  <>
+                    <div style={{ fontSize: 24, marginBottom: 4 }}>📷</div>
+                    <div style={{ fontSize: 13, color: 'var(--muted)' }}>画像をドロップまたはクリックして選択</div>
+                    <div style={{ fontSize: 11, color: '#94A3B8', marginTop: 4 }}>jpg / png / webp、最大5MB</div>
+                  </>
+                )}
+              </div>
+              {uploadError && <div style={{ color: '#EF4444', fontSize: 12, marginBottom: 4 }}>{uploadError}</div>}
+              {!isEdit && pendingImageFile && (
+                <div style={{ fontSize: 12, color: '#10B981', marginBottom: 4 }}>選択済み: {pendingImageFile.name}（保存後にアップロードされます）</div>
+              )}
               {getImageUrl() && (
-                <div style={{ marginTop: 8 }}>
+                <div style={{ marginTop: 4 }}>
                   <img
                     src={getImageUrl()}
                     alt="商品画像プレビュー"
@@ -173,6 +267,8 @@ export default function MenuFormModal({
                   />
                 </div>
               )}
+              <label className="form-label" style={{ marginTop: 8 }}>または画像URLを直接入力</label>
+              <input type="url" className="form-input" value={getImageUrl()} onChange={(e) => setField('imageUrl', e.target.value || null)} placeholder="https://example.com/image.jpg" />
             </div>
             <div className="form-group">
               <label className="form-label">商品ページURL</label>

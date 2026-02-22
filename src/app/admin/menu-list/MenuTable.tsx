@@ -217,7 +217,11 @@ export default function MenuTable({
                     <td style={{ textAlign: 'center', fontWeight: 600, color: '#94A3B8', fontSize: '13px' }}>{rowNum}</td>
                     <td>
                       <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                        <div style={{ width: '40px', height: '30px', background: '#1E293B', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', color: '#94A3B8', flexShrink: 0, marginTop: '2px' }}>📄</div>
+                        {item.imageUrl ? (
+                          <img src={item.imageUrl} alt="" style={{ width: 50, height: 50, borderRadius: 4, objectFit: 'cover', flexShrink: 0 }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
+                        ) : (
+                          <div style={{ width: 50, height: 50, background: '#1E293B', borderRadius: 4, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px', color: '#94A3B8', flexShrink: 0 }}>📷</div>
+                        )}
                         <div style={{ flex: 1 }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '2px', flexWrap: 'wrap' }}>
                             {itemIsNew && (
