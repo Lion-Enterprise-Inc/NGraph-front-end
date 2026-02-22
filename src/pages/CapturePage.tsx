@@ -1490,8 +1490,8 @@ export default function CapturePage({
                 /* NFGカード表示（チャット応答テキスト + カード） */
                 <div className="chat-row chat-row-assistant">
                   <div className="chat-content">
-                    {/* チャットからのNFGカード: テキスト導入文があれば先に表示 */}
-                    {typingState[response.id]?.intro && (
+                    {/* NFGカード1枚の時はintro非表示（カードに全情報あり）、複数枚の時はintro表示 */}
+                    {typingState[response.id]?.intro && response.visionItems!.length > 1 && (
                       <div className="chat-message-wrapper" style={{ marginBottom: 8 }}>
                         <div className="chat-bubble chat-bubble-assistant">
                           <div className="assistant-intro">
@@ -1729,11 +1729,14 @@ export default function CapturePage({
                       const items = extractNumberedItems(fullText);
                       if (items.length < 2) return null;
                       return (
-                        <div className="quick-reply-chips">
+                        <div className="suggestion-mini-cards">
+                          <div className="suggestion-mini-cards-label">
+                            {activeLanguage === 'ja' ? '関連メニュー' : 'Related'}
+                          </div>
                           {items.map((item) => (
                             <button
                               key={item.num}
-                              className="quick-reply-chip"
+                              className="suggestion-mini-card"
                               type="button"
                               onClick={() => handleSend(
                                 activeLanguage === 'ja'
@@ -1741,7 +1744,8 @@ export default function CapturePage({
                                   : `Tell me more about #${item.num} ${item.name}`
                               )}
                             >
-                              {item.num}. {item.name}
+                              <span className="suggestion-mini-card-name">{item.name}</span>
+                              <span className="suggestion-mini-card-arrow">›</span>
                             </button>
                           ))}
                         </div>

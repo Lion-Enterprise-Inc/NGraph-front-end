@@ -5380,6 +5380,59 @@ textarea.form-input {
   background: rgba(255,255,255,0.15);
 }
 
+/* ========== Suggestion Mini Cards (関連メニュー) ========== */
+.suggestion-mini-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin-top: 10px;
+  border: 1px solid rgba(255,255,255,0.10);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.suggestion-mini-cards-label {
+  padding: 8px 12px 4px;
+  font-size: 11px;
+  color: rgba(255,255,255,0.4);
+  letter-spacing: 0.02em;
+}
+.suggestion-mini-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 11px 12px;
+  background: transparent;
+  border: none;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.8);
+  font-size: 13.5px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s;
+  text-align: left;
+}
+.suggestion-mini-card:first-of-type {
+  border-top: none;
+}
+.suggestion-mini-card:hover {
+  background: rgba(255,255,255,0.06);
+}
+.suggestion-mini-card:active {
+  background: rgba(255,255,255,0.10);
+}
+.suggestion-mini-card-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.suggestion-mini-card-arrow {
+  flex-shrink: 0;
+  margin-left: 8px;
+  color: rgba(255,255,255,0.3);
+  font-size: 16px;
+}
+
 /* ========== Context Chips (理解補助) ========== */
 .context-chips { display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; }
 .context-chip {
