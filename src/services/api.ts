@@ -107,6 +107,7 @@ export interface Restaurant {
   popular_menus: { auto: boolean; menu_uids: string[] } | null;
   recommend_texts: string[] | null;
   google_review_enabled: boolean | null;
+  city: string | null;
   menu_count?: number;
   created_at: string;
   updated_at: string;

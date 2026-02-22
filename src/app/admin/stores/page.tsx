@@ -61,7 +61,7 @@ export default function StoresPage() {
           uid: restaurant.uid,
           storeCode: restaurant.uid.substring(0, 8).toUpperCase(),
           name: restaurant.name,
-          location: restaurant.address ? extractLocation(restaurant.address) : '未設定',
+          location: extractLocation(restaurant),
           address: restaurant.address || '',
           type: restaurant.business_type ? (BUSINESS_TYPES[restaurant.business_type] || restaurant.business_type) : '未設定',
           plan: 'フリープラン',
@@ -81,12 +81,14 @@ export default function StoresPage() {
     }
   }
 
-  // Helper to extract location from address
-  const extractLocation = (address: string): string => {
-    if (address.includes('Dhaka')) return 'Dhaka'
-    if (address.includes('福井')) return '福井'
-    if (address.includes('金沢')) return '金沢'
-    if (address.includes('名古屋')) return '名古屋'
+  // Helper to extract location from city column (address fallback)
+  const extractLocation = (restaurant: Restaurant): string => {
+    if (restaurant.city) return restaurant.city
+    const address = restaurant.address || ''
+    const cities = ['福井市', '敦賀市', '越前市', 'あわら市', '鯖江市', '金沢市', '名古屋市']
+    for (const c of cities) {
+      if (address.includes(c)) return c
+    }
     if (address.includes('東京')) return '東京'
     if (address.includes('大阪')) return '大阪'
     return address.split(',')[0] || '未設定'
@@ -145,14 +147,14 @@ export default function StoresPage() {
 
   const filteredStores = filter === 'all'
     ? stores
-    : stores.filter(s => s.location.toLowerCase().includes(filter === 'fukui' ? '福井' : filter === 'kanazawa' ? '金沢' : '名古屋'))
+    : stores.filter(s => s.location === filter)
 
-  const locationCounts = {
-    all: stores.length,
-    fukui: stores.filter(s => s.location === '福井').length,
-    kanazawa: stores.filter(s => s.location === '金沢').length,
-    nagoya: stores.filter(s => s.location === '名古屋').length,
-  }
+  // 動的に都市リスト生成（店舗がある都市だけ表示）
+  const locationCounts: Record<string, number> = {}
+  stores.forEach(s => {
+    locationCounts[s.location] = (locationCounts[s.location] || 0) + 1
+  })
+  const cityFilters = Object.entries(locationCounts).sort((a, b) => b[1] - a[1])
 
   const handleCreateStore = async () => {
     if (!newStore.name || !newStore.user_uid) {
@@ -203,7 +205,7 @@ export default function StoresPage() {
           uid: response.result.uid,
           storeCode: response.result.uid.substring(0, 8).toUpperCase(),
           name: response.result.name,
-          location: response.result.address ? extractLocation(response.result.address) : '未設定',
+          location: extractLocation(response.result),
           address: response.result.address || '',
           type: newStore.type ? (BUSINESS_TYPES[newStore.type] || newStore.type) : '未設定',
           plan: 'フリープラン',
@@ -345,31 +347,18 @@ export default function StoresPage() {
           <button
             className={`btn btn-secondary btn-small ${filter === 'all' ? 'active' : ''}`}
             onClick={() => setFilter('all')}
-            id="filter-all"
           >
-            すべて ({locationCounts.all})
+            すべて ({stores.length})
           </button>
-          <button
-            className={`btn btn-secondary btn-small ${filter === 'fukui' ? 'active' : ''}`}
-            onClick={() => setFilter('fukui')}
-            id="filter-fukui"
-          >
-            福井 ({locationCounts.fukui})
-          </button>
-          <button
-            className={`btn btn-secondary btn-small ${filter === 'kanazawa' ? 'active' : ''}`}
-            onClick={() => setFilter('kanazawa')}
-            id="filter-kanazawa"
-          >
-            金沢 ({locationCounts.kanazawa})
-          </button>
-          <button
-            className={`btn btn-secondary btn-small ${filter === 'nagoya' ? 'active' : ''}`}
-            onClick={() => setFilter('nagoya')}
-            id="filter-nagoya"
-          >
-            名古屋 ({locationCounts.nagoya})
-          </button>
+          {cityFilters.map(([city, count]) => (
+            <button
+              key={city}
+              className={`btn btn-secondary btn-small ${filter === city ? 'active' : ''}`}
+              onClick={() => setFilter(city)}
+            >
+              {city} ({count})
+            </button>
+          ))}
         </div>
 
         {filteredStores.length === 0 ? (
