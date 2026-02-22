@@ -11,10 +11,14 @@ type SuggestionModalProps = {
 };
 
 const FIELD_OPTIONS = [
-  { value: 'price', label: '価格' },
-  { value: 'name', label: '名前' },
+  { value: 'allergens', label: 'アレルゲン' },
   { value: 'ingredients', label: '材料' },
+  { value: 'price', label: '価格' },
   { value: 'description', label: '説明' },
+  { value: 'taste_profiles', label: '味の特徴' },
+  { value: 'category', label: 'カテゴリ' },
+  { value: 'name', label: '名前' },
+  { value: 'other', label: 'その他' },
 ];
 
 const getSessionId = (): string => {
@@ -27,7 +31,7 @@ const getSessionId = (): string => {
 };
 
 export default function SuggestionModal({ open, onClose, menuItem, onSubmit }: SuggestionModalProps) {
-  const [field, setField] = useState('price');
+  const [field, setField] = useState('allergens');
   const [value, setValue] = useState('');
   const [reason, setReason] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -134,7 +138,13 @@ export default function SuggestionModal({ open, onClose, menuItem, onSubmit }: S
           type="text"
           value={value}
           onChange={(e) => setValue(e.target.value)}
-          placeholder="正しい値を入力"
+          placeholder={
+            field === 'allergens' ? '例: 卵、小麦、えび' :
+            field === 'ingredients' ? '例: 蟹、帆立、卵、出汁' :
+            field === 'taste_profiles' ? '例: 旨味、まろやか' :
+            field === 'price' ? '例: 1280' :
+            '正しい値を入力'
+          }
           style={{
             width: '100%',
             padding: '10px 12px',
