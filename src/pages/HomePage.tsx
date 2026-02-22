@@ -65,7 +65,7 @@ export default function HomePage() {
           <h1 className="explore-brand">
             NGraph <span className="explore-badge">β</span> <span className="explore-region">＠FUKUI</span>
           </h1>
-          <p className="explore-tagline">AIが読める、飲食店の正解データ</p>
+          <p className="explore-tagline">AIも人も読める、飲食店の正解データ</p>
         </div>
       </header>
 
