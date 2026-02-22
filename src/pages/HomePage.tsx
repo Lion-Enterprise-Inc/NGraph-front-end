@@ -5,7 +5,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { Search } from 'lucide-react'
 import { ExploreApi, SearchRestaurant, NfgSearchRestaurant, CityCount, PlatformStats } from '../services/api'
 
-const MATRIX_CHARS = 'アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン0123456789ABCDEFNFGRAPH'
+const MATRIX_CHARS = 'ニコマコス倫理学中庸武士道茶の本論語と算盤サピエンス全史美食の美学禅と日本文化代表的日本人ダヴィンチ量子力学日本再興戦略料理の四面体NFGraph正解データ誠不完全実践知共同主観'
 
 function MatrixRain() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
