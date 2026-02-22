@@ -4900,7 +4900,7 @@ textarea.form-input {
 
 .explore-header {
   border-bottom: 1px solid rgba(255,255,255,0.08);
-  padding: 24px 16px 20px;
+  padding: 14px 16px 10px;
 }
 
 .explore-header-inner {
@@ -4914,7 +4914,7 @@ textarea.form-input {
   font-size: 22px;
   letter-spacing: -0.03em;
   color: var(--color-text);
-  margin: 0 0 4px;
+  margin: 0;
 }
 
 .explore-badge {
@@ -5109,6 +5109,13 @@ textarea.form-input {
   color: #58a6ff;
 }
 
+.explore-row-info {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
 .explore-row-count {
   font-family: 'SF Mono', 'Fira Code', monospace;
   font-size: 11px;
@@ -5117,6 +5124,22 @@ textarea.form-input {
   padding: 2px 6px;
   border-radius: 10px;
   flex-shrink: 0;
+}
+
+.explore-row-address {
+  font-size: 11px;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.explore-footer-stats {
+  text-align: center;
+  font-size: 11px;
+  color: var(--color-text-muted);
+  padding: 16px 0 24px;
+  letter-spacing: 0.01em;
 }
 
 .explore-row-reasons {
@@ -5171,7 +5194,7 @@ textarea.form-input {
 
 @media (min-width: 640px) {
   .explore-header {
-    padding: 32px 24px 24px;
+    padding: 16px 24px 12px;
   }
   .explore-body {
     padding: 20px 24px;

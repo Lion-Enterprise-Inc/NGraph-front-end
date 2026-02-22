@@ -90,32 +90,6 @@ export default function HomePage() {
           <h1 className="explore-brand">
             NGraph <span className="explore-badge">β</span> <span className="explore-region">＠FUKUI</span>
           </h1>
-          <p className="explore-tagline">人もAIも読める、飲食店の正解データ</p>
-
-          {stats && (
-            <div className="explore-stats">
-              <div className="explore-stat">
-                <span className="explore-stat-num">{stats.total_restaurants.toLocaleString()}</span>
-                <span className="explore-stat-label">店舗</span>
-              </div>
-              <div className="explore-stat">
-                <span className="explore-stat-num">{stats.total_menus.toLocaleString()}</span>
-                <span className="explore-stat-label">メニュー</span>
-              </div>
-              <div className="explore-stat">
-                <span className="explore-stat-num">{stats.enriched_menus.toLocaleString()}</span>
-                <span className="explore-stat-label">NFG構造化</span>
-              </div>
-              <div className="explore-stat">
-                <span className="explore-stat-num">{stats.cities}</span>
-                <span className="explore-stat-label">都市</span>
-              </div>
-              <div className="explore-stat">
-                <span className="explore-stat-num">{stats.translated_menus.toLocaleString()}</span>
-                <span className="explore-stat-label">多言語</span>
-              </div>
-            </div>
-          )}
         </div>
       </header>
 
@@ -126,7 +100,7 @@ export default function HomePage() {
           <input
             className="explore-search"
             type="text"
-            placeholder="店名で検索、または「蟹が食べたい」「片町で接待」等"
+            placeholder="店名・ジャンル・食べたいもので検索"
             value={query}
             onChange={e => handleSearch(e.target.value)}
           />
@@ -172,7 +146,10 @@ export default function HomePage() {
                 onClick={() => router.push(`/capture?restaurant=${encodeURIComponent(r.slug)}`)}
               >
                 <div className="explore-row-main">
-                  <span className="explore-row-name">{r.name}</span>
+                  <div className="explore-row-info">
+                    <span className="explore-row-name">{r.name}</span>
+                    {r.city && <span className="explore-row-address">{r.city}</span>}
+                  </div>
                   {r.menu_count > 0 && (
                     <span className="explore-row-count">{r.menu_count}</span>
                   )}
@@ -207,6 +184,12 @@ export default function HomePage() {
             >
               次へ
             </button>
+          </div>
+        )}
+
+        {stats && (
+          <div className="explore-footer-stats">
+            {stats.total_restaurants.toLocaleString()}店舗 · {stats.total_menus.toLocaleString()}メニュー · {stats.enriched_menus.toLocaleString()}構造化 · {stats.cities}都市
           </div>
         )}
       </div>
