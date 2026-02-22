@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <rect width="1200" height="630" fill="#0d1117"/>
+  <defs>
+    <linearGradient id="og-line" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#10a37f" stop-opacity="0"/>
+      <stop offset="50%" stop-color="#10a37f" stop-opacity="0.6"/>
+      <stop offset="100%" stop-color="#10a37f" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <!-- NGraph text -->
+  <text x="600" y="280" text-anchor="middle" font-family="Georgia, 'Noto Serif JP', serif" font-size="96" letter-spacing="0.12em">
+    <tspan fill="#ffffff" font-weight="400">N</tspan><tspan fill="#ffffff" font-weight="300">Graph</tspan>
+  </text>
+  <!-- Gradient line -->
+  <line x1="350" y1="310" x2="850" y2="310" stroke="url(#og-line)" stroke-width="1.5"/>
+  <!-- Subtitle -->
+  <text x="600" y="360" text-anchor="middle" font-family="Georgia, 'Noto Serif JP', serif" font-size="28" fill="#10a37f" letter-spacing="0.18em" font-weight="300">Nicomacos Food Graph</text>
+  <!-- Tagline -->
+  <text x="600" y="420" text-anchor="middle" font-family="sans-serif" font-size="22" fill="#555555" letter-spacing="0.05em">Structured Data for Dining — FUKUI, Japan</text>
+</svg>

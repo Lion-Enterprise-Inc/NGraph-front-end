@@ -12,7 +12,7 @@ export const metadata: Metadata = {
     description: 'AI多言語メニューガイド。カメラやチャットで、あなたの言葉でメニューをご案内。',
     url: 'https://app.ngraph.jp',
     siteName: 'NGraph',
-    images: [{ url: 'https://app.ngraph.jp/og-bonta.png', width: 1200, height: 630 }],
+    images: [{ url: 'https://app.ngraph.jp/og-ngraph.png', width: 1200, height: 630 }],
     type: 'website',
     locale: 'ja_JP',
   },
@@ -20,7 +20,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'NGraph — 食を正しく伝える、データインフラ',
     description: 'AI多言語メニューガイド。カメラやチャットで、あなたの言葉でメニューをご案内。',
-    images: ['https://app.ngraph.jp/og-bonta.png'],
+    images: ['https://app.ngraph.jp/og-ngraph.png'],
   },
 }
 
