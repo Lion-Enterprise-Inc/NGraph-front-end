@@ -5,9 +5,15 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { Search } from 'lucide-react'
 import { ExploreApi, SearchRestaurant, NfgSearchRestaurant, CityCount, PlatformStats } from '../services/api'
 
-const MATRIX_CHARS = 'ニコマコス倫理学中庸武士道茶の本論語と算盤サピエンス全史美食の美学禅と日本文化代表的日本人ダヴィンチ量子力学日本再興戦略料理の四面体NFGraph正解データ誠不完全実践知共同主観Plurality0011100001010110100111010001'
+interface Particle {
+  x: number; y: number
+  vx: number; vy: number
+  size: number; alpha: number
+  char: string
+  life: number; maxLife: number
+}
 
-function MatrixRain() {
+function BinaryField() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
   useEffect(() => {
@@ -17,66 +23,84 @@ function MatrixRain() {
     if (!ctx) return
 
     let animId: number
-    const fontSize = 11
-    let columns: number[] = []
-    let colFlip: boolean[] = []
+    let particles: Particle[] = []
+    const COUNT = 60
+
+    const spawn = (w: number, h: number): Particle => {
+      const angle = Math.random() * Math.PI * 2
+      const speed = 0.15 + Math.random() * 0.25
+      const size = 9 + Math.floor(Math.random() * 3) * 2 // 9, 11, 13
+      const cx = w / 2, cy = h / 2
+      const spread = Math.min(w, h) * 0.3
+      return {
+        x: cx + (Math.random() - 0.5) * spread * 2,
+        y: cy + (Math.random() - 0.5) * spread * 2,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        size,
+        alpha: 0.03 + Math.random() * 0.1,
+        char: Math.random() > 0.5 ? '1' : '0',
+        life: 0,
+        maxLife: 300 + Math.random() * 400,
+      }
+    }
 
     const resize = () => {
       canvas.width = canvas.offsetWidth
       canvas.height = canvas.offsetHeight
-      const cols = Math.floor(canvas.width / (fontSize * 1.8))
-      columns = Array.from({ length: cols }, () => Math.random() * -canvas.height / fontSize)
-      colFlip = Array.from({ length: cols }, () => Math.random() > 0.5)
+      particles = Array.from({ length: COUNT }, () => {
+        const p = spawn(canvas.width, canvas.height)
+        p.life = Math.random() * p.maxLife
+        return p
+      })
     }
     resize()
     window.addEventListener('resize', resize)
 
     const draw = () => {
-      ctx.fillStyle = 'rgba(13, 17, 23, 0.04)'
-      ctx.fillRect(0, 0, canvas.width, canvas.height)
+      ctx.clearRect(0, 0, canvas.width, canvas.height)
 
       const cx = canvas.width / 2
       const cy = canvas.height / 2
-      const radius = Math.min(canvas.width, canvas.height) * 0.35
+      const radius = Math.min(canvas.width, canvas.height) * 0.32
 
-      const spacing = fontSize * 1.8
-      for (let i = 0; i < columns.length; i++) {
-        const char = MATRIX_CHARS[Math.floor(Math.random() * MATRIX_CHARS.length)]
-        const x = i * spacing
-        const y = columns[i] * fontSize
+      for (let i = 0; i < particles.length; i++) {
+        const p = particles[i]
+        p.x += p.vx
+        p.y += p.vy
+        p.life++
 
-        const dx = (x - cx) / radius
-        const dy = (y - cy) / radius
+        // fade in/out
+        const lifeRatio = p.life / p.maxLife
+        const lifeFade = lifeRatio < 0.1 ? lifeRatio / 0.1
+          : lifeRatio > 0.85 ? (1 - lifeRatio) / 0.15
+          : 1
+
+        // radial fade
+        const dx = (p.x - cx) / radius
+        const dy = (p.y - cy) / radius
         const dist = Math.sqrt(dx * dx + dy * dy)
-        if (dist > 1.2) { columns[i] += 0.2; continue }
-        const radialFade = Math.max(0, 1 - dist * dist * 0.8)
+        const radialFade = Math.max(0, 1 - dist * dist)
 
-        const depth = (i % 4 === 0) ? 0.14 : (i % 4 === 1) ? 0.09 : (i % 4 === 2) ? 0.05 : 0.03
-        const alpha = depth * radialFade
-
-        ctx.save()
-        ctx.fillStyle = `rgba(16, 163, 127, ${alpha})`
-        ctx.font = `${fontSize}px 'SF Mono', 'Fira Code', monospace`
-        ctx.translate(x + fontSize / 2, y)
-        if (colFlip[i]) ctx.scale(-1, 1)
-        ctx.fillText(char, -fontSize / 2, 0)
-        ctx.restore()
-
-        columns[i] += 0.15 + Math.random() * 0.15
-
-        if (y > canvas.height && Math.random() > 0.985) {
-          columns[i] = 0
-          colFlip[i] = Math.random() > 0.5
+        const alpha = p.alpha * lifeFade * radialFade
+        if (alpha < 0.005) {
+          if (p.life >= p.maxLife || dist > 1.5) {
+            particles[i] = spawn(canvas.width, canvas.height)
+          }
+          continue
         }
+
+        ctx.fillStyle = `rgba(16, 163, 127, ${alpha})`
+        ctx.font = `${p.size}px 'SF Mono', 'Fira Code', monospace`
+        ctx.fillText(p.char, p.x, p.y)
       }
+
+      animId = requestAnimationFrame(draw)
     }
 
-    const interval = setInterval(() => {
-      animId = requestAnimationFrame(draw)
-    }, 65)
+    animId = requestAnimationFrame(draw)
 
     return () => {
-      clearInterval(interval)
       cancelAnimationFrame(animId)
       window.removeEventListener('resize', resize)
     }
@@ -191,7 +215,7 @@ export default function HomePage() {
 
   return (
     <div className={`explore-page ${!searched ? 'explore-landing' : ''}`}>
-      {!searched && <MatrixRain />}
+      {!searched && <BinaryField />}
       <div className={!searched ? 'explore-landing-center' : ''}>
         <header className="explore-header">
           <div className="explore-header-inner">
