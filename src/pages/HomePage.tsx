@@ -48,7 +48,7 @@ function BinaryField() {
       const speed = 0.15 + Math.random() * 0.25
       const size = 9 + Math.floor(Math.random() * 3) * 2 // 9, 11, 13
       const cx = w / 2, cy = h / 2
-      const spread = Math.min(w, h) * 0.3
+      const spread = Math.min(w, h) * 0.42
       return {
         x: cx + (Math.random() - 0.5) * spread * 2,
         y: cy + (Math.random() - 0.5) * spread * 2,
@@ -82,7 +82,7 @@ function BinaryField() {
 
       const cx = canvas.width / 2
       const cy = canvas.height / 2
-      const radius = Math.min(canvas.width, canvas.height) * 0.32
+      const radius = Math.min(canvas.width, canvas.height) * 0.45
 
       // update & compute visible alpha
       for (let i = 0; i < particles.length; i++) {
