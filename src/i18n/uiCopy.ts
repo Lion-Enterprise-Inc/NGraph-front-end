@@ -168,6 +168,7 @@ const uiCopy = {
       tasteChart: "Taste",
       kidFriendly: "Kid-friendly",
       notKidFriendly: "May not suit kids",
+      suggestEdit: "Suggest edit",
     },
     feedback: {
       copy: "Copy",
@@ -313,6 +314,7 @@ const uiCopy = {
       tasteChart: "味わい",
       kidFriendly: "お子様OK",
       notKidFriendly: "お子様向けではない場合あり",
+      suggestEdit: "この情報を修正",
     },
     feedback: {
       copy: "コピー",
@@ -458,6 +460,7 @@ const uiCopy = {
       tasteChart: "맛",
       kidFriendly: "어린이 적합",
       notKidFriendly: "어린이에게 적합하지 않을 수 있음",
+      suggestEdit: "수정 제안",
     },
     qrScanner: {
       title: "QR 코드 스캔",
@@ -598,6 +601,7 @@ const uiCopy = {
       tasteChart: "味道",
       kidFriendly: "适合儿童",
       notKidFriendly: "可能不适合儿童",
+      suggestEdit: "建议修改",
     },
   },
   "zh-Hant": {
@@ -725,6 +729,7 @@ const uiCopy = {
       tasteChart: "味道",
       kidFriendly: "適合兒童",
       notKidFriendly: "可能不適合兒童",
+      suggestEdit: "建議修改",
     },
   },
   es: {
@@ -851,6 +856,7 @@ const uiCopy = {
       tasteChart: "Sabor",
       kidFriendly: "Apto para niños",
       notKidFriendly: "Puede no ser apto para niños",
+      suggestEdit: "Sugerir edición",
     },
   },
   fr: {
@@ -977,6 +983,7 @@ const uiCopy = {
       tasteChart: "Goût",
       kidFriendly: "Adapté aux enfants",
       notKidFriendly: "Peut ne pas convenir aux enfants",
+      suggestEdit: "Suggérer une modification",
     },
   },
   de: {
@@ -1103,6 +1110,7 @@ const uiCopy = {
       tasteChart: "Geschmack",
       kidFriendly: "Kinderfreundlich",
       notKidFriendly: "Möglicherweise nicht für Kinder geeignet",
+      suggestEdit: "Änderung vorschlagen",
     },
   },
   it: {
@@ -1229,6 +1237,7 @@ const uiCopy = {
       tasteChart: "Gusto",
       kidFriendly: "Adatto ai bambini",
       notKidFriendly: "Potrebbe non essere adatto ai bambini",
+      suggestEdit: "Suggerisci modifica",
     },
   },
   pt: {
@@ -1355,6 +1364,7 @@ const uiCopy = {
       tasteChart: "Sabor",
       kidFriendly: "Para crianças",
       notKidFriendly: "Pode não ser adequado para crianças",
+      suggestEdit: "Sugerir edição",
     },
   },
   ru: {
@@ -1481,6 +1491,7 @@ const uiCopy = {
       tasteChart: "Вкус",
       kidFriendly: "Подходит детям",
       notKidFriendly: "Может не подойти детям",
+      suggestEdit: "Предложить правку",
     },
   },
   th: {
@@ -1607,6 +1618,7 @@ const uiCopy = {
       tasteChart: "รสชาติ",
       kidFriendly: "เหมาะสำหรับเด็ก",
       notKidFriendly: "อาจไม่เหมาะสำหรับเด็ก",
+      suggestEdit: "แนะนำการแก้ไข",
     },
   },
   vi: {
@@ -1733,6 +1745,7 @@ const uiCopy = {
       tasteChart: "Vị",
       kidFriendly: "Phù hợp trẻ em",
       notKidFriendly: "Có thể không phù hợp trẻ em",
+      suggestEdit: "Đề xuất chỉnh sửa",
     },
   },
   id: {
@@ -1859,6 +1872,7 @@ const uiCopy = {
       tasteChart: "Rasa",
       kidFriendly: "Ramah anak",
       notKidFriendly: "Mungkin tidak cocok untuk anak",
+      suggestEdit: "Sarankan perubahan",
     },
   },
   ms: {
@@ -1985,6 +1999,7 @@ const uiCopy = {
       tasteChart: "Rasa",
       kidFriendly: "Mesra kanak-kanak",
       notKidFriendly: "Mungkin tidak sesuai untuk kanak-kanak",
+      suggestEdit: "Cadangan pindaan",
     },
   },
   ar: {
@@ -2111,6 +2126,7 @@ const uiCopy = {
       tasteChart: "الطعم",
       kidFriendly: "مناسب للأطفال",
       notKidFriendly: "قد لا يناسب الأطفال",
+      suggestEdit: "اقتراح تعديل",
     },
   },
   hi: {
@@ -2237,6 +2253,7 @@ const uiCopy = {
       tasteChart: "स्वाद",
       kidFriendly: "बच्चों के लिए उपयुक्त",
       notKidFriendly: "बच्चों के लिए उपयुक्त नहीं हो सकता",
+      suggestEdit: "संशोधन सुझाएं",
     },
   },
   tr: {
@@ -2363,6 +2380,7 @@ const uiCopy = {
       tasteChart: "Tat",
       kidFriendly: "\u00C7ocuklar i\u00E7in uygun",
       notKidFriendly: "\u00C7ocuklar i\u00E7in uygun olmayabilir",
+      suggestEdit: "Düzenleme öner",
     },
   },
   bn: {
@@ -2489,6 +2507,7 @@ const uiCopy = {
       tasteChart: "স্বাদ",
       kidFriendly: "শিশুদের জন্য উপযোগী",
       notKidFriendly: "শিশুদের জন্য উপযুক্ত নাও হতে পারে",
+      suggestEdit: "সম্পাদনা প্রস্তাব",
     },
   },
   my: {
@@ -2615,6 +2634,7 @@ const uiCopy = {
       tasteChart: "အရသာ",
       kidFriendly: "ကလေးများအတွက်သင့်တော်",
       notKidFriendly: "ကလေးများအတွက်မသင့်တော်နိုင်ပါ",
+      suggestEdit: "ပြင်ဆင်ချက်အကြံပြု",
     },
   },
   tl: {
@@ -2741,6 +2761,7 @@ const uiCopy = {
       tasteChart: "Lasa",
       kidFriendly: "Para sa bata",
       notKidFriendly: "Maaaring hindi angkop sa bata",
+      suggestEdit: "Magmungkahi ng pagbabago",
     },
   },
   lo: {
@@ -2867,6 +2888,7 @@ const uiCopy = {
       tasteChart: "ລົດຊາດ",
       kidFriendly: "ເໝາະສຳລັບເດັກ",
       notKidFriendly: "ອາດບໍ່ເໝາະສຳລັບເດັກ",
+      suggestEdit: "ແນະນຳການແກ້ໄຂ",
     },
   },
   km: {
@@ -2993,6 +3015,7 @@ const uiCopy = {
       tasteChart: "រសជាតិ",
       kidFriendly: "សមរម្យសម្រាប់កុមារ",
       notKidFriendly: "ប្រហែលមិនសមរម្យសម្រាប់កុមារ",
+      suggestEdit: "ស្នើសុំកែប្រែ",
     },
   },
   ne: {
@@ -3119,6 +3142,7 @@ const uiCopy = {
       tasteChart: "स्वाद",
       kidFriendly: "बच्चाहरूलाई उपयुक्त",
       notKidFriendly: "बच्चाहरूलाई उपयुक्त नहुन सक्छ",
+      suggestEdit: "सम्पादन सुझाव",
     },
   },
   mn: {
@@ -3245,6 +3269,7 @@ const uiCopy = {
       tasteChart: "Амт",
       kidFriendly: "Хүүхдэд тохиромжтой",
       notKidFriendly: "Хүүхдэд тохиромжгүй байж болно",
+      suggestEdit: "Засвар санал болгох",
     },
   },
   fa: {
@@ -3371,6 +3396,7 @@ const uiCopy = {
       tasteChart: "طعم",
       kidFriendly: "مناسب کودکان",
       notKidFriendly: "ممکن است برای کودکان مناسب نباشد",
+      suggestEdit: "پیشنهاد ویرایش",
     },
   },
   uk: {
@@ -3497,6 +3523,7 @@ const uiCopy = {
       tasteChart: "Смак",
       kidFriendly: "Підходить дітям",
       notKidFriendly: "Може не підходити дітям",
+      suggestEdit: "Запропонувати зміну",
     },
   },
   pl: {
@@ -3623,6 +3650,7 @@ const uiCopy = {
       tasteChart: "Smak",
       kidFriendly: "Dla dzieci",
       notKidFriendly: "Mo\u017Ce nie odpowiada\u0107 dzieciom",
+      suggestEdit: "Zaproponuj zmianę",
     },
   },
 } as const;
