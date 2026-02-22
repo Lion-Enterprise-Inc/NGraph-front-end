@@ -4871,85 +4871,277 @@ textarea.form-input {
 }
 
 /* ========== HubScreen ========== */
-.hub-page {
+/* ========== Explore Page (GitHub-style) ========== */
+.explore-page {
   min-height: 100vh;
   background: var(--color-bg);
-  display: flex;
-  flex-direction: column;
-  max-width: var(--page-max-width);
+}
+
+.explore-header {
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  padding: 24px 16px 20px;
+}
+
+.explore-header-inner {
+  max-width: 720px;
   margin: 0 auto;
 }
 
-.hub-header {
-  padding: 16px 20px;
-  text-align: center;
-}
-
-.hub-brand {
-  font-family: Inter, -apple-system, BlinkMacSystemFont, sans-serif;
+.explore-brand {
+  font-family: 'SF Mono', 'Fira Code', 'Fira Mono', Menlo, monospace;
   font-weight: 700;
-  font-size: 18px;
-  letter-spacing: -0.02em;
+  font-size: 22px;
+  letter-spacing: -0.03em;
   color: var(--color-text);
+  margin: 0 0 4px;
 }
 
-.hub-empty {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 16px;
-  padding: 40px 20px;
-}
-
-.hub-empty-icon {
-  color: var(--color-text-muted);
-}
-
-.hub-empty-text {
+.explore-badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 4px;
   color: var(--color-text-secondary);
-  font-size: 15px;
-  text-align: center;
-  line-height: 1.6;
+  vertical-align: middle;
+  margin-left: 2px;
+  letter-spacing: 0.05em;
+}
+
+.explore-region {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--color-text-secondary);
+  vertical-align: middle;
+  margin-left: 4px;
+  letter-spacing: 0.02em;
+}
+
+.explore-tagline {
+  font-size: 13px;
+  color: var(--color-text-secondary);
   margin: 0;
 }
 
-.hub-list {
-  display: flex;
-  flex-direction: column;
-  padding: 8px 16px;
-  gap: 4px;
+.explore-body {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 16px;
 }
 
-.hub-card {
+.explore-search-wrap {
+  position: relative;
+  margin-bottom: 12px;
+}
+
+.explore-search-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-text-secondary);
+}
+
+.explore-search {
+  width: 100%;
+  padding: 10px 12px 10px 36px;
+  background: var(--color-surface);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 6px;
+  color: var(--color-text);
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.15s;
+  box-sizing: border-box;
+}
+
+.explore-search:focus {
+  border-color: rgba(255,255,255,0.25);
+}
+
+.explore-search::placeholder {
+  color: var(--color-text-secondary);
+}
+
+.explore-filters {
   display: flex;
-  flex-direction: column;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.explore-filter-pill {
+  display: inline-flex;
+  align-items: center;
   gap: 4px;
-  padding: 14px 16px;
+  padding: 4px 10px;
   background: transparent;
-  border: none;
-  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 20px;
+  color: var(--color-text-secondary);
+  font-size: 12px;
   cursor: pointer;
-  text-align: left;
-  transition: background 0.15s ease;
+  transition: all 0.15s;
+}
+
+.explore-filter-pill:hover {
+  border-color: rgba(255,255,255,0.2);
   color: var(--color-text);
 }
 
-.hub-card:hover {
+.explore-filter-pill.active {
+  background: rgba(255,255,255,0.08);
+  border-color: rgba(255,255,255,0.2);
+  color: var(--color-text);
+}
+
+.explore-filter-count {
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-size: 11px;
+  opacity: 0.6;
+}
+
+.explore-results-bar {
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  margin-bottom: 0;
+}
+
+.explore-results-count {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+.explore-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.explore-loading,
+.explore-empty {
+  padding: 40px 0;
+  text-align: center;
+  color: var(--color-text-secondary);
+  font-size: 14px;
+}
+
+.explore-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 8px;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.1s;
+  color: var(--color-text);
+  width: 100%;
+}
+
+.explore-row:hover {
+  background: rgba(255,255,255,0.03);
+}
+
+.explore-row-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.explore-row-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #58a6ff;
+}
+
+.explore-row-icon {
+  color: var(--color-text-secondary);
+  flex-shrink: 0;
+}
+
+.explore-row-addr {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  padding-left: 24px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.explore-row-meta {
+  display: flex;
+  gap: 12px;
+  padding-left: 24px;
+}
+
+.explore-row-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+
+.explore-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 20px 0;
+}
+
+.explore-page-btn {
+  padding: 6px 14px;
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 6px;
+  color: var(--color-text);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.explore-page-btn:hover:not(:disabled) {
+  border-color: rgba(255,255,255,0.25);
   background: rgba(255,255,255,0.04);
 }
 
-.hub-card-name {
-  font-size: 15px;
-  font-weight: 600;
+.explore-page-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
 }
 
-.hub-card-meta {
-  display: flex;
-  gap: 6px;
-  font-size: 12px;
+.explore-page-info {
+  font-size: 13px;
   color: var(--color-text-secondary);
+  font-family: 'SF Mono', 'Fira Code', monospace;
+}
+
+@media (min-width: 640px) {
+  .explore-header {
+    padding: 32px 24px 24px;
+  }
+  .explore-body {
+    padding: 20px 24px;
+  }
+  .explore-brand {
+    font-size: 26px;
+  }
+  .explore-row {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .explore-row-meta {
+    padding-left: 0;
+    flex-shrink: 0;
+  }
 }
 
 /* ========== Animations ========== */
