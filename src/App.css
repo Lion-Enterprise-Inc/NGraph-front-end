@@ -4897,6 +4897,7 @@ textarea.form-input {
 .explore-page {
   min-height: 100vh;
   background: var(--color-bg);
+  overflow-x: hidden;
 }
 
 .explore-landing {
@@ -4919,6 +4920,7 @@ textarea.form-input {
 .explore-landing-center {
   position: relative;
   z-index: 1;
+  padding: 0 16px;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -5003,6 +5005,7 @@ textarea.form-input {
 .explore-logo {
   height: 48px;
   width: auto;
+  max-width: 80vw;
 }
 
 .explore-brand-tags {

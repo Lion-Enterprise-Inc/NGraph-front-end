@@ -269,9 +269,18 @@ export default function HomePage() {
         setPages(res.result.pages)
       } else {
         const res = await ExploreApi.search(q, c, p, 30)
-        setRestaurants(res.result.items)
-        setTotal(res.result.total)
-        setPages(res.result.pages)
+        // fallback to NFG search if text search returns 0 and query is 2+ chars
+        if (res.result.total === 0 && q.length >= 2) {
+          const nfg = await ExploreApi.nfgSearch(q, c, p, 30)
+          const items: DisplayRestaurant[] = nfg.result.items.map(r => ({ ...r, _nfg: true }))
+          setRestaurants(items)
+          setTotal(nfg.result.total)
+          setPages(nfg.result.pages)
+        } else {
+          setRestaurants(res.result.items)
+          setTotal(res.result.total)
+          setPages(res.result.pages)
+        }
       }
     } catch (err) {
       console.error('fetchRestaurants error:', err)
