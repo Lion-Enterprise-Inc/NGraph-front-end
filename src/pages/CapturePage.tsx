@@ -1724,6 +1724,29 @@ export default function CapturePage({
                         ))}
                       </div>
                     )}
+                    {typingComplete.has(response.id) && (() => {
+                      const fullText = [response.output?.intro, ...(response.output?.body || [])].filter(Boolean).join('\n');
+                      const items = extractNumberedItems(fullText);
+                      if (items.length < 2) return null;
+                      return (
+                        <div className="quick-reply-chips">
+                          {items.map((item) => (
+                            <button
+                              key={item.num}
+                              className="quick-reply-chip"
+                              type="button"
+                              onClick={() => handleSend(
+                                activeLanguage === 'ja'
+                                  ? `${item.num}の${item.name}について詳しく教えて`
+                                  : `Tell me more about #${item.num} ${item.name}`
+                              )}
+                            >
+                              {item.num}. {item.name}
+                            </button>
+                          ))}
+                        </div>
+                      );
+                    })()}
                     {/* Feedback for NFG cards */}
                     <div className="feedback-row">
                       <div className="feedback-actions">
