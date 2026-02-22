@@ -5,6 +5,11 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { Search } from 'lucide-react'
 import { ExploreApi, SearchRestaurant, NfgSearchRestaurant, CityCount, PlatformStats } from '../services/api'
 
+const QUICK_TAPS = [
+  '蟹', '海鮮', '寿司', '焼き鳥', 'ラーメン', 'そば', '居酒屋',
+  'ランチ', 'コース', '接待',
+]
+
 const NFG_TRIGGER_WORDS = [
   '食べたい', 'おすすめ', '向け', '向き', '接待', '宴会', 'ランチ', 'デザート',
   '海鮮', '刺身', '寿司', '天ぷら', 'ラーメン', 'そば', '焼き鳥', '鍋',
@@ -29,8 +34,9 @@ export default function HomePage() {
   const [total, setTotal] = useState(0)
   const [page, setPage] = useState(1)
   const [pages, setPages] = useState(1)
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
   const [stats, setStats] = useState<PlatformStats | null>(null)
+  const [searched, setSearched] = useState(false)
   const debounceRef = useRef<ReturnType<typeof setTimeout>>()
 
   const fetchRestaurants = useCallback(async (q: string, c: string, p: number) => {
@@ -58,21 +64,40 @@ export default function HomePage() {
   useEffect(() => {
     ExploreApi.cities().then(res => setCities(res.result)).catch(() => {})
     ExploreApi.stats().then(res => setStats(res.result)).catch(() => {})
-    fetchRestaurants('', '', 1)
   }, [fetchRestaurants])
 
   const handleSearch = (q: string) => {
     setQuery(q)
     setPage(1)
     if (debounceRef.current) clearTimeout(debounceRef.current)
-    debounceRef.current = setTimeout(() => fetchRestaurants(q, city, 1), 300)
+    if (q.length >= 1) {
+      setSearched(true)
+      debounceRef.current = setTimeout(() => fetchRestaurants(q, city, 1), 300)
+    } else {
+      setSearched(!!city)
+      if (city) {
+        debounceRef.current = setTimeout(() => fetchRestaurants('', city, 1), 300)
+      } else {
+        setRestaurants([])
+        setTotal(0)
+        setPages(1)
+      }
+    }
   }
 
   const handleCity = (c: string) => {
     const next = city === c ? '' : c
     setCity(next)
     setPage(1)
-    fetchRestaurants(query, next, 1)
+    if (next || query) {
+      setSearched(true)
+      fetchRestaurants(query, next, 1)
+    } else {
+      setSearched(false)
+      setRestaurants([])
+      setTotal(0)
+      setPages(1)
+    }
   }
 
   const handlePage = (p: number) => {
@@ -84,115 +109,140 @@ export default function HomePage() {
   const totalAll = cities.reduce((s, c) => s + c.count, 0)
 
   return (
-    <div className="explore-page">
-      <header className="explore-header">
-        <div className="explore-header-inner">
-          <h1 className="explore-brand">
-            NGraph <span className="explore-badge">β</span> <span className="explore-region">＠FUKUI</span>
-          </h1>
-        </div>
-      </header>
+    <div className={`explore-page ${!searched ? 'explore-landing' : ''}`}>
+      <div className={!searched ? 'explore-landing-center' : ''}>
+        <header className="explore-header">
+          <div className="explore-header-inner">
+            <h1 className="explore-brand">
+              NGraph <span className="explore-badge">β</span> <span className="explore-region">＠FUKUI</span>
+            </h1>
+          </div>
+        </header>
 
-      <div className="explore-body">
-        {/* Search */}
-        <div className="explore-search-wrap">
-          <Search size={16} className="explore-search-icon" />
-          <input
-            className="explore-search"
-            type="text"
-            placeholder="店名・ジャンル・食べたいもので検索"
-            value={query}
-            onChange={e => handleSearch(e.target.value)}
-          />
-        </div>
+        <div className="explore-body">
+          {/* Search */}
+          <div className="explore-search-wrap">
+            <Search size={16} className="explore-search-icon" />
+            <input
+              className="explore-search"
+              type="text"
+              placeholder="店名・ジャンル・食べたいもので検索"
+              value={query}
+              onChange={e => handleSearch(e.target.value)}
+            />
+          </div>
 
-        {/* City filter */}
-        <div className="explore-filters">
-          <button
-            className={`explore-filter-pill ${!city ? 'active' : ''}`}
-            onClick={() => handleCity('')}
-          >
-            すべて <span className="explore-filter-count">{totalAll}</span>
-          </button>
-          {cities.map(c => (
-            <button
-              key={c.city}
-              className={`explore-filter-pill ${city === c.city ? 'active' : ''}`}
-              onClick={() => handleCity(c.city)}
-            >
-              {c.city} <span className="explore-filter-count">{c.count}</span>
-            </button>
-          ))}
-        </div>
-
-        {/* Results count */}
-        <div className="explore-results-bar">
-          <span className="explore-results-count">
-            {total.toLocaleString()} 件{query && ` — "${query}"`}
-          </span>
-        </div>
-
-        {/* Restaurant list */}
-        <div className="explore-list">
-          {loading ? (
-            <div className="explore-loading">読み込み中...</div>
-          ) : restaurants.length === 0 ? (
-            <div className="explore-empty">該当する店舗がありません</div>
-          ) : (
-            restaurants.map(r => (
+          {/* City filter */}
+          <div className="explore-filters">
+            {searched && (
               <button
-                key={r.uid}
-                className="explore-row"
-                onClick={() => router.push(`/capture?restaurant=${encodeURIComponent(r.slug)}`)}
+                className={`explore-filter-pill ${!city ? 'active' : ''}`}
+                onClick={() => handleCity('')}
               >
-                <div className="explore-row-main">
-                  <div className="explore-row-info">
-                    <span className="explore-row-name">{r.name}</span>
-                    {r.city && <span className="explore-row-address">{r.city}</span>}
-                  </div>
-                  {r.menu_count > 0 && (
-                    <span className="explore-row-count">{r.menu_count}</span>
-                  )}
-                </div>
-                {r._nfg && 'match_reasons' in r && (r as NfgSearchRestaurant).match_reasons.length > 0 && (
-                  <div className="explore-row-reasons">
-                    {(r as NfgSearchRestaurant).match_reasons.map((reason, i) => (
-                      <span key={i} className="explore-match-tag">{reason}</span>
-                    ))}
-                  </div>
-                )}
+                すべて <span className="explore-filter-count">{totalAll}</span>
               </button>
-            ))
+            )}
+            {cities.map(c => (
+              <button
+                key={c.city}
+                className={`explore-filter-pill ${city === c.city ? 'active' : ''}`}
+                onClick={() => handleCity(c.city)}
+              >
+                {c.city} <span className="explore-filter-count">{c.count}</span>
+              </button>
+            ))}
+          </div>
+
+          {!searched && (
+            <>
+              <div className="explore-quick-taps">
+                {QUICK_TAPS.map(t => (
+                  <button key={t} className="explore-quick-tap" onClick={() => handleSearch(t)}>
+                    {t}
+                  </button>
+                ))}
+              </div>
+              {stats && (
+                <div className="explore-landing-stats">
+                  {stats.total_restaurants.toLocaleString()} 店舗 · {stats.total_menus.toLocaleString()} メニュー · {stats.cities} 都市
+                </div>
+              )}
+            </>
           )}
         </div>
-
-        {/* Pagination */}
-        {pages > 1 && (
-          <div className="explore-pagination">
-            <button
-              className="explore-page-btn"
-              disabled={page <= 1}
-              onClick={() => handlePage(page - 1)}
-            >
-              前へ
-            </button>
-            <span className="explore-page-info">{page} / {pages}</span>
-            <button
-              className="explore-page-btn"
-              disabled={page >= pages}
-              onClick={() => handlePage(page + 1)}
-            >
-              次へ
-            </button>
-          </div>
-        )}
-
-        {stats && (
-          <div className="explore-footer-stats">
-            {stats.total_restaurants.toLocaleString()}店舗 · {stats.total_menus.toLocaleString()}メニュー · {stats.enriched_menus.toLocaleString()}構造化 · {stats.cities}都市
-          </div>
-        )}
       </div>
+
+      {searched && (
+        <div className="explore-body">
+          {/* Results count */}
+          <div className="explore-results-bar">
+            <span className="explore-results-count">
+              {total.toLocaleString()} 件{query && ` — "${query}"`}
+            </span>
+          </div>
+
+          {/* Restaurant list */}
+          <div className="explore-list">
+            {loading ? (
+              <div className="explore-loading">読み込み中...</div>
+            ) : restaurants.length === 0 ? (
+              <div className="explore-empty">該当する店舗がありません</div>
+            ) : (
+              restaurants.map(r => (
+                <button
+                  key={r.uid}
+                  className="explore-row"
+                  onClick={() => router.push(`/capture?restaurant=${encodeURIComponent(r.slug)}`)}
+                >
+                  <div className="explore-row-main">
+                    <div className="explore-row-info">
+                      <span className="explore-row-name">{r.name}</span>
+                      {r.city && <span className="explore-row-address">{r.city}</span>}
+                    </div>
+                    {r.menu_count > 0 && (
+                      <span className="explore-row-count">{r.menu_count}</span>
+                    )}
+                  </div>
+                  {r._nfg && 'match_reasons' in r && (r as NfgSearchRestaurant).match_reasons.length > 0 && (
+                    <div className="explore-row-reasons">
+                      {(r as NfgSearchRestaurant).match_reasons.map((reason, i) => (
+                        <span key={i} className="explore-match-tag">{reason}</span>
+                      ))}
+                    </div>
+                  )}
+                </button>
+              ))
+            )}
+          </div>
+
+          {/* Pagination */}
+          {pages > 1 && (
+            <div className="explore-pagination">
+              <button
+                className="explore-page-btn"
+                disabled={page <= 1}
+                onClick={() => handlePage(page - 1)}
+              >
+                前へ
+              </button>
+              <span className="explore-page-info">{page} / {pages}</span>
+              <button
+                className="explore-page-btn"
+                disabled={page >= pages}
+                onClick={() => handlePage(page + 1)}
+              >
+                次へ
+              </button>
+            </div>
+          )}
+
+          {stats && (
+            <div className="explore-footer-stats">
+              {stats.total_restaurants.toLocaleString()}店舗 · {stats.total_menus.toLocaleString()}メニュー · {stats.enriched_menus.toLocaleString()}構造化 · {stats.cities}都市
+            </div>
+          )}
+        </div>
+      )}
     </div>
   )
 }
