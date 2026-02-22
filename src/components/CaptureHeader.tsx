@@ -1,3 +1,4 @@
+import { useRouter } from 'next/navigation'
 import { Menu } from 'lucide-react'
 import { getUiCopy } from '../i18n/uiCopy'
 import { useAppContext } from './AppProvider'
@@ -18,6 +19,7 @@ interface CaptureHeaderProps {
 }
 
 export default function CaptureHeader({ onMenu, onLanguage, restaurantName }: CaptureHeaderProps) {
+  const router = useRouter()
   const { language } = useAppContext()
   const copy = getUiCopy(language)
   const badge = LANG_BADGES[language] || language.slice(0, 2).toUpperCase()
@@ -28,8 +30,14 @@ export default function CaptureHeader({ onMenu, onLanguage, restaurantName }: Ca
         <Menu size={22} strokeWidth={1.75} color="rgba(255,255,255,0.9)" />
       </button>
       <div className="capture-header-center">
+        <button className="capture-header-home" type="button" onClick={() => router.push('/')}>
+          NGraph
+        </button>
         {restaurantName && (
-          <span className="capture-header-name">{restaurantName}</span>
+          <>
+            <span className="capture-header-sep">/</span>
+            <span className="capture-header-name">{restaurantName}</span>
+          </>
         )}
       </div>
       <button className="header-lang-badge" type="button" onClick={onLanguage}>
