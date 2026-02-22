@@ -4968,6 +4968,21 @@ textarea.form-input {
   letter-spacing: 0.01em;
 }
 
+/* Proximity glow */
+.glow-target {
+  --glow: 0;
+  transition: color 0.2s, border-color 0.2s, text-shadow 0.2s;
+  color: color-mix(in srgb, var(--color-accent) calc(var(--glow) * 100%), var(--color-text-secondary) calc((1 - var(--glow)) * 100%));
+  text-shadow: 0 0 calc(var(--glow) * 8px) rgba(16, 163, 127, calc(var(--glow) * 0.6));
+}
+.explore-filter-pill.glow-target,
+.explore-quick-tap.glow-target {
+  border-color: color-mix(in srgb, var(--color-accent) calc(var(--glow) * 100%), rgba(255,255,255,0.12) calc((1 - var(--glow)) * 100%));
+}
+.explore-badge.glow-target {
+  border-color: color-mix(in srgb, var(--color-accent) calc(var(--glow) * 100%), rgba(255,255,255,0.2) calc((1 - var(--glow)) * 100%));
+}
+
 .explore-header {
   border-bottom: 1px solid rgba(255,255,255,0.08);
   padding: 14px 16px 10px;

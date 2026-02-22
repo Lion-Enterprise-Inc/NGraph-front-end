@@ -209,6 +209,43 @@ export default function HomePage() {
   const [stats, setStats] = useState<PlatformStats | null>(null)
   const [searched, setSearched] = useState(false)
   const debounceRef = useRef<ReturnType<typeof setTimeout>>()
+  const pageRef = useRef<HTMLDivElement>(null)
+
+  // Proximity glow: elements near pointer get accent color
+  useEffect(() => {
+    if (searched) return
+    const el = pageRef.current
+    if (!el) return
+    const RADIUS = 120
+    const update = (px: number, py: number) => {
+      const glowEls = el.querySelectorAll<HTMLElement>('.glow-target')
+      glowEls.forEach(g => {
+        const rect = g.getBoundingClientRect()
+        const cx = rect.left + rect.width / 2
+        const cy = rect.top + rect.height / 2
+        const dist = Math.sqrt((px - cx) ** 2 + (py - cy) ** 2)
+        const intensity = Math.max(0, 1 - dist / RADIUS)
+        g.style.setProperty('--glow', String(intensity))
+      })
+    }
+    const onMouse = (e: MouseEvent) => update(e.clientX, e.clientY)
+    const onTouch = (e: TouchEvent) => {
+      const t = e.touches[0]
+      if (t) update(t.clientX, t.clientY)
+    }
+    const onLeave = () => {
+      const glowEls = el.querySelectorAll<HTMLElement>('.glow-target')
+      glowEls.forEach(g => g.style.setProperty('--glow', '0'))
+    }
+    document.addEventListener('mousemove', onMouse)
+    document.addEventListener('touchmove', onTouch, { passive: true })
+    document.addEventListener('mouseleave', onLeave)
+    return () => {
+      document.removeEventListener('mousemove', onMouse)
+      document.removeEventListener('touchmove', onTouch)
+      document.removeEventListener('mouseleave', onLeave)
+    }
+  }, [searched])
 
   const fetchRestaurants = useCallback(async (q: string, c: string, p: number) => {
     setLoading(true)
@@ -281,7 +318,7 @@ export default function HomePage() {
   const totalAll = cities.reduce((s, c) => s + c.count, 0)
 
   return (
-    <div className={`explore-page ${!searched ? 'explore-landing' : ''}`}>
+    <div ref={pageRef} className={`explore-page ${!searched ? 'explore-landing' : ''}`}>
       {!searched && <BinaryField />}
       <div className={!searched ? 'explore-landing-center' : ''}>
         <header className="explore-header">
@@ -289,8 +326,8 @@ export default function HomePage() {
             <div className="explore-brand">
               <img src="/ngraph-text-logo.svg" alt="NGraph" className="explore-logo" />
               <div className="explore-brand-tags">
-                <span className="explore-badge">β</span>
-                <span className="explore-region">＠FUKUI</span>
+                <span className="explore-badge glow-target">β</span>
+                <span className="explore-region glow-target">＠FUKUI</span>
               </div>
             </div>
           </div>
@@ -322,7 +359,7 @@ export default function HomePage() {
             {cities.map(c => (
               <button
                 key={c.city}
-                className={`explore-filter-pill ${city === c.city ? 'active' : ''}`}
+                className={`explore-filter-pill glow-target ${city === c.city ? 'active' : ''}`}
                 onClick={() => handleCity(c.city)}
               >
                 {c.city} <span className="explore-filter-count">{c.count}</span>
@@ -334,13 +371,13 @@ export default function HomePage() {
             <>
               <div className="explore-quick-taps">
                 {QUICK_TAPS.map(t => (
-                  <button key={t} className="explore-quick-tap" onClick={() => handleSearch(t)}>
+                  <button key={t} className="explore-quick-tap glow-target" onClick={() => handleSearch(t)}>
                     {t}
                   </button>
                 ))}
               </div>
               {stats && (
-                <div className="explore-landing-stats">
+                <div className="explore-landing-stats glow-target">
                   {stats.total_restaurants.toLocaleString()} 店舗 · {stats.total_menus.toLocaleString()} メニュー · {stats.cities} 都市
                 </div>
               )}
