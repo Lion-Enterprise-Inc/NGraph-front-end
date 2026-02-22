@@ -249,9 +249,13 @@ export default function HomePage() {
       <div className={!searched ? 'explore-landing-center' : ''}>
         <header className="explore-header">
           <div className="explore-header-inner">
-            <h1 className="explore-brand">
-              NGraph <span className="explore-badge">β</span> <span className="explore-region">＠FUKUI</span>
-            </h1>
+            <div className="explore-brand">
+              <img src="/ngraph-text-logo.svg" alt="NGraph" className="explore-logo" />
+              <div className="explore-brand-tags">
+                <span className="explore-badge">β</span>
+                <span className="explore-region">＠FUKUI</span>
+              </div>
+            </div>
           </div>
         </header>
 

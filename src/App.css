@@ -4978,12 +4978,21 @@ textarea.form-input {
 }
 
 .explore-brand {
-  font-family: 'SF Mono', 'Fira Code', 'Fira Mono', Menlo, monospace;
-  font-weight: 700;
-  font-size: 22px;
-  letter-spacing: -0.03em;
-  color: var(--color-text);
-  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.explore-logo {
+  height: 48px;
+  width: auto;
+}
+
+.explore-brand-tags {
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .explore-badge {
@@ -4994,8 +5003,6 @@ textarea.form-input {
   border: 1px solid rgba(255,255,255,0.2);
   border-radius: 4px;
   color: var(--color-text-secondary);
-  vertical-align: middle;
-  margin-left: 2px;
   letter-spacing: 0.05em;
 }
 
@@ -5003,8 +5010,6 @@ textarea.form-input {
   font-size: 13px;
   font-weight: 400;
   color: var(--color-text-secondary);
-  vertical-align: middle;
-  margin-left: 4px;
   letter-spacing: 0.02em;
 }
 
@@ -5268,8 +5273,8 @@ textarea.form-input {
   .explore-body {
     padding: 20px 24px;
   }
-  .explore-brand {
-    font-size: 26px;
+  .explore-logo {
+    height: 56px;
   }
 }
 
