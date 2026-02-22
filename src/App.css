@@ -5111,8 +5111,9 @@ textarea.form-input {
 }
 
 .explore-filter-pill:hover {
-  border-color: rgba(255,255,255,0.2);
-  color: var(--color-text);
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+  background: rgba(16, 163, 127, 0.08);
 }
 
 .explore-filter-pill.active {
