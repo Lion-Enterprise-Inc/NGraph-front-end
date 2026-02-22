@@ -4954,9 +4954,9 @@ textarea.form-input {
 }
 
 .explore-quick-tap:hover {
-  border-color: rgba(255,255,255,0.3);
-  color: var(--color-text);
-  background: rgba(255,255,255,0.04);
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+  background: rgba(16, 163, 127, 0.08);
 }
 
 .explore-landing-stats {
