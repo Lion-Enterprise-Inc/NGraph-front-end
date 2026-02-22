@@ -2,8 +2,8 @@
 
 import { useRouter } from 'next/navigation'
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { Search, MapPin, UtensilsCrossed, Star } from 'lucide-react'
-import { ExploreApi, SearchRestaurant, CityCount, BUSINESS_TYPES } from '../services/api'
+import { Search } from 'lucide-react'
+import { ExploreApi, SearchRestaurant, CityCount } from '../services/api'
 
 export default function HomePage() {
   const router = useRouter()
@@ -121,27 +121,10 @@ export default function HomePage() {
                 className="explore-row"
                 onClick={() => router.push(`/capture?restaurant=${encodeURIComponent(r.slug)}`)}
               >
-                <div className="explore-row-main">
-                  <div className="explore-row-name">
-                    <UtensilsCrossed size={16} className="explore-row-icon" />
-                    {r.name}
-                  </div>
-                  {r.address && (
-                    <div className="explore-row-addr">{r.address}</div>
-                  )}
-                </div>
-                <div className="explore-row-meta">
-                  {r.city && (
-                    <span className="explore-row-tag">
-                      <MapPin size={12} /> {r.city}
-                    </span>
-                  )}
-                  {r.menu_count > 0 && (
-                    <span className="explore-row-tag">
-                      <Star size={12} /> {r.menu_count} 品
-                    </span>
-                  )}
-                </div>
+                <span className="explore-row-name">{r.name}</span>
+                {r.menu_count > 0 && (
+                  <span className="explore-row-count">{r.menu_count}</span>
+                )}
               </button>
             ))
           )}
