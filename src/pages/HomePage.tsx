@@ -57,6 +57,9 @@ function BinaryField() {
     resize()
     window.addEventListener('resize', resize)
 
+    const SYNAPSE_DIST = 80
+    const alphas: number[] = new Array(COUNT).fill(0)
+
     const draw = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height)
 
@@ -64,33 +67,56 @@ function BinaryField() {
       const cy = canvas.height / 2
       const radius = Math.min(canvas.width, canvas.height) * 0.32
 
+      // update & compute visible alpha
       for (let i = 0; i < particles.length; i++) {
         const p = particles[i]
         p.x += p.vx
         p.y += p.vy
         p.life++
 
-        // fade in/out
         const lifeRatio = p.life / p.maxLife
         const lifeFade = lifeRatio < 0.1 ? lifeRatio / 0.1
           : lifeRatio > 0.85 ? (1 - lifeRatio) / 0.15
           : 1
 
-        // radial fade
         const dx = (p.x - cx) / radius
         const dy = (p.y - cy) / radius
         const dist = Math.sqrt(dx * dx + dy * dy)
         const radialFade = Math.max(0, 1 - dist * dist)
 
-        const alpha = p.alpha * lifeFade * radialFade
-        if (alpha < 0.005) {
-          if (p.life >= p.maxLife || dist > 1.5) {
-            particles[i] = spawn(canvas.width, canvas.height)
-          }
-          continue
-        }
+        alphas[i] = p.alpha * lifeFade * radialFade
 
-        ctx.fillStyle = `rgba(16, 163, 127, ${alpha})`
+        if (p.life >= p.maxLife || dist > 1.5) {
+          particles[i] = spawn(canvas.width, canvas.height)
+          alphas[i] = 0
+        }
+      }
+
+      // synapses — thin lines between nearby particles
+      for (let i = 0; i < particles.length; i++) {
+        if (alphas[i] < 0.008) continue
+        for (let j = i + 1; j < particles.length; j++) {
+          if (alphas[j] < 0.008) continue
+          const ddx = particles[i].x - particles[j].x
+          const ddy = particles[i].y - particles[j].y
+          const d = Math.sqrt(ddx * ddx + ddy * ddy)
+          if (d < SYNAPSE_DIST) {
+            const lineAlpha = Math.min(alphas[i], alphas[j]) * (1 - d / SYNAPSE_DIST) * 0.5
+            ctx.beginPath()
+            ctx.moveTo(particles[i].x, particles[i].y - particles[i].size * 0.3)
+            ctx.lineTo(particles[j].x, particles[j].y - particles[j].size * 0.3)
+            ctx.strokeStyle = `rgba(16, 163, 127, ${lineAlpha})`
+            ctx.lineWidth = 0.5
+            ctx.stroke()
+          }
+        }
+      }
+
+      // draw characters
+      for (let i = 0; i < particles.length; i++) {
+        if (alphas[i] < 0.005) continue
+        const p = particles[i]
+        ctx.fillStyle = `rgba(16, 163, 127, ${alphas[i]})`
         ctx.font = `${p.size}px 'SF Mono', 'Fira Code', monospace`
         ctx.fillText(p.char, p.x, p.y)
       }
