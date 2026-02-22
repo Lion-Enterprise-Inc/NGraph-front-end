@@ -632,11 +632,12 @@ body {
   background: none;
   border: none;
   padding: 0;
-  font-family: 'SF Mono', 'Fira Code', monospace;
-  font-size: 14px;
-  font-weight: 700;
-  color: #58a6ff;
+  font-family: 'Noto Serif JP', Georgia, serif;
+  font-size: 15px;
+  font-weight: 400;
+  color: var(--color-accent);
   cursor: pointer;
+  letter-spacing: 0.08em;
   flex-shrink: 0;
 }
 
