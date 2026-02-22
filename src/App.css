@@ -5173,6 +5173,16 @@ textarea.form-input {
   background: rgba(255,255,255,0.15);
 }
 
+/* ========== Context Chips (理解補助) ========== */
+.context-chips { display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; }
+.context-chip {
+  padding:7px 14px; background:rgba(255,255,255,0.04);
+  border:1px solid rgba(255,255,255,0.10); border-radius:16px;
+  color:rgba(255,255,255,0.65); font-size:12px; cursor:pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.context-chip:hover { background:rgba(255,255,255,0.08); color:rgba(255,255,255,0.85); }
+
 /* ========== Sidebar ========== */
 .sidebar-brand {
   display: flex;
@@ -5617,3 +5627,12 @@ textarea.form-input {
   color: rgba(255,255,255,0.45);
   border: 1px solid rgba(255,255,255,0.08);
 }
+
+.nfg-taste-chart { margin: 10px 0; }
+.nfg-taste-row { display:flex; align-items:center; gap:6px; margin:3px 0; }
+.nfg-taste-label { width:48px; font-size:11px; color:rgba(255,255,255,0.5); text-align:right; }
+.nfg-taste-bar { flex:1; height:6px; background:rgba(255,255,255,0.06); border-radius:3px; overflow:hidden; }
+.nfg-taste-fill { height:100%; background:linear-gradient(90deg,#4f8cff,#7c5cff); border-radius:3px; }
+.nfg-narrative { margin:10px 0; }
+.nfg-narrative-story { font-size:13px; color:rgba(255,255,255,0.7); line-height:1.5; margin-bottom:8px; font-style:italic; }
+.nfg-serving { margin:8px 0; }

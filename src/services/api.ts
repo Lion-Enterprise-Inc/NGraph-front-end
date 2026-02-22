@@ -648,6 +648,11 @@ export interface VisionMenuItem {
   image_url?: string;
   source?: "db" | "ai";
   confidence?: number;
+  taste_values?: Record<string, number>;
+  narrative?: Record<string, any>;
+  serving?: Record<string, any>;
+  featured_tags?: string[];
+  verification_rank?: string;
 }
 
 export interface VisionAnalysisResult {

@@ -129,6 +129,7 @@ type ResponseItem = {
   messageUid: string | null;
   streaming?: boolean;
   visionItems?: VisionMenuItem[];
+  contextChips?: { label: string; query: string }[];
 };
 
 type FeedbackEntry = {
@@ -249,6 +250,10 @@ export default function CapturePage({
   const [userScrolledUp, setUserScrolledUp] = useState(false);
   const [expandedCards, setExpandedCards] = useState<Record<string, Set<number>>>({});
   const [suggestionTarget, setSuggestionTarget] = useState<{ name_jp: string; menu_uid?: string; restaurant_uid?: string } | null>(null);
+  const [likedMenus, setLikedMenus] = useState<Set<string>>(() => {
+    if (typeof window === 'undefined') return new Set();
+    try { return new Set(JSON.parse(localStorage.getItem('ngraph_liked_menus') || '[]')); } catch { return new Set(); }
+  });
 
   // responsesをsessionStorageに自動保存
   useEffect(() => {
@@ -998,10 +1003,11 @@ export default function CapturePage({
                     throw new Error(data.message || 'Server error');
                   } else if (data.type === 'done' && data.message_uid) {
                     const nfgItems = data.nfg_items as VisionMenuItem[] | undefined;
+                    const contextChips = data.context_chips as { label: string; query: string }[] | undefined;
                     setResponses((prev) =>
                       prev.map((item) =>
                         item.id === responseId
-                          ? { ...item, messageUid: data.message_uid, ...(nfgItems?.length ? { visionItems: nfgItems } : {}) }
+                          ? { ...item, messageUid: data.message_uid, ...(nfgItems?.length ? { visionItems: nfgItems } : {}), ...(contextChips?.length ? { contextChips } : {}) }
                           : item
                       )
                     );
@@ -1492,6 +1498,64 @@ export default function CapturePage({
                               {vi.description && (
                                 <div className="nfg-card-desc">{vi.description}</div>
                               )}
+                              {vi.taste_values && Object.keys(vi.taste_values).length > 0 && (
+                                <div className="nfg-taste-chart">
+                                  <div className="nfg-field-label" style={{marginBottom:4}}>{copy.nfg.tasteChart}</div>
+                                  {Object.entries(vi.taste_values).map(([key, val]) => {
+                                    const tasteLabels: Record<string, string> = activeLanguage === 'ja'
+                                      ? {sweetness:"甘味",sourness:"酸味",saltiness:"塩味",bitterness:"苦味",umami:"旨味",spiciness:"辛味",richness:"コク",lightness:"あっさり"}
+                                      : {sweetness:"Sweet",sourness:"Sour",saltiness:"Salty",bitterness:"Bitter",umami:"Umami",spiciness:"Spicy",richness:"Rich",lightness:"Light"};
+                                    return (
+                                      <div key={key} className="nfg-taste-row">
+                                        <span className="nfg-taste-label">{tasteLabels[key] || key}</span>
+                                        <div className="nfg-taste-bar">
+                                          <div className="nfg-taste-fill" style={{width:`${(val as number) * 10}%`}} />
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              )}
+                              {vi.narrative && (
+                                <div className="nfg-narrative">
+                                  {vi.narrative.story && (
+                                    <div className="nfg-narrative-story">{vi.narrative.story}</div>
+                                  )}
+                                  {vi.narrative.texture && (
+                                    <div className="nfg-field">
+                                      <span className="nfg-field-label">{copy.nfg.texture}</span>
+                                      <span className="nfg-field-value">{vi.narrative.texture}</span>
+                                    </div>
+                                  )}
+                                  {vi.narrative.how_to_eat && (
+                                    <div className="nfg-field">
+                                      <span className="nfg-field-label">{copy.nfg.howToEat}</span>
+                                      <span className="nfg-field-value">{vi.narrative.how_to_eat}</span>
+                                    </div>
+                                  )}
+                                  {vi.narrative.pairing && (
+                                    <div className="nfg-field">
+                                      <span className="nfg-field-label">{copy.nfg.pairing}</span>
+                                      <span className="nfg-field-value">{vi.narrative.pairing}</span>
+                                    </div>
+                                  )}
+                                  {vi.narrative.kid_friendly != null && (
+                                    <div className="nfg-field">
+                                      <span className="nfg-field-label">{vi.narrative.kid_friendly ? copy.nfg.kidFriendly : copy.nfg.notKidFriendly}</span>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                              {vi.serving && (vi.serving.style || vi.serving.portion || vi.serving.temperature) && (
+                                <div className="nfg-serving">
+                                  <div className="nfg-field">
+                                    <span className="nfg-field-label">{copy.nfg.servingStyle}</span>
+                                    <span className="nfg-field-value">
+                                      {[vi.serving.style, vi.serving.portion, vi.serving.temperature].filter(Boolean).join(' / ')}
+                                    </span>
+                                  </div>
+                                </div>
+                              )}
                               <div className="nfg-card-fields">
                                 {vi.ingredients?.length > 0 && (
                                   <div className="nfg-field">
@@ -1542,6 +1606,30 @@ export default function CapturePage({
                                 <button
                                   type="button"
                                   className="nfg-badge"
+                                  style={{
+                                    cursor: 'pointer',
+                                    background: (vi as any).menu_uid && likedMenus.has((vi as any).menu_uid) ? 'rgba(255,80,80,0.18)' : 'rgba(255,255,255,0.06)',
+                                    color: (vi as any).menu_uid && likedMenus.has((vi as any).menu_uid) ? '#ff5050' : 'rgba(255,255,255,0.5)',
+                                    border: (vi as any).menu_uid && likedMenus.has((vi as any).menu_uid) ? '1px solid rgba(255,80,80,0.3)' : '1px solid rgba(255,255,255,0.1)',
+                                  }}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    const menuUid = (vi as any).menu_uid;
+                                    if (!menuUid) return;
+                                    const next = new Set(likedMenus);
+                                    if (next.has(menuUid)) { next.delete(menuUid); } else { next.add(menuUid); }
+                                    setLikedMenus(next);
+                                    localStorage.setItem('ngraph_liked_menus', JSON.stringify([...next]));
+                                    if (!likedMenus.has(menuUid) && restaurantSlug) {
+                                      EventApi.log({ restaurant_slug: restaurantSlug, event: 'dish_like', meta: { menu_uid: menuUid } });
+                                    }
+                                  }}
+                                >
+                                  {(vi as any).menu_uid && likedMenus.has((vi as any).menu_uid) ? '♥' : '♡'}
+                                </button>
+                                <button
+                                  type="button"
+                                  className="nfg-badge"
                                   style={{ marginLeft: 'auto', cursor: 'pointer', background: 'rgba(79,140,255,0.15)', color: '#4f8cff', border: '1px solid rgba(79,140,255,0.3)' }}
                                   onClick={(e) => {
                                     e.stopPropagation();
@@ -1560,6 +1648,15 @@ export default function CapturePage({
                         );
                       })}
                     </div>
+                    {response.contextChips && response.contextChips.length > 0 && (
+                      <div className="context-chips">
+                        {response.contextChips.map((chip, i) => (
+                          <button key={i} className="context-chip" onClick={() => handleSend(chip.query)}>
+                            {chip.label}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                     {/* Feedback for NFG cards */}
                     <div className="feedback-row">
                       <div className="feedback-actions">
