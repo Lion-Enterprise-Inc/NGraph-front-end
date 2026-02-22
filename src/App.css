@@ -5079,8 +5079,7 @@ textarea.form-input {
 
 .explore-row {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
   padding: 10px 8px;
   background: transparent;
   border: none;
@@ -5090,10 +5089,18 @@ textarea.form-input {
   transition: background 0.1s;
   color: var(--color-text);
   width: 100%;
+  gap: 4px;
 }
 
 .explore-row:hover {
   background: rgba(255,255,255,0.03);
+}
+
+.explore-row-main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
 }
 
 .explore-row-name {
@@ -5110,6 +5117,21 @@ textarea.form-input {
   padding: 2px 6px;
   border-radius: 10px;
   flex-shrink: 0;
+}
+
+.explore-row-reasons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.explore-match-tag {
+  font-size: 10px;
+  color: var(--color-text-secondary);
+  background: rgba(255,255,255,0.06);
+  padding: 1px 6px;
+  border-radius: 8px;
+  line-height: 1.4;
 }
 
 .explore-pagination {

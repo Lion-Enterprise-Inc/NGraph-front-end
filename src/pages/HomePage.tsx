@@ -3,14 +3,29 @@
 import { useRouter } from 'next/navigation'
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { Search } from 'lucide-react'
-import { ExploreApi, SearchRestaurant, CityCount, PlatformStats } from '../services/api'
+import { ExploreApi, SearchRestaurant, NfgSearchRestaurant, CityCount, PlatformStats } from '../services/api'
+
+const NFG_TRIGGER_WORDS = [
+  '食べたい', 'おすすめ', '向け', '向き', '接待', '宴会', 'ランチ', 'デザート',
+  '海鮮', '刺身', '寿司', '天ぷら', 'ラーメン', 'そば', '焼き鳥', '鍋',
+  '蟹', 'カニ', 'かに', '肉', '魚', 'へしこ', '甘えび', '地酒', '日本酒',
+  '県外', '観光', 'コース', 'ドリンク', 'パン',
+  '片町', '駅前', '順化', '大名町', '敦賀', '鯖江', '越前', 'あわら',
+]
+
+function isNfgQuery(q: string): boolean {
+  if (q.length < 2) return false
+  return NFG_TRIGGER_WORDS.some(w => q.includes(w))
+}
+
+type DisplayRestaurant = (SearchRestaurant | NfgSearchRestaurant) & { _nfg?: boolean }
 
 export default function HomePage() {
   const router = useRouter()
   const [query, setQuery] = useState('')
   const [city, setCity] = useState('')
   const [cities, setCities] = useState<CityCount[]>([])
-  const [restaurants, setRestaurants] = useState<SearchRestaurant[]>([])
+  const [restaurants, setRestaurants] = useState<DisplayRestaurant[]>([])
   const [total, setTotal] = useState(0)
   const [page, setPage] = useState(1)
   const [pages, setPages] = useState(1)
@@ -21,10 +36,18 @@ export default function HomePage() {
   const fetchRestaurants = useCallback(async (q: string, c: string, p: number) => {
     setLoading(true)
     try {
-      const res = await ExploreApi.search(q, c, p, 30)
-      setRestaurants(res.result.items)
-      setTotal(res.result.total)
-      setPages(res.result.pages)
+      if (q && isNfgQuery(q)) {
+        const res = await ExploreApi.nfgSearch(q, c, p, 30)
+        const items: DisplayRestaurant[] = res.result.items.map(r => ({ ...r, _nfg: true }))
+        setRestaurants(items)
+        setTotal(res.result.total)
+        setPages(res.result.pages)
+      } else {
+        const res = await ExploreApi.search(q, c, p, 30)
+        setRestaurants(res.result.items)
+        setTotal(res.result.total)
+        setPages(res.result.pages)
+      }
     } catch {
       setRestaurants([])
     } finally {
@@ -103,7 +126,7 @@ export default function HomePage() {
           <input
             className="explore-search"
             type="text"
-            placeholder="店名で検索..."
+            placeholder="店名で検索、または「蟹が食べたい」「片町で接待」等"
             value={query}
             onChange={e => handleSearch(e.target.value)}
           />
@@ -148,9 +171,18 @@ export default function HomePage() {
                 className="explore-row"
                 onClick={() => router.push(`/capture?restaurant=${encodeURIComponent(r.slug)}`)}
               >
-                <span className="explore-row-name">{r.name}</span>
-                {r.menu_count > 0 && (
-                  <span className="explore-row-count">{r.menu_count}</span>
+                <div className="explore-row-main">
+                  <span className="explore-row-name">{r.name}</span>
+                  {r.menu_count > 0 && (
+                    <span className="explore-row-count">{r.menu_count}</span>
+                  )}
+                </div>
+                {r._nfg && 'match_reasons' in r && (r as NfgSearchRestaurant).match_reasons.length > 0 && (
+                  <div className="explore-row-reasons">
+                    {(r as NfgSearchRestaurant).match_reasons.map((reason, i) => (
+                      <span key={i} className="explore-match-tag">{reason}</span>
+                    ))}
+                  </div>
                 )}
               </button>
             ))

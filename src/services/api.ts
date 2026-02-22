@@ -1091,6 +1091,28 @@ export interface PlatformStats {
   translated_menus: number;
 }
 
+export interface NfgSearchRestaurant {
+  uid: string;
+  name: string;
+  slug: string;
+  address: string | null;
+  city: string | null;
+  menu_count: number;
+  score: number;
+  match_reasons: string[];
+}
+
+export interface NfgQueryIntent {
+  address_patterns: string[];
+  ingredient_targets: string[];
+  category_targets: string[];
+  regional_patterns: string[];
+  price_min: number | null;
+  price_max: number | null;
+  featured: boolean;
+  raw_query: string;
+}
+
 export const ExploreApi = {
   stats: async (): Promise<{ result: PlatformStats }> => {
     const resp = await fetch(`${API_BASE_URL}/restaurants/stats`);
@@ -1118,6 +1140,18 @@ export const ExploreApi = {
     const params = new URLSearchParams({ lat: String(lat), lng: String(lng), radius: String(radius) });
     const resp = await fetch(`${API_BASE_URL}/restaurants/nearby?${params}`);
     if (!resp.ok) throw new Error('Nearby search failed');
+    return resp.json();
+  },
+  nfgSearch: async (q: string, city: string = '', page: number = 1, size: number = 20): Promise<{
+    result: { total: number; page: number; size: number; pages: number; items: NfgSearchRestaurant[]; query_intent: NfgQueryIntent };
+  }> => {
+    const params = new URLSearchParams();
+    if (q) params.append('q', q);
+    if (city) params.append('city', city);
+    params.append('page', String(page));
+    params.append('size', String(size));
+    const resp = await fetch(`${API_BASE_URL}/restaurants/nfg-search?${params}`);
+    if (!resp.ok) throw new Error('NFG search failed');
     return resp.json();
   },
 };
