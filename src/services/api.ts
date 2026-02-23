@@ -1207,6 +1207,60 @@ export const SemanticSearchApi = {
   },
 };
 
+// Menu search types
+export interface MenuSearchItem {
+  uid: string;
+  name_jp: string;
+  name_en: string | null;
+  price: number;
+  category: string;
+  category_label: string;
+  description: string | null;
+  narrative_snippet: string | null;
+  featured_tags: string[];
+  restaurant_uid: string;
+  restaurant_name: string;
+  restaurant_slug: string;
+  restaurant_city: string | null;
+}
+
+export const MenuSearchApi = {
+  count: async (params: {
+    category?: string; q?: string; diet?: string; no?: string;
+    mood?: string; area?: string;
+  }): Promise<{ result: { count: number } }> => {
+    const sp = new URLSearchParams();
+    if (params.category) sp.append('category', params.category);
+    if (params.q) sp.append('q', params.q);
+    if (params.diet) sp.append('diet', params.diet);
+    if (params.no) sp.append('no', params.no);
+    if (params.mood) sp.append('mood', params.mood);
+    if (params.area) sp.append('area', params.area);
+    const resp = await fetch(`${API_BASE_URL}/restaurants/search/menus/count?${sp}`);
+    if (!resp.ok) throw new Error('Menu count failed');
+    return resp.json();
+  },
+  search: async (params: {
+    category?: string; q?: string; diet?: string; no?: string;
+    mood?: string; area?: string; page?: number; size?: number;
+  }): Promise<{
+    result: { count: number; menus: MenuSearchItem[]; page: number; size: number; pages: number };
+  }> => {
+    const sp = new URLSearchParams();
+    if (params.category) sp.append('category', params.category);
+    if (params.q) sp.append('q', params.q);
+    if (params.diet) sp.append('diet', params.diet);
+    if (params.no) sp.append('no', params.no);
+    if (params.mood) sp.append('mood', params.mood);
+    if (params.area) sp.append('area', params.area);
+    sp.append('page', String(params.page || 1));
+    sp.append('size', String(params.size || 20));
+    const resp = await fetch(`${API_BASE_URL}/restaurants/search/menus?${sp}`);
+    if (!resp.ok) throw new Error('Menu search failed');
+    return resp.json();
+  },
+};
+
 // Contribution/Suggestion API (public, no auth)
 export interface SuggestionRequest {
   menu_uid: string;

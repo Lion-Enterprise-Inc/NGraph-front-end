@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { Search } from 'lucide-react'
-import { ExploreApi, SemanticSearchApi, SearchRestaurant, NfgSearchRestaurant, SemanticSearchRestaurant, CityCount, PlatformStats } from '../services/api'
+import { ExploreApi, SemanticSearchApi, MenuSearchApi, SearchRestaurant, NfgSearchRestaurant, SemanticSearchRestaurant, MenuSearchItem, CityCount, PlatformStats } from '../services/api'
 
 interface Particle {
   x: number; y: number
@@ -258,13 +258,18 @@ const MOODS = [
 ]
 const MOOD_LABELS: Record<string, string> = Object.fromEntries(MOODS.map(m => [m.key, m.label]))
 
-const CURIOSITIES = [
-  { key: 'safe', label: 'いつもの安心' },
-  { key: 'local', label: '福井ならでは' },
-  { key: 'seasonal', label: '季節を感じる' },
-  { key: 'adventure', label: '冒険したい' },
-]
-const CURIOSITY_LABELS: Record<string, string> = Object.fromEntries(CURIOSITIES.map(c => [c.key, c.label]))
+const GENRES = [
+  { key: 'meat', label: '肉料理', q: '肉' },
+  { key: 'seafood', label: '魚・海鮮', q: '魚,海鮮' },
+  { key: 'sashimi', label: '刺身', category: 'sashimi' },
+  { key: 'sushi', label: '寿司', category: 'sushi' },
+  { key: 'nabe', label: '鍋', category: 'nabe' },
+  { key: 'ramen', label: 'ラーメン・麺', category: 'ramen,soba' },
+  { key: 'rice', label: 'ご飯もの', category: 'rice' },
+  { key: 'tempura', label: '天ぷら', category: 'tempura' },
+  { key: 'yakitori', label: '焼き鳥', category: 'yakitori' },
+] as const
+const GENRE_LABELS: Record<string, string> = Object.fromEntries(GENRES.map(g => [g.key, g.label]))
 
 type SortKey = 'score' | 'menu_count'
 type DisplayRestaurant = (SearchRestaurant | NfgSearchRestaurant) & { _nfg?: boolean }
@@ -291,7 +296,10 @@ export default function HomePage() {
   const [flowDiets, setFlowDiets] = useState<Set<string>>(new Set())
   const [flowAllergens, setFlowAllergens] = useState<Set<string>>(new Set())
   const [flowMood, setFlowMood] = useState<string | null>(null)
-  const [flowCuriosity, setFlowCuriosity] = useState<string | null>(null)
+  const [flowGenre, setFlowGenre] = useState<string | null>(null)
+  const [menuCards, setMenuCards] = useState<MenuSearchItem[]>([])
+  const [menuLoading, setMenuLoading] = useState(false)
+  const [menuTotal, setMenuTotal] = useState(0)
   const [flowTransition, setFlowTransition] = useState<'idle' | 'exiting' | 'entering'>('idle')
   const [flowCount, setFlowCount] = useState<number | null>(null)
   const [flowLoading, setFlowLoading] = useState(false)
@@ -468,24 +476,25 @@ export default function HomePage() {
     advanceStep()
   }
 
-  const answerMood = (key: string) => {
-    setFlowMood(key)
-    advanceStep()
-  }
-
-  const buildFlowParams = (curiosityOverride?: string): Record<string, string> => {
+  const buildFlowParams = (): Record<string, string> => {
     const params: Record<string, string> = {}
     if (flowDiets.size > 0) params.diet = Array.from(flowDiets).join(',')
     if (flowAllergens.size > 0) params.no = Array.from(flowAllergens).join(',')
     if (flowMood) params.mood = flowMood
-    const cur = curiosityOverride ?? flowCuriosity
-    if (cur === 'local') params.mood = params.mood ? params.mood + ',local' : 'local'
     if (city) params.area = city
     return params
   }
 
-  const fetchRecommendations = async (curiosityOverride?: string) => {
-    const params = buildFlowParams(curiosityOverride)
+  const buildMenuParams = (): Record<string, string> => {
+    const params = buildFlowParams()
+    const genre = GENRES.find(g => g.key === flowGenre)
+    if (genre && 'category' in genre && genre.category) params.category = genre.category
+    if (genre && 'q' in genre && genre.q) params.q = genre.q
+    return params
+  }
+
+  const fetchRecommendations = async () => {
+    const params = buildFlowParams()
     setRecoLoading(true)
     setRecoFallback(false)
     try {
@@ -494,7 +503,6 @@ export default function HomePage() {
         setRecoCards(res.result.restaurants)
         setRecoTotal(res.result.count)
       } else {
-        // fallback: フィルタ外して福井のおすすめを出す
         const fallback = await SemanticSearchApi.search({ area: city || undefined, size: 3 })
         setRecoCards(fallback.result.restaurants)
         setRecoTotal(fallback.result.count)
@@ -508,23 +516,68 @@ export default function HomePage() {
     }
   }
 
-  const answerCuriosity = (key: string) => {
-    setFlowCuriosity(key)
+  const answerMoodAndFetchReco = (key: string) => {
+    setFlowMood(key)
+    setFlowTransition('exiting')
+    setTimeout(() => {
+      setFlowStep(4)
+      setFlowTransition('entering')
+      setTimeout(() => setFlowTransition('idle'), 300)
+    }, 200)
+    // fetch reco cards after mood is set (use key directly since state update is async)
+    const params: Record<string, string> = {}
+    if (flowDiets.size > 0) params.diet = Array.from(flowDiets).join(',')
+    if (flowAllergens.size > 0) params.no = Array.from(flowAllergens).join(',')
+    params.mood = key
+    if (city) params.area = city
+    setRecoLoading(true)
+    setRecoFallback(false)
+    SemanticSearchApi.search({ ...params, size: 3 }).then(res => {
+      if (res.result.restaurants.length > 0) {
+        setRecoCards(res.result.restaurants)
+        setRecoTotal(res.result.count)
+      } else {
+        SemanticSearchApi.search({ area: city || undefined, size: 3 }).then(fb => {
+          setRecoCards(fb.result.restaurants)
+          setRecoTotal(fb.result.count)
+          setRecoFallback(true)
+        }).catch(() => { setRecoCards([]); setRecoTotal(0) })
+      }
+    }).catch(() => { setRecoCards([]); setRecoTotal(0) }).finally(() => setRecoLoading(false))
+  }
+
+  const answerGenre = async (key: string) => {
+    setFlowGenre(key)
     setFlowTransition('exiting')
     setTimeout(() => {
       setFlowStep(5)
       setFlowTransition('entering')
       setTimeout(() => setFlowTransition('idle'), 300)
     }, 200)
-    fetchRecommendations(key)
+    // fetch menu cards
+    setMenuLoading(true)
+    const params = buildFlowParams()
+    const genre = GENRES.find(g => g.key === key)
+    if (genre && 'category' in genre && genre.category) params.category = genre.category
+    if (genre && 'q' in genre && genre.q) params.q = genre.q
+    try {
+      const res = await MenuSearchApi.search({ ...params, size: 20 })
+      setMenuCards(res.result.menus)
+      setMenuTotal(res.result.count)
+    } catch {
+      setMenuCards([])
+      setMenuTotal(0)
+    } finally {
+      setMenuLoading(false)
+    }
   }
 
   const skipStep = () => {
-    if (flowStep === 4) {
-      // Step 4 skip → show recommendations too
+    if (flowStep === 3) {
+      // Step 3 skip → show reco cards at step 4
       setFlowTransition('exiting')
       setTimeout(() => {
-        setFlowStep(5)
+        setFlowStep(4)
         setFlowTransition('entering')
         setTimeout(() => setFlowTransition('idle'), 300)
       }, 200)
@@ -537,8 +590,8 @@ export default function HomePage() {
   const goToStep = (step: number) => {
     if (step <= 1) setFlowSituation(null)
     if (step <= 2) { setFlowDiets(new Set()); setFlowAllergens(new Set()) }
-    if (step <= 3) setFlowMood(null)
-    if (step <= 4) { setFlowCuriosity(null); setRecoCards([]); setRecoTotal(0); setRecoFallback(false) }
+    if (step <= 3) { setFlowMood(null); setRecoCards([]); setRecoTotal(0); setRecoFallback(false) }
+    if (step <= 4) { setFlowGenre(null); setMenuCards([]); setMenuTotal(0) }
     setFlowStep(step)
     setFlowTransition('idle')
   }
@@ -548,13 +601,15 @@ export default function HomePage() {
     setFlowDiets(new Set())
     setFlowAllergens(new Set())
     setFlowMood(null)
-    setFlowCuriosity(null)
+    setFlowGenre(null)
     setFlowStep(1)
     setFlowCount(null)
     setFlowTransition('idle')
     setRecoCards([])
     setRecoTotal(0)
     setRecoFallback(false)
+    setMenuCards([])
+    setMenuTotal(0)
   }
 
   const fetchFlowCount = useCallback(async () => {
@@ -562,13 +617,7 @@ export default function HomePage() {
     if (flowDiets.size > 0) params.diet = Array.from(flowDiets).join(',')
     if (flowAllergens.size > 0) params.no = Array.from(flowAllergens).join(',')
     if (flowMood) params.mood = flowMood
-    if (flowCuriosity === 'local') params.mood = params.mood ? params.mood + ',local' : 'local'
     if (city) params.area = city
-
-    if (Object.keys(params).length === 0) {
-      setFlowCount(null)
-      return
-    }
 
     setFlowLoading(true)
     try {
@@ -579,7 +628,7 @@ export default function HomePage() {
     } finally {
       setFlowLoading(false)
     }
-  }, [flowDiets, flowAllergens, flowMood, flowCuriosity, city])
+  }, [flowDiets, flowAllergens, flowMood, city])
 
   useEffect(() => {
     if (countDebounceRef.current) clearTimeout(countDebounceRef.current)
@@ -587,8 +636,8 @@ export default function HomePage() {
     return () => { if (countDebounceRef.current) clearTimeout(countDebounceRef.current) }
   }, [fetchFlowCount])
 
-  const handleViewResults = async (curiosityOverride?: string) => {
-    const params = buildFlowParams(curiosityOverride)
+  const handleViewResults = async () => {
+    const params = buildFlowParams()
     setSearched(true)
     setLoading(true)
     try {
@@ -608,7 +657,7 @@ export default function HomePage() {
     }
   }
 
-  const activeFilterCount = flowDiets.size + flowAllergens.size + (flowMood ? 1 : 0) + (flowCuriosity === 'local' ? 1 : 0)
+  const activeFilterCount = flowDiets.size + flowAllergens.size + (flowMood ? 1 : 0)
 
   const totalAll = cities.reduce((s, c) => s + c.count, 0)
 
@@ -683,9 +732,9 @@ export default function HomePage() {
                       {MOOD_LABELS[flowMood]}
                     </span>
                   )}
-                  {flowCuriosity && flowStep > 4 && (
+                  {flowGenre && flowStep > 4 && (
                     <span className="conv-trail-item" onClick={() => goToStep(4)}>
-                      {CURIOSITY_LABELS[flowCuriosity]}
+                      {GENRE_LABELS[flowGenre]}
                     </span>
                   )}
                   <span className="conv-reset" onClick={resetFlow}>← やり直す</span>
@@ -735,31 +784,32 @@ export default function HomePage() {
                   <BinaryText key={`q3-${flowStep}`} text="今の気分は？" className="conv-question" />
                   <div className="conv-chips">
                     {MOODS.map(m => (
-                      <button key={m.key} className="conv-chip" onClick={() => answerMood(m.key)}>{m.label}</button>
+                      <button key={m.key} className="conv-chip" onClick={() => answerMoodAndFetchReco(m.key)}>{m.label}</button>
                     ))}
                     <button className="conv-chip conv-chip-skip" onClick={() => skipStep()}>スキップ →</button>
                   </div>
                 </div>
               )}
 
-              {/* Step 4: 好奇心 */}
-              {flowStep === 4 && flowTransition !== 'exiting' && (
-                <div className={`conv-step ${flowTransition === 'entering' ? 'conv-entering' : ''}`}>
-                  <BinaryText key={`q4-${flowStep}`} text="どんな発見がしたい？" className="conv-question" />
-                  <div className="conv-chips">
-                    {CURIOSITIES.map(c => (
-                      <button key={c.key} className="conv-chip" onClick={() => answerCuriosity(c.key)}>{c.label}</button>
-                    ))}
-                    <button className="conv-chip conv-chip-skip" onClick={() => skipStep()}>スキップ →</button>
-                  </div>
+              {/* Inline count — visible during steps 1-3 */}
+              {flowStep >= 1 && flowStep <= 3 && (
+                <div className="conv-count-inline">
+                  <BinaryText
+                    key={`count-${flowCount}-${flowLoading}`}
+                    text={flowLoading ? '...' : `${flowCount ?? '—'} / ${stats?.total_menus?.toLocaleString() || '—'}`}
+                    className="conv-count-num"
+                  />
+                  {flowCount !== null && flowCount > 0 && (
+                    <button className="conv-chip" onClick={() => handleViewResults()}>今すぐ見る</button>
+                  )}
                 </div>
               )}
 
-              {/* Step 5: NFG recommendations */}
-              {flowStep >= 5 && !searched && (
+              {/* Step 4: Restaurant reco cards + genre selection */}
+              {flowStep >= 4 && !searched && (
                 <div className="conv-reco">
                   {recoLoading ? (
-                    <div className="conv-question">探しています...</div>
+                    <div className="conv-question" style={{ padding: '0 24px' }}>探しています...</div>
                   ) : recoCards.length > 0 ? (
                     <>
                       <BinaryText key={`reco-${recoFallback}`} text={recoFallback ? 'ぴったりは見つからなかったけど…こちらはどう？' : 'AIのおすすめ'} className="conv-reco-title" />
@@ -808,29 +858,75 @@ export default function HomePage() {
                   )}
                 </div>
               )}
+
+              {/* Step 4: Genre selection — "何食べたい？" */}
+              {flowStep === 4 && flowTransition !== 'exiting' && (
+                <div className={`conv-step ${flowTransition === 'entering' ? 'conv-entering' : ''}`}>
+                  <BinaryText key={`q4-${flowStep}`} text="何食べたい？" className="conv-question" />
+                  <div className="conv-chips">
+                    {GENRES.map(g => (
+                      <button key={g.key} className="conv-chip" onClick={() => answerGenre(g.key)}>{g.label}</button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Step 5: Menu cards */}
+              {flowStep >= 5 && !searched && (
+                <div className="conv-reco">
+                  {menuLoading ? (
+                    <div className="conv-question" style={{ padding: '0 24px' }}>メニューを探しています...</div>
+                  ) : menuCards.length > 0 ? (
+                    <>
+                      <BinaryText key={`menu-${flowGenre}`} text={`${GENRE_LABELS[flowGenre || ''] || ''} ${menuTotal}品`} className="conv-reco-title" />
+                      <div className="conv-menu-cards">
+                        {menuCards.map(m => (
+                          <button
+                            key={m.uid}
+                            className="conv-menu-card"
+                            onClick={() => router.push(`/capture?restaurant=${encodeURIComponent(m.restaurant_slug)}`)}
+                          >
+                            <div className="conv-menu-name">{m.name_jp}</div>
+                            <div className="conv-menu-meta">{m.restaurant_name} · {m.category_label}</div>
+                            <div className="conv-menu-price">&yen;{m.price.toLocaleString()}</div>
+                            {m.narrative_snippet && (
+                              <div className="conv-menu-narrative">{m.narrative_snippet}</div>
+                            )}
+                            {m.featured_tags.length > 0 && (
+                              <div className="conv-menu-tags">
+                                {m.featured_tags.map((tag, i) => (
+                                  <span key={i} className="conv-menu-tag">{tag}</span>
+                                ))}
+                              </div>
+                            )}
+                            <div className="conv-reco-meta">
+                              <span className="conv-reco-city">{m.restaurant_city || '福井'}</span>
+                              <a
+                                className="conv-reco-link"
+                                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(m.restaurant_name + ' ' + (m.restaurant_city || '福井'))}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onClick={e => e.stopPropagation()}
+                              >
+                                Google Map →
+                              </a>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    </>
+                  ) : (
+                    <div className="conv-step">
+                      <div className="conv-question">このジャンルのメニューが見つかりませんでした</div>
+                      <button className="conv-next" onClick={() => goToStep(4)}>ジャンルを変える</button>
+                    </div>
+                  )}
+                </div>
+              )}
             </>
           )}
         </div>
       </div>
-
-      {/* Bottom bar */}
-      {!searched && flowStep >= 2 && activeFilterCount > 0 && (
-        <div className="flow-bottombar">
-          <BinaryText
-            key={`count-${flowCount}-${flowLoading}`}
-            text={flowLoading ? '...' : flowCount !== null ? `${flowCount} / ${stats?.total_menus?.toLocaleString() || '—'}` : '—'}
-            className="flow-count-binary"
-          />
-          <div className="flow-bottom-actions">
-            <button className="conv-chip" onClick={() => handleViewResults()}>
-              今すぐ見る
-            </button>
-            <button className="conv-chip conv-chip-skip" onClick={() => advanceStep()}>
-              もっと絞る ↓
-            </button>
-          </div>
-        </div>
-      )}
 
       {searched && (
         <div className="explore-body">
