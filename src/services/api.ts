@@ -1158,6 +1158,55 @@ export const ExploreApi = {
   },
 };
 
+export interface SemanticSearchRestaurant {
+  uid: string;
+  name: string;
+  slug: string;
+  city: string | null;
+  menu_count: number;
+  score: number;
+  match_reasons: string[];
+  safe_menu_count: number;
+}
+
+export const SemanticSearchApi = {
+  count: async (params: {
+    diet?: string; no?: string; scene?: string;
+    mood?: string; area?: string; q?: string;
+  }): Promise<{ result: { count: number } }> => {
+    const sp = new URLSearchParams();
+    if (params.diet) sp.append('diet', params.diet);
+    if (params.no) sp.append('no', params.no);
+    if (params.scene) sp.append('scene', params.scene);
+    if (params.mood) sp.append('mood', params.mood);
+    if (params.area) sp.append('area', params.area);
+    if (params.q) sp.append('q', params.q);
+    const resp = await fetch(`${API_BASE_URL}/restaurants/search/count?${sp}`);
+    if (!resp.ok) throw new Error('Count failed');
+    return resp.json();
+  },
+  search: async (params: {
+    diet?: string; no?: string; scene?: string;
+    mood?: string; area?: string; q?: string;
+    page?: number; size?: number;
+  }): Promise<{
+    result: { count: number; restaurants: SemanticSearchRestaurant[]; page: number; size: number; pages: number };
+  }> => {
+    const sp = new URLSearchParams();
+    if (params.diet) sp.append('diet', params.diet);
+    if (params.no) sp.append('no', params.no);
+    if (params.scene) sp.append('scene', params.scene);
+    if (params.mood) sp.append('mood', params.mood);
+    if (params.area) sp.append('area', params.area);
+    if (params.q) sp.append('q', params.q);
+    sp.append('page', String(params.page || 1));
+    sp.append('size', String(params.size || 30));
+    const resp = await fetch(`${API_BASE_URL}/restaurants/search/semantic?${sp}`);
+    if (!resp.ok) throw new Error('Semantic search failed');
+    return resp.json();
+  },
+};
+
 // Contribution/Suggestion API (public, no auth)
 export interface SuggestionRequest {
   menu_uid: string;

@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { Search } from 'lucide-react'
-import { ExploreApi, SearchRestaurant, NfgSearchRestaurant, CityCount, PlatformStats } from '../services/api'
+import { ExploreApi, SemanticSearchApi, SearchRestaurant, NfgSearchRestaurant, CityCount, PlatformStats } from '../services/api'
 
 interface Particle {
   x: number; y: number
@@ -216,6 +216,17 @@ export default function HomePage() {
   const [sortBy, setSortBy] = useState<SortKey>('score')
   const debounceRef = useRef<ReturnType<typeof setTimeout>>()
   const pageRef = useRef<HTMLDivElement>(null)
+  const [exploreMode, setExploreMode] = useState<'semantic' | 'scene' | 'mood' | 'name' | null>(null)
+  const [selectedDiets, setSelectedDiets] = useState<Set<string>>(new Set())
+  const [selectedAllergens, setSelectedAllergens] = useState<Set<string>>(new Set())
+  const [selectedScenes, setSelectedScenes] = useState<Set<string>>(new Set())
+  const [selectedMoods, setSelectedMoods] = useState<Set<string>>(new Set())
+  const [semanticQuery, setSemanticQuery] = useState('')
+  const [visitType, setVisitType] = useState<string | null>(null)
+  const [recentFood, setRecentFood] = useState<string | null>(null)
+  const [flowCount, setFlowCount] = useState<number | null>(null)
+  const [flowLoading, setFlowLoading] = useState(false)
+  const countDebounceRef = useRef<ReturnType<typeof setTimeout>>()
 
   // Proximity glow: elements near pointer get accent color
   useEffect(() => {
@@ -354,6 +365,105 @@ export default function HomePage() {
     })
   }
 
+  const fetchFlowCount = useCallback(async () => {
+    const params: Record<string, string> = {}
+    if (selectedDiets.size > 0) params.diet = Array.from(selectedDiets).join(',')
+    if (selectedAllergens.size > 0) params.no = Array.from(selectedAllergens).join(',')
+    if (selectedScenes.size > 0) params.scene = Array.from(selectedScenes).join(',')
+    if (selectedMoods.size > 0) params.mood = Array.from(selectedMoods).join(',')
+    if (city) params.area = city
+    if (semanticQuery.trim()) params.q = semanticQuery.trim()
+
+    if (Object.keys(params).length === 0) {
+      setFlowCount(null)
+      return
+    }
+
+    setFlowLoading(true)
+    try {
+      const res = await SemanticSearchApi.count(params)
+      setFlowCount(res.result.count)
+    } catch {
+      setFlowCount(null)
+    } finally {
+      setFlowLoading(false)
+    }
+  }, [selectedDiets, selectedAllergens, selectedScenes, selectedMoods, city, semanticQuery])
+
+  useEffect(() => {
+    if (countDebounceRef.current) clearTimeout(countDebounceRef.current)
+    countDebounceRef.current = setTimeout(() => fetchFlowCount(), 300)
+    return () => { if (countDebounceRef.current) clearTimeout(countDebounceRef.current) }
+  }, [fetchFlowCount])
+
+  const toggleSet = (set: Set<string>, setFn: React.Dispatch<React.SetStateAction<Set<string>>>, val: string) => {
+    setFn(prev => {
+      const next = new Set(prev)
+      if (next.has(val)) next.delete(val)
+      else next.add(val)
+      return next
+    })
+  }
+
+  const selectMood = (val: string) => {
+    setSelectedMoods(prev => {
+      const next = new Set<string>()
+      if (!prev.has(val)) next.add(val)
+      return next
+    })
+  }
+
+  const startMode = (mode: 'semantic' | 'scene' | 'mood' | 'name') => {
+    if (mode === 'name') {
+      const input = document.querySelector('.explore-search') as HTMLInputElement
+      if (input) input.focus()
+      return
+    }
+    setExploreMode(prev => prev === mode ? null : mode)
+  }
+
+  const resetFlow = () => {
+    setExploreMode(null)
+    setSelectedDiets(new Set())
+    setSelectedAllergens(new Set())
+    setSelectedScenes(new Set())
+    setSelectedMoods(new Set())
+    setSemanticQuery('')
+    setVisitType(null)
+    setRecentFood(null)
+    setFlowCount(null)
+  }
+
+  const handleViewResults = async () => {
+    const params: Record<string, string> = {}
+    if (selectedDiets.size > 0) params.diet = Array.from(selectedDiets).join(',')
+    if (selectedAllergens.size > 0) params.no = Array.from(selectedAllergens).join(',')
+    if (selectedScenes.size > 0) params.scene = Array.from(selectedScenes).join(',')
+    if (selectedMoods.size > 0) params.mood = Array.from(selectedMoods).join(',')
+    if (city) params.area = city
+    if (semanticQuery.trim()) params.q = semanticQuery.trim()
+
+    setSearched(true)
+    setLoading(true)
+    try {
+      const res = await SemanticSearchApi.search(params)
+      const items: DisplayRestaurant[] = res.result.restaurants.map(r => ({
+        ...r, _nfg: true, address: null, logo_url: null
+      }))
+      setRestaurants(items)
+      setTotal(res.result.count)
+      setPages(res.result.pages)
+      setPage(res.result.page)
+    } catch {
+      setRestaurants([])
+      setTotal(0)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const activeFilterCount = selectedDiets.size + selectedAllergens.size + selectedScenes.size + selectedMoods.size + (semanticQuery.trim() ? 1 : 0) + (visitType ? 1 : 0) + (recentFood ? 1 : 0)
+
   const totalAll = cities.reduce((s, c) => s + c.count, 0)
 
   return (
@@ -379,7 +489,7 @@ export default function HomePage() {
             <input
               className="explore-search"
               type="text"
-              placeholder="店名・ジャンル・食べたいもので検索"
+              placeholder="卵不使用・ハラール・昆布だし・店名で検索"
               value={query}
               onChange={e => handleSearch(e.target.value)}
             />
@@ -420,10 +530,209 @@ export default function HomePage() {
                   {stats.total_restaurants.toLocaleString()} 店舗 · {stats.total_menus.toLocaleString()} メニュー · {stats.cities} 都市
                 </div>
               )}
+
+              {/* Explore Modes */}
+              <div className="explore-modes">
+                <div className="explore-label">どこから探しますか？</div>
+                <div className="explore-grid">
+                  <div className={`explore-mode ${exploreMode === 'semantic' ? 'active' : ''}`} onClick={() => startMode('semantic')}>
+                    <span className="em-icon">🥗</span>
+                    <span className="em-label">食の制約・原材料</span>
+                  </div>
+                  <div className={`explore-mode ${exploreMode === 'scene' ? 'active' : ''}`} onClick={() => startMode('scene')}>
+                    <span className="em-icon">🎭</span>
+                    <span className="em-label">シーンから</span>
+                  </div>
+                  <div className={`explore-mode ${exploreMode === 'mood' ? 'active' : ''}`} onClick={() => startMode('mood')}>
+                    <span className="em-icon">😋</span>
+                    <span className="em-label">気分から</span>
+                  </div>
+                  <div className={`explore-mode ${exploreMode === 'name' ? 'active' : ''}`} onClick={() => startMode('name')}>
+                    <span className="em-icon">🔍</span>
+                    <span className="em-label">店名で直接</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Mode A: 食の制約・原材料 */}
+              {exploreMode === 'semantic' && (
+                <div className="q-block">
+                  <div className="q-label">食の制約</div>
+                  <div className="explore-filters" style={{ justifyContent: 'flex-start' }}>
+                    {[
+                      { key: 'halal', emoji: '☪️', label: 'ハラール' },
+                      { key: 'vegetarian', emoji: '🌱', label: 'ベジタリアン' },
+                      { key: 'pescatarian', emoji: '🐟', label: 'ペスカタリアン' },
+                      { key: 'kosher', emoji: '✡️', label: 'コーシャ' },
+                      { key: 'gluten_free', emoji: '🚫', label: 'グルテンフリー' },
+                      { key: 'dairy_free', emoji: '🥛', label: '乳製品不使用' },
+                    ].map(d => (
+                      <button key={d.key} className={`explore-filter-pill ${selectedDiets.has(d.key) ? 'active' : ''}`}
+                        onClick={() => toggleSet(selectedDiets, setSelectedDiets, d.key)}>
+                        {d.emoji} {d.label}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="q-divider" />
+                  <div className="q-label">アレルゲンを除外</div>
+                  <div className="explore-filters" style={{ justifyContent: 'flex-start' }}>
+                    {[
+                      { key: 'egg', emoji: '🥚', label: '卵なし' },
+                      { key: 'shrimp', emoji: '🦐', label: 'えびなし' },
+                      { key: 'crab', emoji: '🦀', label: 'かになし' },
+                      { key: 'wheat', emoji: '🌾', label: '小麦なし' },
+                      { key: 'peanut', emoji: '🥜', label: 'ピーナッツなし' },
+                      { key: 'milk', emoji: '🐄', label: '乳なし' },
+                      { key: 'fish', emoji: '🐟', label: '魚なし' },
+                    ].map(a => (
+                      <button key={a.key} className={`explore-filter-pill ${selectedAllergens.has(a.key) ? 'active' : ''}`}
+                        onClick={() => toggleSet(selectedAllergens, setSelectedAllergens, a.key)}>
+                        {a.emoji} {a.label}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="q-divider" />
+                  <div className="q-label">原材料・調理法で絞る</div>
+                  <div className="semantic-search">
+                    <input
+                      type="text"
+                      placeholder="原材料・調理法を入力（例：昆布だし、国産鶏）"
+                      value={semanticQuery}
+                      onChange={e => setSemanticQuery(e.target.value)}
+                    />
+                    <div className="semantic-suggestions">
+                      {['昆布だし', '国産食材', '無添加', '有機野菜'].map(s => (
+                        <span key={s} className="suggestion-chip" onClick={() => setSemanticQuery(s)}>{s}</span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Mode B: シーン */}
+              {exploreMode === 'scene' && (
+                <div className="q-block">
+                  <div className="q-label">どんなシーン？（複数選択可）</div>
+                  <div className="explore-filters" style={{ justifyContent: 'flex-start' }}>
+                    {[
+                      { key: 'kids_ok', emoji: '👶', label: '子連れOK' },
+                      { key: 'private_room', emoji: '🚪', label: '個室あり' },
+                      { key: 'date', emoji: '💑', label: 'デート' },
+                      { key: 'entertainment', emoji: '💼', label: '接待' },
+                      { key: 'no_smoking', emoji: '🚭', label: '禁煙' },
+                      { key: 'parking', emoji: '🅿️', label: '駐車場' },
+                      { key: 'late_night', emoji: '🌙', label: '深夜営業' },
+                      { key: 'all_you_can_drink', emoji: '🍺', label: '飲み放題' },
+                    ].map(s => (
+                      <button key={s.key} className={`explore-filter-pill ${selectedScenes.has(s.key) ? 'active' : ''}`}
+                        onClick={() => toggleSet(selectedScenes, setSelectedScenes, s.key)}>
+                        {s.emoji} {s.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Mode C: 気分 */}
+              {exploreMode === 'mood' && (
+                <div className="q-block">
+                  <div className="q-label">今の気分は？</div>
+                  <div className="explore-filters" style={{ justifyContent: 'flex-start' }}>
+                    {[
+                      { key: 'hearty', emoji: '🍚', label: 'しっかり食事' },
+                      { key: 'drinking', emoji: '🍺', label: '飲みメイン' },
+                      { key: 'budget', emoji: '💰', label: 'コスパ重視' },
+                      { key: 'spicy', emoji: '🌶️', label: '辛いもの' },
+                      { key: 'local', emoji: '✨', label: '福井の名物' },
+                    ].map(m => (
+                      <button key={m.key} className={`explore-filter-pill ${selectedMoods.has(m.key) ? 'active' : ''}`}
+                        onClick={() => selectMood(m.key)}>
+                        {m.emoji} {m.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* やり直すボタン */}
+              {exploreMode && activeFilterCount > 0 && (
+                <div style={{ padding: '0 24px 8px' }}>
+                  <span className="q-skip" onClick={resetFlow}>← やり直す</span>
+                </div>
+              )}
+
+              {/* 共通フロー */}
+              {exploreMode && activeFilterCount > 0 && (
+                <>
+                  <div className="q-block">
+                    <div className="q-divider" />
+                    <div className="q-label">
+                      福井は初めて？
+                      {visitType && <span className="q-answered-val"> — {visitType === 'first' ? '初めて' : visitType === 'repeat' ? '何度か' : '地元'}</span>}
+                    </div>
+                    <div className="explore-filters" style={{ justifyContent: 'flex-start' }}>
+                      {[
+                        { key: 'first', emoji: '✈️', label: '初めて' },
+                        { key: 'repeat', emoji: '🗺️', label: '何度か' },
+                        { key: 'local_resident', emoji: '🏠', label: '地元' },
+                      ].map(v => (
+                        <button key={v.key} className={`explore-filter-pill ${visitType === v.key ? 'active' : ''}`}
+                          onClick={() => setVisitType(prev => prev === v.key ? null : v.key)}>
+                          {v.emoji} {v.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="q-block">
+                    <div className="q-label">
+                      直近で食べたのは？
+                      {recentFood && <span className="q-answered-val"> — {
+                        recentFood === 'seafood' ? '海鮮' : recentFood === 'meat' ? '肉系' : recentFood === 'noodle' ? '麺' : recentFood === 'japanese' ? '和食' : '洋食'
+                      }</span>}
+                    </div>
+                    <div className="explore-filters" style={{ justifyContent: 'flex-start' }}>
+                      {[
+                        { key: 'seafood', emoji: '🦀', label: '海鮮' },
+                        { key: 'meat', emoji: '🍖', label: '肉系' },
+                        { key: 'noodle', emoji: '🍜', label: '麺' },
+                        { key: 'japanese', emoji: '🍱', label: '和食' },
+                        { key: 'western', emoji: '🍝', label: '洋食' },
+                      ].map(f => (
+                        <button key={f.key} className={`explore-filter-pill ${recentFood === f.key ? 'active' : ''}`}
+                          onClick={() => setRecentFood(prev => prev === f.key ? null : f.key)}>
+                          {f.emoji} {f.label}
+                        </button>
+                      ))}
+                    </div>
+                    <span className="q-skip" onClick={() => setRecentFood(null)}>スキップ →</span>
+                  </div>
+                </>
+              )}
             </>
           )}
         </div>
       </div>
+
+      {!searched && exploreMode && activeFilterCount > 0 && (
+        <div className="flow-bottombar">
+          <div className="flow-count-row">
+            <div>
+              <span className="flow-count-num">{flowCount !== null ? flowCount : '—'}</span>
+              <span className="flow-count-unit"> 件</span>
+            </div>
+            <span className="flow-count-status">{activeFilterCount}項目で絞り込み中</span>
+          </div>
+          <div className={`flow-actions ${activeFilterCount > 0 ? 'show' : ''}`}>
+            <button className="flow-btn-primary" onClick={handleViewResults}>
+              今すぐ見る
+            </button>
+            <button className="flow-btn-secondary" onClick={() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })}>
+              もっと絞る ↓
+            </button>
+          </div>
+        </div>
+      )}
 
       {searched && (
         <div className="explore-body">
