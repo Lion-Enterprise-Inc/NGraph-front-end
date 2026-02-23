@@ -735,18 +735,6 @@ export default function HomePage() {
                 </div>
               )}
 
-              {/* Count bar — subtle, near search */}
-              {flowStep >= 1 && (
-                <div className="conv-count-bar">
-                  <span className="conv-count-num-static">
-                    {flowLoading ? '...' : `${flowCount ?? '—'} / ${stats?.total_menus?.toLocaleString() || '—'}`}
-                  </span>
-                  {flowCount !== null && flowCount > 0 && (
-                    <button className="conv-chip conv-chip-small" onClick={() => handleViewResults()}>今すぐ見る</button>
-                  )}
-                </div>
-              )}
-
               {/* Step 1: 状況 */}
               {flowStep === 1 && flowTransition !== 'exiting' && (
                 <div className={`conv-step ${flowTransition === 'entering' ? 'conv-entering' : ''}`}>
@@ -915,6 +903,18 @@ export default function HomePage() {
                   )}
                 </div>
               )}
+              {/* Count bar — above search */}
+              {flowStep >= 1 && (
+                <div className="conv-count-bar">
+                  <span className="conv-count-num-static">
+                    {flowLoading ? '...' : `${flowCount ?? '—'} / ${stats?.total_menus?.toLocaleString() || '—'}`}
+                  </span>
+                  {flowCount !== null && flowCount > 0 && (
+                    <button className="conv-chip conv-chip-small" onClick={() => handleViewResults()}>今すぐ見る</button>
+                  )}
+                </div>
+              )}
+
               {/* Search — secondary, at bottom of flow */}
               <div className="explore-search-wrap explore-search-secondary">
                 <div className="explore-search-sub">もっと細かく探す</div>

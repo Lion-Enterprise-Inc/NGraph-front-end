@@ -4904,7 +4904,8 @@ textarea.form-input {
   display: flex;
   flex-direction: column;
   position: relative;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 .matrix-rain {
@@ -5200,7 +5201,7 @@ textarea.form-input {
 .explore-row-name {
   font-size: 14px;
   font-weight: 500;
-  color: #58a6ff;
+  color: var(--color-accent);
 }
 
 .explore-row-info {
@@ -6367,9 +6368,10 @@ textarea.form-input {
 
 /* Count bar — subtle accent near search */
 .conv-count-bar {
-  padding: 6px 24px 10px;
+  padding: 12px 24px 4px;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 10px;
 }
 .conv-count-num-static {
