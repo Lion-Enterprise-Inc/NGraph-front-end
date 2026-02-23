@@ -516,7 +516,7 @@ export default function HomePage() {
     }
   }
 
-  const answerMoodAndFetchReco = (key: string) => {
+  const answerMoodAndFetchReco = async (key: string) => {
     setFlowMood(key)
     setFlowTransition('exiting')
     setTimeout(() => {
@@ -524,7 +524,7 @@ export default function HomePage() {
       setFlowTransition('entering')
       setTimeout(() => setFlowTransition('idle'), 300)
     }, 200)
-    // fetch reco cards after mood is set (use key directly since state update is async)
+    // fetch reco cards (use key directly since state update is async)
     const params: Record<string, string> = {}
     if (flowDiets.size > 0) params.diet = Array.from(flowDiets).join(',')
     if (flowAllergens.size > 0) params.no = Array.from(flowAllergens).join(',')
@@ -532,18 +532,23 @@ export default function HomePage() {
     if (city) params.area = city
     setRecoLoading(true)
     setRecoFallback(false)
-    SemanticSearchApi.search({ ...params, size: 3 }).then(res => {
+    try {
+      const res = await SemanticSearchApi.search({ ...params, size: 3 })
       if (res.result.restaurants.length > 0) {
         setRecoCards(res.result.restaurants)
         setRecoTotal(res.result.count)
       } else {
-        SemanticSearchApi.search({ area: city || undefined, size: 3 }).then(fb => {
-          setRecoCards(fb.result.restaurants)
-          setRecoTotal(fb.result.count)
-          setRecoFallback(true)
-        }).catch(() => { setRecoCards([]); setRecoTotal(0) })
+        const fallback = await SemanticSearchApi.search({ area: city || undefined, size: 3 })
+        setRecoCards(fallback.result.restaurants)
+        setRecoTotal(fallback.result.count)
+        setRecoFallback(true)
       }
-    }).catch(() => { setRecoCards([]); setRecoTotal(0) }).finally(() => setRecoLoading(false))
+    } catch {
+      setRecoCards([])
+      setRecoTotal(0)
+    } finally {
+      setRecoLoading(false)
+    }
   }
 
   const answerGenre = async (key: string) => {
@@ -806,7 +811,7 @@ export default function HomePage() {
               )}
 
               {/* Step 4: Restaurant reco cards + genre selection */}
-              {flowStep >= 4 && !searched && (
+              {flowStep >= 4 && !searched && (recoLoading || recoCards.length > 0) && (
                 <div className="conv-reco">
                   {recoLoading ? (
                     <div className="conv-question" style={{ padding: '0 24px' }}>探しています...</div>
