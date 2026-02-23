@@ -245,11 +245,11 @@ function isNfgQuery(q: string): boolean {
 // Step 1: 食ジャンル — 最大の絞り込み
 const FOOD_TYPES = [
   { key: 'crab', label: '蟹', q: '蟹,カニ,かに,ズワイ,セイコ' },
-  { key: 'seafood', label: '海鮮・お刺身', q: '海鮮,刺身', category: 'sashimi' },
-  { key: 'sushi', label: '寿司', category: 'sushi' },
-  { key: 'meat', label: '肉料理', q: '肉' },
-  { key: 'nabe', label: '鍋', category: 'nabe' },
-  { key: 'ramen', label: '麺類', category: 'ramen,soba' },
+  { key: 'seafood', label: '海鮮・お刺身', q: '海鮮,刺身,魚', category: 'sashimi,seafood' },
+  { key: 'sushi', label: '寿司', q: '寿司,すし,にぎり', category: 'sushi,nigiri,gunkan,roll' },
+  { key: 'meat', label: '肉料理', q: '肉,カツ,ステーキ,焼肉', category: 'meat' },
+  { key: 'nabe', label: '鍋', q: '鍋,しゃぶ,すき焼き', category: 'nabe,hotpot' },
+  { key: 'ramen', label: '麺類', q: '麺,ラーメン,そば,うどん', category: 'ramen,soba,noodle' },
   { key: 'drinking', label: 'お酒に合うつまみ', mood: 'drinking' },
   { key: 'local', label: '福井の名物', mood: 'local' },
   { key: 'light', label: 'あっさり', q: 'サラダ,酢の物,蒸し', category: 'salad,steamed,vinegared' },
