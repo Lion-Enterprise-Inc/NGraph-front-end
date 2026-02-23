@@ -6167,7 +6167,7 @@ textarea.form-input {
 }
 .conv-question {
   font-family: 'Noto Sans JP', sans-serif;
-  font-size: 15px;
+  font-size: 18px;
   font-weight: 500;
   color: rgba(16,163,127,0.7);
   margin-bottom: 16px;
@@ -6176,13 +6176,13 @@ textarea.form-input {
 .conv-question .bt-noise {
   font-family: 'SF Mono', 'Fira Code', monospace;
   color: rgba(16,163,127,0.2);
-  font-size: 13px;
+  font-size: 16px;
 }
 .conv-question .bt-decoded {
   color: rgba(16,163,127,0.7);
 }
 .conv-section-label {
-  font-size: 11px;
+  font-size: 12px;
   color: #555;
   letter-spacing: 0.1em;
   margin: 12px 0 8px;
@@ -6194,12 +6194,12 @@ textarea.form-input {
   gap: 8px;
 }
 .conv-chip {
-  padding: 6px 14px;
+  padding: 8px 16px;
   border-radius: 20px;
   border: 1px solid rgba(255,255,255,0.12);
   background: transparent;
   color: var(--color-text-secondary);
-  font-size: 13px;
+  font-size: 14px;
   font-family: 'Noto Sans JP', sans-serif;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -6228,7 +6228,7 @@ textarea.form-input {
   border: 1px solid rgba(16,163,127,0.3);
   background: transparent;
   color: var(--color-accent);
-  font-size: 13px;
+  font-size: 14px;
   cursor: pointer;
   transition: all 0.2s;
 }
@@ -6243,12 +6243,12 @@ textarea.form-input {
   align-items: center;
 }
 .conv-trail-item {
-  padding: 4px 12px;
+  padding: 5px 12px;
   border-radius: 100px;
   background: rgba(16,163,127,0.08);
   border: 1px solid rgba(16,163,127,0.15);
   color: var(--color-accent);
-  font-size: 11px;
+  font-size: 13px;
   cursor: pointer;
   transition: all 0.15s;
   animation: trailPop 0.2s ease both;
@@ -6306,7 +6306,7 @@ textarea.form-input {
 }
 .conv-reco-restaurant {
   font-family: 'Noto Sans JP', sans-serif;
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 500;
   color: #e0e0e0;
   margin-bottom: 6px;
@@ -6318,17 +6318,17 @@ textarea.form-input {
   margin-bottom: 6px;
 }
 .conv-reco-tag {
-  padding: 2px 8px;
+  padding: 3px 8px;
   border-radius: 100px;
   background: rgba(16,163,127,0.08);
-  font-size: 10px;
+  font-size: 11px;
   color: var(--color-accent);
 }
 .conv-reco-score {
-  padding: 2px 8px;
+  padding: 3px 8px;
   border-radius: 100px;
   background: rgba(16,163,127,0.12);
-  font-size: 10px;
+  font-size: 11px;
   color: #4fd1a5;
   font-weight: 600;
 }
@@ -6339,11 +6339,11 @@ textarea.form-input {
   margin-top: 8px;
 }
 .conv-reco-city {
-  font-size: 11px;
+  font-size: 12px;
   color: #555;
 }
 .conv-reco-link {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--color-accent);
   text-decoration: none;
   transition: color 0.15s;
@@ -6381,7 +6381,7 @@ textarea.form-input {
 }
 .flow-count-binary {
   font-family: 'SF Mono', 'Fira Code', monospace;
-  font-size: 12px;
+  font-size: 13px;
   color: rgba(16,163,127,0.5);
   margin-bottom: 10px;
   letter-spacing: 0.05em;
@@ -6389,7 +6389,7 @@ textarea.form-input {
 .flow-count-binary .bt-noise {
   font-family: 'SF Mono', 'Fira Code', monospace;
   color: rgba(16,163,127,0.15);
-  font-size: 12px;
+  font-size: 13px;
 }
 .flow-count-binary .bt-decoded {
   color: rgba(16,163,127,0.5);
