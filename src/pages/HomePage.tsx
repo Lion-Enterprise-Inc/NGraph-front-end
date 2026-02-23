@@ -323,6 +323,7 @@ export default function HomePage() {
   const [flowArea, setFlowArea] = useState<string | null>(null)
   const [flowBudget, setFlowBudget] = useState<string | null>(null)
   const [flowStyle, setFlowStyle] = useState<string | null>(null)
+  const [availableAreas, setAvailableAreas] = useState<typeof AREAS[number][]>([...AREAS])
   const [flowRestrictions, setFlowRestrictions] = useState<Set<string>>(new Set())
   const [showRestrictions, setShowRestrictions] = useState(false)
   const [flowTransition, setFlowTransition] = useState<'idle' | 'exiting' | 'entering'>('idle')
@@ -417,6 +418,15 @@ export default function HomePage() {
   useEffect(() => {
     ExploreApi.cities().then(res => setCities(res.result)).catch(() => {})
     ExploreApi.stats().then(res => setStats(res.result)).catch(() => {})
+    // Check which areas have restaurants with menus
+    Promise.all(
+      AREAS.filter(a => a.area).map(a =>
+        SemanticSearchApi.count({ area: a.area }).then(r => ({ key: a.key, count: r.result.count }))
+      )
+    ).then(results => {
+      const withMenus = new Set(results.filter(r => r.count > 0).map(r => r.key))
+      setAvailableAreas(AREAS.filter(a => !a.area || withMenus.has(a.key)))
+    }).catch(() => {})
   }, [fetchRestaurants])
 
   const handleSearch = (q: string) => {
@@ -563,7 +573,20 @@ export default function HomePage() {
 
   const answerFoodType = (key: string) => {
     setFlowFoodType(key)
-    advanceStep()
+    // Auto-skip area step if only 1 real area (+ "どこでもOK")
+    const realAreas = availableAreas.filter(a => a.area)
+    if (realAreas.length <= 1) {
+      setFlowArea(realAreas[0]?.key || 'anywhere')
+      // Skip step 2, go to step 3
+      setFlowTransition('exiting')
+      setTimeout(() => {
+        setFlowStep(3)
+        setFlowTransition('entering')
+        setTimeout(() => setFlowTransition('idle'), 300)
+      }, 200)
+    } else {
+      advanceStep()
+    }
   }
 
   const answerArea = (key: string) => {
@@ -747,7 +770,7 @@ export default function HomePage() {
                 <div className={`conv-step ${flowTransition === 'entering' ? 'conv-entering' : ''}`}>
                   <BinaryText key={`q2-${flowStep}`} text="どのあたりで探しますか？" className="conv-question" />
                   <div className="conv-chips">
-                    {AREAS.map(a => (
+                    {availableAreas.map(a => (
                       <button key={a.key} className="conv-chip" onClick={() => answerArea(a.key)}>{a.label}</button>
                     ))}
                   </div>
