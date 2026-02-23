@@ -6092,8 +6092,10 @@ textarea.form-input {
 }
 
 .nfg-taste-chart { margin: 10px 0; display:flex; flex-direction:column; align-items:center; }
-.nfg-ngraph-label { font-size:11px; font-weight:700; color:#10a37f; letter-spacing:1.5px; text-transform:uppercase; margin-bottom:2px; }
-.nfg-radar { max-width:200px; width:100%; height:auto; }
+.nfg-fg-label { font-size:8px; letter-spacing:0.3em; color:#00e896; text-transform:uppercase; margin-bottom:4px; display:flex; align-items:center; gap:5px; font-family:'DM Mono',monospace; }
+.nfg-fg-dot { width:5px; height:5px; border-radius:50%; background:#00e896; animation:nfg-pulse 2s infinite; }
+@keyframes nfg-pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+.nfg-radar { max-width:220px; width:100%; height:auto; overflow:visible; }
 .nfg-narrative { margin:10px 0; }
 .nfg-narrative-story { font-size:13px; color:rgba(255,255,255,0.7); line-height:1.5; margin-bottom:8px; font-style:italic; }
 .nfg-serving { margin:8px 0; }
