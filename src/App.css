@@ -5151,11 +5151,36 @@ textarea.form-input {
   padding: 8px 0;
   border-bottom: 1px solid rgba(255,255,255,0.06);
   margin-bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
 }
 
 .explore-results-count {
   font-size: 13px;
   color: var(--color-text-secondary);
+}
+
+.explore-sort-toggle {
+  display: flex;
+  gap: 4px;
+}
+
+.explore-sort-btn {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: transparent;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+
+.explore-sort-btn.active {
+  background: rgba(16, 163, 127, 0.15);
+  color: #10a37f;
+  border-color: rgba(16, 163, 127, 0.3);
 }
 
 .explore-list {
@@ -5240,6 +5265,16 @@ textarea.form-input {
   display: flex;
   flex-wrap: wrap;
   gap: 4px;
+}
+
+.explore-score-badge {
+  font-size: 10px;
+  color: #10a37f;
+  background: rgba(16, 163, 127, 0.12);
+  padding: 1px 6px;
+  border-radius: 8px;
+  line-height: 1.4;
+  font-weight: 600;
 }
 
 .explore-match-tag {
@@ -5952,6 +5987,13 @@ textarea.form-input {
   padding-left: 22px;
 }
 
+.nfg-card-reading {
+  font-size: 11px;
+  color: rgba(255,255,255,0.3);
+  padding-left: 22px;
+  letter-spacing: 0.5px;
+}
+
 .nfg-card-body {
   max-height: 0;
   overflow: hidden;
@@ -5960,7 +6002,7 @@ textarea.form-input {
 }
 
 .nfg-card-body.expanded {
-  max-height: 600px;
+  max-height: 5000px;
   padding: 0 14px 14px;
   border-top: 1px solid rgba(255,255,255,0.04);
 }

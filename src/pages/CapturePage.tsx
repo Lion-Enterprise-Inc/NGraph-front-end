@@ -250,7 +250,6 @@ export default function CapturePage({
   const [userScrolledUp, setUserScrolledUp] = useState(false);
   const [expandedCards, setExpandedCards] = useState<Record<string, Set<number>>>({});
   const [suggestionTarget, setSuggestionTarget] = useState<{ name_jp: string; menu_uid?: string; restaurant_uid?: string } | null>(null);
-  const [speakingCardId, setSpeakingCardId] = useState<string | null>(null);
   const [likedMenus, setLikedMenus] = useState<Set<string>>(() => {
     if (typeof window === 'undefined') return new Set();
     try { return new Set(JSON.parse(localStorage.getItem('ngraph_liked_menus') || '[]')); } catch { return new Set(); }
@@ -332,37 +331,6 @@ export default function CapturePage({
     const expanded = expandedCards[responseId];
     if (expanded) return expanded.has(cardIndex);
     return totalItems <= 2;
-  };
-
-  const speakNfgCard = (cardId: string, vi: any) => {
-    if (!window.speechSynthesis) return;
-    if (speakingCardId === cardId) {
-      window.speechSynthesis.cancel();
-      setSpeakingCardId(null);
-      return;
-    }
-    window.speechSynthesis.cancel();
-    const isJa = activeLanguage === 'ja';
-    const name = isJa ? vi.name_jp : (vi.name_en || vi.name_jp);
-    const parts: string[] = [name];
-    if (vi.description) parts.push(vi.description);
-    const narr = vi.narrative;
-    if (narr) {
-      if (narr.story) parts.push(narr.story);
-      if (narr.how_to_eat) parts.push(isJa ? `食べ方: ${narr.how_to_eat}` : `How to eat: ${narr.how_to_eat}`);
-      if (narr.pairing) parts.push(isJa ? `合う飲み物: ${narr.pairing}` : `Pairs with: ${narr.pairing}`);
-    }
-    if (vi.allergens?.length) {
-      parts.push(isJa ? `アレルゲン: ${vi.allergens.join('、')}` : `Allergens: ${vi.allergens.join(', ')}`);
-    }
-    const langMap: Record<string, string> = { ja: 'ja-JP', en: 'en-US', zh: 'zh-CN', ko: 'ko-KR', fr: 'fr-FR', es: 'es-ES', de: 'de-DE', th: 'th-TH' };
-    const utter = new SpeechSynthesisUtterance(parts.join('。\n'));
-    utter.lang = langMap[activeLanguage] || 'en-US';
-    utter.rate = 0.95;
-    utter.onend = () => setSpeakingCardId(null);
-    utter.onerror = () => setSpeakingCardId(null);
-    setSpeakingCardId(cardId);
-    window.speechSynthesis.speak(utter);
   };
 
   const [isTypingActive, setIsTypingActive] = useState(false);
@@ -767,26 +735,29 @@ export default function CapturePage({
     }
   }, [typingState, isTypingActive]);
 
-  // Continuous auto-scroll interval during typing or loading for smoother experience
+  // Continuous auto-scroll during typing or loading using requestAnimationFrame
   useEffect(() => {
-    let scrollInterval: NodeJS.Timeout | null = null;
-    
-    if (isTypingActive || loading) {
-      scrollInterval = setInterval(() => {
+    let rafId: number | null = null;
+    let lastTime = 0;
+
+    const scrollStep = (time: number) => {
+      if (time - lastTime >= 200) {
+        lastTime = time;
         const container = captureBodyRef.current;
         if (container) {
-          const { scrollTop, scrollHeight, clientHeight } = container;
-          const distanceFromBottom = scrollHeight - scrollTop - clientHeight;
-          
-          // Always auto-scroll during active typing/loading
           container.scrollTop = container.scrollHeight;
         }
-      }, 50); // Check every 50ms for smooth scrolling
+      }
+      rafId = requestAnimationFrame(scrollStep);
+    };
+
+    if (isTypingActive || loading) {
+      rafId = requestAnimationFrame(scrollStep);
     }
-    
+
     return () => {
-      if (scrollInterval) {
-        clearInterval(scrollInterval);
+      if (rafId !== null) {
+        cancelAnimationFrame(rafId);
       }
     };
   }, [isTypingActive, loading]);
@@ -1539,6 +1510,11 @@ export default function CapturePage({
                                   {activeLanguage !== 'ja' ? vi.name_jp : vi.name_en}
                                 </div>
                               )}
+                              {(activeLanguage === 'ja' ? vi.name_reading : vi.name_romaji) && (
+                                <div className="nfg-card-reading">
+                                  {activeLanguage === 'ja' ? vi.name_reading : vi.name_romaji}
+                                </div>
+                              )}
                             </div>
                             <div className={`nfg-card-body${expanded ? ' expanded' : ''}`}>
                               {vi.image_url && (
@@ -1654,22 +1630,6 @@ export default function CapturePage({
                                 {vi.confidence != null && vi.confidence > 0 && (
                                   <span className="nfg-badge nfg-badge-confidence">{copy.nfg.confidence} {vi.confidence}%</span>
                                 )}
-                                <button
-                                  type="button"
-                                  className="nfg-badge"
-                                  style={{
-                                    cursor: 'pointer',
-                                    background: speakingCardId === `${response.id}-${idx}` ? 'rgba(79,200,140,0.2)' : 'rgba(255,255,255,0.06)',
-                                    color: speakingCardId === `${response.id}-${idx}` ? '#4fc88c' : 'rgba(255,255,255,0.5)',
-                                    border: speakingCardId === `${response.id}-${idx}` ? '1px solid rgba(79,200,140,0.3)' : '1px solid rgba(255,255,255,0.1)',
-                                  }}
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    speakNfgCard(`${response.id}-${idx}`, vi);
-                                  }}
-                                >
-                                  {speakingCardId === `${response.id}-${idx}` ? '🔊' : '🔈'}
-                                </button>
                                 <button
                                   type="button"
                                   className="nfg-badge"

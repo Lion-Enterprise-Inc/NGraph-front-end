@@ -663,6 +663,8 @@ export const ScrapingApi = {
 export interface VisionMenuItem {
   name_jp: string;
   name_en: string;
+  name_reading?: string;
+  name_romaji?: string;
   price: number;
   description: string;
   category: string;

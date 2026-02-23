@@ -198,6 +198,7 @@ function isNfgQuery(q: string): boolean {
   return NFG_TRIGGER_WORDS.some(w => q.includes(w))
 }
 
+type SortKey = 'score' | 'menu_count'
 type DisplayRestaurant = (SearchRestaurant | NfgSearchRestaurant) & { _nfg?: boolean }
 
 export default function HomePage() {
@@ -212,6 +213,7 @@ export default function HomePage() {
   const [loading, setLoading] = useState(false)
   const [stats, setStats] = useState<PlatformStats | null>(null)
   const [searched, setSearched] = useState(false)
+  const [sortBy, setSortBy] = useState<SortKey>('score')
   const debounceRef = useRef<ReturnType<typeof setTimeout>>()
   const pageRef = useRef<HTMLDivElement>(null)
 
@@ -335,6 +337,23 @@ export default function HomePage() {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
+  const handleSort = (key: SortKey) => {
+    setSortBy(key)
+    setRestaurants(prev => {
+      const sorted = [...prev]
+      if (key === 'menu_count') {
+        sorted.sort((a, b) => b.menu_count - a.menu_count)
+      } else {
+        sorted.sort((a, b) => {
+          const sa = (a as NfgSearchRestaurant).score ?? 0
+          const sb = (b as NfgSearchRestaurant).score ?? 0
+          return sb - sa || b.menu_count - a.menu_count
+        })
+      }
+      return sorted
+    })
+  }
+
   const totalAll = cities.reduce((s, c) => s + c.count, 0)
 
   return (
@@ -408,11 +427,27 @@ export default function HomePage() {
 
       {searched && (
         <div className="explore-body">
-          {/* Results count */}
+          {/* Results count + sort */}
           <div className="explore-results-bar">
             <span className="explore-results-count">
               {total.toLocaleString()} 件{query && ` — "${query}"`}
             </span>
+            {restaurants.some(r => r._nfg) && (
+              <div className="explore-sort-toggle">
+                <button
+                  className={`explore-sort-btn ${sortBy === 'score' ? 'active' : ''}`}
+                  onClick={() => handleSort('score')}
+                >
+                  スコア順
+                </button>
+                <button
+                  className={`explore-sort-btn ${sortBy === 'menu_count' ? 'active' : ''}`}
+                  onClick={() => handleSort('menu_count')}
+                >
+                  メニュー数順
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Restaurant list */}
@@ -439,6 +474,11 @@ export default function HomePage() {
                   </div>
                   {r._nfg && 'match_reasons' in r && (r as NfgSearchRestaurant).match_reasons.length > 0 && (
                     <div className="explore-row-reasons">
+                      {(r as NfgSearchRestaurant).score > 0 && (
+                        <span className="explore-score-badge">
+                          {(r as NfgSearchRestaurant).score}pt
+                        </span>
+                      )}
                       {(r as NfgSearchRestaurant).match_reasons.map((reason, i) => (
                         <span key={i} className="explore-match-tag">{reason}</span>
                       ))}
