@@ -1525,24 +1525,36 @@ export default function CapturePage({
                               {vi.description && (
                                 <div className="nfg-card-desc">{vi.description}</div>
                               )}
-                              {vi.taste_values && Object.keys(vi.taste_values).length > 0 && (
-                                <div className="nfg-taste-chart">
-                                  <div className="nfg-field-label" style={{marginBottom:4}}>{copy.nfg.tasteChart}</div>
-                                  {Object.entries(vi.taste_values).map(([key, val]) => {
-                                    const tasteLabels: Record<string, string> = activeLanguage === 'ja'
-                                      ? {sweetness:"甘味",sourness:"酸味",saltiness:"塩味",bitterness:"苦味",umami:"旨味",spiciness:"辛味",richness:"コク",lightness:"あっさり"}
-                                      : {sweetness:"Sweet",sourness:"Sour",saltiness:"Salty",bitterness:"Bitter",umami:"Umami",spiciness:"Spicy",richness:"Rich",lightness:"Light"};
-                                    return (
-                                      <div key={key} className="nfg-taste-row">
-                                        <span className="nfg-taste-label">{tasteLabels[key] || key}</span>
-                                        <div className="nfg-taste-bar">
-                                          <div className="nfg-taste-fill" style={{width:`${(val as number) * 10}%`}} />
-                                        </div>
-                                      </div>
-                                    );
-                                  })}
-                                </div>
-                              )}
+                              {vi.taste_values && Object.keys(vi.taste_values).length > 0 && (() => {
+                                const axes = ['sweetness','sourness','saltiness','bitterness','umami','spiciness','richness','lightness'] as const;
+                                const labelsJa: Record<string,string> = {sweetness:"甘味",sourness:"酸味",saltiness:"塩味",bitterness:"苦味",umami:"旨味",spiciness:"辛味",richness:"コク",lightness:"あっさり"};
+                                const labelsEn: Record<string,string> = {sweetness:"Sweet",sourness:"Sour",saltiness:"Salty",bitterness:"Bitter",umami:"Umami",spiciness:"Spicy",richness:"Rich",lightness:"Light"};
+                                const labels = activeLanguage === 'ja' ? labelsJa : labelsEn;
+                                const sz = 200, cx = sz/2, cy = sz/2, r = 65;
+                                const step = (2 * Math.PI) / axes.length;
+                                const pt = (i: number, rv: number) => ({
+                                  x: cx + rv * Math.cos(-Math.PI/2 + i * step),
+                                  y: cy + rv * Math.sin(-Math.PI/2 + i * step),
+                                });
+                                const poly = (rv: number) => axes.map((_, i) => { const p = pt(i, rv); return `${p.x},${p.y}`; }).join(' ');
+                                const dataPath = axes.map((a, i) => {
+                                  const v = ((vi.taste_values as Record<string,number>)[a] || 0) / 10;
+                                  const p = pt(i, r * v);
+                                  return `${i === 0 ? 'M' : 'L'}${p.x} ${p.y}`;
+                                }).join(' ') + ' Z';
+                                return (
+                                  <div className="nfg-taste-chart">
+                                    <div className="nfg-ngraph-label">NGraph</div>
+                                    <svg className="nfg-radar" viewBox={`0 0 ${sz} ${sz}`} width={sz} height={sz}>
+                                      {[0.25,0.5,0.75,1].map(lv => <polygon key={lv} points={poly(r*lv)} fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth="0.8"/>)}
+                                      {axes.map((_, i) => { const p = pt(i, r); return <line key={i} x1={cx} y1={cy} x2={p.x} y2={p.y} stroke="rgba(255,255,255,0.07)" strokeWidth="0.8"/>; })}
+                                      <path d={dataPath} fill="rgba(16,163,127,0.18)" stroke="#10a37f" strokeWidth="1.5" strokeLinejoin="round"/>
+                                      {axes.map((a, i) => { const v = ((vi.taste_values as Record<string,number>)[a] || 0) / 10; const p = pt(i, r * v); return <circle key={i} cx={p.x} cy={p.y} r="2.5" fill="#10a37f"/>; })}
+                                      {axes.map((a, i) => { const p = pt(i, r + 20); return <text key={i} x={p.x} y={p.y} textAnchor="middle" dominantBaseline="middle" fill="rgba(255,255,255,0.5)" fontSize="9.5" fontFamily="system-ui">{labels[a] || a}</text>; })}
+                                    </svg>
+                                  </div>
+                                );
+                              })()}
                               {vi.narrative && (
                                 <div className="nfg-narrative">
                                   {vi.narrative.story && (

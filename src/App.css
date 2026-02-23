@@ -6091,11 +6091,9 @@ textarea.form-input {
   border: 1px solid rgba(255,255,255,0.08);
 }
 
-.nfg-taste-chart { margin: 10px 0; }
-.nfg-taste-row { display:flex; align-items:center; gap:6px; margin:3px 0; }
-.nfg-taste-label { width:48px; font-size:11px; color:rgba(255,255,255,0.5); text-align:right; }
-.nfg-taste-bar { flex:1; height:6px; background:rgba(255,255,255,0.06); border-radius:3px; overflow:hidden; }
-.nfg-taste-fill { height:100%; background:linear-gradient(90deg,#4f8cff,#7c5cff); border-radius:3px; }
+.nfg-taste-chart { margin: 10px 0; display:flex; flex-direction:column; align-items:center; }
+.nfg-ngraph-label { font-size:11px; font-weight:700; color:#10a37f; letter-spacing:1.5px; text-transform:uppercase; margin-bottom:2px; }
+.nfg-radar { max-width:200px; width:100%; height:auto; }
 .nfg-narrative { margin:10px 0; }
 .nfg-narrative-story { font-size:13px; color:rgba(255,255,255,0.7); line-height:1.5; margin-bottom:8px; font-style:italic; }
 .nfg-serving { margin:8px 0; }
