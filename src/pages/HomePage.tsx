@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { Search } from 'lucide-react'
-import { ExploreApi, SemanticSearchApi, SearchRestaurant, NfgSearchRestaurant, CityCount, PlatformStats } from '../services/api'
+import { ExploreApi, SemanticSearchApi, SearchRestaurant, NfgSearchRestaurant, SemanticSearchRestaurant, CityCount, PlatformStats } from '../services/api'
 
 interface Particle {
   x: number; y: number
@@ -180,11 +180,6 @@ function BinaryField() {
   return <canvas ref={canvasRef} className="matrix-rain" />
 }
 
-const QUICK_TAPS = [
-  '蟹', '海鮮', '寿司', '焼き鳥', 'ラーメン', 'そば', '居酒屋',
-  'ランチ', 'コース', '接待',
-]
-
 const NFG_TRIGGER_WORDS = [
   '食べたい', 'おすすめ', '向け', '向き', '接待', '宴会', 'ランチ', 'デザート',
   '海鮮', '刺身', '寿司', '天ぷら', 'ラーメン', 'そば', '焼き鳥', '鍋',
@@ -197,6 +192,46 @@ function isNfgQuery(q: string): boolean {
   if (q.length < 2) return false
   return NFG_TRIGGER_WORDS.some(w => q.includes(w))
 }
+
+const SITUATIONS = [
+  { key: 'solo', label: 'ひとり' },
+  { key: 'date', label: 'デート' },
+  { key: 'friends', label: '友人と' },
+  { key: 'family', label: '家族で' },
+  { key: 'business', label: '接待・宴会' },
+]
+const SITUATION_LABELS: Record<string, string> = Object.fromEntries(SITUATIONS.map(s => [s.key, s.label]))
+
+const DIETS = [
+  { key: 'halal', label: 'ハラール' },
+  { key: 'vegetarian', label: 'ベジタリアン' },
+  { key: 'gluten_free', label: 'グルテンフリー' },
+]
+const ALLERGENS = [
+  { key: 'egg', label: '卵×' },
+  { key: 'shrimp', label: 'えび×' },
+  { key: 'crab', label: 'かに×' },
+  { key: 'wheat', label: '小麦×' },
+  { key: 'milk', label: '乳×' },
+  { key: 'fish', label: '魚×' },
+]
+
+const MOODS = [
+  { key: 'hearty', label: 'がっつり食事' },
+  { key: 'drinking', label: '飲みメイン' },
+  { key: 'budget', label: 'コスパ重視' },
+  { key: 'spicy', label: '辛いもの' },
+  { key: 'local', label: '福井の名物' },
+]
+const MOOD_LABELS: Record<string, string> = Object.fromEntries(MOODS.map(m => [m.key, m.label]))
+
+const CURIOSITIES = [
+  { key: 'safe', label: 'いつもの安心' },
+  { key: 'local', label: '福井ならでは' },
+  { key: 'seasonal', label: '季節を感じる' },
+  { key: 'adventure', label: '冒険したい' },
+]
+const CURIOSITY_LABELS: Record<string, string> = Object.fromEntries(CURIOSITIES.map(c => [c.key, c.label]))
 
 type SortKey = 'score' | 'menu_count'
 type DisplayRestaurant = (SearchRestaurant | NfgSearchRestaurant) & { _nfg?: boolean }
@@ -216,17 +251,26 @@ export default function HomePage() {
   const [sortBy, setSortBy] = useState<SortKey>('score')
   const debounceRef = useRef<ReturnType<typeof setTimeout>>()
   const pageRef = useRef<HTMLDivElement>(null)
-  const [exploreMode, setExploreMode] = useState<'semantic' | 'scene' | 'mood' | 'name' | null>(null)
-  const [selectedDiets, setSelectedDiets] = useState<Set<string>>(new Set())
-  const [selectedAllergens, setSelectedAllergens] = useState<Set<string>>(new Set())
-  const [selectedScenes, setSelectedScenes] = useState<Set<string>>(new Set())
-  const [selectedMoods, setSelectedMoods] = useState<Set<string>>(new Set())
-  const [semanticQuery, setSemanticQuery] = useState('')
-  const [visitType, setVisitType] = useState<string | null>(null)
-  const [recentFood, setRecentFood] = useState<string | null>(null)
+
+  // Conversational flow state
+  const [flowStep, setFlowStep] = useState(0)
+  const [flowSituation, setFlowSituation] = useState<string | null>(null)
+  const [flowDiets, setFlowDiets] = useState<Set<string>>(new Set())
+  const [flowAllergens, setFlowAllergens] = useState<Set<string>>(new Set())
+  const [flowMood, setFlowMood] = useState<string | null>(null)
+  const [flowCuriosity, setFlowCuriosity] = useState<string | null>(null)
+  const [flowTransition, setFlowTransition] = useState<'idle' | 'exiting' | 'entering'>('idle')
   const [flowCount, setFlowCount] = useState<number | null>(null)
   const [flowLoading, setFlowLoading] = useState(false)
   const countDebounceRef = useRef<ReturnType<typeof setTimeout>>()
+  const [recoCards, setRecoCards] = useState<SemanticSearchRestaurant[]>([])
+  const [recoLoading, setRecoLoading] = useState(false)
+  const [recoTotal, setRecoTotal] = useState(0)
+
+  // Auto-start flow
+  useEffect(() => {
+    if (!searched && flowStep === 0) setFlowStep(1)
+  }, [searched, flowStep])
 
   // Proximity glow: elements near pointer get accent color
   useEffect(() => {
@@ -365,14 +409,117 @@ export default function HomePage() {
     })
   }
 
+  // --- Conversational flow functions ---
+
+  const toggleSet = (set: Set<string>, setFn: React.Dispatch<React.SetStateAction<Set<string>>>, val: string) => {
+    setFn(prev => {
+      const next = new Set(prev)
+      if (next.has(val)) next.delete(val)
+      else next.add(val)
+      return next
+    })
+  }
+
+  const advanceStep = () => {
+    setFlowTransition('exiting')
+    setTimeout(() => {
+      setFlowStep(prev => prev + 1)
+      setFlowTransition('entering')
+      setTimeout(() => setFlowTransition('idle'), 300)
+    }, 200)
+  }
+
+  const answerSituation = (key: string) => {
+    setFlowSituation(key)
+    advanceStep()
+  }
+
+  const answerMood = (key: string) => {
+    setFlowMood(key)
+    advanceStep()
+  }
+
+  const buildFlowParams = (curiosityOverride?: string): Record<string, string> => {
+    const params: Record<string, string> = {}
+    if (flowDiets.size > 0) params.diet = Array.from(flowDiets).join(',')
+    if (flowAllergens.size > 0) params.no = Array.from(flowAllergens).join(',')
+    if (flowMood) params.mood = flowMood
+    const cur = curiosityOverride ?? flowCuriosity
+    if (cur === 'local') params.mood = params.mood ? params.mood + ',local' : 'local'
+    if (city) params.area = city
+    return params
+  }
+
+  const fetchRecommendations = async (curiosityOverride?: string) => {
+    const params = buildFlowParams(curiosityOverride)
+    setRecoLoading(true)
+    try {
+      const res = await SemanticSearchApi.search({ ...params, size: 3 })
+      setRecoCards(res.result.restaurants)
+      setRecoTotal(res.result.count)
+    } catch {
+      setRecoCards([])
+      setRecoTotal(0)
+    } finally {
+      setRecoLoading(false)
+    }
+  }
+
+  const answerCuriosity = (key: string) => {
+    setFlowCuriosity(key)
+    setFlowTransition('exiting')
+    setTimeout(() => {
+      setFlowStep(5)
+      setFlowTransition('entering')
+      setTimeout(() => setFlowTransition('idle'), 300)
+    }, 200)
+    fetchRecommendations(key)
+  }
+
+  const skipStep = () => {
+    if (flowStep === 4) {
+      // Step 4 skip → show recommendations too
+      setFlowTransition('exiting')
+      setTimeout(() => {
+        setFlowStep(5)
+        setFlowTransition('entering')
+        setTimeout(() => setFlowTransition('idle'), 300)
+      }, 200)
+      fetchRecommendations()
+    } else {
+      advanceStep()
+    }
+  }
+
+  const goToStep = (step: number) => {
+    if (step <= 1) setFlowSituation(null)
+    if (step <= 2) { setFlowDiets(new Set()); setFlowAllergens(new Set()) }
+    if (step <= 3) setFlowMood(null)
+    if (step <= 4) { setFlowCuriosity(null); setRecoCards([]); setRecoTotal(0) }
+    setFlowStep(step)
+    setFlowTransition('idle')
+  }
+
+  const resetFlow = () => {
+    setFlowSituation(null)
+    setFlowDiets(new Set())
+    setFlowAllergens(new Set())
+    setFlowMood(null)
+    setFlowCuriosity(null)
+    setFlowStep(1)
+    setFlowCount(null)
+    setFlowTransition('idle')
+    setRecoCards([])
+    setRecoTotal(0)
+  }
+
   const fetchFlowCount = useCallback(async () => {
     const params: Record<string, string> = {}
-    if (selectedDiets.size > 0) params.diet = Array.from(selectedDiets).join(',')
-    if (selectedAllergens.size > 0) params.no = Array.from(selectedAllergens).join(',')
-    if (selectedScenes.size > 0) params.scene = Array.from(selectedScenes).join(',')
-    if (selectedMoods.size > 0) params.mood = Array.from(selectedMoods).join(',')
+    if (flowDiets.size > 0) params.diet = Array.from(flowDiets).join(',')
+    if (flowAllergens.size > 0) params.no = Array.from(flowAllergens).join(',')
+    if (flowMood) params.mood = flowMood
+    if (flowCuriosity === 'local') params.mood = params.mood ? params.mood + ',local' : 'local'
     if (city) params.area = city
-    if (semanticQuery.trim()) params.q = semanticQuery.trim()
 
     if (Object.keys(params).length === 0) {
       setFlowCount(null)
@@ -388,7 +535,7 @@ export default function HomePage() {
     } finally {
       setFlowLoading(false)
     }
-  }, [selectedDiets, selectedAllergens, selectedScenes, selectedMoods, city, semanticQuery])
+  }, [flowDiets, flowAllergens, flowMood, flowCuriosity, city])
 
   useEffect(() => {
     if (countDebounceRef.current) clearTimeout(countDebounceRef.current)
@@ -396,53 +543,8 @@ export default function HomePage() {
     return () => { if (countDebounceRef.current) clearTimeout(countDebounceRef.current) }
   }, [fetchFlowCount])
 
-  const toggleSet = (set: Set<string>, setFn: React.Dispatch<React.SetStateAction<Set<string>>>, val: string) => {
-    setFn(prev => {
-      const next = new Set(prev)
-      if (next.has(val)) next.delete(val)
-      else next.add(val)
-      return next
-    })
-  }
-
-  const selectMood = (val: string) => {
-    setSelectedMoods(prev => {
-      const next = new Set<string>()
-      if (!prev.has(val)) next.add(val)
-      return next
-    })
-  }
-
-  const startMode = (mode: 'semantic' | 'scene' | 'mood' | 'name') => {
-    if (mode === 'name') {
-      const input = document.querySelector('.explore-search') as HTMLInputElement
-      if (input) input.focus()
-      return
-    }
-    setExploreMode(prev => prev === mode ? null : mode)
-  }
-
-  const resetFlow = () => {
-    setExploreMode(null)
-    setSelectedDiets(new Set())
-    setSelectedAllergens(new Set())
-    setSelectedScenes(new Set())
-    setSelectedMoods(new Set())
-    setSemanticQuery('')
-    setVisitType(null)
-    setRecentFood(null)
-    setFlowCount(null)
-  }
-
-  const handleViewResults = async () => {
-    const params: Record<string, string> = {}
-    if (selectedDiets.size > 0) params.diet = Array.from(selectedDiets).join(',')
-    if (selectedAllergens.size > 0) params.no = Array.from(selectedAllergens).join(',')
-    if (selectedScenes.size > 0) params.scene = Array.from(selectedScenes).join(',')
-    if (selectedMoods.size > 0) params.mood = Array.from(selectedMoods).join(',')
-    if (city) params.area = city
-    if (semanticQuery.trim()) params.q = semanticQuery.trim()
-
+  const handleViewResults = async (curiosityOverride?: string) => {
+    const params = buildFlowParams(curiosityOverride)
     setSearched(true)
     setLoading(true)
     try {
@@ -462,7 +564,7 @@ export default function HomePage() {
     }
   }
 
-  const activeFilterCount = selectedDiets.size + selectedAllergens.size + selectedScenes.size + selectedMoods.size + (semanticQuery.trim() ? 1 : 0) + (visitType ? 1 : 0) + (recentFood ? 1 : 0)
+  const activeFilterCount = flowDiets.size + flowAllergens.size + (flowMood ? 1 : 0) + (flowCuriosity === 'local' ? 1 : 0)
 
   const totalAll = cities.reduce((s, c) => s + c.count, 0)
 
@@ -518,216 +620,175 @@ export default function HomePage() {
 
           {!searched && (
             <>
-              <div className="explore-quick-taps">
-                {QUICK_TAPS.map(t => (
-                  <button key={t} className="explore-quick-tap glow-target" onClick={() => handleSearch(t)}>
-                    {t}
-                  </button>
-                ))}
-              </div>
               {stats && (
                 <div className="explore-landing-stats glow-target">
                   {stats.total_restaurants.toLocaleString()} 店舗 · {stats.total_menus.toLocaleString()} メニュー · {stats.cities} 都市
                 </div>
               )}
 
-              {/* Explore Modes */}
-              <div className="explore-modes">
-                <div className="explore-label">どこから探しますか？</div>
-                <div className="explore-grid">
-                  <div className={`explore-mode ${exploreMode === 'semantic' ? 'active' : ''}`} onClick={() => startMode('semantic')}>
-                    <span className="em-icon">🥗</span>
-                    <span className="em-label">食の制約・原材料</span>
-                  </div>
-                  <div className={`explore-mode ${exploreMode === 'scene' ? 'active' : ''}`} onClick={() => startMode('scene')}>
-                    <span className="em-icon">🎭</span>
-                    <span className="em-label">シーンから</span>
-                  </div>
-                  <div className={`explore-mode ${exploreMode === 'mood' ? 'active' : ''}`} onClick={() => startMode('mood')}>
-                    <span className="em-icon">😋</span>
-                    <span className="em-label">気分から</span>
-                  </div>
-                  <div className={`explore-mode ${exploreMode === 'name' ? 'active' : ''}`} onClick={() => startMode('name')}>
-                    <span className="em-icon">🔍</span>
-                    <span className="em-label">店名で直接</span>
-                  </div>
+              {/* Answer Trail */}
+              {flowStep > 1 && (
+                <div className="conv-trail">
+                  {flowSituation && (
+                    <span className="conv-trail-item" onClick={() => goToStep(1)}>
+                      {SITUATION_LABELS[flowSituation]}
+                    </span>
+                  )}
+                  {(flowDiets.size > 0 || flowAllergens.size > 0) && (
+                    <span className="conv-trail-item" onClick={() => goToStep(2)}>
+                      {[...Array.from(flowDiets).map(d => DIETS.find(x => x.key === d)?.label || d), ...Array.from(flowAllergens).map(a => ALLERGENS.find(x => x.key === a)?.label || a)].join(', ')}
+                    </span>
+                  )}
+                  {flowMood && flowStep > 3 && (
+                    <span className="conv-trail-item" onClick={() => goToStep(3)}>
+                      {MOOD_LABELS[flowMood]}
+                    </span>
+                  )}
+                  {flowCuriosity && flowStep > 4 && (
+                    <span className="conv-trail-item" onClick={() => goToStep(4)}>
+                      {CURIOSITY_LABELS[flowCuriosity]}
+                    </span>
+                  )}
+                  <span className="conv-reset" onClick={resetFlow}>← やり直す</span>
                 </div>
-              </div>
+              )}
 
-              {/* Mode A: 食の制約・原材料 */}
-              {exploreMode === 'semantic' && (
-                <div className="q-block">
-                  <div className="q-label">食の制約</div>
-                  <div className="explore-filters" style={{ justifyContent: 'flex-start' }}>
-                    {[
-                      { key: 'halal', emoji: '☪️', label: 'ハラール' },
-                      { key: 'vegetarian', emoji: '🌱', label: 'ベジタリアン' },
-                      { key: 'pescatarian', emoji: '🐟', label: 'ペスカタリアン' },
-                      { key: 'kosher', emoji: '✡️', label: 'コーシャ' },
-                      { key: 'gluten_free', emoji: '🚫', label: 'グルテンフリー' },
-                      { key: 'dairy_free', emoji: '🥛', label: '乳製品不使用' },
-                    ].map(d => (
-                      <button key={d.key} className={`explore-filter-pill ${selectedDiets.has(d.key) ? 'active' : ''}`}
-                        onClick={() => toggleSet(selectedDiets, setSelectedDiets, d.key)}>
-                        {d.emoji} {d.label}
-                      </button>
+              {/* Step 1: 状況 */}
+              {flowStep === 1 && flowTransition !== 'exiting' && (
+                <div className={`conv-step ${flowTransition === 'entering' ? 'conv-entering' : ''}`}>
+                  <div className="conv-question">今日はどんなお店探し？</div>
+                  <div className="conv-chips">
+                    {SITUATIONS.map(s => (
+                      <button key={s.key} className="conv-chip" onClick={() => answerSituation(s.key)}>{s.label}</button>
                     ))}
-                  </div>
-                  <div className="q-divider" />
-                  <div className="q-label">アレルゲンを除外</div>
-                  <div className="explore-filters" style={{ justifyContent: 'flex-start' }}>
-                    {[
-                      { key: 'egg', emoji: '🥚', label: '卵なし' },
-                      { key: 'shrimp', emoji: '🦐', label: 'えびなし' },
-                      { key: 'crab', emoji: '🦀', label: 'かになし' },
-                      { key: 'wheat', emoji: '🌾', label: '小麦なし' },
-                      { key: 'peanut', emoji: '🥜', label: 'ピーナッツなし' },
-                      { key: 'milk', emoji: '🐄', label: '乳なし' },
-                      { key: 'fish', emoji: '🐟', label: '魚なし' },
-                    ].map(a => (
-                      <button key={a.key} className={`explore-filter-pill ${selectedAllergens.has(a.key) ? 'active' : ''}`}
-                        onClick={() => toggleSet(selectedAllergens, setSelectedAllergens, a.key)}>
-                        {a.emoji} {a.label}
-                      </button>
-                    ))}
-                  </div>
-                  <div className="q-divider" />
-                  <div className="q-label">原材料・調理法で絞る</div>
-                  <div className="semantic-search">
-                    <input
-                      type="text"
-                      placeholder="原材料・調理法を入力（例：昆布だし、国産鶏）"
-                      value={semanticQuery}
-                      onChange={e => setSemanticQuery(e.target.value)}
-                    />
-                    <div className="semantic-suggestions">
-                      {['昆布だし', '国産食材', '無添加', '有機野菜'].map(s => (
-                        <span key={s} className="suggestion-chip" onClick={() => setSemanticQuery(s)}>{s}</span>
-                      ))}
-                    </div>
+                    <button className="conv-chip conv-chip-skip" onClick={() => skipStep()}>スキップ →</button>
                   </div>
                 </div>
               )}
 
-              {/* Mode B: シーン */}
-              {exploreMode === 'scene' && (
-                <div className="q-block">
-                  <div className="q-label">どんなシーン？（複数選択可）</div>
-                  <div className="explore-filters" style={{ justifyContent: 'flex-start' }}>
-                    {[
-                      { key: 'kids_ok', emoji: '👶', label: '子連れOK' },
-                      { key: 'private_room', emoji: '🚪', label: '個室あり' },
-                      { key: 'date', emoji: '💑', label: 'デート' },
-                      { key: 'entertainment', emoji: '💼', label: '接待' },
-                      { key: 'no_smoking', emoji: '🚭', label: '禁煙' },
-                      { key: 'parking', emoji: '🅿️', label: '駐車場' },
-                      { key: 'late_night', emoji: '🌙', label: '深夜営業' },
-                      { key: 'all_you_can_drink', emoji: '🍺', label: '飲み放題' },
-                    ].map(s => (
-                      <button key={s.key} className={`explore-filter-pill ${selectedScenes.has(s.key) ? 'active' : ''}`}
-                        onClick={() => toggleSet(selectedScenes, setSelectedScenes, s.key)}>
-                        {s.emoji} {s.label}
-                      </button>
+              {/* Step 2: 制約 */}
+              {flowStep === 2 && flowTransition !== 'exiting' && (
+                <div className={`conv-step ${flowTransition === 'entering' ? 'conv-entering' : ''}`}>
+                  <div className="conv-question">外せない条件は？</div>
+                  <div className="conv-section-label">食事制約</div>
+                  <div className="conv-chips">
+                    {DIETS.map(d => (
+                      <button key={d.key} className={`conv-chip ${flowDiets.has(d.key) ? 'selected' : ''}`}
+                        onClick={() => toggleSet(flowDiets, setFlowDiets, d.key)}>{d.label}</button>
                     ))}
+                  </div>
+                  <div className="conv-section-label">除外したいアレルゲン</div>
+                  <div className="conv-chips">
+                    {ALLERGENS.map(a => (
+                      <button key={a.key} className={`conv-chip ${flowAllergens.has(a.key) ? 'selected' : ''}`}
+                        onClick={() => toggleSet(flowAllergens, setFlowAllergens, a.key)}>{a.label}</button>
+                    ))}
+                  </div>
+                  <button className="conv-next" onClick={() => advanceStep()}>
+                    {flowDiets.size + flowAllergens.size > 0 ? '次へ →' : 'スキップ →'}
+                  </button>
+                </div>
+              )}
+
+              {/* Step 3: 気分 */}
+              {flowStep === 3 && flowTransition !== 'exiting' && (
+                <div className={`conv-step ${flowTransition === 'entering' ? 'conv-entering' : ''}`}>
+                  <div className="conv-question">今の気分は？</div>
+                  <div className="conv-chips">
+                    {MOODS.map(m => (
+                      <button key={m.key} className="conv-chip" onClick={() => answerMood(m.key)}>{m.label}</button>
+                    ))}
+                    <button className="conv-chip conv-chip-skip" onClick={() => skipStep()}>スキップ →</button>
                   </div>
                 </div>
               )}
 
-              {/* Mode C: 気分 */}
-              {exploreMode === 'mood' && (
-                <div className="q-block">
-                  <div className="q-label">今の気分は？</div>
-                  <div className="explore-filters" style={{ justifyContent: 'flex-start' }}>
-                    {[
-                      { key: 'hearty', emoji: '🍚', label: 'しっかり食事' },
-                      { key: 'drinking', emoji: '🍺', label: '飲みメイン' },
-                      { key: 'budget', emoji: '💰', label: 'コスパ重視' },
-                      { key: 'spicy', emoji: '🌶️', label: '辛いもの' },
-                      { key: 'local', emoji: '✨', label: '福井の名物' },
-                    ].map(m => (
-                      <button key={m.key} className={`explore-filter-pill ${selectedMoods.has(m.key) ? 'active' : ''}`}
-                        onClick={() => selectMood(m.key)}>
-                        {m.emoji} {m.label}
-                      </button>
+              {/* Step 4: 好奇心 */}
+              {flowStep === 4 && flowTransition !== 'exiting' && (
+                <div className={`conv-step ${flowTransition === 'entering' ? 'conv-entering' : ''}`}>
+                  <div className="conv-question">どんな発見がしたい？</div>
+                  <div className="conv-chips">
+                    {CURIOSITIES.map(c => (
+                      <button key={c.key} className="conv-chip" onClick={() => answerCuriosity(c.key)}>{c.label}</button>
                     ))}
+                    <button className="conv-chip conv-chip-skip" onClick={() => skipStep()}>スキップ →</button>
                   </div>
                 </div>
               )}
 
-              {/* やり直すボタン */}
-              {exploreMode && activeFilterCount > 0 && (
-                <div style={{ padding: '0 24px 8px' }}>
-                  <span className="q-skip" onClick={resetFlow}>← やり直す</span>
-                </div>
-              )}
-
-              {/* 共通フロー */}
-              {exploreMode && activeFilterCount > 0 && (
-                <>
-                  <div className="q-block">
-                    <div className="q-divider" />
-                    <div className="q-label">
-                      福井は初めて？
-                      {visitType && <span className="q-answered-val"> — {visitType === 'first' ? '初めて' : visitType === 'repeat' ? '何度か' : '地元'}</span>}
-                    </div>
-                    <div className="explore-filters" style={{ justifyContent: 'flex-start' }}>
-                      {[
-                        { key: 'first', emoji: '✈️', label: '初めて' },
-                        { key: 'repeat', emoji: '🗺️', label: '何度か' },
-                        { key: 'local_resident', emoji: '🏠', label: '地元' },
-                      ].map(v => (
-                        <button key={v.key} className={`explore-filter-pill ${visitType === v.key ? 'active' : ''}`}
-                          onClick={() => setVisitType(prev => prev === v.key ? null : v.key)}>
-                          {v.emoji} {v.label}
+              {/* Step 5: NFG recommendations */}
+              {flowStep >= 5 && !searched && (
+                <div className="conv-reco">
+                  {recoLoading ? (
+                    <div className="conv-question">探しています...</div>
+                  ) : recoCards.length > 0 ? (
+                    <>
+                      <div className="conv-reco-title">AIのおすすめ</div>
+                      <div className="conv-reco-cards">
+                        {recoCards.map(r => (
+                          <button
+                            key={r.uid}
+                            className="conv-reco-card"
+                            onClick={() => router.push(`/capture?restaurant=${encodeURIComponent(r.slug)}`)}
+                          >
+                            <div className="conv-reco-restaurant">{r.name}</div>
+                            {r.match_reasons.length > 0 && (
+                              <div className="conv-reco-reasons">
+                                {r.score > 0 && <span className="conv-reco-score">{r.score}pt</span>}
+                                {r.match_reasons.map((reason, i) => (
+                                  <span key={i} className="conv-reco-tag">{reason}</span>
+                                ))}
+                              </div>
+                            )}
+                            <div className="conv-reco-meta">
+                              <span className="conv-reco-city">{r.city || '福井'} · {r.menu_count}品</span>
+                              <a
+                                className="conv-reco-link"
+                                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(r.name + ' ' + (r.city || '福井'))}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onClick={e => e.stopPropagation()}
+                              >
+                                Google Map →
+                              </a>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                      {recoTotal > 3 && (
+                        <button className="conv-reco-more" onClick={() => handleViewResults()}>
+                          他 {recoTotal - 3} 件を見る
                         </button>
-                      ))}
+                      )}
+                    </>
+                  ) : (
+                    <div className="conv-step">
+                      <div className="conv-question">条件に合うお店が見つかりませんでした</div>
+                      <button className="conv-next" onClick={resetFlow}>やり直す</button>
                     </div>
-                  </div>
-
-                  <div className="q-block">
-                    <div className="q-label">
-                      直近で食べたのは？
-                      {recentFood && <span className="q-answered-val"> — {
-                        recentFood === 'seafood' ? '海鮮' : recentFood === 'meat' ? '肉系' : recentFood === 'noodle' ? '麺' : recentFood === 'japanese' ? '和食' : '洋食'
-                      }</span>}
-                    </div>
-                    <div className="explore-filters" style={{ justifyContent: 'flex-start' }}>
-                      {[
-                        { key: 'seafood', emoji: '🦀', label: '海鮮' },
-                        { key: 'meat', emoji: '🍖', label: '肉系' },
-                        { key: 'noodle', emoji: '🍜', label: '麺' },
-                        { key: 'japanese', emoji: '🍱', label: '和食' },
-                        { key: 'western', emoji: '🍝', label: '洋食' },
-                      ].map(f => (
-                        <button key={f.key} className={`explore-filter-pill ${recentFood === f.key ? 'active' : ''}`}
-                          onClick={() => setRecentFood(prev => prev === f.key ? null : f.key)}>
-                          {f.emoji} {f.label}
-                        </button>
-                      ))}
-                    </div>
-                    <span className="q-skip" onClick={() => setRecentFood(null)}>スキップ →</span>
-                  </div>
-                </>
+                  )}
+                </div>
               )}
             </>
           )}
         </div>
       </div>
 
-      {!searched && exploreMode && activeFilterCount > 0 && (
+      {/* Bottom bar */}
+      {!searched && flowStep >= 2 && activeFilterCount > 0 && (
         <div className="flow-bottombar">
           <div className="flow-count-row">
             <div>
-              <span className="flow-count-num">{flowCount !== null ? flowCount : '—'}</span>
+              <span className="flow-count-num">{flowLoading ? '...' : flowCount !== null ? flowCount : '—'}</span>
               <span className="flow-count-unit"> 件</span>
             </div>
             <span className="flow-count-status">{activeFilterCount}項目で絞り込み中</span>
           </div>
-          <div className={`flow-actions ${activeFilterCount > 0 ? 'show' : ''}`}>
-            <button className="flow-btn-primary" onClick={handleViewResults}>
+          <div className="flow-actions show">
+            <button className="flow-btn-primary" onClick={() => handleViewResults()}>
               今すぐ見る
             </button>
-            <button className="flow-btn-secondary" onClick={() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })}>
+            <button className="flow-btn-secondary" onClick={() => advanceStep()}>
               もっと絞る ↓
             </button>
           </div>
@@ -736,6 +797,11 @@ export default function HomePage() {
 
       {searched && (
         <div className="explore-body">
+          {/* Back button */}
+          <div style={{ padding: '8px 24px 0' }}>
+            <span className="conv-reset" onClick={() => { setSearched(false); setQuery(''); setRestaurants([]); setTotal(0) }}>← 戻る</span>
+          </div>
+
           {/* Results count + sort */}
           <div className="explore-results-bar">
             <span className="explore-results-count">
