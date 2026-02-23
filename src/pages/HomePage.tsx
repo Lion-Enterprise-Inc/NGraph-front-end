@@ -24,7 +24,7 @@ function BinaryField() {
 
     let animId: number
     let particles: Particle[] = []
-    const COUNT = 35
+    const COUNT = 60
     let pointer = { x: -9999, y: -9999, active: false }
 
     const onMove = (e: MouseEvent) => {
@@ -74,7 +74,7 @@ function BinaryField() {
     resize()
     window.addEventListener('resize', resize)
 
-    const SYNAPSE_DIST = 80
+    const SYNAPSE_DIST = 90
     const alphas: number[] = new Array(COUNT).fill(0)
 
     const draw = () => {
@@ -122,6 +122,22 @@ function BinaryField() {
         if (p.life >= p.maxLife || dist > 1.5) {
           particles[i] = spawn(canvas.width, canvas.height)
           alphas[i] = 0
+        }
+      }
+
+      // density boost — nearby particles get brighter
+      const DENSITY_DIST = 60
+      for (let i = 0; i < particles.length; i++) {
+        if (alphas[i] < 0.005) continue
+        let neighbors = 0
+        for (let j = 0; j < particles.length; j++) {
+          if (i === j || alphas[j] < 0.005) continue
+          const ddx = particles[i].x - particles[j].x
+          const ddy = particles[i].y - particles[j].y
+          if (ddx * ddx + ddy * ddy < DENSITY_DIST * DENSITY_DIST) neighbors++
+        }
+        if (neighbors > 0) {
+          alphas[i] = Math.min(alphas[i] * (1 + neighbors * 0.3), 0.7)
         }
       }
 
@@ -250,7 +266,18 @@ const AREAS = [
 ] as const
 const AREA_LABELS: Record<string, string> = Object.fromEntries(AREAS.map(a => [a.key, a.label]))
 
-// Step 3: スタイル
+// Step 3: 予算
+const BUDGETS = [
+  { key: 'under1000', label: '~1,000円', min: 0, max: 1000 },
+  { key: '1000to2000', label: '1,000~2,000円', min: 1000, max: 2000 },
+  { key: '2000to3000', label: '2,000~3,000円', min: 2000, max: 3000 },
+  { key: '3000to5000', label: '3,000~5,000円', min: 3000, max: 5000 },
+  { key: 'over5000', label: '5,000円~', min: 5000, max: 0 },
+  { key: 'any', label: '気にしない', min: 0, max: 0 },
+] as const
+const BUDGET_LABELS: Record<string, string> = Object.fromEntries(BUDGETS.map(b => [b.key, b.label]))
+
+// Step 4: スタイル
 const STYLES = [
   { key: 'hearty', label: 'がっつり', mood: 'hearty' },
   { key: 'budget', label: 'コスパ重視', mood: 'budget' },
@@ -294,6 +321,7 @@ export default function HomePage() {
   const [flowStep, setFlowStep] = useState(0)
   const [flowFoodType, setFlowFoodType] = useState<string | null>(null)
   const [flowArea, setFlowArea] = useState<string | null>(null)
+  const [flowBudget, setFlowBudget] = useState<string | null>(null)
   const [flowStyle, setFlowStyle] = useState<string | null>(null)
   const [flowRestrictions, setFlowRestrictions] = useState<Set<string>>(new Set())
   const [showRestrictions, setShowRestrictions] = useState(false)
@@ -468,7 +496,7 @@ export default function HomePage() {
     }, 200)
   }
 
-  const buildFlowParams = (overrides?: { foodType?: string; areaKey?: string; styleKey?: string }): Record<string, string> => {
+  const buildFlowParams = (overrides?: { foodType?: string; areaKey?: string; budgetKey?: string; styleKey?: string }): Record<string, string> => {
     const params: Record<string, string> = {}
     const ftKey = overrides?.foodType ?? flowFoodType
     const ft = FOOD_TYPES.find(f => f.key === ftKey)
@@ -484,6 +512,13 @@ export default function HomePage() {
       if (a && a.area) params.area = a.area
     } else if (city) {
       params.area = city
+    }
+    // Budget
+    const bKey = overrides?.budgetKey ?? flowBudget
+    if (bKey) {
+      const b = BUDGETS.find(x => x.key === bKey)
+      if (b && b.min > 0) params.price_min = String(b.min)
+      if (b && b.max > 0) params.price_max = String(b.max)
     }
     // Style (mood override if not already set by food type)
     const sKey = overrides?.styleKey ?? flowStyle
@@ -536,11 +571,16 @@ export default function HomePage() {
     advanceStep()
   }
 
+  const answerBudget = (key: string) => {
+    setFlowBudget(key)
+    advanceStep()
+  }
+
   const answerStyle = (key: string) => {
     setFlowStyle(key)
     setFlowTransition('exiting')
     setTimeout(() => {
-      setFlowStep(4)
+      setFlowStep(5)
       setFlowTransition('entering')
       setTimeout(() => setFlowTransition('idle'), 300)
     }, 200)
@@ -557,7 +597,8 @@ export default function HomePage() {
   const goToStep = (step: number) => {
     if (step <= 1) { setFlowFoodType(null) }
     if (step <= 2) { setFlowArea(null) }
-    if (step <= 3) { setFlowStyle(null); setRecoCards([]); setRecoTotal(0); setRecoFallback(false) }
+    if (step <= 3) { setFlowBudget(null) }
+    if (step <= 4) { setFlowStyle(null); setRecoCards([]); setRecoTotal(0); setRecoFallback(false) }
     setFlowStep(step)
     setFlowTransition('idle')
   }
@@ -565,6 +606,7 @@ export default function HomePage() {
   const resetFlow = () => {
     setFlowFoodType(null)
     setFlowArea(null)
+    setFlowBudget(null)
     setFlowStyle(null)
     setFlowRestrictions(new Set())
     setShowRestrictions(false)
@@ -588,7 +630,7 @@ export default function HomePage() {
       setFlowLoading(false)
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [flowFoodType, flowArea, flowStyle, flowRestrictions, city])
+  }, [flowFoodType, flowArea, flowBudget, flowStyle, flowRestrictions, city])
 
   useEffect(() => {
     if (countDebounceRef.current) clearTimeout(countDebounceRef.current)
@@ -674,8 +716,13 @@ export default function HomePage() {
                       {AREA_LABELS[flowArea]}
                     </span>
                   )}
-                  {flowStyle && flowStep > 3 && (
+                  {flowBudget && (
                     <span className="conv-trail-item" onClick={() => goToStep(3)}>
+                      {BUDGET_LABELS[flowBudget]}
+                    </span>
+                  )}
+                  {flowStyle && flowStep > 4 && (
+                    <span className="conv-trail-item" onClick={() => goToStep(4)}>
                       {STYLE_LABELS[flowStyle]}
                     </span>
                   )}
@@ -707,10 +754,22 @@ export default function HomePage() {
                 </div>
               )}
 
-              {/* Step 3: スタイル */}
+              {/* Step 3: 予算 */}
               {flowStep === 3 && flowTransition !== 'exiting' && (
                 <div className={`conv-step ${flowTransition === 'entering' ? 'conv-entering' : ''}`}>
-                  <BinaryText key={`q3-${flowStep}`} text="こだわりはありますか？" className="conv-question" />
+                  <BinaryText key={`q3-${flowStep}`} text="ご予算はどれくらいですか？" className="conv-question" />
+                  <div className="conv-chips">
+                    {BUDGETS.map(b => (
+                      <button key={b.key} className="conv-chip" onClick={() => answerBudget(b.key)}>{b.label}</button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Step 4: スタイル */}
+              {flowStep === 4 && flowTransition !== 'exiting' && (
+                <div className={`conv-step ${flowTransition === 'entering' ? 'conv-entering' : ''}`}>
+                  <BinaryText key={`q4-${flowStep}`} text="こだわりはありますか？" className="conv-question" />
                   <div className="conv-chips">
                     {STYLES.map(s => (
                       <button key={s.key} className="conv-chip" onClick={() => answerStyle(s.key)}>{s.label}</button>
@@ -733,8 +792,8 @@ export default function HomePage() {
                 </div>
               )}
 
-              {/* Step 4: Results — reco cards + food type re-select */}
-              {flowStep >= 4 && !searched && (
+              {/* Step 5: Results — reco cards + food type re-select */}
+              {flowStep >= 5 && !searched && (
                 <div className="conv-reco">
                   {recoLoading ? (
                     <div className="conv-question" style={{ padding: '0 24px' }}>探しています...</div>
