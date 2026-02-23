@@ -1261,6 +1261,16 @@ export const MenuSearchApi = {
   },
 };
 
+// Top menus API (public, no auth)
+export const TopMenusApi = {
+  fetch: async (slug: string, limit = 5, lang = 'ja'): Promise<{ result: { menus: VisionMenuItem[]; total: number } }> => {
+    const params = new URLSearchParams({ limit: String(limit), lang });
+    const resp = await fetch(`${API_BASE_URL}/restaurants/public/${encodeURIComponent(slug)}/top-menus?${params}`);
+    if (!resp.ok) throw new Error('Top menus failed');
+    return resp.json();
+  },
+};
+
 // Contribution/Suggestion API (public, no auth)
 export interface SuggestionRequest {
   menu_uid: string;

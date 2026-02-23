@@ -683,17 +683,6 @@ export default function HomePage() {
         </header>
 
         <div className="explore-body">
-          {/* Search */}
-          <div className="explore-search-wrap">
-            <Search size={16} className="explore-search-icon" />
-            <input
-              className="explore-search"
-              type="text"
-              placeholder="卵不使用・ハラール・昆布だし・店名で検索"
-              value={query}
-              onChange={e => handleSearch(e.target.value)}
-            />
-          </div>
 
           {/* City filter — searched only */}
           {searched && (
@@ -746,12 +735,13 @@ export default function HomePage() {
                 </div>
               )}
 
-              {/* Fixed count bar */}
+              {/* Count bar — prominent */}
               {flowStep >= 1 && (
                 <div className="conv-count-bar">
                   <span className="conv-count-num-static">
                     {flowLoading ? '...' : `${flowCount ?? '—'} / ${stats?.total_menus?.toLocaleString() || '—'}`}
                   </span>
+                  <span className="conv-count-label">品のNFGデータ</span>
                   {flowCount !== null && flowCount > 0 && (
                     <button className="conv-chip conv-chip-small" onClick={() => handleViewResults()}>今すぐ見る</button>
                   )}
@@ -926,6 +916,20 @@ export default function HomePage() {
                   )}
                 </div>
               )}
+              {/* Search — secondary, at bottom of flow */}
+              <div className="explore-search-wrap explore-search-secondary">
+                <div className="explore-search-sub">もっと細かく探す</div>
+                <div style={{ position: 'relative' }}>
+                  <Search size={16} className="explore-search-icon" />
+                  <input
+                    className="explore-search"
+                    type="text"
+                    placeholder="卵不使用・ハラール・昆布だし・店名で検索"
+                    value={query}
+                    onChange={e => handleSearch(e.target.value)}
+                  />
+                </div>
+              </div>
             </>
           )}
         </div>
