@@ -1574,7 +1574,7 @@ export default function CapturePage({
                             <div className={`nfg-card-body${expanded ? ' expanded' : ''}`}>
                               {/* === 第一階層: Food Graph + 説明 + アレルゲン === */}
                               <div className="nfg-card-primary">
-                                {vi.taste_values && Object.keys(vi.taste_values).length > 0 && (() => {
+                                {vi.taste_values && Object.keys(vi.taste_values).length > 0 && !((vi as any).dish_category === 'drink' && (() => { const vals = Object.values(vi.taste_values as Record<string,number>); return Math.max(...vals) - Math.min(...vals) <= 3; })()) && (() => {
                                   const axes = ['umami','richness','saltiness','sweetness','spiciness','lightness','sourness','bitterness'] as const;
                                   const labelsJa: Record<string,string> = {umami:"旨味",richness:"コク",saltiness:"塩味",sweetness:"甘味",spiciness:"辛味",lightness:"新鮮",sourness:"酸味",bitterness:"苦味"};
                                   const labelsEn: Record<string,string> = {umami:"Umami",richness:"Rich",saltiness:"Salty",sweetness:"Sweet",spiciness:"Spicy",lightness:"Fresh",sourness:"Sour",bitterness:"Bitter"};
