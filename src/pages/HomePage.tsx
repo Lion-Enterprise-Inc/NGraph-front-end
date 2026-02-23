@@ -180,6 +180,39 @@ function BinaryField() {
   return <canvas ref={canvasRef} className="matrix-rain" />
 }
 
+function BinaryText({ text, className }: { text: string; className?: string }) {
+  const [decoded, setDecoded] = useState(0)
+  const [noise, setNoise] = useState<string[]>([])
+
+  useEffect(() => {
+    setDecoded(0)
+    const noiseId = setInterval(() => {
+      setNoise(Array.from({ length: text.length }, () => Math.random() > 0.5 ? '1' : '0'))
+    }, 40)
+    // small delay before decoding starts — let noise settle
+    const startDelay = setTimeout(() => {
+      const decodeId = setInterval(() => {
+        setDecoded(prev => {
+          if (prev >= text.length) { clearInterval(decodeId); clearInterval(noiseId); return prev }
+          return prev + 1
+        })
+      }, 50)
+      return () => clearInterval(decodeId)
+    }, 300)
+    return () => { clearInterval(noiseId); clearTimeout(startDelay) }
+  }, [text])
+
+  return (
+    <div className={className}>
+      {text.split('').map((char, i) => (
+        <span key={i} className={i < decoded ? 'bt-decoded' : 'bt-noise'}>
+          {i < decoded ? char : (char === ' ' ? '\u00A0' : noise[i] || '0')}
+        </span>
+      ))}
+    </div>
+  )
+}
+
 const NFG_TRIGGER_WORDS = [
   '食べたい', 'おすすめ', '向け', '向き', '接待', '宴会', 'ランチ', 'デザート',
   '海鮮', '刺身', '寿司', '天ぷら', 'ラーメン', 'そば', '焼き鳥', '鍋',
@@ -662,7 +695,7 @@ export default function HomePage() {
               {/* Step 1: 状況 */}
               {flowStep === 1 && flowTransition !== 'exiting' && (
                 <div className={`conv-step ${flowTransition === 'entering' ? 'conv-entering' : ''}`}>
-                  <div className="conv-question">今日はどんなお店探し？</div>
+                  <BinaryText key={`q1-${flowStep}`} text="今日はどんなお店探し？" className="conv-question" />
                   <div className="conv-chips">
                     {SITUATIONS.map(s => (
                       <button key={s.key} className="conv-chip" onClick={() => answerSituation(s.key)}>{s.label}</button>
@@ -675,7 +708,7 @@ export default function HomePage() {
               {/* Step 2: 制約 */}
               {flowStep === 2 && flowTransition !== 'exiting' && (
                 <div className={`conv-step ${flowTransition === 'entering' ? 'conv-entering' : ''}`}>
-                  <div className="conv-question">外せない条件は？</div>
+                  <BinaryText key={`q2-${flowStep}`} text="外せない条件は？" className="conv-question" />
                   <div className="conv-section-label">食事制約</div>
                   <div className="conv-chips">
                     {DIETS.map(d => (
@@ -699,7 +732,7 @@ export default function HomePage() {
               {/* Step 3: 気分 */}
               {flowStep === 3 && flowTransition !== 'exiting' && (
                 <div className={`conv-step ${flowTransition === 'entering' ? 'conv-entering' : ''}`}>
-                  <div className="conv-question">今の気分は？</div>
+                  <BinaryText key={`q3-${flowStep}`} text="今の気分は？" className="conv-question" />
                   <div className="conv-chips">
                     {MOODS.map(m => (
                       <button key={m.key} className="conv-chip" onClick={() => answerMood(m.key)}>{m.label}</button>
@@ -712,7 +745,7 @@ export default function HomePage() {
               {/* Step 4: 好奇心 */}
               {flowStep === 4 && flowTransition !== 'exiting' && (
                 <div className={`conv-step ${flowTransition === 'entering' ? 'conv-entering' : ''}`}>
-                  <div className="conv-question">どんな発見がしたい？</div>
+                  <BinaryText key={`q4-${flowStep}`} text="どんな発見がしたい？" className="conv-question" />
                   <div className="conv-chips">
                     {CURIOSITIES.map(c => (
                       <button key={c.key} className="conv-chip" onClick={() => answerCuriosity(c.key)}>{c.label}</button>
@@ -729,7 +762,7 @@ export default function HomePage() {
                     <div className="conv-question">探しています...</div>
                   ) : recoCards.length > 0 ? (
                     <>
-                      <div className="conv-reco-title">{recoFallback ? 'ぴったりは見つからなかったけど…こちらはどう？' : 'AIのおすすめ'}</div>
+                      <BinaryText key={`reco-${recoFallback}`} text={recoFallback ? 'ぴったりは見つからなかったけど…こちらはどう？' : 'AIのおすすめ'} className="conv-reco-title" />
                       <div className="conv-reco-cards">
                         {recoCards.map(r => (
                           <button

@@ -6173,6 +6173,14 @@ textarea.form-input {
   margin-bottom: 16px;
   letter-spacing: 0.02em;
 }
+.conv-question .bt-noise {
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  color: rgba(16,163,127,0.2);
+  font-size: 13px;
+}
+.conv-question .bt-decoded {
+  color: rgba(16,163,127,0.7);
+}
 .conv-section-label {
   font-size: 11px;
   color: #555;
