@@ -6374,56 +6374,28 @@ textarea.form-input {
   transform: translateX(-50%);
   width: 100%;
   max-width: 430px;
-  padding: 12px 24px 36px;
+  padding: 12px 24px 32px;
   background: linear-gradient(to top, #0a0a0a 72%, transparent);
   z-index: 100;
+  text-align: center;
 }
-.flow-count-row {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
+.flow-count-binary {
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-size: 12px;
+  color: rgba(16,163,127,0.5);
   margin-bottom: 10px;
+  letter-spacing: 0.05em;
 }
-.flow-count-num {
-  font-family: 'DM Serif Display', serif;
-  font-size: 32px;
-  color: var(--color-accent);
-  line-height: 1;
-  transition: all 0.3s ease;
+.flow-count-binary .bt-noise {
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  color: rgba(16,163,127,0.15);
+  font-size: 12px;
 }
-.flow-count-unit { font-size: 12px; color: #555; }
-.flow-count-status { font-size: 11px; color: #444; }
-.flow-actions {
+.flow-count-binary .bt-decoded {
+  color: rgba(16,163,127,0.5);
+}
+.flow-bottom-actions {
   display: flex;
   gap: 8px;
-  opacity: 0;
-  transform: translateY(6px);
-  transition: all 0.3s ease;
-  pointer-events: none;
+  justify-content: center;
 }
-.flow-actions.show { opacity: 1; transform: translateY(0); pointer-events: all; }
-.flow-btn-primary {
-  flex: 1.3;
-  padding: 13px;
-  border-radius: 11px;
-  background: var(--color-accent);
-  border: none;
-  color: #0a0a0a;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-.flow-btn-primary:hover { background: #4fd1a5; }
-.flow-btn-secondary {
-  flex: 1;
-  padding: 13px;
-  border-radius: 11px;
-  background: transparent;
-  border: 1px solid rgba(255,255,255,0.07);
-  color: #555;
-  font-size: 13px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-.flow-btn-secondary:hover { border-color: rgba(16,163,127,0.3); color: #888; }

@@ -816,18 +816,16 @@ export default function HomePage() {
       {/* Bottom bar */}
       {!searched && flowStep >= 2 && activeFilterCount > 0 && (
         <div className="flow-bottombar">
-          <div className="flow-count-row">
-            <div>
-              <span className="flow-count-num">{flowLoading ? '...' : flowCount !== null ? flowCount : '—'}</span>
-              <span className="flow-count-unit"> 件</span>
-            </div>
-            <span className="flow-count-status">{activeFilterCount}項目で絞り込み中</span>
-          </div>
-          <div className="flow-actions show">
-            <button className="flow-btn-primary" onClick={() => handleViewResults()}>
+          <BinaryText
+            key={`count-${flowCount}-${flowLoading}`}
+            text={flowLoading ? '...' : flowCount !== null ? `${flowCount} / ${stats?.total_menus?.toLocaleString() || '—'}` : '—'}
+            className="flow-count-binary"
+          />
+          <div className="flow-bottom-actions">
+            <button className="conv-chip" onClick={() => handleViewResults()}>
               今すぐ見る
             </button>
-            <button className="flow-btn-secondary" onClick={() => advanceStep()}>
+            <button className="conv-chip conv-chip-skip" onClick={() => advanceStep()}>
               もっと絞る ↓
             </button>
           </div>
