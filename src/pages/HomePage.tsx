@@ -266,6 +266,7 @@ export default function HomePage() {
   const [recoCards, setRecoCards] = useState<SemanticSearchRestaurant[]>([])
   const [recoLoading, setRecoLoading] = useState(false)
   const [recoTotal, setRecoTotal] = useState(0)
+  const [recoFallback, setRecoFallback] = useState(false)
 
   // Auto-start flow
   useEffect(() => {
@@ -453,10 +454,19 @@ export default function HomePage() {
   const fetchRecommendations = async (curiosityOverride?: string) => {
     const params = buildFlowParams(curiosityOverride)
     setRecoLoading(true)
+    setRecoFallback(false)
     try {
       const res = await SemanticSearchApi.search({ ...params, size: 3 })
-      setRecoCards(res.result.restaurants)
-      setRecoTotal(res.result.count)
+      if (res.result.restaurants.length > 0) {
+        setRecoCards(res.result.restaurants)
+        setRecoTotal(res.result.count)
+      } else {
+        // fallback: フィルタ外して福井のおすすめを出す
+        const fallback = await SemanticSearchApi.search({ area: city || undefined, size: 3 })
+        setRecoCards(fallback.result.restaurants)
+        setRecoTotal(fallback.result.count)
+        setRecoFallback(true)
+      }
     } catch {
       setRecoCards([])
       setRecoTotal(0)
@@ -495,7 +505,7 @@ export default function HomePage() {
     if (step <= 1) setFlowSituation(null)
     if (step <= 2) { setFlowDiets(new Set()); setFlowAllergens(new Set()) }
     if (step <= 3) setFlowMood(null)
-    if (step <= 4) { setFlowCuriosity(null); setRecoCards([]); setRecoTotal(0) }
+    if (step <= 4) { setFlowCuriosity(null); setRecoCards([]); setRecoTotal(0); setRecoFallback(false) }
     setFlowStep(step)
     setFlowTransition('idle')
   }
@@ -511,6 +521,7 @@ export default function HomePage() {
     setFlowTransition('idle')
     setRecoCards([])
     setRecoTotal(0)
+    setRecoFallback(false)
   }
 
   const fetchFlowCount = useCallback(async () => {
@@ -723,7 +734,7 @@ export default function HomePage() {
                     <div className="conv-question">探しています...</div>
                   ) : recoCards.length > 0 ? (
                     <>
-                      <div className="conv-reco-title">AIのおすすめ</div>
+                      <div className="conv-reco-title">{recoFallback ? 'ぴったりは見つからなかったけど…こちらはどう？' : 'AIのおすすめ'}</div>
                       <div className="conv-reco-cards">
                         {recoCards.map(r => (
                           <button
@@ -763,8 +774,8 @@ export default function HomePage() {
                     </>
                   ) : (
                     <div className="conv-step">
-                      <div className="conv-question">条件に合うお店が見つかりませんでした</div>
-                      <button className="conv-next" onClick={resetFlow}>やり直す</button>
+                      <div className="conv-question">もう少し条件を変えてみよう</div>
+                      <button className="conv-next" onClick={resetFlow}>はじめから探す</button>
                     </div>
                   )}
                 </div>
