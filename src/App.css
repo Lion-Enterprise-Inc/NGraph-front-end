@@ -6167,9 +6167,9 @@ textarea.form-input {
 }
 .conv-question {
   font-family: 'Noto Sans JP', sans-serif;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 500;
-  color: #ccc;
+  color: rgba(16,163,127,0.7);
   margin-bottom: 16px;
   letter-spacing: 0.02em;
 }
@@ -6186,25 +6186,26 @@ textarea.form-input {
   gap: 8px;
 }
 .conv-chip {
-  padding: 10px 18px;
-  border-radius: 100px;
-  border: 1px solid rgba(255,255,255,0.08);
-  background: rgba(255,255,255,0.03);
-  color: #999;
-  font-size: 14px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-size: 13px;
   font-family: 'Noto Sans JP', sans-serif;
   cursor: pointer;
   transition: all 0.15s ease;
   user-select: none;
 }
 .conv-chip:hover {
-  border-color: rgba(200,169,110,0.35);
-  color: #ccc;
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+  background: rgba(16,163,127,0.08);
 }
 .conv-chip.selected {
-  border-color: #c8a96e;
-  background: rgba(200,169,110,0.1);
-  color: #e8d4a8;
+  border-color: var(--color-accent);
+  background: rgba(16,163,127,0.12);
+  color: #4fd1a5;
 }
 .conv-chip-skip {
   color: #444;
@@ -6214,16 +6215,16 @@ textarea.form-input {
 .conv-chip-skip:hover { color: #666; }
 .conv-next {
   margin-top: 16px;
-  padding: 10px 28px;
-  border-radius: 100px;
-  border: 1px solid rgba(200,169,110,0.3);
+  padding: 8px 24px;
+  border-radius: 20px;
+  border: 1px solid rgba(16,163,127,0.3);
   background: transparent;
-  color: #c8a96e;
+  color: var(--color-accent);
   font-size: 13px;
   cursor: pointer;
   transition: all 0.2s;
 }
-.conv-next:hover { background: rgba(200,169,110,0.08); }
+.conv-next:hover { background: rgba(16,163,127,0.08); }
 
 /* Trail */
 .conv-trail {
@@ -6236,9 +6237,9 @@ textarea.form-input {
 .conv-trail-item {
   padding: 4px 12px;
   border-radius: 100px;
-  background: rgba(200,169,110,0.08);
-  border: 1px solid rgba(200,169,110,0.15);
-  color: #c8a96e;
+  background: rgba(16,163,127,0.08);
+  border: 1px solid rgba(16,163,127,0.15);
+  color: var(--color-accent);
   font-size: 11px;
   cursor: pointer;
   transition: all 0.15s;
@@ -6248,7 +6249,7 @@ textarea.form-input {
   from { opacity: 0; transform: scale(0.9); }
   to { opacity: 1; transform: scale(1); }
 }
-.conv-trail-item:hover { background: rgba(200,169,110,0.15); }
+.conv-trail-item:hover { background: rgba(16,163,127,0.15); }
 .conv-reset {
   font-size: 11px;
   color: #444;
@@ -6259,26 +6260,32 @@ textarea.form-input {
 
 /* NFG recommendation cards */
 .conv-reco {
-  padding: 0 24px 20px;
+  padding: 0 0 20px;
   animation: convFadeIn 0.3s ease both;
 }
 .conv-reco-title {
   font-family: 'Noto Sans JP', sans-serif;
-  font-size: 14px;
-  color: #888;
+  font-size: 13px;
+  color: rgba(16,163,127,0.6);
   margin-bottom: 12px;
+  padding: 0 24px;
 }
 .conv-reco-cards {
   display: flex;
-  flex-direction: column;
-  gap: 10px;
+  gap: 12px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  padding: 0 24px 8px;
+  scrollbar-width: none;
 }
+.conv-reco-cards::-webkit-scrollbar { display: none; }
 .conv-reco-card {
-  display: block;
-  width: 100%;
+  flex: 0 0 260px;
+  scroll-snap-align: start;
   padding: 14px 16px;
   border-radius: 12px;
-  border: 1px solid rgba(200,169,110,0.12);
+  border: 1px solid rgba(16,163,127,0.12);
   background: rgba(255,255,255,0.02);
   cursor: pointer;
   transition: all 0.2s;
@@ -6286,15 +6293,15 @@ textarea.form-input {
   text-decoration: none;
 }
 .conv-reco-card:hover {
-  border-color: rgba(200,169,110,0.35);
-  background: rgba(200,169,110,0.04);
+  border-color: rgba(16,163,127,0.35);
+  background: rgba(16,163,127,0.04);
 }
 .conv-reco-restaurant {
   font-family: 'Noto Sans JP', sans-serif;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 500;
-  color: #e8d4a8;
-  margin-bottom: 4px;
+  color: #e0e0e0;
+  margin-bottom: 6px;
 }
 .conv-reco-reasons {
   display: flex;
@@ -6305,23 +6312,23 @@ textarea.form-input {
 .conv-reco-tag {
   padding: 2px 8px;
   border-radius: 100px;
-  background: rgba(200,169,110,0.08);
+  background: rgba(16,163,127,0.08);
   font-size: 10px;
-  color: #c8a96e;
+  color: var(--color-accent);
 }
 .conv-reco-score {
   padding: 2px 8px;
   border-radius: 100px;
-  background: rgba(200,169,110,0.12);
+  background: rgba(16,163,127,0.12);
   font-size: 10px;
-  color: #e8d4a8;
+  color: #4fd1a5;
   font-weight: 600;
 }
 .conv-reco-meta {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-top: 6px;
+  margin-top: 8px;
 }
 .conv-reco-city {
   font-size: 11px;
@@ -6329,26 +6336,27 @@ textarea.form-input {
 }
 .conv-reco-link {
   font-size: 11px;
-  color: #c8a96e;
+  color: var(--color-accent);
   text-decoration: none;
   transition: color 0.15s;
 }
-.conv-reco-link:hover { color: #e8d4a8; }
+.conv-reco-link:hover { color: #4fd1a5; }
 .conv-reco-more {
   margin-top: 12px;
   display: block;
   text-align: center;
-  padding: 10px;
-  border-radius: 100px;
+  padding: 8px;
+  border-radius: 20px;
   border: 1px solid rgba(255,255,255,0.06);
   background: transparent;
   color: #555;
   font-size: 12px;
   cursor: pointer;
   transition: all 0.15s;
-  width: 100%;
+  width: calc(100% - 48px);
+  margin-left: 24px;
 }
-.conv-reco-more:hover { color: #888; border-color: rgba(200,169,110,0.2); }
+.conv-reco-more:hover { color: #888; border-color: rgba(16,163,127,0.2); }
 
 /* Bottom bar */
 .flow-bottombar {
@@ -6371,7 +6379,7 @@ textarea.form-input {
 .flow-count-num {
   font-family: 'DM Serif Display', serif;
   font-size: 32px;
-  color: #c8a96e;
+  color: var(--color-accent);
   line-height: 1;
   transition: all 0.3s ease;
 }
@@ -6390,7 +6398,7 @@ textarea.form-input {
   flex: 1.3;
   padding: 13px;
   border-radius: 11px;
-  background: #c8a96e;
+  background: var(--color-accent);
   border: none;
   color: #0a0a0a;
   font-size: 14px;
@@ -6398,7 +6406,7 @@ textarea.form-input {
   cursor: pointer;
   transition: background 0.2s;
 }
-.flow-btn-primary:hover { background: #e8d4a8; }
+.flow-btn-primary:hover { background: #4fd1a5; }
 .flow-btn-secondary {
   flex: 1;
   padding: 13px;
@@ -6410,4 +6418,4 @@ textarea.form-input {
   cursor: pointer;
   transition: all 0.2s;
 }
-.flow-btn-secondary:hover { border-color: rgba(200,169,110,0.3); color: #888; }
+.flow-btn-secondary:hover { border-color: rgba(16,163,127,0.3); color: #888; }

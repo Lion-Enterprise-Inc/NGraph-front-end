@@ -608,34 +608,29 @@ export default function HomePage() {
             />
           </div>
 
-          {/* City filter */}
-          <div className="explore-filters">
-            {searched && (
+          {/* City filter — searched only */}
+          {searched && (
+            <div className="explore-filters">
               <button
                 className={`explore-filter-pill ${!city ? 'active' : ''}`}
                 onClick={() => handleCity('')}
               >
                 すべて <span className="explore-filter-count">{totalAll}</span>
               </button>
-            )}
-            {cities.map(c => (
-              <button
-                key={c.city}
-                className={`explore-filter-pill glow-target ${city === c.city ? 'active' : ''}`}
-                onClick={() => handleCity(c.city)}
-              >
-                {c.city} <span className="explore-filter-count">{c.count}</span>
-              </button>
-            ))}
-          </div>
+              {cities.map(c => (
+                <button
+                  key={c.city}
+                  className={`explore-filter-pill ${city === c.city ? 'active' : ''}`}
+                  onClick={() => handleCity(c.city)}
+                >
+                  {c.city} <span className="explore-filter-count">{c.count}</span>
+                </button>
+              ))}
+            </div>
+          )}
 
           {!searched && (
             <>
-              {stats && (
-                <div className="explore-landing-stats glow-target">
-                  {stats.total_restaurants.toLocaleString()} 店舗 · {stats.total_menus.toLocaleString()} メニュー · {stats.cities} 都市
-                </div>
-              )}
 
               {/* Answer Trail */}
               {flowStep > 1 && (
