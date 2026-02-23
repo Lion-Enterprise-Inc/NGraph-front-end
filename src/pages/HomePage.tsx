@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { Search } from 'lucide-react'
-import { ExploreApi, SemanticSearchApi, MenuSearchApi, SearchRestaurant, NfgSearchRestaurant, SemanticSearchRestaurant, MenuSearchItem, CityCount, PlatformStats } from '../services/api'
+import { ExploreApi, SemanticSearchApi, SearchRestaurant, NfgSearchRestaurant, SemanticSearchRestaurant, CityCount, PlatformStats } from '../services/api'
 
 interface Particle {
   x: number; y: number
@@ -226,50 +226,30 @@ function isNfgQuery(q: string): boolean {
   return NFG_TRIGGER_WORDS.some(w => q.includes(w))
 }
 
-const SITUATIONS = [
-  { key: 'solo', label: 'ひとり' },
-  { key: 'date', label: 'デート' },
-  { key: 'friends', label: '友人と' },
-  { key: 'family', label: '家族で' },
-  { key: 'business', label: '接待・宴会' },
-]
-const SITUATION_LABELS: Record<string, string> = Object.fromEntries(SITUATIONS.map(s => [s.key, s.label]))
-
-const DIETS = [
-  { key: 'halal', label: 'ハラール' },
-  { key: 'vegetarian', label: 'ベジタリアン' },
-  { key: 'gluten_free', label: 'グルテンフリー' },
-]
-const ALLERGENS = [
-  { key: 'egg', label: '卵×' },
-  { key: 'shrimp', label: 'えび×' },
-  { key: 'crab', label: 'かに×' },
-  { key: 'wheat', label: '小麦×' },
-  { key: 'milk', label: '乳×' },
-  { key: 'fish', label: '魚×' },
-]
-
-const MOODS = [
-  { key: 'hearty', label: 'がっつり食事' },
-  { key: 'drinking', label: '飲みメイン' },
-  { key: 'budget', label: 'コスパ重視' },
-  { key: 'spicy', label: '辛いもの' },
-  { key: 'local', label: '福井の名物' },
-]
-const MOOD_LABELS: Record<string, string> = Object.fromEntries(MOODS.map(m => [m.key, m.label]))
-
-const GENRES = [
-  { key: 'meat', label: '肉料理', q: '肉' },
-  { key: 'seafood', label: '魚・海鮮', q: '魚,海鮮' },
-  { key: 'sashimi', label: '刺身', category: 'sashimi' },
-  { key: 'sushi', label: '寿司', category: 'sushi' },
-  { key: 'nabe', label: '鍋', category: 'nabe' },
-  { key: 'ramen', label: 'ラーメン・麺', category: 'ramen,soba' },
-  { key: 'rice', label: 'ご飯もの', category: 'rice' },
-  { key: 'tempura', label: '天ぷら', category: 'tempura' },
-  { key: 'yakitori', label: '焼き鳥', category: 'yakitori' },
+// Step 1: 食ジャンル — 最大の絞り込み（mood/category/q統合）
+const FOOD_TYPES = [
+  { key: 'seafood', label: '海鮮・お刺身', q: '海鮮,刺身', category: 'sashimi,sushi' },
+  { key: 'meat', label: '肉料理', q: '肉', mood: 'hearty' },
+  { key: 'nabe', label: '鍋・温かい料理', category: 'nabe' },
+  { key: 'ramen', label: '麺類', category: 'ramen,soba' },
+  { key: 'drinking', label: 'お酒に合うつまみ', mood: 'drinking' },
+  { key: 'local', label: '福井の名物', mood: 'local' },
+  { key: 'light', label: 'あっさり・ヘルシー', q: 'サラダ,酢の物,蒸し', category: 'salad,steamed,vinegared' },
+  { key: 'spicy', label: '辛いもの', mood: 'spicy' },
 ] as const
-const GENRE_LABELS: Record<string, string> = Object.fromEntries(GENRES.map(g => [g.key, g.label]))
+const FOOD_TYPE_LABELS: Record<string, string> = Object.fromEntries(FOOD_TYPES.map(f => [f.key, f.label]))
+
+// Step 2: 制約 — 安全フィルタ（マルチセレクト、スキップ可）
+const RESTRICTIONS = [
+  { key: 'shrimp', label: 'えび・かに×', no: 'shrimp,crab' },
+  { key: 'egg', label: '卵×', no: 'egg' },
+  { key: 'wheat', label: '小麦×', no: 'wheat' },
+  { key: 'milk', label: '乳×', no: 'milk' },
+  { key: 'soba', label: 'そば×', no: 'soba' },
+  { key: 'halal', label: 'ハラール', diet: 'halal' },
+  { key: 'vegetarian', label: 'ベジタリアン', diet: 'vegetarian' },
+  { key: 'gluten_free', label: 'グルテンフリー', diet: 'gluten_free' },
+] as const
 
 type SortKey = 'score' | 'menu_count'
 type DisplayRestaurant = (SearchRestaurant | NfgSearchRestaurant) & { _nfg?: boolean }
@@ -292,14 +272,8 @@ export default function HomePage() {
 
   // Conversational flow state
   const [flowStep, setFlowStep] = useState(0)
-  const [flowSituation, setFlowSituation] = useState<string | null>(null)
-  const [flowDiets, setFlowDiets] = useState<Set<string>>(new Set())
-  const [flowAllergens, setFlowAllergens] = useState<Set<string>>(new Set())
-  const [flowMood, setFlowMood] = useState<string | null>(null)
-  const [flowGenre, setFlowGenre] = useState<string | null>(null)
-  const [menuCards, setMenuCards] = useState<MenuSearchItem[]>([])
-  const [menuLoading, setMenuLoading] = useState(false)
-  const [menuTotal, setMenuTotal] = useState(0)
+  const [flowFoodType, setFlowFoodType] = useState<string | null>(null)
+  const [flowRestrictions, setFlowRestrictions] = useState<Set<string>>(new Set())
   const [flowTransition, setFlowTransition] = useState<'idle' | 'exiting' | 'entering'>('idle')
   const [flowCount, setFlowCount] = useState<number | null>(null)
   const [flowLoading, setFlowLoading] = useState(false)
@@ -471,29 +445,45 @@ export default function HomePage() {
     }, 200)
   }
 
-  const answerSituation = (key: string) => {
-    setFlowSituation(key)
-    advanceStep()
-  }
-
-  const buildFlowParams = (): Record<string, string> => {
+  const buildFlowParams = (foodTypeKey?: string): Record<string, string> => {
     const params: Record<string, string> = {}
-    if (flowDiets.size > 0) params.diet = Array.from(flowDiets).join(',')
-    if (flowAllergens.size > 0) params.no = Array.from(flowAllergens).join(',')
-    if (flowMood) params.mood = flowMood
+    const ft = FOOD_TYPES.find(f => f.key === (foodTypeKey || flowFoodType))
+    if (ft) {
+      if ('mood' in ft && ft.mood) params.mood = ft.mood
+      if ('category' in ft && ft.category) params.category = ft.category
+      if ('q' in ft && ft.q) params.q = ft.q
+    }
+    const diets: string[] = []
+    const allergens: string[] = []
+    for (const key of flowRestrictions) {
+      const r = RESTRICTIONS.find(x => x.key === key)
+      if (r && 'diet' in r && r.diet) diets.push(r.diet)
+      if (r && 'no' in r && r.no) allergens.push(r.no)
+    }
+    if (diets.length > 0) params.diet = diets.join(',')
+    if (allergens.length > 0) params.no = allergens.join(',')
     if (city) params.area = city
     return params
   }
 
-  const buildMenuParams = (): Record<string, string> => {
-    const params = buildFlowParams()
-    const genre = GENRES.find(g => g.key === flowGenre)
-    if (genre && 'category' in genre && genre.category) params.category = genre.category
-    if (genre && 'q' in genre && genre.q) params.q = genre.q
-    return params
+  const answerFoodType = async (key: string) => {
+    setFlowFoodType(key)
+    setFlowTransition('exiting')
+    setTimeout(() => {
+      setFlowStep(2)
+      setFlowTransition('entering')
+      setTimeout(() => setFlowTransition('idle'), 300)
+    }, 200)
   }
 
-  const fetchRecommendations = async () => {
+  const finishRestrictions = async () => {
+    setFlowTransition('exiting')
+    setTimeout(() => {
+      setFlowStep(3)
+      setFlowTransition('entering')
+      setTimeout(() => setFlowTransition('idle'), 300)
+    }, 200)
+    // Fetch reco cards
     const params = buildFlowParams()
     setRecoLoading(true)
     setRecoFallback(false)
@@ -513,117 +503,29 @@ export default function HomePage() {
       setRecoTotal(0)
     } finally {
       setRecoLoading(false)
-    }
-  }
-
-  const answerMoodAndFetchReco = async (key: string) => {
-    setFlowMood(key)
-    setFlowTransition('exiting')
-    setTimeout(() => {
-      setFlowStep(4)
-      setFlowTransition('entering')
-      setTimeout(() => setFlowTransition('idle'), 300)
-    }, 200)
-    // fetch reco cards (use key directly since state update is async)
-    const params: Record<string, string> = {}
-    if (flowDiets.size > 0) params.diet = Array.from(flowDiets).join(',')
-    if (flowAllergens.size > 0) params.no = Array.from(flowAllergens).join(',')
-    params.mood = key
-    if (city) params.area = city
-    setRecoLoading(true)
-    setRecoFallback(false)
-    try {
-      const res = await SemanticSearchApi.search({ ...params, size: 3 })
-      if (res.result.restaurants.length > 0) {
-        setRecoCards(res.result.restaurants)
-        setRecoTotal(res.result.count)
-      } else {
-        const fallback = await SemanticSearchApi.search({ area: city || undefined, size: 3 })
-        setRecoCards(fallback.result.restaurants)
-        setRecoTotal(fallback.result.count)
-        setRecoFallback(true)
-      }
-    } catch {
-      setRecoCards([])
-      setRecoTotal(0)
-    } finally {
-      setRecoLoading(false)
-    }
-  }
-
-  const answerGenre = async (key: string) => {
-    setFlowGenre(key)
-    setFlowTransition('exiting')
-    setTimeout(() => {
-      setFlowStep(5)
-      setFlowTransition('entering')
-      setTimeout(() => setFlowTransition('idle'), 300)
-    }, 200)
-    // fetch menu cards
-    setMenuLoading(true)
-    const params = buildFlowParams()
-    const genre = GENRES.find(g => g.key === key)
-    if (genre && 'category' in genre && genre.category) params.category = genre.category
-    if (genre && 'q' in genre && genre.q) params.q = genre.q
-    try {
-      const res = await MenuSearchApi.search({ ...params, size: 20 })
-      setMenuCards(res.result.menus)
-      setMenuTotal(res.result.count)
-    } catch {
-      setMenuCards([])
-      setMenuTotal(0)
-    } finally {
-      setMenuLoading(false)
-    }
-  }
-
-  const skipStep = () => {
-    if (flowStep === 3) {
-      // Step 3 skip → show reco cards at step 4
-      setFlowTransition('exiting')
-      setTimeout(() => {
-        setFlowStep(4)
-        setFlowTransition('entering')
-        setTimeout(() => setFlowTransition('idle'), 300)
-      }, 200)
-      fetchRecommendations()
-    } else {
-      advanceStep()
     }
   }
 
   const goToStep = (step: number) => {
-    if (step <= 1) setFlowSituation(null)
-    if (step <= 2) { setFlowDiets(new Set()); setFlowAllergens(new Set()) }
-    if (step <= 3) { setFlowMood(null); setRecoCards([]); setRecoTotal(0); setRecoFallback(false) }
-    if (step <= 4) { setFlowGenre(null); setMenuCards([]); setMenuTotal(0) }
+    if (step <= 1) { setFlowFoodType(null) }
+    if (step <= 2) { setFlowRestrictions(new Set()); setRecoCards([]); setRecoTotal(0); setRecoFallback(false) }
     setFlowStep(step)
     setFlowTransition('idle')
   }
 
   const resetFlow = () => {
-    setFlowSituation(null)
-    setFlowDiets(new Set())
-    setFlowAllergens(new Set())
-    setFlowMood(null)
-    setFlowGenre(null)
+    setFlowFoodType(null)
+    setFlowRestrictions(new Set())
     setFlowStep(1)
     setFlowCount(null)
     setFlowTransition('idle')
     setRecoCards([])
     setRecoTotal(0)
     setRecoFallback(false)
-    setMenuCards([])
-    setMenuTotal(0)
   }
 
   const fetchFlowCount = useCallback(async () => {
-    const params: Record<string, string> = {}
-    if (flowDiets.size > 0) params.diet = Array.from(flowDiets).join(',')
-    if (flowAllergens.size > 0) params.no = Array.from(flowAllergens).join(',')
-    if (flowMood) params.mood = flowMood
-    if (city) params.area = city
-
+    const params = buildFlowParams()
     setFlowLoading(true)
     try {
       const res = await SemanticSearchApi.count(params)
@@ -633,7 +535,8 @@ export default function HomePage() {
     } finally {
       setFlowLoading(false)
     }
-  }, [flowDiets, flowAllergens, flowMood, city])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [flowFoodType, flowRestrictions, city])
 
   useEffect(() => {
     if (countDebounceRef.current) clearTimeout(countDebounceRef.current)
@@ -661,8 +564,6 @@ export default function HomePage() {
       setLoading(false)
     }
   }
-
-  const activeFilterCount = flowDiets.size + flowAllergens.size + (flowMood ? 1 : 0)
 
   const totalAll = cities.reduce((s, c) => s + c.count, 0)
 
@@ -711,88 +612,56 @@ export default function HomePage() {
               {/* Answer Trail */}
               {flowStep > 1 && (
                 <div className="conv-trail">
-                  {flowSituation && (
+                  {flowFoodType && (
                     <span className="conv-trail-item" onClick={() => goToStep(1)}>
-                      {SITUATION_LABELS[flowSituation]}
+                      {FOOD_TYPE_LABELS[flowFoodType]}
                     </span>
                   )}
-                  {(flowDiets.size > 0 || flowAllergens.size > 0) && (
+                  {flowRestrictions.size > 0 && (
                     <span className="conv-trail-item" onClick={() => goToStep(2)}>
-                      {[...Array.from(flowDiets).map(d => DIETS.find(x => x.key === d)?.label || d), ...Array.from(flowAllergens).map(a => ALLERGENS.find(x => x.key === a)?.label || a)].join(', ')}
-                    </span>
-                  )}
-                  {flowMood && flowStep > 3 && (
-                    <span className="conv-trail-item" onClick={() => goToStep(3)}>
-                      {MOOD_LABELS[flowMood]}
-                    </span>
-                  )}
-                  {flowGenre && flowStep > 4 && (
-                    <span className="conv-trail-item" onClick={() => goToStep(4)}>
-                      {GENRE_LABELS[flowGenre]}
+                      {Array.from(flowRestrictions).map(k => RESTRICTIONS.find(x => x.key === k)?.label || k).join(', ')}
                     </span>
                   )}
                   <span className="conv-reset" onClick={resetFlow}>← やり直す</span>
                 </div>
               )}
 
-              {/* Step 1: 状況 */}
+              {/* Step 1: 何を食べたい？ */}
               {flowStep === 1 && flowTransition !== 'exiting' && (
                 <div className={`conv-step ${flowTransition === 'entering' ? 'conv-entering' : ''}`}>
-                  <BinaryText key={`q1-${flowStep}`} text="今日はどんなお店探しですか？" className="conv-question" />
+                  <BinaryText key={`q1-${flowStep}`} text="何を食べたいですか？" className="conv-question" />
                   <div className="conv-chips">
-                    {SITUATIONS.map(s => (
-                      <button key={s.key} className="conv-chip" onClick={() => answerSituation(s.key)}>{s.label}</button>
+                    {FOOD_TYPES.map(f => (
+                      <button key={f.key} className="conv-chip" onClick={() => answerFoodType(f.key)}>{f.label}</button>
                     ))}
-                    <button className="conv-chip conv-chip-skip" onClick={() => skipStep()}>スキップ →</button>
                   </div>
                 </div>
               )}
 
-              {/* Step 2: 制約 */}
+              {/* Step 2: 避けたいもの */}
               {flowStep === 2 && flowTransition !== 'exiting' && (
                 <div className={`conv-step ${flowTransition === 'entering' ? 'conv-entering' : ''}`}>
-                  <BinaryText key={`q2-${flowStep}`} text="外せない条件はありますか？" className="conv-question" />
-                  <div className="conv-section-label">食事制約</div>
+                  <BinaryText key={`q2-${flowStep}`} text="避けたいものはありますか？" className="conv-question" />
                   <div className="conv-chips">
-                    {DIETS.map(d => (
-                      <button key={d.key} className={`conv-chip ${flowDiets.has(d.key) ? 'selected' : ''}`}
-                        onClick={() => toggleSet(flowDiets, setFlowDiets, d.key)}>{d.label}</button>
+                    {RESTRICTIONS.map(r => (
+                      <button key={r.key} className={`conv-chip ${flowRestrictions.has(r.key) ? 'selected' : ''}`}
+                        onClick={() => toggleSet(flowRestrictions, setFlowRestrictions, r.key)}>{r.label}</button>
                     ))}
                   </div>
-                  <div className="conv-section-label">除外したいアレルゲン</div>
-                  <div className="conv-chips">
-                    {ALLERGENS.map(a => (
-                      <button key={a.key} className={`conv-chip ${flowAllergens.has(a.key) ? 'selected' : ''}`}
-                        onClick={() => toggleSet(flowAllergens, setFlowAllergens, a.key)}>{a.label}</button>
-                    ))}
-                  </div>
-                  <button className="conv-next" onClick={() => advanceStep()}>
-                    {flowDiets.size + flowAllergens.size > 0 ? '次へ →' : 'スキップ →'}
+                  <button className="conv-next" onClick={() => finishRestrictions()}>
+                    {flowRestrictions.size > 0 ? '結果を見る →' : '特になし →'}
                   </button>
                 </div>
               )}
 
-              {/* Step 3: 気分 */}
-              {flowStep === 3 && flowTransition !== 'exiting' && (
-                <div className={`conv-step ${flowTransition === 'entering' ? 'conv-entering' : ''}`}>
-                  <BinaryText key={`q3-${flowStep}`} text="今の気分はいかがですか？" className="conv-question" />
-                  <div className="conv-chips">
-                    {MOODS.map(m => (
-                      <button key={m.key} className="conv-chip" onClick={() => answerMoodAndFetchReco(m.key)}>{m.label}</button>
-                    ))}
-                    <button className="conv-chip conv-chip-skip" onClick={() => skipStep()}>スキップ →</button>
-                  </div>
-                </div>
-              )}
-
-              {/* Step 4: Restaurant reco cards + genre selection */}
-              {flowStep >= 4 && !searched && (recoLoading || recoCards.length > 0) && (
+              {/* Step 3: Results — reco cards */}
+              {flowStep >= 3 && !searched && (recoLoading || recoCards.length > 0) && (
                 <div className="conv-reco">
                   {recoLoading ? (
                     <div className="conv-question" style={{ padding: '0 24px' }}>探しています...</div>
                   ) : recoCards.length > 0 ? (
                     <>
-                      <BinaryText key={`reco-${recoFallback}`} text={recoFallback ? 'ぴったりは見つからなかったけど…こちらはどう？' : 'AIのおすすめ'} className="conv-reco-title" />
+                      <BinaryText key={`reco-${recoFallback}`} text={recoFallback ? 'ぴったりは見つからなかったけど…こちらはどうですか？' : 'おすすめのお店'} className="conv-reco-title" />
                       <div className="conv-reco-cards">
                         {recoCards.map(r => (
                           <button
@@ -834,71 +703,6 @@ export default function HomePage() {
                     <div className="conv-step">
                       <div className="conv-question">もう少し条件を変えてみよう</div>
                       <button className="conv-next" onClick={resetFlow}>はじめから探す</button>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Step 4: Genre selection — "何食べたい？" */}
-              {flowStep === 4 && flowTransition !== 'exiting' && (
-                <div className={`conv-step ${flowTransition === 'entering' ? 'conv-entering' : ''}`}>
-                  <BinaryText key={`q4-${flowStep}`} text="何を食べたいですか？" className="conv-question" />
-                  <div className="conv-chips">
-                    {GENRES.map(g => (
-                      <button key={g.key} className="conv-chip" onClick={() => answerGenre(g.key)}>{g.label}</button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Step 5: Menu cards */}
-              {flowStep >= 5 && !searched && (
-                <div className="conv-reco">
-                  {menuLoading ? (
-                    <div className="conv-question" style={{ padding: '0 24px' }}>メニューを探しています...</div>
-                  ) : menuCards.length > 0 ? (
-                    <>
-                      <BinaryText key={`menu-${flowGenre}`} text={`${GENRE_LABELS[flowGenre || ''] || ''} ${menuTotal}品`} className="conv-reco-title" />
-                      <div className="conv-menu-cards">
-                        {menuCards.map(m => (
-                          <button
-                            key={m.uid}
-                            className="conv-menu-card"
-                            onClick={() => router.push(`/capture?restaurant=${encodeURIComponent(m.restaurant_slug)}`)}
-                          >
-                            <div className="conv-menu-name">{m.name_jp}</div>
-                            <div className="conv-menu-meta">{m.restaurant_name} · {m.category_label}</div>
-                            <div className="conv-menu-price">&yen;{m.price.toLocaleString()}</div>
-                            {m.narrative_snippet && (
-                              <div className="conv-menu-narrative">{m.narrative_snippet}</div>
-                            )}
-                            {m.featured_tags.length > 0 && (
-                              <div className="conv-menu-tags">
-                                {m.featured_tags.map((tag, i) => (
-                                  <span key={i} className="conv-menu-tag">{tag}</span>
-                                ))}
-                              </div>
-                            )}
-                            <div className="conv-reco-meta">
-                              <span className="conv-reco-city">{m.restaurant_city || '福井'}</span>
-                              <a
-                                className="conv-reco-link"
-                                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(m.restaurant_name + ' ' + (m.restaurant_city || '福井'))}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                onClick={e => e.stopPropagation()}
-                              >
-                                Google Map →
-                              </a>
-                            </div>
-                          </button>
-                        ))}
-                      </div>
-                    </>
-                  ) : (
-                    <div className="conv-step">
-                      <div className="conv-question">このジャンルのメニューが見つかりませんでした</div>
-                      <button className="conv-next" onClick={() => goToStep(4)}>ジャンルを変える</button>
                     </div>
                   )}
                 </div>
