@@ -6366,26 +6366,23 @@ textarea.form-input {
 }
 .conv-reco-more:hover { background: rgba(16,163,127,0.08); }
 
-/* Inline count */
-.conv-count-inline {
-  padding: 8px 24px 16px;
+/* Fixed count bar */
+.conv-count-bar {
+  padding: 6px 24px 12px;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
-.conv-count-num {
+.conv-count-num-static {
   font-family: 'SF Mono', 'Fira Code', monospace;
   font-size: 13px;
-  color: rgba(16,163,127,0.45);
+  color: rgba(16,163,127,0.5);
   letter-spacing: 0.05em;
+  transition: color 0.3s;
 }
-.conv-count-num .bt-noise {
-  font-family: 'SF Mono', 'Fira Code', monospace;
-  color: rgba(16,163,127,0.15);
-  font-size: 13px;
-}
-.conv-count-num .bt-decoded {
-  color: rgba(16,163,127,0.45);
+.conv-chip-small {
+  padding: 5px 12px;
+  font-size: 12px;
 }
 
 /* Menu cards */

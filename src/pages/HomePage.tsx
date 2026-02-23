@@ -746,6 +746,18 @@ export default function HomePage() {
                 </div>
               )}
 
+              {/* Fixed count bar */}
+              {flowStep >= 1 && (
+                <div className="conv-count-bar">
+                  <span className="conv-count-num-static">
+                    {flowLoading ? '...' : `${flowCount ?? '—'} / ${stats?.total_menus?.toLocaleString() || '—'}`}
+                  </span>
+                  {flowCount !== null && flowCount > 0 && (
+                    <button className="conv-chip conv-chip-small" onClick={() => handleViewResults()}>今すぐ見る</button>
+                  )}
+                </div>
+              )}
+
               {/* Step 1: 状況 */}
               {flowStep === 1 && flowTransition !== 'exiting' && (
                 <div className={`conv-step ${flowTransition === 'entering' ? 'conv-entering' : ''}`}>
@@ -793,20 +805,6 @@ export default function HomePage() {
                     ))}
                     <button className="conv-chip conv-chip-skip" onClick={() => skipStep()}>スキップ →</button>
                   </div>
-                </div>
-              )}
-
-              {/* Inline count — visible during steps 1-3 */}
-              {flowStep >= 1 && flowStep <= 3 && (
-                <div className="conv-count-inline">
-                  <BinaryText
-                    key={`count-${flowCount}-${flowLoading}`}
-                    text={flowLoading ? '...' : `${flowCount ?? '—'} / ${stats?.total_menus?.toLocaleString() || '—'}`}
-                    className="conv-count-num"
-                  />
-                  {flowCount !== null && flowCount > 0 && (
-                    <button className="conv-chip" onClick={() => handleViewResults()}>今すぐ見る</button>
-                  )}
                 </div>
               )}
 
