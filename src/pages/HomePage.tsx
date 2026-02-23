@@ -226,20 +226,40 @@ function isNfgQuery(q: string): boolean {
   return NFG_TRIGGER_WORDS.some(w => q.includes(w))
 }
 
-// Step 1: 食ジャンル — 最大の絞り込み（mood/category/q統合）
+// Step 1: 食ジャンル — 最大の絞り込み
 const FOOD_TYPES = [
-  { key: 'seafood', label: '海鮮・お刺身', q: '海鮮,刺身', category: 'sashimi,sushi' },
-  { key: 'meat', label: '肉料理', q: '肉', mood: 'hearty' },
-  { key: 'nabe', label: '鍋・温かい料理', category: 'nabe' },
+  { key: 'crab', label: '蟹', q: '蟹,カニ,かに,ズワイ,セイコ' },
+  { key: 'seafood', label: '海鮮・お刺身', q: '海鮮,刺身', category: 'sashimi' },
+  { key: 'sushi', label: '寿司', category: 'sushi' },
+  { key: 'meat', label: '肉料理', q: '肉' },
+  { key: 'nabe', label: '鍋', category: 'nabe' },
   { key: 'ramen', label: '麺類', category: 'ramen,soba' },
   { key: 'drinking', label: 'お酒に合うつまみ', mood: 'drinking' },
   { key: 'local', label: '福井の名物', mood: 'local' },
-  { key: 'light', label: 'あっさり・ヘルシー', q: 'サラダ,酢の物,蒸し', category: 'salad,steamed,vinegared' },
-  { key: 'spicy', label: '辛いもの', mood: 'spicy' },
+  { key: 'light', label: 'あっさり', q: 'サラダ,酢の物,蒸し', category: 'salad,steamed,vinegared' },
 ] as const
 const FOOD_TYPE_LABELS: Record<string, string> = Object.fromEntries(FOOD_TYPES.map(f => [f.key, f.label]))
 
-// Step 2: 制約 — 安全フィルタ（マルチセレクト、スキップ可）
+// Step 2: エリア
+const AREAS = [
+  { key: 'fukui', label: '福井駅周辺', area: '福井市' },
+  { key: 'echizen', label: '越前・鯖江', area: '越前市' },
+  { key: 'tsuruga', label: '敦賀', area: '敦賀市' },
+  { key: 'awara', label: 'あわら', area: 'あわら市' },
+  { key: 'anywhere', label: 'どこでもOK', area: '' },
+] as const
+const AREA_LABELS: Record<string, string> = Object.fromEntries(AREAS.map(a => [a.key, a.label]))
+
+// Step 3: スタイル
+const STYLES = [
+  { key: 'hearty', label: 'がっつり', mood: 'hearty' },
+  { key: 'budget', label: 'コスパ重視', mood: 'budget' },
+  { key: 'drinking', label: '飲みメイン', mood: 'drinking' },
+  { key: 'none', label: '特にこだわりなし', mood: '' },
+] as const
+const STYLE_LABELS: Record<string, string> = Object.fromEntries(STYLES.map(s => [s.key, s.label]))
+
+// 制約 — 安全フィルタ（別枠）
 const RESTRICTIONS = [
   { key: 'shrimp', label: 'えび・かに×', no: 'shrimp,crab' },
   { key: 'egg', label: '卵×', no: 'egg' },
@@ -273,7 +293,10 @@ export default function HomePage() {
   // Conversational flow state
   const [flowStep, setFlowStep] = useState(0)
   const [flowFoodType, setFlowFoodType] = useState<string | null>(null)
+  const [flowArea, setFlowArea] = useState<string | null>(null)
+  const [flowStyle, setFlowStyle] = useState<string | null>(null)
   const [flowRestrictions, setFlowRestrictions] = useState<Set<string>>(new Set())
+  const [showRestrictions, setShowRestrictions] = useState(false)
   const [flowTransition, setFlowTransition] = useState<'idle' | 'exiting' | 'entering'>('idle')
   const [flowCount, setFlowCount] = useState<number | null>(null)
   const [flowLoading, setFlowLoading] = useState(false)
@@ -445,14 +468,30 @@ export default function HomePage() {
     }, 200)
   }
 
-  const buildFlowParams = (foodTypeKey?: string): Record<string, string> => {
+  const buildFlowParams = (overrides?: { foodType?: string; areaKey?: string; styleKey?: string }): Record<string, string> => {
     const params: Record<string, string> = {}
-    const ft = FOOD_TYPES.find(f => f.key === (foodTypeKey || flowFoodType))
+    const ftKey = overrides?.foodType ?? flowFoodType
+    const ft = FOOD_TYPES.find(f => f.key === ftKey)
     if (ft) {
       if ('mood' in ft && ft.mood) params.mood = ft.mood
       if ('category' in ft && ft.category) params.category = ft.category
       if ('q' in ft && ft.q) params.q = ft.q
     }
+    // Area
+    const aKey = overrides?.areaKey ?? flowArea
+    if (aKey) {
+      const a = AREAS.find(x => x.key === aKey)
+      if (a && a.area) params.area = a.area
+    } else if (city) {
+      params.area = city
+    }
+    // Style (mood override if not already set by food type)
+    const sKey = overrides?.styleKey ?? flowStyle
+    if (sKey) {
+      const s = STYLES.find(x => x.key === sKey)
+      if (s && s.mood && !params.mood) params.mood = s.mood
+    }
+    // Restrictions
     const diets: string[] = []
     const allergens: string[] = []
     for (const key of flowRestrictions) {
@@ -462,29 +501,10 @@ export default function HomePage() {
     }
     if (diets.length > 0) params.diet = diets.join(',')
     if (allergens.length > 0) params.no = allergens.join(',')
-    if (city) params.area = city
     return params
   }
 
-  const answerFoodType = async (key: string) => {
-    setFlowFoodType(key)
-    setFlowTransition('exiting')
-    setTimeout(() => {
-      setFlowStep(2)
-      setFlowTransition('entering')
-      setTimeout(() => setFlowTransition('idle'), 300)
-    }, 200)
-  }
-
-  const finishRestrictions = async () => {
-    setFlowTransition('exiting')
-    setTimeout(() => {
-      setFlowStep(3)
-      setFlowTransition('entering')
-      setTimeout(() => setFlowTransition('idle'), 300)
-    }, 200)
-    // Fetch reco cards
-    const params = buildFlowParams()
+  const fetchReco = async (params: Record<string, string>) => {
     setRecoLoading(true)
     setRecoFallback(false)
     try {
@@ -493,7 +513,7 @@ export default function HomePage() {
         setRecoCards(res.result.restaurants)
         setRecoTotal(res.result.count)
       } else {
-        const fallback = await SemanticSearchApi.search({ area: city || undefined, size: 3 })
+        const fallback = await SemanticSearchApi.search({ size: 3 })
         setRecoCards(fallback.result.restaurants)
         setRecoTotal(fallback.result.count)
         setRecoFallback(true)
@@ -506,16 +526,48 @@ export default function HomePage() {
     }
   }
 
+  const answerFoodType = (key: string) => {
+    setFlowFoodType(key)
+    advanceStep()
+  }
+
+  const answerArea = (key: string) => {
+    setFlowArea(key)
+    advanceStep()
+  }
+
+  const answerStyle = (key: string) => {
+    setFlowStyle(key)
+    setFlowTransition('exiting')
+    setTimeout(() => {
+      setFlowStep(4)
+      setFlowTransition('entering')
+      setTimeout(() => setFlowTransition('idle'), 300)
+    }, 200)
+    // Fetch results with all params including this style
+    fetchReco(buildFlowParams({ styleKey: key }))
+  }
+
+  // Re-select food type from results view → update results
+  const switchFoodType = (key: string) => {
+    setFlowFoodType(key)
+    fetchReco(buildFlowParams({ foodType: key }))
+  }
+
   const goToStep = (step: number) => {
     if (step <= 1) { setFlowFoodType(null) }
-    if (step <= 2) { setFlowRestrictions(new Set()); setRecoCards([]); setRecoTotal(0); setRecoFallback(false) }
+    if (step <= 2) { setFlowArea(null) }
+    if (step <= 3) { setFlowStyle(null); setRecoCards([]); setRecoTotal(0); setRecoFallback(false) }
     setFlowStep(step)
     setFlowTransition('idle')
   }
 
   const resetFlow = () => {
     setFlowFoodType(null)
+    setFlowArea(null)
+    setFlowStyle(null)
     setFlowRestrictions(new Set())
+    setShowRestrictions(false)
     setFlowStep(1)
     setFlowCount(null)
     setFlowTransition('idle')
@@ -536,7 +588,7 @@ export default function HomePage() {
       setFlowLoading(false)
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [flowFoodType, flowRestrictions, city])
+  }, [flowFoodType, flowArea, flowStyle, flowRestrictions, city])
 
   useEffect(() => {
     if (countDebounceRef.current) clearTimeout(countDebounceRef.current)
@@ -617,9 +669,14 @@ export default function HomePage() {
                       {FOOD_TYPE_LABELS[flowFoodType]}
                     </span>
                   )}
-                  {flowRestrictions.size > 0 && (
+                  {flowArea && (
                     <span className="conv-trail-item" onClick={() => goToStep(2)}>
-                      {Array.from(flowRestrictions).map(k => RESTRICTIONS.find(x => x.key === k)?.label || k).join(', ')}
+                      {AREA_LABELS[flowArea]}
+                    </span>
+                  )}
+                  {flowStyle && flowStep > 3 && (
+                    <span className="conv-trail-item" onClick={() => goToStep(3)}>
+                      {STYLE_LABELS[flowStyle]}
                     </span>
                   )}
                   <span className="conv-reset" onClick={resetFlow}>← やり直す</span>
@@ -638,30 +695,52 @@ export default function HomePage() {
                 </div>
               )}
 
-              {/* Step 2: 避けたいもの */}
+              {/* Step 2: エリア */}
               {flowStep === 2 && flowTransition !== 'exiting' && (
                 <div className={`conv-step ${flowTransition === 'entering' ? 'conv-entering' : ''}`}>
-                  <BinaryText key={`q2-${flowStep}`} text="避けたいものはありますか？" className="conv-question" />
+                  <BinaryText key={`q2-${flowStep}`} text="どのあたりで探しますか？" className="conv-question" />
                   <div className="conv-chips">
-                    {RESTRICTIONS.map(r => (
-                      <button key={r.key} className={`conv-chip ${flowRestrictions.has(r.key) ? 'selected' : ''}`}
-                        onClick={() => toggleSet(flowRestrictions, setFlowRestrictions, r.key)}>{r.label}</button>
+                    {AREAS.map(a => (
+                      <button key={a.key} className="conv-chip" onClick={() => answerArea(a.key)}>{a.label}</button>
                     ))}
                   </div>
-                  <button className="conv-next" onClick={() => finishRestrictions()}>
-                    {flowRestrictions.size > 0 ? '結果を見る →' : '特になし →'}
-                  </button>
                 </div>
               )}
 
-              {/* Step 3: Results — reco cards */}
-              {flowStep >= 3 && !searched && (recoLoading || recoCards.length > 0) && (
+              {/* Step 3: スタイル */}
+              {flowStep === 3 && flowTransition !== 'exiting' && (
+                <div className={`conv-step ${flowTransition === 'entering' ? 'conv-entering' : ''}`}>
+                  <BinaryText key={`q3-${flowStep}`} text="こだわりはありますか？" className="conv-question" />
+                  <div className="conv-chips">
+                    {STYLES.map(s => (
+                      <button key={s.key} className="conv-chip" onClick={() => answerStyle(s.key)}>{s.label}</button>
+                    ))}
+                  </div>
+                  <button
+                    className="conv-restriction-link"
+                    onClick={() => setShowRestrictions(!showRestrictions)}
+                  >
+                    {showRestrictions ? 'アレルギー設定を閉じる' : 'アレルギー・食事制限がある方'}
+                  </button>
+                  {showRestrictions && (
+                    <div className="conv-chips" style={{ marginTop: 8 }}>
+                      {RESTRICTIONS.map(r => (
+                        <button key={r.key} className={`conv-chip ${flowRestrictions.has(r.key) ? 'selected' : ''}`}
+                          onClick={() => toggleSet(flowRestrictions, setFlowRestrictions, r.key)}>{r.label}</button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Step 4: Results — reco cards + food type re-select */}
+              {flowStep >= 4 && !searched && (
                 <div className="conv-reco">
                   {recoLoading ? (
                     <div className="conv-question" style={{ padding: '0 24px' }}>探しています...</div>
                   ) : recoCards.length > 0 ? (
                     <>
-                      <BinaryText key={`reco-${recoFallback}`} text={recoFallback ? 'ぴったりは見つからなかったけど…こちらはどうですか？' : 'おすすめのお店'} className="conv-reco-title" />
+                      <BinaryText key={`reco-${recoFallback}-${flowFoodType}`} text={recoFallback ? 'ぴったりは見つからなかったけど…こちらはどうですか？' : 'おすすめのお店'} className="conv-reco-title" />
                       <div className="conv-reco-cards">
                         {recoCards.map(r => (
                           <button
@@ -698,6 +777,15 @@ export default function HomePage() {
                           他 {recoTotal - 3} 件を見る
                         </button>
                       )}
+                      {/* Food type re-select — change and update results */}
+                      <div className="conv-switch">
+                        <div className="conv-switch-label">他のジャンルも見る</div>
+                        <div className="conv-chips">
+                          {FOOD_TYPES.filter(f => f.key !== flowFoodType).map(f => (
+                            <button key={f.key} className="conv-chip conv-chip-small" onClick={() => switchFoodType(f.key)}>{f.label}</button>
+                          ))}
+                        </div>
+                      </div>
                     </>
                   ) : (
                     <div className="conv-step">
