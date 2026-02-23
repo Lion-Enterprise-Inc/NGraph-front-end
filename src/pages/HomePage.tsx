@@ -735,13 +735,12 @@ export default function HomePage() {
                 </div>
               )}
 
-              {/* Count bar — prominent */}
+              {/* Count bar — subtle, near search */}
               {flowStep >= 1 && (
                 <div className="conv-count-bar">
                   <span className="conv-count-num-static">
                     {flowLoading ? '...' : `${flowCount ?? '—'} / ${stats?.total_menus?.toLocaleString() || '—'}`}
                   </span>
-                  <span className="conv-count-label">品のNFGデータ</span>
                   {flowCount !== null && flowCount > 0 && (
                     <button className="conv-chip conv-chip-small" onClick={() => handleViewResults()}>今すぐ見る</button>
                   )}
@@ -751,7 +750,7 @@ export default function HomePage() {
               {/* Step 1: 状況 */}
               {flowStep === 1 && flowTransition !== 'exiting' && (
                 <div className={`conv-step ${flowTransition === 'entering' ? 'conv-entering' : ''}`}>
-                  <BinaryText key={`q1-${flowStep}`} text="今日はどんなお店探し？" className="conv-question" />
+                  <BinaryText key={`q1-${flowStep}`} text="今日はどんなお店探しですか？" className="conv-question" />
                   <div className="conv-chips">
                     {SITUATIONS.map(s => (
                       <button key={s.key} className="conv-chip" onClick={() => answerSituation(s.key)}>{s.label}</button>
@@ -764,7 +763,7 @@ export default function HomePage() {
               {/* Step 2: 制約 */}
               {flowStep === 2 && flowTransition !== 'exiting' && (
                 <div className={`conv-step ${flowTransition === 'entering' ? 'conv-entering' : ''}`}>
-                  <BinaryText key={`q2-${flowStep}`} text="外せない条件は？" className="conv-question" />
+                  <BinaryText key={`q2-${flowStep}`} text="外せない条件はありますか？" className="conv-question" />
                   <div className="conv-section-label">食事制約</div>
                   <div className="conv-chips">
                     {DIETS.map(d => (
@@ -788,7 +787,7 @@ export default function HomePage() {
               {/* Step 3: 気分 */}
               {flowStep === 3 && flowTransition !== 'exiting' && (
                 <div className={`conv-step ${flowTransition === 'entering' ? 'conv-entering' : ''}`}>
-                  <BinaryText key={`q3-${flowStep}`} text="今の気分は？" className="conv-question" />
+                  <BinaryText key={`q3-${flowStep}`} text="今の気分はいかがですか？" className="conv-question" />
                   <div className="conv-chips">
                     {MOODS.map(m => (
                       <button key={m.key} className="conv-chip" onClick={() => answerMoodAndFetchReco(m.key)}>{m.label}</button>
@@ -855,7 +854,7 @@ export default function HomePage() {
               {/* Step 4: Genre selection — "何食べたい？" */}
               {flowStep === 4 && flowTransition !== 'exiting' && (
                 <div className={`conv-step ${flowTransition === 'entering' ? 'conv-entering' : ''}`}>
-                  <BinaryText key={`q4-${flowStep}`} text="何食べたい？" className="conv-question" />
+                  <BinaryText key={`q4-${flowStep}`} text="何を食べたいですか？" className="conv-question" />
                   <div className="conv-chips">
                     {GENRES.map(g => (
                       <button key={g.key} className="conv-chip" onClick={() => answerGenre(g.key)}>{g.label}</button>
