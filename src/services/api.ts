@@ -1172,7 +1172,7 @@ export interface SemanticSearchRestaurant {
 export const SemanticSearchApi = {
   count: async (params: {
     diet?: string; no?: string; scene?: string;
-    mood?: string; area?: string; q?: string;
+    mood?: string; area?: string; q?: string; category?: string;
   }): Promise<{ result: { count: number } }> => {
     const sp = new URLSearchParams();
     if (params.diet) sp.append('diet', params.diet);
@@ -1181,13 +1181,14 @@ export const SemanticSearchApi = {
     if (params.mood) sp.append('mood', params.mood);
     if (params.area) sp.append('area', params.area);
     if (params.q) sp.append('q', params.q);
+    if (params.category) sp.append('category', params.category);
     const resp = await fetch(`${API_BASE_URL}/restaurants/search/count?${sp}`);
     if (!resp.ok) throw new Error('Count failed');
     return resp.json();
   },
   search: async (params: {
     diet?: string; no?: string; scene?: string;
-    mood?: string; area?: string; q?: string;
+    mood?: string; area?: string; q?: string; category?: string;
     page?: number; size?: number;
   }): Promise<{
     result: { count: number; restaurants: SemanticSearchRestaurant[]; page: number; size: number; pages: number };
@@ -1199,6 +1200,7 @@ export const SemanticSearchApi = {
     if (params.mood) sp.append('mood', params.mood);
     if (params.area) sp.append('area', params.area);
     if (params.q) sp.append('q', params.q);
+    if (params.category) sp.append('category', params.category);
     sp.append('page', String(params.page || 1));
     sp.append('size', String(params.size || 30));
     const resp = await fetch(`${API_BASE_URL}/restaurants/search/semantic?${sp}`);
