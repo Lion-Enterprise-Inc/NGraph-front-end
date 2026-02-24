@@ -4895,9 +4895,9 @@ textarea.form-input {
 /* ========== HubScreen ========== */
 /* ========== Explore Page (GitHub-style) ========== */
 .explore-page {
-  min-height: 100vh;
-  background: var(--color-bg);
+  height: 100%;
   overflow-y: auto;
+  background: var(--color-bg);
 }
 
 .explore-landing {

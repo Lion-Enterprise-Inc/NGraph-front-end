@@ -1376,12 +1376,12 @@ export default function CapturePage({
   };
 
   // Sync handleNewChat + handleSelectThread to AppContext for sidebar
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     setOnNewChat(() => handleNewChat);
     setOnSelectThread(() => handleSelectThread);
     return () => { setOnNewChat(null); setOnSelectThread(null); };
-  }, []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [restaurantSlug]);
 
   return (
     <div className="page capture-page" onClick={handleBackgroundClick}>
