@@ -469,18 +469,27 @@ export default function HomePage() {
     setQuery(q)
     setPage(1)
     if (debounceRef.current) clearTimeout(debounceRef.current)
-    if (q.length >= 1) {
+    if (q.length >= 2) {
       setSearched(true)
-      debounceRef.current = setTimeout(() => fetchRestaurants(q, city, 1), 300)
-    } else {
-      setSearched(!!city)
+      debounceRef.current = setTimeout(() => fetchRestaurants(q, city, 1), 400)
+    } else if (q.length === 0) {
       if (city) {
+        setSearched(true)
         debounceRef.current = setTimeout(() => fetchRestaurants('', city, 1), 300)
       } else {
+        setSearched(false)
         setRestaurants([])
         setTotal(0)
         setPages(1)
       }
+    }
+    // 1文字目は遷移もフェッチもしない — 入力継続を待つ
+  }
+
+  const handleSearchSubmit = () => {
+    if (query.length >= 1) {
+      setSearched(true)
+      fetchRestaurants(query, city, 1)
     }
   }
 
@@ -944,6 +953,7 @@ export default function HomePage() {
                     placeholder={fl.searchPlaceholder}
                     value={query}
                     onChange={e => handleSearch(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && handleSearchSubmit()}
                   />
                 </div>
               </div>
@@ -965,6 +975,7 @@ export default function HomePage() {
                 placeholder={fl.searchPlaceholder}
                 value={query}
                 onChange={e => handleSearch(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && handleSearchSubmit()}
                 autoFocus
               />
             </div>
