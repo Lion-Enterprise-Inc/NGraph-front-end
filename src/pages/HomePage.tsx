@@ -13,7 +13,7 @@ interface Particle {
   life: number; maxLife: number
 }
 
-function BinaryField() {
+function BinaryField({ pulseRef }: { pulseRef?: React.RefObject<{ x: number; y: number; strength: number }> }) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
   useEffect(() => {
@@ -98,6 +98,23 @@ function BinaryField() {
             p.vx += (pdx / pdist) * force
             p.vy += (pdy / pdist) * force
           }
+        }
+
+        // pulse attraction (count bar)
+        if (pulseRef?.current && pulseRef.current.strength > 0.01) {
+          const pulse = pulseRef.current
+          const rect = canvas.getBoundingClientRect()
+          const px = pulse.x - rect.left
+          const py = pulse.y - rect.top
+          const pdx2 = px - p.x
+          const pdy2 = py - p.y
+          const pdist2 = Math.sqrt(pdx2 * pdx2 + pdy2 * pdy2)
+          if (pdist2 > 1) {
+            const force = pulse.strength * 0.4 * Math.min(1, 200 / pdist2)
+            p.vx += (pdx2 / pdist2) * force
+            p.vy += (pdy2 / pdist2) * force
+          }
+          pulse.strength *= 0.97
         }
 
         // dampen velocity
@@ -316,6 +333,8 @@ export default function HomePage() {
   const [sortBy, setSortBy] = useState<SortKey>('score')
   const debounceRef = useRef<ReturnType<typeof setTimeout>>()
   const pageRef = useRef<HTMLDivElement>(null)
+  const countBarRef = useRef<HTMLDivElement>(null)
+  const pulseRef = useRef({ x: 0, y: 0, strength: 0 })
 
   // Conversational flow state
   const [flowStep, setFlowStep] = useState(0)
@@ -334,6 +353,13 @@ export default function HomePage() {
   const [recoLoading, setRecoLoading] = useState(false)
   const [recoTotal, setRecoTotal] = useState(0)
   const [recoFallback, setRecoFallback] = useState(false)
+
+  // Pulse binary particles toward count bar when count changes
+  useEffect(() => {
+    if (flowCount === null || !countBarRef.current) return
+    const rect = countBarRef.current.getBoundingClientRect()
+    pulseRef.current = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2, strength: 1 }
+  }, [flowCount])
 
   // Auto-start flow
   useEffect(() => {
@@ -686,7 +712,7 @@ export default function HomePage() {
 
   return (
     <div ref={pageRef} className={`explore-page ${!searched ? 'explore-landing' : ''}`}>
-      {!searched && <BinaryField />}
+      {!searched && <BinaryField pulseRef={pulseRef} />}
       <div className={!searched ? 'explore-landing-center' : ''}>
         <header className="explore-header">
           <div className="explore-header-inner">
@@ -879,7 +905,7 @@ export default function HomePage() {
               )}
               {/* Count bar — above search */}
               {flowStep >= 1 && (
-                <div className="conv-count-bar">
+                <div className="conv-count-bar" ref={countBarRef}>
                   <span className="conv-count-num-static">
                     {flowLoading ? '...' : `${flowCount ?? '—'} / ${stats?.total_menus?.toLocaleString() || '—'}`}
                   </span>
