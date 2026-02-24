@@ -1575,11 +1575,17 @@ export default function CapturePage({
                           </div>
                         )}
                         <div className="nfg-card-badge-row">
-                          {((vi as any).verification_rank === 'A' || (vi as any).verification_rank === 'S') ? (
-                            <span className="nfg-badge nfg-badge-db">{copy.nfg.vadBadge}</span>
-                          ) : (
-                            <span className="nfg-badge nfg-badge-ai">{(copy.nfg as any).pendingBadge || '未確認'}</span>
-                          )}
+                          {(() => {
+                            const rank = (vi as any).verification_rank || 'C';
+                            const isVad = rank === 'S' || rank === 'A';
+                            return (
+                              <span className={`nfg-badge nfg-rank nfg-rank-${rank.toLowerCase()}`}>
+                                <span className="nfg-rank-source">{isVad ? 'VAD' : 'GPT-4o'}</span>
+                                <span className="nfg-rank-dot">∙</span>
+                                <span className="nfg-rank-letter">{rank}</span>
+                              </span>
+                            );
+                          })()}
                           {menuUid && (
                             <button
                               type="button"
@@ -1779,11 +1785,17 @@ export default function CapturePage({
                                   </div>
                                 )}
                                 <div className="nfg-card-badge-row">
-                                  {((vi as any).verification_rank === 'A' || (vi as any).verification_rank === 'S') ? (
-                                    <span className="nfg-badge nfg-badge-db">{copy.nfg.vadBadge}</span>
-                                  ) : (
-                                    <span className="nfg-badge nfg-badge-ai">{(copy.nfg as any).pendingBadge || '未確認'}</span>
-                                  )}
+                                  {(() => {
+                                    const rank = (vi as any).verification_rank || 'C';
+                                    const isVad = rank === 'S' || rank === 'A';
+                                    return (
+                                      <span className={`nfg-badge nfg-rank nfg-rank-${rank.toLowerCase()}`}>
+                                        <span className="nfg-rank-source">{isVad ? 'VAD' : 'GPT-4o'}</span>
+                                        <span className="nfg-rank-dot">∙</span>
+                                        <span className="nfg-rank-letter">{rank}</span>
+                                      </span>
+                                    );
+                                  })()}
                                   <button
                                     type="button"
                                     className="nfg-badge"

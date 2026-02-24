@@ -6077,6 +6077,49 @@ textarea.form-input {
   border: 1px solid rgba(255,255,255,0.08);
 }
 
+/* Rank badge — provenance + trust level */
+.nfg-rank {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-family: 'DM Mono', 'SF Mono', monospace;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+}
+.nfg-rank-source {
+  font-size: 10px;
+  opacity: 0.85;
+}
+.nfg-rank-dot {
+  font-size: 8px;
+  opacity: 0.4;
+}
+.nfg-rank-letter {
+  font-size: 12px;
+  font-weight: 700;
+}
+.nfg-rank-s {
+  background: rgba(16,163,127,0.18);
+  color: #10a37f;
+  border: 1px solid rgba(16,163,127,0.35);
+  box-shadow: 0 0 8px rgba(16,163,127,0.15);
+}
+.nfg-rank-a {
+  background: rgba(16,163,127,0.12);
+  color: #10a37f;
+  border: 1px solid rgba(16,163,127,0.25);
+}
+.nfg-rank-b {
+  background: rgba(80,200,240,0.08);
+  color: rgba(80,200,240,0.7);
+  border: 1px solid rgba(80,200,240,0.15);
+}
+.nfg-rank-c {
+  background: rgba(255,255,255,0.03);
+  color: rgba(255,255,255,0.35);
+  border: 1px solid rgba(255,255,255,0.08);
+}
+
 .nfg-taste-chart { display:flex; flex-direction:column; align-items:center; flex:1; min-width:0; }
 .nfg-fg-label { font-size:7px; letter-spacing:0.3em; color:#00e896; text-transform:uppercase; margin-bottom:2px; display:flex; align-items:center; gap:4px; font-family:'DM Mono',monospace; }
 .nfg-fg-dot { width:4px; height:4px; border-radius:50%; background:#00e896; animation:nfg-pulse 2s infinite; }
