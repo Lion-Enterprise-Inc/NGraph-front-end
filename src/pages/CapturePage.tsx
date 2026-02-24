@@ -1576,10 +1576,10 @@ export default function CapturePage({
                       </div>
                     )}
                     <div className="nfg-card-badge-row">
-                      {vi.source === 'db' ? (
+                      {((vi as any).verification_rank === 'A' || (vi as any).verification_rank === 'S') ? (
                         <span className="nfg-badge nfg-badge-db">{copy.nfg.vadBadge}</span>
                       ) : (
-                        <span className="nfg-badge nfg-badge-ai">{copy.nfg.aiBadge}</span>
+                        <span className="nfg-badge nfg-badge-ai">{(copy.nfg as any).pendingBadge || '未確認'}</span>
                       )}
                     </div>
                   </div>
@@ -1795,10 +1795,10 @@ export default function CapturePage({
                                   </div>
                                 )}
                                 <div className="nfg-card-badge-row">
-                                  {vi.source === 'db' ? (
+                                  {((vi as any).verification_rank === 'A' || (vi as any).verification_rank === 'S') ? (
                                     <span className="nfg-badge nfg-badge-db">{copy.nfg.vadBadge}</span>
                                   ) : (
-                                    <span className="nfg-badge nfg-badge-ai">{copy.nfg.aiBadge}</span>
+                                    <span className="nfg-badge nfg-badge-ai">{(copy.nfg as any).pendingBadge || '未確認'}</span>
                                   )}
                                   <button
                                     type="button"
