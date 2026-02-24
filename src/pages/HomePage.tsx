@@ -21,47 +21,38 @@ interface Particle {
   tx?: number; ty?: number // target position for portrait formation
 }
 
-// アリストテレス胸像 — 20x28 ビットマップ（1=パーティクル配置点）
-// 右向き横顔: 髪 + 額 + 目 + 鼻 + 口 + 顎 + 首 + 肩
-const ARISTOTLE_BITMAP = [
-  '00000001111100000000', // 0  頭頂
-  '00000111111110000000', // 1
-  '00001111111111000000', // 2  髪
-  '00011111111111100000', // 3
-  '00011111111111100000', // 4
-  '00011110001111110000', // 5  額
-  '00011100000111111000', // 6
-  '00011100000011111100', // 7  眉
-  '00011100001101111100', // 8  目
-  '00011100000001111100', // 9
-  '00011100000001111110', // 10 鼻梁
-  '00011110000001111110', // 11
-  '00001110000000111110', // 12 鼻先
-  '00001110000001111100', // 13
-  '00001111000011111000', // 14 口
-  '00000111000111110000', // 15
-  '00000111101111100000', // 16 顎
-  '00000011111111000000', // 17
-  '00000011111110000000', // 18 髭
-  '00000001111100000000', // 19
-  '00000001111000000000', // 20 首
-  '00000001111000000000', // 21
-  '00000001111000000000', // 22
-  '00000011111100000000', // 23 首→肩
-  '00000111111110000000', // 24
-  '00001111111111100000', // 25 肩
-  '00011111111111110000', // 26
-  '00111111111111111000', // 27
-]
-
-// ビットマップから座標リストを生成（正規化 0-1）
-const ARISTOTLE_PIXELS: [number, number][] = []
-for (let row = 0; row < ARISTOTLE_BITMAP.length; row++) {
-  for (let col = 0; col < ARISTOTLE_BITMAP[row].length; col++) {
-    if (ARISTOTLE_BITMAP[row][col] === '1') {
-      ARISTOTLE_PIXELS.push([col / 20, row / 28])
+// テキストをCanvas描画→ピクセルサンプリング
+function generateTextPixels(text: string, fontSize: number, w: number, h: number): [number, number][] {
+  if (typeof document === 'undefined') return []
+  const c = document.createElement('canvas')
+  c.width = w; c.height = h
+  const ctx = c.getContext('2d')
+  if (!ctx) return []
+  ctx.fillStyle = '#000'
+  ctx.font = `bold ${fontSize}px 'Georgia', 'Times New Roman', serif`
+  ctx.textAlign = 'center'
+  ctx.textBaseline = 'middle'
+  // 2行に分割
+  ctx.fillText('Nicomacos', w / 2, h * 0.35)
+  ctx.fillText('Food Graph', w / 2, h * 0.65)
+  const data = ctx.getImageData(0, 0, w, h).data
+  const pixels: [number, number][] = []
+  const step = 3
+  for (let y = 0; y < h; y += step) {
+    for (let x = 0; x < w; x += step) {
+      const idx = (y * w + x) * 4
+      if (data[idx + 3] > 128) {
+        pixels.push([x / w, y / h])
+      }
     }
   }
+  return pixels
+}
+
+let _textCache: [number, number][] | null = null
+function getTextPixels(): [number, number][] {
+  if (!_textCache) _textCache = generateTextPixels('NFG', 28, 240, 80)
+  return _textCache
 }
 
 function BinaryField({ pulseRef }: { pulseRef?: React.RefObject<{ x: number; y: number; strength: number }> }) {
@@ -75,19 +66,26 @@ function BinaryField({ pulseRef }: { pulseRef?: React.RefObject<{ x: number; y: 
 
     let animId: number
     let particles: Particle[] = []
-    const COUNT = 150
+    const COUNT_MIN = 20
+    const COUNT_MAX = 250
+    const GROW_INTERVAL = 2000 // add a particle every 2s
+    let targetCount = COUNT_MIN
+    let lastGrow = Date.now()
+    const COUNT = COUNT_MAX // alphas array max size
     let pointer = { x: -9999, y: -9999, active: false }
     let lastInteraction = Date.now()
     let portraitActive = false
     let portraitStrength = 0 // 0-1, fades in slowly
+    let portraitFormedAt = 0 // timestamp when fully formed
+    let portraitDone = false  // true after scatter cycle, won't re-trigger until interaction
 
     const resetIdle = () => {
       lastInteraction = Date.now()
       if (portraitActive) {
         portraitActive = false
-        // clear targets so particles drift free
         for (const p of particles) { p.tx = undefined; p.ty = undefined }
       }
+      portraitDone = false // allow next idle cycle
     }
 
     const onMove = (e: MouseEvent) => {
@@ -132,11 +130,12 @@ function BinaryField({ pulseRef }: { pulseRef?: React.RefObject<{ x: number; y: 
     const resize = () => {
       canvas.width = canvas.offsetWidth
       canvas.height = canvas.offsetHeight
-      particles = Array.from({ length: COUNT }, () => {
+      particles = Array.from({ length: COUNT_MIN }, () => {
         const p = spawn(canvas.width, canvas.height)
         p.life = Math.random() * p.maxLife
         return p
       })
+      targetCount = COUNT_MIN
     }
     resize()
     window.addEventListener('resize', resize)
@@ -151,31 +150,52 @@ function BinaryField({ pulseRef }: { pulseRef?: React.RefObject<{ x: number; y: 
       const cy = canvas.height / 2
       const radius = Math.min(canvas.width, canvas.height) * 0.45
 
+      // Grow particles over time
+      const now = Date.now()
+      if (now - lastGrow > GROW_INTERVAL && particles.length < COUNT_MAX) {
+        lastGrow = now
+        targetCount = Math.min(targetCount + 1, COUNT_MAX)
+        if (particles.length < targetCount) {
+          particles.push(spawn(canvas.width, canvas.height))
+        }
+      }
+
       // Portrait formation check (5 min idle)
       const idleMs = Date.now() - lastInteraction
-      const IDLE_THRESHOLD = 300_000 // 5 minutes
-      if (idleMs > IDLE_THRESHOLD && !portraitActive) {
+      const IDLE_THRESHOLD = 300_000 // 5 min
+      if (idleMs > IDLE_THRESHOLD && !portraitActive && !portraitDone) {
         portraitActive = true
         portraitStrength = 0
-        // Assign target positions from ARISTOTLE_PIXELS
-        const scale = Math.min(canvas.width, canvas.height) * 0.6
-        const ox = canvas.width / 2 - scale * 0.55
-        const oy = canvas.height / 2 - scale * 0.4
-        for (let i = 0; i < particles.length; i++) {
-          if (i < ARISTOTLE_PIXELS.length) {
-            const [px, py] = ARISTOTLE_PIXELS[i]
-            particles[i].tx = ox + px * scale
-            particles[i].ty = oy + py * scale
-          } else {
-            // Extra particles drift toward random portrait area
-            const rp = ARISTOTLE_PIXELS[Math.floor(Math.random() * ARISTOTLE_PIXELS.length)]
-            particles[i].tx = ox + rp[0] * scale + (Math.random() - 0.5) * 20
-            particles[i].ty = oy + rp[1] * scale + (Math.random() - 0.5) * 20
+        portraitFormedAt = 0
+        const pixels = getTextPixels()
+        if (pixels.length > 0) {
+          const scale = Math.min(canvas.width, canvas.height) * 0.7
+          const ox = canvas.width / 2 - scale * 0.5
+          const oy = canvas.height / 2 - scale * 0.5
+          for (let i = 0; i < particles.length; i++) {
+            const pi = i % pixels.length
+            const [px, py] = pixels[pi]
+            particles[i].tx = ox + px * scale + (Math.random() - 0.5) * 4
+            particles[i].ty = oy + py * scale + (Math.random() - 0.5) * 4
           }
         }
       }
       if (portraitActive) {
-        portraitStrength = Math.min(portraitStrength + 0.0008, 1)
+        portraitStrength = Math.min(portraitStrength + 0.001, 1) // ~17s to form
+        // Hold 3s after fully formed, then scatter
+        if (portraitStrength >= 0.95 && portraitFormedAt === 0) {
+          portraitFormedAt = Date.now()
+        }
+        if (portraitFormedAt > 0 && Date.now() - portraitFormedAt > 3000) {
+          portraitActive = false
+          portraitDone = true
+          for (const p of particles) {
+            p.tx = undefined; p.ty = undefined
+            const angle = Math.random() * Math.PI * 2
+            p.vx += Math.cos(angle) * 1.5
+            p.vy += Math.sin(angle) * 1.5
+          }
+        }
       } else {
         portraitStrength = Math.max(portraitStrength - 0.02, 0)
       }
