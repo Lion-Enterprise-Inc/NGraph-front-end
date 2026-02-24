@@ -933,7 +933,7 @@ export default function HomePage() {
                   ) : (
                     <span className="conv-count-num-static">
                       <BinaryText key={`fc-${flowCount}`} text={String(flowCount ?? '—')} className="conv-count-numerator" />
-                      <span className="conv-count-sep"> / {stats?.total_restaurants?.toLocaleString() || '—'}</span>
+                      <span className="conv-count-sep"> / {stats?.enriched_menus?.toLocaleString() || '—'}</span>
                     </span>
                   )}
                   {flowCount !== null && flowCount > 0 && (
