@@ -268,7 +268,7 @@ export default function CapturePage({
 
   // マイグラフ: likedMenusの味覚平均を計算
   const myTasteAvg = useMemo(() => {
-    const axes = ['umami','richness','saltiness','sweetness','spiciness','lightness','sourness','bitterness'];
+    const axes = ['umami','richness','saltiness','sweetness','spiciness','lightness','sourness','bitterness','volume','locality'];
     const entries = Object.entries(tasteCache).filter(([uid]) => likedMenus.has(uid));
     if (entries.length < 2) return null;
     const sums: Record<string, number> = {};
@@ -1588,10 +1588,10 @@ export default function CapturePage({
                                 )}
                               </div>
                               {vi.taste_values && Object.keys(vi.taste_values).length > 0 && !((vi as any).dish_category === 'drink' && (() => { const vals = Object.values(vi.taste_values as Record<string,number>); return Math.max(...vals) - Math.min(...vals) <= 3; })()) && (() => {
-                                const axes = ['umami','richness','saltiness','sweetness','spiciness','lightness','sourness','bitterness'] as const;
-                                const labelsJa: Record<string,string> = {umami:"旨味",richness:"コク",saltiness:"塩味",sweetness:"甘味",spiciness:"辛味",lightness:"新鮮",sourness:"酸味",bitterness:"苦味"};
-                                const labelsEn: Record<string,string> = {umami:"Umami",richness:"Rich",saltiness:"Salty",sweetness:"Sweet",spiciness:"Spicy",lightness:"Fresh",sourness:"Sour",bitterness:"Bitter"};
-                                const axisColors: Record<string,string> = {umami:"#00e896",richness:"#e8c050",saltiness:"#a0a0ff",sweetness:"#f0a050",spiciness:"#ff6b4a",lightness:"#80d0ff",sourness:"#50c8f0",bitterness:"#80c080"};
+                                const axes = ['umami','richness','saltiness','sweetness','spiciness','lightness','sourness','bitterness','volume','locality'] as const;
+                                const labelsJa: Record<string,string> = {umami:"旨味",richness:"コク",saltiness:"塩味",sweetness:"甘味",spiciness:"辛味",lightness:"新鮮",sourness:"酸味",bitterness:"苦味",volume:"量",locality:"地元"};
+                                const labelsEn: Record<string,string> = {umami:"Umami",richness:"Rich",saltiness:"Salty",sweetness:"Sweet",spiciness:"Spicy",lightness:"Fresh",sourness:"Sour",bitterness:"Bitter",volume:"Volume",locality:"Local"};
+                                const axisColors: Record<string,string> = {umami:"#00e896",richness:"#e8c050",saltiness:"#a0a0ff",sweetness:"#f0a050",spiciness:"#ff6b4a",lightness:"#80d0ff",sourness:"#50c8f0",bitterness:"#80c080",volume:"#c080ff",locality:"#ff80a0"};
                                 const labels = activeLanguage === 'ja' ? labelsJa : labelsEn;
                                 const N = axes.length, R = 88;
                                 const pt = (i: number, rv: number) => {
