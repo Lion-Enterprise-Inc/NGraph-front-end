@@ -251,6 +251,10 @@ export default function CapturePage({
   const [expandedCards, setExpandedCards] = useState<Record<string, Set<number>>>({});
   const [expandedDetails, setExpandedDetails] = useState<Record<string, Set<number>>>({});
   const [suggestionTarget, setSuggestionTarget] = useState<{ name_jp: string; menu_uid?: string; restaurant_uid?: string } | null>(null);
+  const [reviewOpen, setReviewOpen] = useState(false);
+  const [reviewText, setReviewText] = useState('');
+  const [reviewSubmitting, setReviewSubmitting] = useState(false);
+  const [reviewToast, setReviewToast] = useState(false);
   const [likedMenus, setLikedMenus] = useState<Set<string>>(() => {
     if (typeof window === 'undefined') return new Set();
     try { return new Set(JSON.parse(localStorage.getItem('ngraph_liked_menus') || '[]')); } catch { return new Set(); }
@@ -1486,6 +1490,16 @@ export default function CapturePage({
             />
           )}
 
+          {/* 口コミボタン */}
+          {restaurantData && (
+            <button
+              type="button"
+              className="review-btn"
+              onClick={() => setReviewOpen(true)}
+            >
+              {activeLanguage === 'ja' ? '口コミを書く' : 'Write a review'}
+            </button>
+          )}
 
         </main>
 
@@ -2129,6 +2143,71 @@ export default function CapturePage({
         menuItem={suggestionTarget || { name_jp: '' }}
         onSubmit={() => setSuggestionTarget(null)}
       />
+
+      {/* Review modal */}
+      {reviewOpen && (
+        <>
+          <div className="review-backdrop" onClick={() => setReviewOpen(false)} />
+          <div className="review-modal">
+            <div className="review-handle" />
+            <div className="review-title">
+              {activeLanguage === 'ja' ? '口コミを投稿' : 'Write a review'}
+            </div>
+            <div className="review-subtitle">
+              {restaurantData?.name || ''}
+            </div>
+            <textarea
+              className="review-textarea"
+              value={reviewText}
+              onChange={e => setReviewText(e.target.value)}
+              placeholder={activeLanguage === 'ja'
+                ? '料理の感想、お店の雰囲気、おすすめポイントなど'
+                : 'Food impressions, atmosphere, recommendations...'}
+              rows={4}
+            />
+            <button
+              type="button"
+              className="review-submit"
+              disabled={!reviewText.trim() || reviewSubmitting}
+              onClick={async () => {
+                if (!reviewText.trim() || !restaurantData?.uid) return;
+                setReviewSubmitting(true);
+                try {
+                  await ContributionApi.suggest({
+                    restaurant_uid: restaurantData.uid,
+                    field: 'review',
+                    suggested_value: reviewText.trim(),
+                    session_id: (() => {
+                      let id = localStorage.getItem('ngraph_session_id');
+                      if (!id) { id = crypto.randomUUID(); localStorage.setItem('ngraph_session_id', id); }
+                      return id;
+                    })(),
+                  });
+                  setReviewToast(true);
+                  setTimeout(() => {
+                    setReviewToast(false);
+                    setReviewText('');
+                    setReviewOpen(false);
+                  }, 1200);
+                } catch (e) {
+                  console.error('Review submit error:', e);
+                } finally {
+                  setReviewSubmitting(false);
+                }
+              }}
+            >
+              {reviewSubmitting
+                ? (activeLanguage === 'ja' ? '送信中...' : 'Sending...')
+                : (activeLanguage === 'ja' ? '投稿する' : 'Submit')}
+            </button>
+            {reviewToast && (
+              <div className="review-toast">
+                {activeLanguage === 'ja' ? '投稿しました！' : 'Review submitted!'}
+              </div>
+            )}
+          </div>
+        </>
+      )}
     </div>
   );
 }

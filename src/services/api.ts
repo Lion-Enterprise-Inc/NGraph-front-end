@@ -1281,12 +1281,12 @@ export const TopMenusApi = {
 
 // Contribution/Suggestion API (public, no auth)
 export interface SuggestionRequest {
-  menu_uid: string;
+  menu_uid?: string;
   restaurant_uid: string;
   field: string;
   suggested_value: string;
   reason?: string;
-  session_id: string;
+  session_id?: string;
 }
 
 export const ContributionApi = {
