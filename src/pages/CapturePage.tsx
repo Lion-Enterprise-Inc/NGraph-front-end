@@ -1583,6 +1583,64 @@ export default function CapturePage({
                       )}
                     </div>
                   </div>
+                  {/* 詳しく見る */}
+                  {(() => {
+                    const hasDetails = vi.narrative || (vi.serving && (vi.serving.style || vi.serving.portion || vi.serving.temperature)) || (vi.ingredients?.length > 0) || (vi.restrictions && vi.restrictions.length > 0) || vi.flavor_profile || vi.estimated_calories;
+                    if (!hasDetails) return null;
+                    const detailsOpen = isDetailsExpanded('top-menus', idx);
+                    return (
+                      <>
+                        <button
+                          type="button"
+                          className="nfg-details-toggle"
+                          onClick={() => toggleDetails('top-menus', idx)}
+                        >
+                          {detailsOpen ? (activeLanguage === 'ja' ? '閉じる' : 'Less') : (activeLanguage === 'ja' ? '詳しく見る' : 'More details')}
+                          <span className={`nfg-details-chevron${detailsOpen ? ' open' : ''}`}>▼</span>
+                        </button>
+                        <div className={`nfg-card-details${detailsOpen ? ' open' : ''}`}>
+                          {vi.narrative && (
+                            <div className="nfg-narrative">
+                              {vi.narrative.story && <div className="nfg-narrative-story">{vi.narrative.story}</div>}
+                              {vi.narrative.texture && (
+                                <div className="nfg-field"><span className="nfg-field-label">{copy.nfg.texture}</span><span className="nfg-field-value">{vi.narrative.texture}</span></div>
+                              )}
+                              {vi.narrative.how_to_eat && (
+                                <div className="nfg-field"><span className="nfg-field-label">{copy.nfg.howToEat}</span><span className="nfg-field-value">{vi.narrative.how_to_eat}</span></div>
+                              )}
+                              {vi.narrative.pairing && (
+                                <div className="nfg-field"><span className="nfg-field-label">{copy.nfg.pairing}</span><span className="nfg-field-value">{vi.narrative.pairing}</span></div>
+                              )}
+                            </div>
+                          )}
+                          {vi.serving && (vi.serving.style || vi.serving.portion || vi.serving.temperature) && (
+                            <div className="nfg-serving">
+                              <div className="nfg-field">
+                                <span className="nfg-field-label">{copy.nfg.servingStyle}</span>
+                                <span className="nfg-field-value">{[vi.serving.style, vi.serving.portion, vi.serving.temperature].filter(Boolean).join(' / ')}</span>
+                              </div>
+                            </div>
+                          )}
+                          <div className="nfg-card-fields">
+                            {vi.ingredients?.length > 0 && (
+                              <div className="nfg-field"><span className="nfg-field-label">{copy.nfg.ingredients}</span><span className="nfg-field-value">{vi.ingredients.join(activeLanguage === 'ja' ? '、' : ', ')}</span></div>
+                            )}
+                            {vi.flavor_profile && (
+                              <div className="nfg-field"><span className="nfg-field-label">{copy.nfg.flavorProfile}</span><span className="nfg-field-value">{vi.flavor_profile}</span></div>
+                            )}
+                            {vi.estimated_calories && (
+                              <div className="nfg-field"><span className="nfg-field-label">{copy.nfg.calories}</span><span className="nfg-field-value">{vi.estimated_calories}</span></div>
+                            )}
+                          </div>
+                          {vi.confidence != null && vi.confidence > 0 && (
+                            <div className="nfg-card-badge-row" style={{ marginBottom: 0 }}>
+                              <span className="nfg-badge nfg-badge-confidence">{copy.nfg.confidence} {vi.confidence}%</span>
+                            </div>
+                          )}
+                        </div>
+                      </>
+                    );
+                  })()}
                 </div>
               ))}
             </div>
