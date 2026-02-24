@@ -11,7 +11,7 @@ import {
 import { useRouter, useSearchParams } from "next/navigation";
 import { mockRestaurants, mockScanResponse, type Restaurant } from "../api/mockApi";
 import Tesseract from "tesseract.js";
-import { FeedbackApi, EventApi, type VisionMenuItem, ContributionApi, TopMenusApi } from "../services/api";
+import { FeedbackApi, EventApi, type VisionMenuItem, ContributionApi } from "../services/api";
 import SuggestionModal from "../components/SuggestionModal";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -261,8 +261,6 @@ export default function CapturePage({
   });
   const [photoAdoptedCount, setPhotoAdoptedCount] = useState(0);
   const [compareTarget, setCompareTarget] = useState<{ name: string; taste_values: Record<string, number> } | null>(null);
-  const [topMenus, setTopMenus] = useState<VisionMenuItem[]>([]);
-  const [topMenusLoading, setTopMenusLoading] = useState(false);
 
   // マイグラフ: likedMenusの味覚平均を計算
   const myTasteAvg = useMemo(() => {
@@ -444,15 +442,6 @@ export default function CapturePage({
     }
   }, [restaurantSlug, activeLanguage]);
 
-  // Fetch top menus for initial NFG card display
-  useEffect(() => {
-    if (!restaurantData?.slug) return;
-    setTopMenusLoading(true);
-    TopMenusApi.fetch(restaurantData.slug, 5, activeLanguage)
-      .then(data => setTopMenus(data.result?.menus || []))
-      .catch(() => setTopMenus([]))
-      .finally(() => setTopMenusLoading(false));
-  }, [restaurantData?.slug, activeLanguage]);
 
   // Sync slug to AppContext for sidebar
   useEffect(() => {
@@ -1497,159 +1486,6 @@ export default function CapturePage({
             />
           )}
 
-          {/* === 初期NFGカード表示 === */}
-          {topMenus.length > 0 && !restaurantLoading && (
-            <div className="top-menus-section">
-              <div className="top-menus-label">おすすめ</div>
-              {topMenus.map((vi, idx) => (
-                <div key={idx} className="nfg-card">
-                  <div className="nfg-card-header">
-                    <div className="nfg-card-title-row">
-                      <span className="nfg-card-number">{idx + 1}.</span>
-                      <span className="nfg-card-name">
-                        {activeLanguage !== 'ja' && vi.name_en ? vi.name_en : vi.name_jp}
-                      </span>
-                      {vi.price > 0 && (
-                        <span className="nfg-card-price">¥{vi.price.toLocaleString()}</span>
-                      )}
-                    </div>
-                    {(activeLanguage !== 'ja' ? vi.name_jp : vi.name_en) && (
-                      <div className="nfg-card-name-en">
-                        {activeLanguage !== 'ja' ? vi.name_jp : vi.name_en}
-                      </div>
-                    )}
-                  </div>
-                  <div className="nfg-card-hero">
-                    <div className="nfg-card-thumb">
-                      {vi.image_url ? (
-                        <img src={vi.image_url} alt={vi.name_jp} loading="lazy" />
-                      ) : (
-                        <div className="nfg-card-thumb-empty">📷</div>
-                      )}
-                    </div>
-                    {vi.taste_values && Object.keys(vi.taste_values).length > 0 && (() => {
-                      const axes = ['umami','richness','saltiness','sweetness','spiciness','lightness','sourness','bitterness'] as const;
-                      const labelsJa: Record<string,string> = {umami:"旨味",richness:"コク",saltiness:"塩味",sweetness:"甘味",spiciness:"辛味",lightness:"新鮮",sourness:"酸味",bitterness:"苦味"};
-                      const labelsEn: Record<string,string> = {umami:"Umami",richness:"Rich",saltiness:"Salty",sweetness:"Sweet",spiciness:"Spicy",lightness:"Fresh",sourness:"Sour",bitterness:"Bitter"};
-                      const axisColors: Record<string,string> = {umami:"#00e896",richness:"#e8c050",saltiness:"#a0a0ff",sweetness:"#f0a050",spiciness:"#ff6b4a",lightness:"#80d0ff",sourness:"#50c8f0",bitterness:"#80c080"};
-                      const labels = activeLanguage === 'ja' ? labelsJa : labelsEn;
-                      const N = axes.length, R = 88;
-                      const pt = (i: number, rv: number) => {
-                        const a = (2 * Math.PI * i / N) - Math.PI / 2;
-                        return { x: rv * Math.cos(a), y: rv * Math.sin(a) };
-                      };
-                      const poly = (rv: number) => axes.map((_, i) => { const p = pt(i, rv); return `${p.x},${p.y}`; }).join(' ');
-                      const tv = vi.taste_values as Record<string,number>;
-                      const dataPoly = axes.map((a, i) => { const p = pt(i, R * (tv[a] || 0) / 10); return `${p.x},${p.y}`; }).join(' ');
-                      const uid = `fg-top-${idx}`;
-                      return (
-                        <div className="nfg-taste-chart">
-                          <div className="nfg-fg-label"><div className="nfg-fg-dot" /> NFG</div>
-                          <svg className="nfg-radar" viewBox="-110 -110 220 220">
-                            <defs>
-                              <radialGradient id={`rg-${uid}`} cx="50%" cy="50%" r="50%">
-                                <stop offset="0%" stopColor="#00e896" stopOpacity="0.25"/>
-                                <stop offset="100%" stopColor="#00e896" stopOpacity="0.03"/>
-                              </radialGradient>
-                              <filter id={`glow-${uid}`}><feGaussianBlur stdDeviation="2.5" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-                            </defs>
-                            {[0.25,0.5,0.75,1].map(lv => <polygon key={lv} points={poly(R*lv)} fill="none" stroke={lv===1?"#2a2a2a":"#1a1a1a"} strokeWidth="0.5"/>)}
-                            {axes.map((_, i) => { const p = pt(i, R); return <line key={i} x1={0} y1={0} x2={p.x} y2={p.y} stroke="#222" strokeWidth="0.5"/>; })}
-                            <polygon points={dataPoly} fill={`url(#rg-${uid})`} stroke="#00e896" strokeWidth="1.5" strokeLinejoin="round" filter={`url(#glow-${uid})`}/>
-                            {axes.map((a, i) => { const v = (tv[a]||0)/10; const active = v > 0.3; const p = pt(i, R*v); return <circle key={i} cx={p.x} cy={p.y} r={active?3.5:2} fill={active?axisColors[a]:"#555"} stroke="#0a0a0a" strokeWidth="1"/>; })}
-                            {axes.map((a, i) => { const v = (tv[a]||0)/10; const active = v > 0.3; const p = pt(i, R*1.22); return <text key={i} x={p.x} y={p.y+3.5} textAnchor="middle" fontFamily="'DM Mono',monospace" fontSize={active?9:7.5} fill={active?axisColors[a]:"rgba(255,255,255,0.5)"}>{labels[a]}{active ? ` ${Math.round(v*100)}` : ''}</text>; })}
-                          </svg>
-                        </div>
-                      );
-                    })()}
-                  </div>
-                  <div className="nfg-card-brief">
-                    {vi.description && (
-                      <div className="nfg-card-desc">{vi.description}</div>
-                    )}
-                    {vi.allergens?.length > 0 && (
-                      <div className="nfg-card-fields">
-                        <div className="nfg-field nfg-field-allergen">
-                          <span className="nfg-field-label">{copy.nfg.allergens}</span>
-                          <span className="nfg-field-value">{vi.allergens.join(activeLanguage === 'ja' ? '、' : ', ')}</span>
-                        </div>
-                      </div>
-                    )}
-                    <div className="nfg-card-badge-row">
-                      {((vi as any).verification_rank === 'A' || (vi as any).verification_rank === 'S') ? (
-                        <span className="nfg-badge nfg-badge-db">{copy.nfg.vadBadge}</span>
-                      ) : (
-                        <span className="nfg-badge nfg-badge-ai">{(copy.nfg as any).pendingBadge || '未確認'}</span>
-                      )}
-                    </div>
-                  </div>
-                  {/* 詳しく見る */}
-                  {(() => {
-                    const hasDetails = vi.narrative || (vi.serving && (vi.serving.style || vi.serving.portion || vi.serving.temperature)) || (vi.ingredients?.length > 0) || (vi.restrictions && vi.restrictions.length > 0) || vi.flavor_profile || vi.estimated_calories;
-                    if (!hasDetails) return null;
-                    const detailsOpen = isDetailsExpanded('top-menus', idx);
-                    return (
-                      <>
-                        <button
-                          type="button"
-                          className="nfg-details-toggle"
-                          onClick={() => toggleDetails('top-menus', idx)}
-                        >
-                          {detailsOpen ? (activeLanguage === 'ja' ? '閉じる' : 'Less') : (activeLanguage === 'ja' ? '詳しく見る' : 'More details')}
-                          <span className={`nfg-details-chevron${detailsOpen ? ' open' : ''}`}>▼</span>
-                        </button>
-                        <div className={`nfg-card-details${detailsOpen ? ' open' : ''}`}>
-                          {vi.narrative && (
-                            <div className="nfg-narrative">
-                              {vi.narrative.story && <div className="nfg-narrative-story">{vi.narrative.story}</div>}
-                              {vi.narrative.texture && (
-                                <div className="nfg-field"><span className="nfg-field-label">{copy.nfg.texture}</span><span className="nfg-field-value">{vi.narrative.texture}</span></div>
-                              )}
-                              {vi.narrative.how_to_eat && (
-                                <div className="nfg-field"><span className="nfg-field-label">{copy.nfg.howToEat}</span><span className="nfg-field-value">{vi.narrative.how_to_eat}</span></div>
-                              )}
-                              {vi.narrative.pairing && (
-                                <div className="nfg-field"><span className="nfg-field-label">{copy.nfg.pairing}</span><span className="nfg-field-value">{vi.narrative.pairing}</span></div>
-                              )}
-                            </div>
-                          )}
-                          {vi.serving && (vi.serving.style || vi.serving.portion || vi.serving.temperature) && (
-                            <div className="nfg-serving">
-                              <div className="nfg-field">
-                                <span className="nfg-field-label">{copy.nfg.servingStyle}</span>
-                                <span className="nfg-field-value">{[vi.serving.style, vi.serving.portion, vi.serving.temperature].filter(Boolean).join(' / ')}</span>
-                              </div>
-                            </div>
-                          )}
-                          <div className="nfg-card-fields">
-                            {vi.ingredients?.length > 0 && (
-                              <div className="nfg-field"><span className="nfg-field-label">{copy.nfg.ingredients}</span><span className="nfg-field-value">{vi.ingredients.join(activeLanguage === 'ja' ? '、' : ', ')}</span></div>
-                            )}
-                            {vi.flavor_profile && (
-                              <div className="nfg-field"><span className="nfg-field-label">{copy.nfg.flavorProfile}</span><span className="nfg-field-value">{vi.flavor_profile}</span></div>
-                            )}
-                            {vi.estimated_calories && (
-                              <div className="nfg-field"><span className="nfg-field-label">{copy.nfg.calories}</span><span className="nfg-field-value">{vi.estimated_calories}</span></div>
-                            )}
-                          </div>
-                          {vi.confidence != null && vi.confidence > 0 && (
-                            <div className="nfg-card-badge-row" style={{ marginBottom: 0 }}>
-                              <span className="nfg-badge nfg-badge-confidence">{copy.nfg.confidence} {vi.confidence}%</span>
-                            </div>
-                          )}
-                        </div>
-                      </>
-                    );
-                  })()}
-                </div>
-              ))}
-            </div>
-          )}
-          {topMenusLoading && (
-            <div className="top-menus-loading">
-              <div style={{ width: 20, height: 20, border: '2px solid rgba(255,255,255,0.1)', borderTopColor: 'rgba(255,255,255,0.4)', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
-            </div>
-          )}
 
         </main>
 
