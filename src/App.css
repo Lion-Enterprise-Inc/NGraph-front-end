@@ -4897,7 +4897,7 @@ textarea.form-input {
 .explore-page {
   min-height: 100vh;
   background: var(--color-bg);
-  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 .explore-landing {
