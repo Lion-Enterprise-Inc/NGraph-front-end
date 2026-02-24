@@ -5998,21 +5998,19 @@ textarea.form-input {
 
 .nfg-field {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
+  gap: 8px;
   font-size: 13px;
-  line-height: 1.6;
+  line-height: 1.5;
 }
 
 .nfg-field-label {
-  color: rgba(255,255,255,0.35);
-  font-size: 10px;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
+  color: rgba(255,255,255,0.45);
+  flex-shrink: 0;
+  min-width: 80px;
 }
 
 .nfg-field-value {
-  color: rgba(255,255,255,0.8);
+  color: rgba(255,255,255,0.78);
 }
 
 .nfg-field-allergen .nfg-field-label {
@@ -6067,8 +6065,8 @@ textarea.form-input {
 .nfg-fg-dot { width:4px; height:4px; border-radius:50%; background:#00e896; animation:nfg-pulse 2s infinite; }
 @keyframes nfg-pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
 .nfg-radar { max-width:160px; width:100%; height:auto; overflow:visible; }
-.nfg-narrative { margin:8px 0; display:flex; flex-direction:column; gap:8px; }
-.nfg-narrative-story { font-size:13px; color:rgba(255,255,255,0.75); line-height:1.7; font-style:italic; }
+.nfg-narrative { margin:10px 0; }
+.nfg-narrative-story { font-size:13px; color:rgba(255,255,255,0.7); line-height:1.5; margin-bottom:8px; font-style:italic; }
 .nfg-serving { margin:8px 0; }
 
 .nfg-details-toggle {
