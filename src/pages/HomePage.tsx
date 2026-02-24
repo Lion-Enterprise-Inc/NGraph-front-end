@@ -4,6 +4,13 @@ import { useRouter } from 'next/navigation'
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { Search } from 'lucide-react'
 import { ExploreApi, SemanticSearchApi, SearchRestaurant, NfgSearchRestaurant, SemanticSearchRestaurant, CityCount, PlatformStats } from '../services/api'
+import { useAppContext } from '../components/AppProvider'
+
+const LANG_BADGES: Record<string, string> = {
+  ja: 'JP', en: 'US', 'zh-Hans': 'CN', 'zh-Hant': 'TW',
+  ko: 'KR', es: 'ES', fr: 'FR', de: 'DE', it: 'IT',
+  pt: 'PT', ru: 'RU', th: 'TH', vi: 'VN', id: 'ID',
+}
 
 interface Particle {
   x: number; y: number
@@ -320,6 +327,8 @@ type DisplayRestaurant = (SearchRestaurant | NfgSearchRestaurant) & { _nfg?: boo
 
 export default function HomePage() {
   const router = useRouter()
+  const { language, openLanguageModal } = useAppContext()
+  const langBadge = LANG_BADGES[language] || language.slice(0, 2).toUpperCase()
   const [query, setQuery] = useState('')
   const [city, setCity] = useState('')
   const [cities, setCities] = useState<CityCount[]>([])
@@ -723,6 +732,9 @@ export default function HomePage() {
                 <span className="explore-region glow-target">＠FUKUI</span>
               </div>
             </div>
+            <button className="header-lang-badge" type="button" onClick={openLanguageModal}>
+              {langBadge}
+            </button>
           </div>
         </header>
 
@@ -906,9 +918,14 @@ export default function HomePage() {
               {/* Count bar — above search */}
               {flowStep >= 1 && (
                 <div className="conv-count-bar" ref={countBarRef}>
-                  <span className="conv-count-num-static">
-                    {flowLoading ? '...' : `${flowCount ?? '—'} / ${stats?.total_menus?.toLocaleString() || '—'}`}
-                  </span>
+                  {flowLoading ? (
+                    <span className="conv-count-num-static">...</span>
+                  ) : (
+                    <span className="conv-count-num-static">
+                      <BinaryText key={`fc-${flowCount}`} text={String(flowCount ?? '—')} className="conv-count-numerator" />
+                      <span className="conv-count-sep"> / {stats?.total_menus?.toLocaleString() || '—'}</span>
+                    </span>
+                  )}
                   {flowCount !== null && flowCount > 0 && (
                     <button className="conv-chip conv-chip-small" onClick={() => handleViewResults()}>今すぐ見る</button>
                   )}
