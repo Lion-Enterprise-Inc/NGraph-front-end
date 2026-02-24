@@ -924,7 +924,7 @@ export default function HomePage() {
                   ) : (
                     <span className="conv-count-num-static">
                       <BinaryText key={`fc-${flowCount}`} text={String(flowCount ?? '—')} className="conv-count-numerator" />
-                      <span className="conv-count-sep"> / {stats?.total_menus?.toLocaleString() || '—'}</span>
+                      <span className="conv-count-sep"> / {stats?.total_restaurants?.toLocaleString() || '—'}</span>
                     </span>
                   )}
                   {flowCount !== null && flowCount > 0 && (
@@ -954,9 +954,20 @@ export default function HomePage() {
 
       {searched && (
         <div className="explore-body">
-          {/* Back button */}
-          <div style={{ padding: '8px 24px 0' }}>
+          {/* Back + search */}
+          <div style={{ padding: '8px 24px 0', display: 'flex', flexDirection: 'column', gap: 8 }}>
             <span className="conv-reset" onClick={() => { setSearched(false); setQuery(''); setRestaurants([]); setTotal(0) }}>{fl.back}</span>
+            <div style={{ position: 'relative' }}>
+              <Search size={16} className="explore-search-icon" />
+              <input
+                className="explore-search"
+                type="text"
+                placeholder={fl.searchPlaceholder}
+                value={query}
+                onChange={e => handleSearch(e.target.value)}
+                autoFocus
+              />
+            </div>
           </div>
 
           {/* Results count + sort */}
