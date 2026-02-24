@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { Search } from 'lucide-react'
-import { ExploreApi, SemanticSearchApi, SearchRestaurant, NfgSearchRestaurant, SemanticSearchRestaurant, CityCount, PlatformStats } from '../services/api'
+import { ExploreApi, SemanticSearchApi, MenuSearchApi, SearchRestaurant, NfgSearchRestaurant, SemanticSearchRestaurant, CityCount, PlatformStats, MenuSearchItem } from '../services/api'
 import { useAppContext } from '../components/AppProvider'
 
 const LANG_BADGES: Record<string, string> = {
@@ -364,6 +364,7 @@ export default function HomePage() {
   const [recoTotal, setRecoTotal] = useState(0)
   const [recoFallback, setRecoFallback] = useState(false)
   const composingRef = useRef(false)
+  const [menuResults, setMenuResults] = useState<MenuSearchItem[]>([])
 
   // Pulse binary particles toward count bar when count changes
   useEffect(() => {
@@ -422,15 +423,29 @@ export default function HomePage() {
 
   const fetchRestaurants = useCallback(async (q: string, c: string, p: number) => {
     setLoading(true)
+    setMenuResults([])
     try {
+      // メニュー検索も並列（2文字以上のテキスト検索時）
+      const menuPromise = q.length >= 2
+        ? MenuSearchApi.search({ q, area: c, size: 6 }).catch(() => null)
+        : Promise.resolve(null)
+
       if (q && isNfgQuery(q)) {
-        const res = await ExploreApi.nfgSearch(q, c, p, 30)
+        const [res, menuRes] = await Promise.all([
+          ExploreApi.nfgSearch(q, c, p, 30),
+          menuPromise,
+        ])
         const items: DisplayRestaurant[] = res.result.items.map(r => ({ ...r, _nfg: true }))
         setRestaurants(items)
         setTotal(res.result.total)
         setPages(res.result.pages)
+        if (menuRes?.result?.menus?.length) setMenuResults(menuRes.result.menus)
       } else {
-        const res = await ExploreApi.search(q, c, p, 30)
+        const [res, menuRes] = await Promise.all([
+          ExploreApi.search(q, c, p, 30),
+          menuPromise,
+        ])
+        if (menuRes?.result?.menus?.length) setMenuResults(menuRes.result.menus)
         // fallback to NFG search if text search returns 0 and query is 2+ chars
         if (res.result.total === 0 && q.length >= 2) {
           const nfg = await ExploreApi.nfgSearch(q, c, p, 30)
@@ -1013,6 +1028,32 @@ export default function HomePage() {
               </div>
             )}
           </div>
+
+          {/* Menu matches */}
+          {menuResults.length > 0 && (
+            <div className="menu-match-section">
+              <div className="menu-match-label">{isJa ? '一致するメニュー' : 'Matching dishes'}</div>
+              <div className="menu-match-scroll">
+                {menuResults.map(m => (
+                  <button
+                    key={m.uid}
+                    className="menu-match-card"
+                    onClick={() => router.push(`/capture?restaurant=${encodeURIComponent(m.restaurant_slug)}`)}
+                  >
+                    <div className="menu-match-name">{m.name_jp}</div>
+                    {m.price > 0 && <div className="menu-match-price">¥{m.price.toLocaleString()}</div>}
+                    {m.narrative_snippet && <div className="menu-match-desc">{m.narrative_snippet}</div>}
+                    <div className="menu-match-restaurant">{m.restaurant_name}{m.restaurant_city ? ` · ${m.restaurant_city}` : ''}</div>
+                    {m.featured_tags.length > 0 && (
+                      <div className="menu-match-tags">
+                        {m.featured_tags.map((t, i) => <span key={i} className="menu-match-tag">{t}</span>)}
+                      </div>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Restaurant list */}
           <div className="explore-list">
