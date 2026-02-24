@@ -21,40 +21,48 @@ interface Particle {
   tx?: number; ty?: number // target position for portrait formation
 }
 
-// アリストテレスの横顔（右向き）— 正規化座標 (0-1)
-// 頭部輪郭 + 目 + 鼻 + 口 + 顎 + 髪 + 髭
-const ARISTOTLE_POINTS: [number, number][] = [
-  // 頭頂〜額
-  [0.45,0.08],[0.50,0.06],[0.55,0.05],[0.60,0.06],[0.65,0.08],[0.68,0.11],
-  // 額〜眉
-  [0.70,0.15],[0.71,0.19],[0.72,0.23],
-  // 眉
-  [0.62,0.24],[0.65,0.23],[0.68,0.23],[0.71,0.24],
-  // 目
-  [0.64,0.28],[0.67,0.27],[0.70,0.28],[0.67,0.29],
-  // 鼻（高い鼻梁）
-  [0.73,0.27],[0.74,0.31],[0.76,0.35],[0.77,0.38],[0.75,0.40],[0.73,0.41],
-  // 口
-  [0.68,0.47],[0.70,0.46],[0.72,0.47],[0.70,0.49],
-  // 顎〜首
-  [0.67,0.52],[0.65,0.56],[0.62,0.60],[0.58,0.63],[0.55,0.65],
-  // 首
-  [0.52,0.68],[0.50,0.72],[0.48,0.76],
-  // 後頭部
-  [0.42,0.10],[0.38,0.14],[0.36,0.20],[0.35,0.26],[0.35,0.32],[0.36,0.38],
-  // 髪の毛（波打つ）
-  [0.40,0.07],[0.37,0.09],[0.34,0.13],[0.33,0.17],[0.32,0.22],
-  [0.43,0.06],[0.48,0.05],[0.53,0.04],
-  // 髭
-  [0.60,0.50],[0.58,0.53],[0.56,0.56],[0.54,0.58],
-  [0.65,0.49],[0.63,0.52],[0.61,0.55],
-  // 耳
-  [0.56,0.28],[0.55,0.31],[0.55,0.34],[0.56,0.37],
-  // 目の奥行き
-  [0.66,0.26],[0.68,0.30],
-  // 鼻の付け根
-  [0.72,0.25],
+// アリストテレス胸像 — 20x28 ビットマップ（1=パーティクル配置点）
+// 右向き横顔: 髪 + 額 + 目 + 鼻 + 口 + 顎 + 首 + 肩
+const ARISTOTLE_BITMAP = [
+  '00000001111100000000', // 0  頭頂
+  '00000111111110000000', // 1
+  '00001111111111000000', // 2  髪
+  '00011111111111100000', // 3
+  '00011111111111100000', // 4
+  '00011110001111110000', // 5  額
+  '00011100000111111000', // 6
+  '00011100000011111100', // 7  眉
+  '00011100001101111100', // 8  目
+  '00011100000001111100', // 9
+  '00011100000001111110', // 10 鼻梁
+  '00011110000001111110', // 11
+  '00001110000000111110', // 12 鼻先
+  '00001110000001111100', // 13
+  '00001111000011111000', // 14 口
+  '00000111000111110000', // 15
+  '00000111101111100000', // 16 顎
+  '00000011111111000000', // 17
+  '00000011111110000000', // 18 髭
+  '00000001111100000000', // 19
+  '00000001111000000000', // 20 首
+  '00000001111000000000', // 21
+  '00000001111000000000', // 22
+  '00000011111100000000', // 23 首→肩
+  '00000111111110000000', // 24
+  '00001111111111100000', // 25 肩
+  '00011111111111110000', // 26
+  '00111111111111111000', // 27
 ]
+
+// ビットマップから座標リストを生成（正規化 0-1）
+const ARISTOTLE_PIXELS: [number, number][] = []
+for (let row = 0; row < ARISTOTLE_BITMAP.length; row++) {
+  for (let col = 0; col < ARISTOTLE_BITMAP[row].length; col++) {
+    if (ARISTOTLE_BITMAP[row][col] === '1') {
+      ARISTOTLE_PIXELS.push([col / 20, row / 28])
+    }
+  }
+}
 
 function BinaryField({ pulseRef }: { pulseRef?: React.RefObject<{ x: number; y: number; strength: number }> }) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -67,7 +75,7 @@ function BinaryField({ pulseRef }: { pulseRef?: React.RefObject<{ x: number; y: 
 
     let animId: number
     let particles: Particle[] = []
-    const COUNT = 60
+    const COUNT = 150
     let pointer = { x: -9999, y: -9999, active: false }
     let lastInteraction = Date.now()
     let portraitActive = false
@@ -149,18 +157,18 @@ function BinaryField({ pulseRef }: { pulseRef?: React.RefObject<{ x: number; y: 
       if (idleMs > IDLE_THRESHOLD && !portraitActive) {
         portraitActive = true
         portraitStrength = 0
-        // Assign target positions from ARISTOTLE_POINTS
+        // Assign target positions from ARISTOTLE_PIXELS
         const scale = Math.min(canvas.width, canvas.height) * 0.6
         const ox = canvas.width / 2 - scale * 0.55
         const oy = canvas.height / 2 - scale * 0.4
         for (let i = 0; i < particles.length; i++) {
-          if (i < ARISTOTLE_POINTS.length) {
-            const [px, py] = ARISTOTLE_POINTS[i]
+          if (i < ARISTOTLE_PIXELS.length) {
+            const [px, py] = ARISTOTLE_PIXELS[i]
             particles[i].tx = ox + px * scale
             particles[i].ty = oy + py * scale
           } else {
             // Extra particles drift toward random portrait area
-            const rp = ARISTOTLE_POINTS[Math.floor(Math.random() * ARISTOTLE_POINTS.length)]
+            const rp = ARISTOTLE_PIXELS[Math.floor(Math.random() * ARISTOTLE_PIXELS.length)]
             particles[i].tx = ox + rp[0] * scale + (Math.random() - 0.5) * 20
             particles[i].ty = oy + rp[1] * scale + (Math.random() - 0.5) * 20
           }
