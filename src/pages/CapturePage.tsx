@@ -1544,7 +1544,7 @@ export default function CapturePage({
                       const uid = `fg-top-${idx}`;
                       return (
                         <div className="nfg-taste-chart">
-                          <div className="nfg-fg-label"><div className="nfg-fg-dot" /> Food Graph</div>
+                          <div className="nfg-fg-label"><div className="nfg-fg-dot" /> NFG</div>
                           <svg className="nfg-radar" viewBox="-110 -110 220 220">
                             <defs>
                               <radialGradient id={`rg-${uid}`} cx="50%" cy="50%" r="50%">
@@ -1754,7 +1754,7 @@ export default function CapturePage({
                                 const uid = `fg-${response.id}-${idx}`;
                                 return (
                                   <div className="nfg-taste-chart">
-                                    <div className="nfg-fg-label"><div className="nfg-fg-dot" /> Food Graph</div>
+                                    <div className="nfg-fg-label"><div className="nfg-fg-dot" /> NFG</div>
                                     <svg className="nfg-radar" viewBox="-110 -110 220 220">
                                       <defs>
                                         <radialGradient id={`rg-${uid}`} cx="50%" cy="50%" r="50%">

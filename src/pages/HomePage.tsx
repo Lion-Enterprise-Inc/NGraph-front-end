@@ -268,58 +268,56 @@ function isNfgQuery(q: string): boolean {
 
 // Step 1: 食ジャンル — 最大の絞り込み
 const FOOD_TYPES = [
-  { key: 'crab', label: '蟹', q: '蟹,カニ,かに,ズワイ,セイコ' },
-  { key: 'seafood', label: '海鮮・お刺身', q: '海鮮,刺身,魚', category: 'sashimi,seafood' },
-  { key: 'sushi', label: '寿司', q: '寿司,すし,にぎり', category: 'sushi,nigiri,gunkan,roll' },
-  { key: 'meat', label: '肉料理', q: '肉,カツ,ステーキ,焼肉', category: 'meat' },
-  { key: 'nabe', label: '鍋', q: '鍋,しゃぶ,すき焼き', category: 'nabe,hotpot' },
-  { key: 'ramen', label: '麺類', q: '麺,ラーメン,そば,うどん', category: 'ramen,soba,noodle' },
-  { key: 'drinking', label: 'お酒に合うつまみ', mood: 'drinking' },
-  { key: 'local', label: '福井の名物', mood: 'local' },
-  { key: 'light', label: 'あっさり', q: 'サラダ,酢の物,蒸し', category: 'salad,steamed,vinegared' },
+  { key: 'crab', label: '蟹', labelEn: 'Crab', q: '蟹,カニ,かに,ズワイ,セイコ' },
+  { key: 'seafood', label: '海鮮・お刺身', labelEn: 'Seafood & Sashimi', q: '海鮮,刺身,魚', category: 'sashimi,seafood' },
+  { key: 'sushi', label: '寿司', labelEn: 'Sushi', q: '寿司,すし,にぎり', category: 'sushi,nigiri,gunkan,roll' },
+  { key: 'meat', label: '肉料理', labelEn: 'Meat', q: '肉,カツ,ステーキ,焼肉', category: 'meat' },
+  { key: 'nabe', label: '鍋', labelEn: 'Hot Pot', q: '鍋,しゃぶ,すき焼き', category: 'nabe,hotpot' },
+  { key: 'ramen', label: '麺類', labelEn: 'Noodles', q: '麺,ラーメン,そば,うどん', category: 'ramen,soba,noodle' },
+  { key: 'drinking', label: 'お酒に合うつまみ', labelEn: 'Bar Snacks', mood: 'drinking' },
+  { key: 'local', label: '福井の名物', labelEn: 'Fukui Specialties', mood: 'local' },
+  { key: 'light', label: 'あっさり', labelEn: 'Light & Healthy', q: 'サラダ,酢の物,蒸し', category: 'salad,steamed,vinegared' },
 ] as const
-const FOOD_TYPE_LABELS: Record<string, string> = Object.fromEntries(FOOD_TYPES.map(f => [f.key, f.label]))
 
-// Step 2: エリア
 const AREAS = [
-  { key: 'fukui', label: '福井駅周辺', area: '福井市' },
-  { key: 'echizen', label: '越前・鯖江', area: '越前市' },
-  { key: 'tsuruga', label: '敦賀', area: '敦賀市' },
-  { key: 'awara', label: 'あわら', area: 'あわら市' },
-  { key: 'anywhere', label: 'どこでもOK', area: '' },
+  { key: 'fukui', label: '福井駅周辺', labelEn: 'Fukui Station', area: '福井市' },
+  { key: 'echizen', label: '越前・鯖江', labelEn: 'Echizen / Sabae', area: '越前市' },
+  { key: 'tsuruga', label: '敦賀', labelEn: 'Tsuruga', area: '敦賀市' },
+  { key: 'awara', label: 'あわら', labelEn: 'Awara', area: 'あわら市' },
+  { key: 'anywhere', label: 'どこでもOK', labelEn: 'Anywhere', area: '' },
 ] as const
-const AREA_LABELS: Record<string, string> = Object.fromEntries(AREAS.map(a => [a.key, a.label]))
 
-// Step 3: 予算
 const BUDGETS = [
-  { key: 'under1000', label: '~1,000円', min: 0, max: 1000 },
-  { key: '1000to2000', label: '1,000~2,000円', min: 1000, max: 2000 },
-  { key: '2000to3000', label: '2,000~3,000円', min: 2000, max: 3000 },
-  { key: '3000to5000', label: '3,000~5,000円', min: 3000, max: 5000 },
-  { key: 'over5000', label: '5,000円~', min: 5000, max: 0 },
-  { key: 'any', label: '気にしない', min: 0, max: 0 },
+  { key: 'under1000', label: '~1,000円', labelEn: '~¥1,000', min: 0, max: 1000 },
+  { key: '1000to2000', label: '1,000~2,000円', labelEn: '¥1,000~2,000', min: 1000, max: 2000 },
+  { key: '2000to3000', label: '2,000~3,000円', labelEn: '¥2,000~3,000', min: 2000, max: 3000 },
+  { key: '3000to5000', label: '3,000~5,000円', labelEn: '¥3,000~5,000', min: 3000, max: 5000 },
+  { key: 'over5000', label: '5,000円~', labelEn: '¥5,000+', min: 5000, max: 0 },
+  { key: 'any', label: '気にしない', labelEn: "Don't mind", min: 0, max: 0 },
 ] as const
-const BUDGET_LABELS: Record<string, string> = Object.fromEntries(BUDGETS.map(b => [b.key, b.label]))
 
-// Step 4: スタイル
 const STYLES = [
-  { key: 'hearty', label: 'がっつり', mood: 'hearty' },
-  { key: 'budget', label: 'コスパ重視', mood: 'budget' },
-  { key: 'drinking', label: '飲みメイン', mood: 'drinking' },
-  { key: 'none', label: '特にこだわりなし', mood: '' },
+  { key: 'hearty', label: 'がっつり', labelEn: 'Hearty', mood: 'hearty' },
+  { key: 'budget', label: 'コスパ重視', labelEn: 'Budget', mood: 'budget' },
+  { key: 'drinking', label: '飲みメイン', labelEn: 'Drinks First', mood: 'drinking' },
+  { key: 'none', label: '特にこだわりなし', labelEn: 'No preference', mood: '' },
 ] as const
-const STYLE_LABELS: Record<string, string> = Object.fromEntries(STYLES.map(s => [s.key, s.label]))
+
+const FLOW_QUESTIONS = {
+  ja: { q1: '何を食べたいですか？', q2: 'どのあたりで探しますか？', q3: '予算は？', q4: 'スタイルは？', viewNow: '今すぐ見る', searchMore: 'もっと細かく探す', restart: '← やり直す', otherGenre: '他のジャンルも見る', changeMore: 'もう少し条件を変えてみよう', startOver: 'はじめから探す', searching: '探しています...', recoFallback: 'ぴったりは見つからなかったけど…こちらはどうですか？', recoTitle: 'おすすめのお店', seeMore: '他 {n} 件を見る', restrictionOpen: 'アレルギー・食事制限がある方', restrictionClose: 'アレルギー設定を閉じる', searchPlaceholder: '卵不使用・ハラール・昆布だし・店名で検索', all: 'すべて', back: '← 戻る', results: '{n} 件', score: 'スコア順', menuCount: 'メニュー数順', loading: '読み込み中...', empty: '該当する店舗がありません', prev: '前へ', next: '次へ', footer: '{r}店舗 · {m}メニュー · {e}構造化 · {c}都市' },
+  en: { q1: 'What do you want to eat?', q2: 'Which area?', q3: 'Budget?', q4: 'Style?', viewNow: 'View now', searchMore: 'Search with details', restart: '← Start over', otherGenre: 'Try other genres', changeMore: 'Try different options', startOver: 'Start from scratch', searching: 'Searching...', recoFallback: "Couldn't find an exact match, but how about these?", recoTitle: 'Recommended', seeMore: 'See {n} more', restrictionOpen: 'Allergies & dietary restrictions', restrictionClose: 'Close allergy settings', searchPlaceholder: 'No egg, halal, kelp stock, restaurant name...', all: 'All', back: '← Back', results: '{n} results', score: 'By score', menuCount: 'By menu count', loading: 'Loading...', empty: 'No restaurants found', prev: 'Prev', next: 'Next', footer: '{r} restaurants · {m} menus · {e} structured · {c} cities' },
+} as const
 
 // 制約 — 安全フィルタ（別枠）
 const RESTRICTIONS = [
-  { key: 'shrimp', label: 'えび・かに×', no: 'shrimp,crab' },
-  { key: 'egg', label: '卵×', no: 'egg' },
-  { key: 'wheat', label: '小麦×', no: 'wheat' },
-  { key: 'milk', label: '乳×', no: 'milk' },
-  { key: 'soba', label: 'そば×', no: 'soba' },
-  { key: 'halal', label: 'ハラール', diet: 'halal' },
-  { key: 'vegetarian', label: 'ベジタリアン', diet: 'vegetarian' },
-  { key: 'gluten_free', label: 'グルテンフリー', diet: 'gluten_free' },
+  { key: 'shrimp', label: 'えび・かに×', labelEn: 'No Shrimp/Crab', no: 'shrimp,crab' },
+  { key: 'egg', label: '卵×', labelEn: 'No Egg', no: 'egg' },
+  { key: 'wheat', label: '小麦×', labelEn: 'No Wheat', no: 'wheat' },
+  { key: 'milk', label: '乳×', labelEn: 'No Dairy', no: 'milk' },
+  { key: 'soba', label: 'そば×', labelEn: 'No Soba', no: 'soba' },
+  { key: 'halal', label: 'ハラール', labelEn: 'Halal', diet: 'halal' },
+  { key: 'vegetarian', label: 'ベジタリアン', labelEn: 'Vegetarian', diet: 'vegetarian' },
+  { key: 'gluten_free', label: 'グルテンフリー', labelEn: 'Gluten Free', diet: 'gluten_free' },
 ] as const
 
 type SortKey = 'score' | 'menu_count'
@@ -329,6 +327,9 @@ export default function HomePage() {
   const router = useRouter()
   const { language, openLanguageModal } = useAppContext()
   const langBadge = LANG_BADGES[language] || language.slice(0, 2).toUpperCase()
+  const isJa = language === 'ja'
+  const fl = isJa ? FLOW_QUESTIONS.ja : FLOW_QUESTIONS.en
+  const lb = (item: { label: string; labelEn: string }) => isJa ? item.label : item.labelEn
   const [query, setQuery] = useState('')
   const [city, setCity] = useState('')
   const [cities, setCities] = useState<CityCount[]>([])
@@ -747,7 +748,7 @@ export default function HomePage() {
                 className={`explore-filter-pill ${!city ? 'active' : ''}`}
                 onClick={() => handleCity('')}
               >
-                すべて <span className="explore-filter-count">{totalAll}</span>
+                {fl.all} <span className="explore-filter-count">{totalAll}</span>
               </button>
               {cities.map(c => (
                 <button
@@ -769,35 +770,35 @@ export default function HomePage() {
                 <div className="conv-trail">
                   {flowFoodType && (
                     <span className="conv-trail-item" onClick={() => goToStep(1)}>
-                      {FOOD_TYPE_LABELS[flowFoodType]}
+                      {lb(FOOD_TYPES.find(f => f.key === flowFoodType)!) }
                     </span>
                   )}
                   {flowArea && (
                     <span className="conv-trail-item" onClick={() => goToStep(2)}>
-                      {AREA_LABELS[flowArea]}
+                      {lb(AREAS.find(a => a.key === flowArea)!)}
                     </span>
                   )}
                   {flowBudget && (
                     <span className="conv-trail-item" onClick={() => goToStep(3)}>
-                      {BUDGET_LABELS[flowBudget]}
+                      {lb(BUDGETS.find(b => b.key === flowBudget)!)}
                     </span>
                   )}
                   {flowStyle && flowStep > 4 && (
                     <span className="conv-trail-item" onClick={() => goToStep(4)}>
-                      {STYLE_LABELS[flowStyle]}
+                      {lb(STYLES.find(s => s.key === flowStyle)!)}
                     </span>
                   )}
-                  <span className="conv-reset" onClick={resetFlow}>← やり直す</span>
+                  <span className="conv-reset" onClick={resetFlow}>{fl.restart}</span>
                 </div>
               )}
 
               {/* Step 1: 何を食べたい？ */}
               {flowStep === 1 && flowTransition !== 'exiting' && (
                 <div className={`conv-step ${flowTransition === 'entering' ? 'conv-entering' : ''}`}>
-                  <BinaryText key={`q1-${flowStep}`} text="何を食べたいですか？" className="conv-question" />
+                  <BinaryText key={`q1-${flowStep}`} text={fl.q1} className="conv-question" />
                   <div className="conv-chips">
                     {FOOD_TYPES.map(f => (
-                      <button key={f.key} className="conv-chip" onClick={() => answerFoodType(f.key)}>{f.label}</button>
+                      <button key={f.key} className="conv-chip" onClick={() => answerFoodType(f.key)}>{lb(f)}</button>
                     ))}
                   </div>
                 </div>
@@ -806,10 +807,10 @@ export default function HomePage() {
               {/* Step 2: エリア */}
               {flowStep === 2 && flowTransition !== 'exiting' && (
                 <div className={`conv-step ${flowTransition === 'entering' ? 'conv-entering' : ''}`}>
-                  <BinaryText key={`q2-${flowStep}`} text="どのあたりで探しますか？" className="conv-question" />
+                  <BinaryText key={`q2-${flowStep}`} text={fl.q2} className="conv-question" />
                   <div className="conv-chips">
                     {availableAreas.map(a => (
-                      <button key={a.key} className="conv-chip" onClick={() => answerArea(a.key)}>{a.label}</button>
+                      <button key={a.key} className="conv-chip" onClick={() => answerArea(a.key)}>{lb(a)}</button>
                     ))}
                   </div>
                 </div>
@@ -818,10 +819,10 @@ export default function HomePage() {
               {/* Step 3: 予算 */}
               {flowStep === 3 && flowTransition !== 'exiting' && (
                 <div className={`conv-step ${flowTransition === 'entering' ? 'conv-entering' : ''}`}>
-                  <BinaryText key={`q3-${flowStep}`} text="ご予算はどれくらいですか？" className="conv-question" />
+                  <BinaryText key={`q3-${flowStep}`} text={fl.q3} className="conv-question" />
                   <div className="conv-chips">
                     {BUDGETS.map(b => (
-                      <button key={b.key} className="conv-chip" onClick={() => answerBudget(b.key)}>{b.label}</button>
+                      <button key={b.key} className="conv-chip" onClick={() => answerBudget(b.key)}>{lb(b)}</button>
                     ))}
                   </div>
                 </div>
@@ -830,23 +831,23 @@ export default function HomePage() {
               {/* Step 4: スタイル */}
               {flowStep === 4 && flowTransition !== 'exiting' && (
                 <div className={`conv-step ${flowTransition === 'entering' ? 'conv-entering' : ''}`}>
-                  <BinaryText key={`q4-${flowStep}`} text="こだわりはありますか？" className="conv-question" />
+                  <BinaryText key={`q4-${flowStep}`} text={fl.q4} className="conv-question" />
                   <div className="conv-chips">
                     {STYLES.map(s => (
-                      <button key={s.key} className="conv-chip" onClick={() => answerStyle(s.key)}>{s.label}</button>
+                      <button key={s.key} className="conv-chip" onClick={() => answerStyle(s.key)}>{lb(s)}</button>
                     ))}
                   </div>
                   <button
                     className="conv-restriction-link"
                     onClick={() => setShowRestrictions(!showRestrictions)}
                   >
-                    {showRestrictions ? 'アレルギー設定を閉じる' : 'アレルギー・食事制限がある方'}
+                    {showRestrictions ? fl.restrictionClose : fl.restrictionOpen}
                   </button>
                   {showRestrictions && (
                     <div className="conv-chips" style={{ marginTop: 8 }}>
                       {RESTRICTIONS.map(r => (
                         <button key={r.key} className={`conv-chip ${flowRestrictions.has(r.key) ? 'selected' : ''}`}
-                          onClick={() => toggleSet(flowRestrictions, setFlowRestrictions, r.key)}>{r.label}</button>
+                          onClick={() => toggleSet(flowRestrictions, setFlowRestrictions, r.key)}>{lb(r)}</button>
                       ))}
                     </div>
                   )}
@@ -857,10 +858,10 @@ export default function HomePage() {
               {flowStep >= 5 && !searched && (
                 <div className="conv-reco">
                   {recoLoading ? (
-                    <div className="conv-question" style={{ padding: '0 24px' }}>探しています...</div>
+                    <div className="conv-question" style={{ padding: '0 24px' }}>{fl.searching}</div>
                   ) : recoCards.length > 0 ? (
                     <>
-                      <BinaryText key={`reco-${recoFallback}-${flowFoodType}`} text={recoFallback ? 'ぴったりは見つからなかったけど…こちらはどうですか？' : 'おすすめのお店'} className="conv-reco-title" />
+                      <BinaryText key={`reco-${recoFallback}-${flowFoodType}`} text={recoFallback ? fl.recoFallback : fl.recoTitle} className="conv-reco-title" />
                       <div className="conv-reco-cards">
                         {recoCards.map(r => (
                           <button
@@ -878,7 +879,7 @@ export default function HomePage() {
                               </div>
                             )}
                             <div className="conv-reco-meta">
-                              <span className="conv-reco-city">{r.city || '福井'} · {r.menu_count}品</span>
+                              <span className="conv-reco-city">{r.city || (isJa ? '福井' : 'Fukui')} · {r.menu_count}{isJa ? '品' : ' items'}</span>
                               <a
                                 className="conv-reco-link"
                                 href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(r.name + ' ' + (r.city || '福井'))}`}
@@ -894,23 +895,23 @@ export default function HomePage() {
                       </div>
                       {recoTotal > 3 && (
                         <button className="conv-reco-more" onClick={() => handleViewResults()}>
-                          他 {recoTotal - 3} 件を見る
+                          {fl.seeMore.replace('{n}', String(recoTotal - 3))}
                         </button>
                       )}
                       {/* Food type re-select — change and update results */}
                       <div className="conv-switch">
-                        <div className="conv-switch-label">他のジャンルも見る</div>
+                        <div className="conv-switch-label">{fl.otherGenre}</div>
                         <div className="conv-chips">
                           {FOOD_TYPES.filter(f => f.key !== flowFoodType).map(f => (
-                            <button key={f.key} className="conv-chip conv-chip-small" onClick={() => switchFoodType(f.key)}>{f.label}</button>
+                            <button key={f.key} className="conv-chip conv-chip-small" onClick={() => switchFoodType(f.key)}>{lb(f)}</button>
                           ))}
                         </div>
                       </div>
                     </>
                   ) : (
                     <div className="conv-step">
-                      <div className="conv-question">もう少し条件を変えてみよう</div>
-                      <button className="conv-next" onClick={resetFlow}>はじめから探す</button>
+                      <div className="conv-question">{fl.changeMore}</div>
+                      <button className="conv-next" onClick={resetFlow}>{fl.startOver}</button>
                     </div>
                   )}
                 </div>
@@ -927,20 +928,20 @@ export default function HomePage() {
                     </span>
                   )}
                   {flowCount !== null && flowCount > 0 && (
-                    <button className="conv-chip conv-chip-small" onClick={() => handleViewResults()}>今すぐ見る</button>
+                    <button className="conv-chip conv-chip-small" onClick={() => handleViewResults()}>{fl.viewNow}</button>
                   )}
                 </div>
               )}
 
               {/* Search — secondary, at bottom of flow */}
               <div className="explore-search-wrap explore-search-secondary">
-                <div className="explore-search-sub">もっと細かく探す</div>
+                <div className="explore-search-sub">{fl.searchMore}</div>
                 <div style={{ position: 'relative' }}>
                   <Search size={16} className="explore-search-icon" />
                   <input
                     className="explore-search"
                     type="text"
-                    placeholder="卵不使用・ハラール・昆布だし・店名で検索"
+                    placeholder={fl.searchPlaceholder}
                     value={query}
                     onChange={e => handleSearch(e.target.value)}
                   />
@@ -955,13 +956,13 @@ export default function HomePage() {
         <div className="explore-body">
           {/* Back button */}
           <div style={{ padding: '8px 24px 0' }}>
-            <span className="conv-reset" onClick={() => { setSearched(false); setQuery(''); setRestaurants([]); setTotal(0) }}>← 戻る</span>
+            <span className="conv-reset" onClick={() => { setSearched(false); setQuery(''); setRestaurants([]); setTotal(0) }}>{fl.back}</span>
           </div>
 
           {/* Results count + sort */}
           <div className="explore-results-bar">
             <span className="explore-results-count">
-              {total.toLocaleString()} 件{query && ` — "${query}"`}
+              {isJa ? `${total.toLocaleString()} 件` : fl.results.replace('{n}', total.toLocaleString())}{query && ` — "${query}"`}
             </span>
             {restaurants.some(r => r._nfg) && (
               <div className="explore-sort-toggle">
@@ -969,13 +970,13 @@ export default function HomePage() {
                   className={`explore-sort-btn ${sortBy === 'score' ? 'active' : ''}`}
                   onClick={() => handleSort('score')}
                 >
-                  スコア順
+                  {fl.score}
                 </button>
                 <button
                   className={`explore-sort-btn ${sortBy === 'menu_count' ? 'active' : ''}`}
                   onClick={() => handleSort('menu_count')}
                 >
-                  メニュー数順
+                  {fl.menuCount}
                 </button>
               </div>
             )}
@@ -984,9 +985,9 @@ export default function HomePage() {
           {/* Restaurant list */}
           <div className="explore-list">
             {loading ? (
-              <div className="explore-loading">読み込み中...</div>
+              <div className="explore-loading">{fl.loading}</div>
             ) : restaurants.length === 0 ? (
-              <div className="explore-empty">該当する店舗がありません</div>
+              <div className="explore-empty">{fl.empty}</div>
             ) : (
               restaurants.map(r => (
                 <button
@@ -1028,7 +1029,7 @@ export default function HomePage() {
                 disabled={page <= 1}
                 onClick={() => handlePage(page - 1)}
               >
-                前へ
+                {fl.prev}
               </button>
               <span className="explore-page-info">{page} / {pages}</span>
               <button
@@ -1036,14 +1037,14 @@ export default function HomePage() {
                 disabled={page >= pages}
                 onClick={() => handlePage(page + 1)}
               >
-                次へ
+                {fl.next}
               </button>
             </div>
           )}
 
           {stats && (
             <div className="explore-footer-stats">
-              {stats.total_restaurants.toLocaleString()}店舗 · {stats.total_menus.toLocaleString()}メニュー · {stats.enriched_menus.toLocaleString()}構造化 · {stats.cities}都市
+              {fl.footer.replace('{r}', stats.total_restaurants.toLocaleString()).replace('{m}', stats.total_menus.toLocaleString()).replace('{e}', stats.enriched_menus.toLocaleString()).replace('{c}', String(stats.cities))}
             </div>
           )}
         </div>

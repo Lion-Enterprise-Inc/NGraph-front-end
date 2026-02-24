@@ -5977,6 +5977,7 @@ textarea.form-input {
 /* Brief: desc + allergens + badges */
 .nfg-card-brief {
   padding: 0 12px 8px;
+  text-align: left;
 }
 
 .nfg-card-desc {
@@ -5998,15 +5999,16 @@ textarea.form-input {
 
 .nfg-field {
   display: flex;
-  gap: 8px;
+  flex-direction: column;
+  gap: 2px;
   font-size: 13px;
   line-height: 1.5;
+  text-align: left;
 }
 
 .nfg-field-label {
   color: rgba(255,255,255,0.45);
-  flex-shrink: 0;
-  min-width: 80px;
+  font-size: 11px;
 }
 
 .nfg-field-value {
