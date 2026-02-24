@@ -5862,6 +5862,21 @@ textarea.form-input {
   white-space: nowrap;
 }
 
+/* ===== Top Menus (initial NFG cards in hero) ===== */
+.top-menus-section {
+  width: 100%;
+  margin-top: 24px;
+  padding: 0 16px;
+}
+.top-menus-label {
+  font-size: 13px;
+  color: var(--color-accent);
+  opacity: 0.7;
+  margin-bottom: 8px;
+  letter-spacing: 0.05em;
+  font-family: 'DM Mono', monospace;
+}
+
 /* ===== NFG Card Styles ===== */
 .nfg-cards-container {
   position: relative;
