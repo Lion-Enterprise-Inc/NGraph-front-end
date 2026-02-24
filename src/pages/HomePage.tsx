@@ -363,6 +363,7 @@ export default function HomePage() {
   const [recoLoading, setRecoLoading] = useState(false)
   const [recoTotal, setRecoTotal] = useState(0)
   const [recoFallback, setRecoFallback] = useState(false)
+  const composingRef = useRef(false)
 
   // Pulse binary particles toward count bar when count changes
   useEffect(() => {
@@ -467,6 +468,11 @@ export default function HomePage() {
 
   const handleSearch = (q: string) => {
     setQuery(q)
+    if (composingRef.current) return // IME変換中は検索トリガーしない
+    triggerSearch(q)
+  }
+
+  const triggerSearch = (q: string) => {
     setPage(1)
     if (debounceRef.current) clearTimeout(debounceRef.current)
     if (q.length >= 2) {
@@ -483,7 +489,6 @@ export default function HomePage() {
         setPages(1)
       }
     }
-    // 1文字目は遷移もフェッチもしない — 入力継続を待つ
   }
 
   const handleSearchSubmit = () => {
@@ -954,7 +959,9 @@ export default function HomePage() {
                     placeholder={fl.searchPlaceholder}
                     value={query}
                     onChange={e => handleSearch(e.target.value)}
-                    onKeyDown={e => e.key === 'Enter' && handleSearchSubmit()}
+                    onCompositionStart={() => { composingRef.current = true }}
+                    onCompositionEnd={e => { composingRef.current = false; triggerSearch((e.target as HTMLInputElement).value) }}
+                    onKeyDown={e => e.key === 'Enter' && !composingRef.current && handleSearchSubmit()}
                   />
                 </div>
               </div>
@@ -976,7 +983,9 @@ export default function HomePage() {
                 placeholder={fl.searchPlaceholder}
                 value={query}
                 onChange={e => handleSearch(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && handleSearchSubmit()}
+                onCompositionStart={() => { composingRef.current = true }}
+                onCompositionEnd={e => { composingRef.current = false; triggerSearch((e.target as HTMLInputElement).value) }}
+                onKeyDown={e => e.key === 'Enter' && !composingRef.current && handleSearchSubmit()}
                 autoFocus
               />
             </div>
