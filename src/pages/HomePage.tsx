@@ -18,7 +18,43 @@ interface Particle {
   size: number; alpha: number
   char: string
   life: number; maxLife: number
+  tx?: number; ty?: number // target position for portrait formation
 }
+
+// アリストテレスの横顔（右向き）— 正規化座標 (0-1)
+// 頭部輪郭 + 目 + 鼻 + 口 + 顎 + 髪 + 髭
+const ARISTOTLE_POINTS: [number, number][] = [
+  // 頭頂〜額
+  [0.45,0.08],[0.50,0.06],[0.55,0.05],[0.60,0.06],[0.65,0.08],[0.68,0.11],
+  // 額〜眉
+  [0.70,0.15],[0.71,0.19],[0.72,0.23],
+  // 眉
+  [0.62,0.24],[0.65,0.23],[0.68,0.23],[0.71,0.24],
+  // 目
+  [0.64,0.28],[0.67,0.27],[0.70,0.28],[0.67,0.29],
+  // 鼻（高い鼻梁）
+  [0.73,0.27],[0.74,0.31],[0.76,0.35],[0.77,0.38],[0.75,0.40],[0.73,0.41],
+  // 口
+  [0.68,0.47],[0.70,0.46],[0.72,0.47],[0.70,0.49],
+  // 顎〜首
+  [0.67,0.52],[0.65,0.56],[0.62,0.60],[0.58,0.63],[0.55,0.65],
+  // 首
+  [0.52,0.68],[0.50,0.72],[0.48,0.76],
+  // 後頭部
+  [0.42,0.10],[0.38,0.14],[0.36,0.20],[0.35,0.26],[0.35,0.32],[0.36,0.38],
+  // 髪の毛（波打つ）
+  [0.40,0.07],[0.37,0.09],[0.34,0.13],[0.33,0.17],[0.32,0.22],
+  [0.43,0.06],[0.48,0.05],[0.53,0.04],
+  // 髭
+  [0.60,0.50],[0.58,0.53],[0.56,0.56],[0.54,0.58],
+  [0.65,0.49],[0.63,0.52],[0.61,0.55],
+  // 耳
+  [0.56,0.28],[0.55,0.31],[0.55,0.34],[0.56,0.37],
+  // 目の奥行き
+  [0.66,0.26],[0.68,0.30],
+  // 鼻の付け根
+  [0.72,0.25],
+]
 
 function BinaryField({ pulseRef }: { pulseRef?: React.RefObject<{ x: number; y: number; strength: number }> }) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -33,22 +69,38 @@ function BinaryField({ pulseRef }: { pulseRef?: React.RefObject<{ x: number; y: 
     let particles: Particle[] = []
     const COUNT = 60
     let pointer = { x: -9999, y: -9999, active: false }
+    let lastInteraction = Date.now()
+    let portraitActive = false
+    let portraitStrength = 0 // 0-1, fades in slowly
+
+    const resetIdle = () => {
+      lastInteraction = Date.now()
+      if (portraitActive) {
+        portraitActive = false
+        // clear targets so particles drift free
+        for (const p of particles) { p.tx = undefined; p.ty = undefined }
+      }
+    }
 
     const onMove = (e: MouseEvent) => {
       const rect = canvas.getBoundingClientRect()
       pointer = { x: e.clientX - rect.left, y: e.clientY - rect.top, active: true }
+      resetIdle()
     }
     const onTouch = (e: TouchEvent) => {
       const rect = canvas.getBoundingClientRect()
       const t = e.touches[0]
       if (t) pointer = { x: t.clientX - rect.left, y: t.clientY - rect.top, active: true }
+      resetIdle()
     }
     const onLeave = () => { pointer.active = false }
+    const onKeyDown = () => { resetIdle() }
 
     document.addEventListener('mousemove', onMove)
     document.addEventListener('touchmove', onTouch, { passive: true })
     document.addEventListener('mouseleave', onLeave)
     document.addEventListener('touchend', onLeave)
+    document.addEventListener('keydown', onKeyDown)
 
     const spawn = (w: number, h: number): Particle => {
       const angle = Math.random() * Math.PI * 2
@@ -91,9 +143,59 @@ function BinaryField({ pulseRef }: { pulseRef?: React.RefObject<{ x: number; y: 
       const cy = canvas.height / 2
       const radius = Math.min(canvas.width, canvas.height) * 0.45
 
+      // Portrait formation check (5 min idle)
+      const idleMs = Date.now() - lastInteraction
+      const IDLE_THRESHOLD = 300_000 // 5 minutes
+      if (idleMs > IDLE_THRESHOLD && !portraitActive) {
+        portraitActive = true
+        portraitStrength = 0
+        // Assign target positions from ARISTOTLE_POINTS
+        const scale = Math.min(canvas.width, canvas.height) * 0.6
+        const ox = canvas.width / 2 - scale * 0.55
+        const oy = canvas.height / 2 - scale * 0.4
+        for (let i = 0; i < particles.length; i++) {
+          if (i < ARISTOTLE_POINTS.length) {
+            const [px, py] = ARISTOTLE_POINTS[i]
+            particles[i].tx = ox + px * scale
+            particles[i].ty = oy + py * scale
+          } else {
+            // Extra particles drift toward random portrait area
+            const rp = ARISTOTLE_POINTS[Math.floor(Math.random() * ARISTOTLE_POINTS.length)]
+            particles[i].tx = ox + rp[0] * scale + (Math.random() - 0.5) * 20
+            particles[i].ty = oy + rp[1] * scale + (Math.random() - 0.5) * 20
+          }
+        }
+      }
+      if (portraitActive) {
+        portraitStrength = Math.min(portraitStrength + 0.0008, 1)
+      } else {
+        portraitStrength = Math.max(portraitStrength - 0.02, 0)
+      }
+
       // update & compute visible alpha
       for (let i = 0; i < particles.length; i++) {
         const p = particles[i]
+
+        // Portrait target attraction (very gentle)
+        if (p.tx !== undefined && p.ty !== undefined && portraitStrength > 0) {
+          const tdx = p.tx - p.x
+          const tdy = p.ty - p.y
+          const tdist = Math.sqrt(tdx * tdx + tdy * tdy)
+          if (tdist > 1) {
+            const force = portraitStrength * 0.02
+            p.vx += (tdx / tdist) * force * Math.min(tdist, 50)
+            p.vy += (tdy / tdist) * force * Math.min(tdist, 50)
+          }
+          // Slow down near target
+          if (tdist < 15) {
+            p.vx *= 0.92
+            p.vy *= 0.92
+          }
+          // Extend life while forming portrait
+          if (p.life > p.maxLife * 0.7) {
+            p.life = p.maxLife * 0.7
+          }
+        }
 
         // attract to pointer
         if (pointer.active) {
@@ -214,6 +316,7 @@ function BinaryField({ pulseRef }: { pulseRef?: React.RefObject<{ x: number; y: 
       document.removeEventListener('touchmove', onTouch)
       document.removeEventListener('mouseleave', onLeave)
       document.removeEventListener('touchend', onLeave)
+      document.removeEventListener('keydown', onKeyDown)
     }
   }, [])
 
