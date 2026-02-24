@@ -1161,6 +1161,7 @@ export const ExploreApi = {
 export interface SemanticSearchRestaurant {
   uid: string;
   name: string;
+  name_romaji: string | null;
   slug: string;
   city: string | null;
   menu_count: number;
@@ -1228,6 +1229,7 @@ export interface MenuSearchItem {
   featured_tags: string[];
   restaurant_uid: string;
   restaurant_name: string;
+  restaurant_name_romaji: string | null;
   restaurant_slug: string;
   restaurant_city: string | null;
 }
@@ -1287,6 +1289,8 @@ export interface SuggestionRequest {
   suggested_value: string;
   reason?: string;
   session_id?: string;
+  contributor_type?: string;
+  contributor_name?: string;
 }
 
 export const ContributionApi = {

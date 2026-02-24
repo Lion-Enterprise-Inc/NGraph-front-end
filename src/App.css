@@ -11,8 +11,8 @@
   --color-bg: #0D0D0D;
   --color-surface: #111111;
   --color-overlay: #1A1A1A;
-  --color-text: rgba(255,255,255,0.9);
-  --color-text-secondary: rgba(255,255,255,0.55);
+  --color-text: rgba(255,255,255,0.95);
+  --color-text-secondary: rgba(255,255,255,0.65);
   --color-text-muted: rgba(255,255,255,0.25);
   --color-text-subtle: rgba(255,255,255,0.15);
   --color-border: rgba(255,255,255,0.07);
@@ -879,7 +879,8 @@ body {
   .form-input,
   .form-field input,
   .source-input,
-  textarea.form-input {
+  textarea.form-input,
+  .explore-search {
     font-size: 16px;
   }
 }
@@ -5070,7 +5071,7 @@ textarea.form-input {
   border: 1px solid rgba(255,255,255,0.1);
   border-radius: 6px;
   color: var(--color-text);
-  font-size: 14px;
+  font-size: 16px;
   outline: none;
   transition: border-color 0.15s;
   box-sizing: border-box;
@@ -5177,6 +5178,10 @@ textarea.form-input {
 .menu-match-tags { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 4px; }
 .menu-match-tag { font-size: 10px; padding: 1px 6px; border-radius: 8px; background: rgba(255,165,0,0.15); color: rgba(255,165,0,0.8); }
 
+/* 店名: ブランド名 + 支店名(小さく) + ローマ字 */
+.store-suffix { font-size: 0.75em; color: rgba(255,255,255,0.4); margin-left: 4px; font-weight: 400; }
+.store-romaji { font-size: 0.8em; color: rgba(255,255,255,0.35); font-weight: 400; margin-top: 1px; }
+
 .explore-list {
   display: flex;
   flex-direction: column;
@@ -5219,7 +5224,7 @@ textarea.form-input {
 .explore-row-name {
   font-size: 14px;
   font-weight: 500;
-  color: var(--color-accent);
+  color: rgba(52,211,153,0.95);
 }
 
 .explore-row-info {
@@ -6226,17 +6231,17 @@ textarea.form-input {
   font-family: 'Noto Sans JP', sans-serif;
   font-size: 18px;
   font-weight: 500;
-  color: rgba(16,163,127,0.7);
+  color: rgba(52,211,153,0.9);
   margin-bottom: 16px;
   letter-spacing: 0.02em;
 }
 .conv-question .bt-noise {
   font-family: 'SF Mono', 'Fira Code', monospace;
-  color: rgba(16,163,127,0.2);
+  color: rgba(52,211,153,0.3);
   font-size: 16px;
 }
 .conv-question .bt-decoded {
-  color: rgba(16,163,127,0.7);
+  color: rgba(52,211,153,0.9);
 }
 .conv-section-label {
   font-size: 12px;
@@ -6263,14 +6268,14 @@ textarea.form-input {
   user-select: none;
 }
 .conv-chip:hover {
-  border-color: var(--color-accent);
-  color: var(--color-accent);
+  border-color: rgba(52,211,153,0.5);
+  color: rgba(52,211,153,0.95);
   background: rgba(16,163,127,0.08);
 }
 .conv-chip.selected {
-  border-color: var(--color-accent);
+  border-color: rgba(52,211,153,0.5);
   background: rgba(16,163,127,0.12);
-  color: #4fd1a5;
+  color: #5ee8b7;
 }
 .conv-chip-skip {
   color: #444;
@@ -6331,7 +6336,7 @@ textarea.form-input {
 .conv-reco-title {
   font-family: 'Noto Sans JP', sans-serif;
   font-size: 13px;
-  color: rgba(16,163,127,0.6);
+  color: rgba(52,211,153,0.8);
   margin-bottom: 12px;
   padding: 0 24px;
 }
@@ -6365,7 +6370,7 @@ textarea.form-input {
   font-family: 'Noto Sans JP', sans-serif;
   font-size: 15px;
   font-weight: 500;
-  color: #e0e0e0;
+  color: #f0f0f0;
   margin-bottom: 6px;
 }
 .conv-reco-reasons {

@@ -21,38 +21,87 @@ interface Particle {
   tx?: number; ty?: number // target position for portrait formation
 }
 
-// テキストをCanvas描画→ピクセルサンプリング
-function generateTextPixels(text: string, fontSize: number, w: number, h: number): [number, number][] {
+// Canvas描画→ピクセルサンプリング共通
+function samplePixels(w: number, h: number, draw: (ctx: CanvasRenderingContext2D) => void, step = 3): [number, number][] {
   if (typeof document === 'undefined') return []
   const c = document.createElement('canvas')
   c.width = w; c.height = h
   const ctx = c.getContext('2d')
   if (!ctx) return []
-  ctx.fillStyle = '#000'
-  ctx.font = `bold ${fontSize}px 'Georgia', 'Times New Roman', serif`
-  ctx.textAlign = 'center'
-  ctx.textBaseline = 'middle'
-  // 2行に分割
-  ctx.fillText('Nicomacos', w / 2, h * 0.35)
-  ctx.fillText('Food Graph', w / 2, h * 0.65)
+  draw(ctx)
   const data = ctx.getImageData(0, 0, w, h).data
   const pixels: [number, number][] = []
-  const step = 3
   for (let y = 0; y < h; y += step) {
     for (let x = 0; x < w; x += step) {
-      const idx = (y * w + x) * 4
-      if (data[idx + 3] > 128) {
-        pixels.push([x / w, y / h])
-      }
+      if (data[(y * w + x) * 4 + 3] > 128) pixels.push([x / w, y / h])
     }
   }
   return pixels
 }
 
-let _textCache: [number, number][] | null = null
-function getTextPixels(): [number, number][] {
-  if (!_textCache) _textCache = generateTextPixels('NFG', 28, 240, 80)
-  return _textCache
+// パターン1: Nicomacos Food Graph テキスト
+function genText(): [number, number][] {
+  return samplePixels(240, 80, ctx => {
+    ctx.fillStyle = '#000'
+    ctx.font = "bold 28px 'Georgia', 'Times New Roman', serif"
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
+    ctx.fillText('Nicomacos', 120, 28)
+    ctx.fillText('Food Graph', 120, 52)
+  })
+}
+
+// パターン2: 鳥居
+function genTorii(): [number, number][] {
+  return samplePixels(200, 200, ctx => {
+    ctx.fillStyle = '#000'
+    // 上の笠木（反り）
+    ctx.beginPath()
+    ctx.moveTo(10, 40); ctx.quadraticCurveTo(100, 20, 190, 40)
+    ctx.lineTo(190, 50); ctx.quadraticCurveTo(100, 32, 10, 50)
+    ctx.fill()
+    // 島木（直線梁）
+    ctx.fillRect(25, 55, 150, 10)
+    // 額束（中央の短い柱）
+    ctx.fillRect(90, 55, 20, 20)
+    // 貫（中段の横梁）
+    ctx.fillRect(30, 75, 140, 8)
+    // 左柱
+    ctx.fillRect(45, 50, 14, 140)
+    // 右柱
+    ctx.fillRect(141, 50, 14, 140)
+  }, 2)
+}
+
+// パターン3: 波（青海波風）
+function genWave(): [number, number][] {
+  return samplePixels(240, 120, ctx => {
+    ctx.strokeStyle = '#000'; ctx.lineWidth = 2.5
+    const rows = 4, cols = 6, r = 22
+    for (let row = 0; row < rows; row++) {
+      for (let col = 0; col < cols + 1; col++) {
+        const offsetX = row % 2 === 0 ? 0 : r
+        const cx = col * r * 2 + offsetX
+        const cy = row * r * 0.8 + r + 10
+        for (let k = 0; k < 3; k++) {
+          ctx.beginPath()
+          ctx.arc(cx, cy, r - k * 6, Math.PI, 0)
+          ctx.stroke()
+        }
+      }
+    }
+  })
+}
+
+const _patternCache: [number, number][][] = []
+const PATTERN_GENERATORS = [genText, genTorii, genWave]
+let _patternIndex = 0
+function getNextPattern(): [number, number][] {
+  if (_patternCache.length === 0) {
+    for (const gen of PATTERN_GENERATORS) _patternCache.push(gen())
+  }
+  const pattern = _patternCache[_patternIndex % _patternCache.length]
+  _patternIndex++
+  return pattern
 }
 
 function BinaryField({ pulseRef }: { pulseRef?: React.RefObject<{ x: number; y: number; strength: number }> }) {
@@ -162,12 +211,12 @@ function BinaryField({ pulseRef }: { pulseRef?: React.RefObject<{ x: number; y: 
 
       // Portrait formation check (5 min idle)
       const idleMs = Date.now() - lastInteraction
-      const IDLE_THRESHOLD = 300_000 // 5 min
+      const IDLE_THRESHOLD = 5_000 // TEST: 5s (prod: 300_000)
       if (idleMs > IDLE_THRESHOLD && !portraitActive && !portraitDone) {
         portraitActive = true
         portraitStrength = 0
         portraitFormedAt = 0
-        const pixels = getTextPixels()
+        const pixels = getNextPattern()
         if (pixels.length > 0) {
           const scale = Math.min(canvas.width, canvas.height) * 0.7
           const ox = canvas.width / 2 - scale * 0.5
@@ -195,6 +244,8 @@ function BinaryField({ pulseRef }: { pulseRef?: React.RefObject<{ x: number; y: 
             p.vx += Math.cos(angle) * 1.5
             p.vy += Math.sin(angle) * 1.5
           }
+          // 散った後、再度アイドルで次パターンへ
+          setTimeout(() => { portraitDone = false; lastInteraction = Date.now() }, 5000)
         }
       } else {
         portraitStrength = Math.max(portraitStrength - 0.02, 0)
@@ -426,6 +477,17 @@ const BUDGETS = [
   { key: 'over5000', label: '5,000円~', labelEn: '¥5,000+', min: 5000, max: 0 },
   { key: 'any', label: '気にしない', labelEn: "Don't mind", min: 0, max: 0 },
 ] as const
+
+// 店名分割: 「個室居酒屋 ぼんた 本店」→ brand="個室居酒屋 ぼんた", suffix="本店"
+const BRANCH_SUFFIXES = ['本店', '別館', '分店', '支店', '新館', '駅前店', '個室お二階']
+function splitStoreName(name: string): { brand: string; suffix: string } {
+  for (const s of BRANCH_SUFFIXES) {
+    if (name.endsWith(s) && name.length > s.length) {
+      return { brand: name.slice(0, -s.length).trimEnd(), suffix: s }
+    }
+  }
+  return { brand: name, suffix: '' }
+}
 
 const STYLES = [
   { key: 'hearty', label: 'がっつり', labelEn: 'Hearty', mood: 'hearty' },
@@ -1029,7 +1091,10 @@ export default function HomePage() {
                             className="conv-reco-card"
                             onClick={() => router.push(`/capture?restaurant=${encodeURIComponent(r.slug)}`)}
                           >
-                            <div className="conv-reco-restaurant">{r.name}</div>
+                            <div className="conv-reco-restaurant">
+                              {(() => { const s = splitStoreName(r.name); return <>{s.brand}{s.suffix && <span className="store-suffix">{s.suffix}</span>}</> })()}
+                              {!isJa && r.name_romaji && <div className="store-romaji">{r.name_romaji}</div>}
+                            </div>
                             {r.match_reasons.length > 0 && (
                               <div className="conv-reco-reasons">
                                 {r.score > 0 && <span className="conv-reco-score">{r.score}pt</span>}
@@ -1174,7 +1239,11 @@ export default function HomePage() {
                     <div className="menu-match-name">{m.name_jp}</div>
                     {m.price > 0 && <div className="menu-match-price">¥{m.price.toLocaleString()}</div>}
                     {m.narrative_snippet && <div className="menu-match-desc">{m.narrative_snippet}</div>}
-                    <div className="menu-match-restaurant">{m.restaurant_name}{m.restaurant_city ? ` · ${m.restaurant_city}` : ''}</div>
+                    <div className="menu-match-restaurant">
+                      {(() => { const s = splitStoreName(m.restaurant_name); return <>{s.brand}{s.suffix && <span className="store-suffix">{s.suffix}</span>}</> })()}
+                      {m.restaurant_city ? ` · ${m.restaurant_city}` : ''}
+                      {!isJa && m.restaurant_name_romaji && <div className="store-romaji">{m.restaurant_name_romaji}</div>}
+                    </div>
                     {m.featured_tags.length > 0 && (
                       <div className="menu-match-tags">
                         {m.featured_tags.map((t, i) => <span key={i} className="menu-match-tag">{t}</span>)}
@@ -1201,7 +1270,10 @@ export default function HomePage() {
                 >
                   <div className="explore-row-main">
                     <div className="explore-row-info">
-                      <span className="explore-row-name">{r.name}</span>
+                      <span className="explore-row-name">
+                        {(() => { const s = splitStoreName(r.name); return <>{s.brand}{s.suffix && <span className="store-suffix">{s.suffix}</span>}</> })()}
+                        {!isJa && (r as any).name_romaji && <span className="store-romaji">{(r as any).name_romaji}</span>}
+                      </span>
                       {r.city && <span className="explore-row-address">{r.city}</span>}
                     </div>
                     {r.menu_count > 0 && (

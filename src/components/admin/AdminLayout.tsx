@@ -73,6 +73,7 @@ export default function AdminLayout({ children, title }: Props) {
     { key: 'basic-info', label: '基本情報', icon: '🧾', to: '/admin/basic-info' },
     { key: 'menu-list', label: 'メニュー一覧', icon: '📋', to: '/admin/menu-list' },
     { key: 'menu-analytics', label: 'メニュー分析', icon: '📊', to: '/admin/menu-analytics' },
+    { key: 'store-knowledge', label: '店舗知識', icon: '🧠', to: '/admin/store-knowledge' },
     { key: 'qr', label: 'QRコード', icon: '📱', to: '/admin/qr-management' },
     { key: 'prompts', label: 'AI設定', icon: '🤖', to: '/admin/prompts' },
   ]

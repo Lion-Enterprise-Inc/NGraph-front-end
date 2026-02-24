@@ -21,6 +21,15 @@ const FIELD_OPTIONS = [
   { value: 'other', label: 'その他' },
 ];
 
+const CONTRIBUTOR_TYPES = [
+  { value: '', label: '選択してください' },
+  { value: 'customer', label: 'お客さん' },
+  { value: 'regular', label: '常連' },
+  { value: 'tourist', label: '観光客' },
+  { value: 'local', label: '地元民' },
+  { value: 'staff', label: '店舗スタッフ' },
+];
+
 const getSessionId = (): string => {
   let id = localStorage.getItem('ngraph_session_id');
   if (!id) {
@@ -32,6 +41,8 @@ const getSessionId = (): string => {
 
 export default function SuggestionModal({ open, onClose, menuItem, onSubmit }: SuggestionModalProps) {
   const [field, setField] = useState('allergens');
+  const [contributorType, setContributorType] = useState('');
+  const [contributorName, setContributorName] = useState('');
   const [value, setValue] = useState('');
   const [reason, setReason] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -50,12 +61,16 @@ export default function SuggestionModal({ open, onClose, menuItem, onSubmit }: S
         suggested_value: value.trim(),
         reason: reason.trim() || undefined,
         session_id: getSessionId(),
+        contributor_type: contributorType || undefined,
+        contributor_name: contributorName.trim() || undefined,
       });
       setToast(true);
       setTimeout(() => {
         setToast(false);
         setValue('');
         setReason('');
+        setContributorType('');
+        setContributorName('');
         onClose();
         onSubmit();
       }, 1200);
@@ -129,6 +144,77 @@ export default function SuggestionModal({ open, onClose, menuItem, onSubmit }: S
             <option key={opt.value} value={opt.value}>{opt.label}</option>
           ))}
         </select>
+
+        {/* Contributor type */}
+        <label style={{ fontSize: '13px', color: 'rgba(255,255,255,0.6)', marginBottom: '6px', display: 'block' }}>
+          あなたの属性
+        </label>
+        <select
+          value={contributorType}
+          onChange={(e) => setContributorType(e.target.value)}
+          style={{
+            width: '100%',
+            padding: '10px 12px',
+            borderRadius: '8px',
+            border: '1px solid rgba(255,255,255,0.12)',
+            background: 'rgba(255,255,255,0.06)',
+            color: 'rgba(255,255,255,0.9)',
+            fontSize: '14px',
+            marginBottom: '12px',
+            outline: 'none',
+          }}
+        >
+          {CONTRIBUTOR_TYPES.map((opt) => (
+            <option key={opt.value} value={opt.value}>{opt.label}</option>
+          ))}
+        </select>
+
+        {/* Contributor name */}
+        <label style={{ fontSize: '13px', color: 'rgba(255,255,255,0.6)', marginBottom: '6px', display: 'block' }}>
+          お名前（任意）
+        </label>
+        <input
+          type="text"
+          value={contributorName}
+          onChange={(e) => setContributorName(e.target.value)}
+          placeholder="匿名でもOK"
+          style={{
+            width: '100%',
+            padding: '10px 12px',
+            borderRadius: '8px',
+            border: '1px solid rgba(255,255,255,0.12)',
+            background: 'rgba(255,255,255,0.06)',
+            color: 'rgba(255,255,255,0.9)',
+            fontSize: '14px',
+            marginBottom: contributorType === 'staff' ? '8px' : '12px',
+            outline: 'none',
+            boxSizing: 'border-box',
+          }}
+        />
+
+        {/* Staff registration banner */}
+        {contributorType === 'staff' && (
+          <div
+            style={{
+              padding: '10px 14px',
+              borderRadius: '8px',
+              background: 'rgba(59,130,246,0.1)',
+              border: '1px solid rgba(59,130,246,0.25)',
+              marginBottom: '12px',
+              fontSize: '13px',
+              color: 'rgba(255,255,255,0.8)',
+              lineHeight: 1.5,
+            }}
+          >
+            店舗アカウントを登録すると、管理画面からデータを直接編集できます。
+            <a
+              href="/admin/login"
+              style={{ color: '#60A5FA', marginLeft: '4px', textDecoration: 'underline' }}
+            >
+              無料で登録
+            </a>
+          </div>
+        )}
 
         {/* Correction input */}
         <label style={{ fontSize: '13px', color: 'rgba(255,255,255,0.6)', marginBottom: '6px', display: 'block' }}>

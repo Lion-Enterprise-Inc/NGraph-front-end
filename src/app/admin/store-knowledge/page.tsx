@@ -1,0 +1,593 @@
+'use client'
+
+import { useEffect, useState, useCallback } from 'react'
+import AdminLayout from '../../../components/admin/AdminLayout'
+import { apiClient, TokenService } from '../../../services/api'
+import { useToast } from '../../../components/admin/Toast'
+import { PHASES, Question } from './questions'
+
+interface StoreKnowledgeItem {
+  uid: string
+  key: string
+  value: string
+  category: string | null
+  applies_to_categories: string[] | null
+  source: string
+  verified: boolean
+}
+
+interface Answer {
+  value: string | string[]
+  note: string
+}
+
+function parseStoredValue(raw: string): { value: string | string[], note: string } {
+  const parts = raw.split('||')
+  const mainVal = parts[0] || ''
+  const note = parts.slice(1).join('||') || ''
+  if (mainVal.includes(',') && !mainVal.includes('¥')) {
+    return { value: mainVal.split(','), note }
+  }
+  return { value: mainVal, note }
+}
+
+function serializeAnswer(answer: Answer): string {
+  const val = Array.isArray(answer.value) ? answer.value.join(',') : answer.value
+  if (answer.note) return `${val}||${answer.note}`
+  return val
+}
+
+function ProgressBar({ filled, total, color = '#3B82F6' }: { filled: number; total: number; color?: string }) {
+  const pct = total > 0 ? (filled / total) * 100 : 0
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+      <div style={{ flex: 1, height: 8, background: '#1E293B', borderRadius: 4, overflow: 'hidden' }}>
+        <div style={{
+          width: `${pct}%`,
+          height: '100%',
+          background: `linear-gradient(90deg, ${color}, #06B6D4)`,
+          borderRadius: 4,
+          transition: 'width 0.3s ease',
+        }} />
+      </div>
+      <span style={{ fontSize: 13, color: '#94A3B8', whiteSpace: 'nowrap' }}>{filled}/{total}</span>
+    </div>
+  )
+}
+
+function TableQuestion({ q, answer, onChange }: {
+  q: Question
+  answer: Answer | undefined
+  onChange: (val: string | string[], note: string) => void
+}) {
+  const rows = q.tableRows || []
+  const cols = q.tableColumns || []
+  // Store as JSON object: { "row_name": "col_name", ... }
+  const currentVal: Record<string, string> = (() => {
+    try {
+      const raw = answer?.value
+      if (typeof raw === 'string' && raw.startsWith('{')) return JSON.parse(raw)
+    } catch { /* ignore */ }
+    return {}
+  })()
+
+  const handleCellClick = (row: string, col: string) => {
+    const updated = { ...currentVal }
+    if (updated[row] === col) {
+      delete updated[row]
+    } else {
+      updated[row] = col
+    }
+    onChange(JSON.stringify(updated), answer?.note || '')
+  }
+
+  return (
+    <div style={{ overflowX: 'auto' }}>
+      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+        <thead>
+          <tr>
+            <th style={{ padding: '8px 12px', textAlign: 'left', borderBottom: '1px solid var(--border)', color: 'var(--muted)', fontWeight: 500 }}></th>
+            {cols.map(c => (
+              <th key={c} style={{ padding: '8px 12px', textAlign: 'center', borderBottom: '1px solid var(--border)', color: 'var(--muted)', fontWeight: 500, whiteSpace: 'nowrap' }}>{c}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map(row => (
+            <tr key={row}>
+              <td style={{ padding: '8px 12px', borderBottom: '1px solid var(--border)', color: 'var(--text-body)', fontSize: 13 }}>{row}</td>
+              {cols.map(col => {
+                const isSelected = currentVal[row] === col
+                return (
+                  <td key={col} style={{ padding: '6px 8px', textAlign: 'center', borderBottom: '1px solid var(--border)' }}>
+                    <button
+                      onClick={() => handleCellClick(row, col)}
+                      style={{
+                        width: 28, height: 28,
+                        borderRadius: '50%',
+                        border: isSelected ? '2px solid #3B82F6' : '1px solid var(--border-strong)',
+                        background: isSelected ? 'rgba(59,130,246,0.2)' : 'transparent',
+                        cursor: 'pointer',
+                        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                        color: isSelected ? '#3B82F6' : 'transparent',
+                        fontSize: 14,
+                        transition: 'all 0.15s ease',
+                      }}
+                    >
+                      {isSelected ? '●' : ''}
+                    </button>
+                  </td>
+                )
+              })}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
+function QuestionCard({ q, answer, onAnswer }: {
+  q: Question
+  answer: Answer | undefined
+  onAnswer: (questionId: string, value: string | string[], note: string) => void
+}) {
+  const currentVal = answer?.value || (q.type === 'multi' ? [] : '')
+  const currentNote = answer?.note || ''
+
+  const handleSingleClick = (opt: string) => {
+    const newVal = currentVal === opt ? '' : opt
+    onAnswer(q.id, newVal, currentNote)
+  }
+
+  const handleMultiClick = (opt: string) => {
+    const arr = Array.isArray(currentVal) ? [...currentVal] : []
+    const idx = arr.indexOf(opt)
+    if (idx >= 0) arr.splice(idx, 1)
+    else arr.push(opt)
+    onAnswer(q.id, arr, currentNote)
+  }
+
+  const hasValue = q.type === 'multi'
+    ? (Array.isArray(currentVal) && currentVal.length > 0)
+    : (q.type === 'table'
+      ? (typeof currentVal === 'string' && currentVal !== '' && currentVal !== '{}')
+      : (typeof currentVal === 'string' && currentVal !== ''))
+
+  return (
+    <div style={{
+      background: 'var(--bg-surface)',
+      border: `1px solid ${hasValue ? 'rgba(59,130,246,0.3)' : 'var(--border)'}`,
+      borderRadius: 10,
+      padding: '16px 20px',
+      transition: 'border-color 0.2s ease',
+    }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: 12 }}>
+        <span style={{
+          width: 8, height: 8, borderRadius: '50%', marginTop: 6, flexShrink: 0,
+          background: hasValue ? '#10B981' : '#475569',
+        }} />
+        <span style={{ fontSize: 14, color: 'var(--text)', lineHeight: 1.5 }}>{q.label}</span>
+      </div>
+
+      {q.type === 'single' && q.options && (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginLeft: 16 }}>
+          {q.options.map(opt => {
+            const isSelected = currentVal === opt
+            return (
+              <button
+                key={opt}
+                onClick={() => handleSingleClick(opt)}
+                style={{
+                  padding: '7px 14px',
+                  borderRadius: 8,
+                  border: isSelected ? '1px solid #3B82F6' : '1px solid var(--border-strong)',
+                  background: isSelected ? 'rgba(59,130,246,0.15)' : 'var(--bg-input)',
+                  color: isSelected ? '#60A5FA' : 'var(--text-body)',
+                  cursor: 'pointer',
+                  fontSize: 13,
+                  transition: 'all 0.15s ease',
+                }}
+              >
+                {opt}
+              </button>
+            )
+          })}
+        </div>
+      )}
+
+      {q.type === 'multi' && q.options && (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginLeft: 16 }}>
+          {q.options.map(opt => {
+            const arr = Array.isArray(currentVal) ? currentVal : []
+            const isSelected = arr.includes(opt)
+            return (
+              <button
+                key={opt}
+                onClick={() => handleMultiClick(opt)}
+                style={{
+                  padding: '7px 14px',
+                  borderRadius: 8,
+                  border: isSelected ? '1px solid #10B981' : '1px solid var(--border-strong)',
+                  background: isSelected ? 'rgba(16,185,129,0.15)' : 'var(--bg-input)',
+                  color: isSelected ? '#34D399' : 'var(--text-body)',
+                  cursor: 'pointer',
+                  fontSize: 13,
+                  transition: 'all 0.15s ease',
+                }}
+              >
+                {isSelected ? '✓ ' : ''}{opt}
+              </button>
+            )
+          })}
+        </div>
+      )}
+
+      {q.type === 'table' && (
+        <div style={{ marginLeft: 16 }}>
+          <TableQuestion q={q} answer={answer} onChange={(val, note) => onAnswer(q.id, val, note)} />
+        </div>
+      )}
+
+      {q.type === 'text' && (
+        <div style={{ marginLeft: 16 }}>
+          <textarea
+            value={typeof currentVal === 'string' ? currentVal : ''}
+            onChange={e => onAnswer(q.id, e.target.value, currentNote)}
+            placeholder={q.note || '自由記述'}
+            rows={2}
+            style={{
+              width: '100%',
+              padding: '10px 12px',
+              background: 'var(--bg-input)',
+              color: 'var(--text)',
+              border: '1px solid var(--border-strong)',
+              borderRadius: 8,
+              fontSize: 13,
+              resize: 'vertical',
+            }}
+          />
+        </div>
+      )}
+
+      {/* Note field for non-text questions */}
+      {q.type !== 'text' && (
+        <div style={{ marginTop: 10, marginLeft: 16 }}>
+          <input
+            type="text"
+            value={currentNote}
+            onChange={e => onAnswer(q.id, currentVal, e.target.value)}
+            placeholder={q.note ? `📝 ${q.note}` : '📝 補足'}
+            style={{
+              width: '100%',
+              padding: '8px 12px',
+              background: 'var(--bg-input)',
+              color: 'var(--text)',
+              border: '1px solid var(--border)',
+              borderRadius: 8,
+              fontSize: 12,
+            }}
+          />
+        </div>
+      )}
+    </div>
+  )
+}
+
+function PhaseSection({ phase, answers, onAnswer, defaultOpen }: {
+  phase: typeof PHASES[0]
+  answers: Record<string, Answer>
+  onAnswer: (questionId: string, value: string | string[], note: string) => void
+  defaultOpen: boolean
+}) {
+  const [open, setOpen] = useState(defaultOpen)
+  const filled = phase.questions.filter(q => {
+    const a = answers[q.id]
+    if (!a) return false
+    if (q.type === 'multi') return Array.isArray(a.value) && a.value.length > 0
+    if (q.type === 'table') return typeof a.value === 'string' && a.value !== '' && a.value !== '{}'
+    return typeof a.value === 'string' && a.value !== ''
+  }).length
+  const total = phase.questions.length
+
+  return (
+    <div style={{
+      background: 'var(--bg-surface)',
+      border: '1px solid var(--border)',
+      borderRadius: 12,
+      overflow: 'hidden',
+    }}>
+      <button
+        onClick={() => setOpen(v => !v)}
+        style={{
+          width: '100%',
+          padding: '16px 20px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 12,
+          background: 'transparent',
+          border: 'none',
+          cursor: 'pointer',
+          color: 'var(--text)',
+        }}
+      >
+        <span style={{ fontSize: 16, transform: open ? 'rotate(90deg)' : 'rotate(0)', transition: 'transform 0.2s' }}>▶</span>
+        <div style={{ flex: 1, textAlign: 'left' }}>
+          <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 4 }}>{phase.title}</div>
+          <div style={{ fontSize: 12, color: 'var(--muted)' }}>{phase.description}</div>
+        </div>
+        <div style={{ width: 120 }}>
+          <ProgressBar filled={filled} total={total} />
+        </div>
+        {filled === total && total > 0 && (
+          <span style={{ color: '#10B981', fontSize: 16 }}>✓</span>
+        )}
+      </button>
+      {open && (
+        <div style={{ padding: '0 20px 20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {phase.questions.map(q => (
+            <QuestionCard
+              key={q.id}
+              q={q}
+              answer={answers[q.id]}
+              onAnswer={onAnswer}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+export default function StoreKnowledgePage() {
+  const [answers, setAnswers] = useState<Record<string, Answer>>({})
+  const [existingItems, setExistingItems] = useState<StoreKnowledgeItem[]>([])
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [slug, setSlug] = useState<string | null>(null)
+  const toast = useToast()
+
+  // Build key→question lookup
+  const keyToQuestion = new Map<string, Question>()
+  for (const phase of PHASES) {
+    for (const q of phase.questions) {
+      keyToQuestion.set(q.key, q)
+    }
+  }
+
+  // Build question id→key lookup
+  const idToKey = new Map<string, string>()
+  for (const phase of PHASES) {
+    for (const q of phase.questions) {
+      idToKey.set(q.id, q.key)
+    }
+  }
+
+  useEffect(() => {
+    const user = TokenService.getUser()
+    if (!user) return
+
+    // For restaurant owners, use their slug. For admin, check URL params or use first restaurant
+    let restaurantSlug = user.restaurant_slug
+    if (!restaurantSlug && (user.role === 'superadmin' || user.role === 'platform_owner')) {
+      const params = new URLSearchParams(window.location.search)
+      restaurantSlug = params.get('slug') || 'bonta-honten'
+    }
+
+    if (restaurantSlug) {
+      setSlug(restaurantSlug)
+      loadData(restaurantSlug)
+    } else {
+      setLoading(false)
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const loadData = async (restaurantSlug: string) => {
+    try {
+      const items = await apiClient.get<StoreKnowledgeItem[]>(`/store-knowledge/${restaurantSlug}`)
+      setExistingItems(items)
+
+      // Prefill answers from existing data
+      const prefilled: Record<string, Answer> = {}
+      for (const item of items) {
+        // Find question by key
+        let questionId: string | null = null
+        for (const phase of PHASES) {
+          for (const q of phase.questions) {
+            if (q.key === item.key) {
+              questionId = q.id
+              break
+            }
+          }
+          if (questionId) break
+        }
+        if (questionId) {
+          const parsed = parseStoredValue(item.value)
+          prefilled[questionId] = parsed
+        }
+      }
+      setAnswers(prefilled)
+    } catch (err) {
+      console.error('Failed to load store knowledge:', err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleAnswer = useCallback((questionId: string, value: string | string[], note: string) => {
+    setAnswers(prev => ({
+      ...prev,
+      [questionId]: { value, note },
+    }))
+  }, [])
+
+  const handleSave = async () => {
+    if (!slug) return
+    setSaving(true)
+
+    try {
+      const promises: Promise<unknown>[] = []
+
+      for (const [questionId, answer] of Object.entries(answers)) {
+        const key = idToKey.get(questionId)
+        if (!key) continue
+
+        const question = keyToQuestion.get(key)
+        const serialized = serializeAnswer(answer)
+        if (!serialized) continue
+
+        // Check if this key already exists
+        const existing = existingItems.find(item => item.key === key)
+
+        if (existing) {
+          promises.push(
+            apiClient.put(`/store-knowledge/${existing.uid}`, {
+              value: serialized,
+              source: 'mtg',
+              verified: true,
+            })
+          )
+        } else {
+          promises.push(
+            apiClient.post(`/store-knowledge/${slug}`, {
+              key,
+              value: serialized,
+              category: question?.category || null,
+              applies_to_categories: question?.applies_to_categories || null,
+              source: 'mtg',
+            })
+          )
+        }
+      }
+
+      const results = await Promise.allSettled(promises)
+      const failed = results.filter(r => r.status === 'rejected').length
+      if (failed > 0) {
+        toast('warning', `${results.length - failed}件保存、${failed}件失敗`)
+      } else {
+        toast('success', `${results.length}件保存しました`)
+      }
+
+      // Reload to get updated UIDs
+      await loadData(slug)
+    } catch (err) {
+      console.error('Save failed:', err)
+      toast('error', '保存に失敗しました')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  // Overall progress
+  const allQuestions = PHASES.flatMap(p => p.questions)
+  const totalQuestions = allQuestions.length
+  const answeredCount = allQuestions.filter(q => {
+    const a = answers[q.id]
+    if (!a) return false
+    if (q.type === 'multi') return Array.isArray(a.value) && a.value.length > 0
+    if (q.type === 'table') return typeof a.value === 'string' && a.value !== '' && a.value !== '{}'
+    return typeof a.value === 'string' && a.value !== ''
+  }).length
+
+  if (loading) {
+    return (
+      <AdminLayout title="店舗知識">
+        <div style={{ textAlign: 'center', padding: 60, color: 'var(--muted)' }}>読み込み中...</div>
+      </AdminLayout>
+    )
+  }
+
+  if (!slug) {
+    return (
+      <AdminLayout title="店舗知識">
+        <div style={{ textAlign: 'center', padding: 60, color: 'var(--muted)' }}>レストランが見つかりません</div>
+      </AdminLayout>
+    )
+  }
+
+  return (
+    <AdminLayout title="店舗知識">
+      {/* Header */}
+      <div style={{
+        background: 'var(--bg-surface)',
+        border: '1px solid var(--border)',
+        borderRadius: 12,
+        padding: '20px 24px',
+        marginBottom: 20,
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+          <div>
+            <h2 style={{ fontSize: 18, fontWeight: 600, margin: 0 }}>NFG構築ヒアリングシート</h2>
+            <p style={{ fontSize: 13, color: 'var(--muted)', marginTop: 4 }}>
+              {slug} — 回答するとアレルゲン精度が向上します
+            </p>
+          </div>
+          <button
+            onClick={handleSave}
+            disabled={saving || answeredCount === 0}
+            style={{
+              padding: '10px 24px',
+              background: saving ? '#475569' : '#3B82F6',
+              color: '#fff',
+              border: 'none',
+              borderRadius: 8,
+              cursor: saving || answeredCount === 0 ? 'not-allowed' : 'pointer',
+              fontSize: 14,
+              fontWeight: 600,
+              opacity: answeredCount === 0 ? 0.5 : 1,
+              transition: 'all 0.2s ease',
+            }}
+          >
+            {saving ? '保存中...' : '保存'}
+          </button>
+        </div>
+        <ProgressBar filled={answeredCount} total={totalQuestions} />
+        <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 6 }}>
+          {answeredCount === 0 ? '未回答' : `${answeredCount}問回答済み / 全${totalQuestions}問`}
+          {existingItems.length > 0 && ` (DB: ${existingItems.length}件)`}
+        </div>
+      </div>
+
+      {/* Phases */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+        {PHASES.map((phase, i) => (
+          <PhaseSection
+            key={phase.id}
+            phase={phase}
+            answers={answers}
+            onAnswer={handleAnswer}
+            defaultOpen={i === 0}
+          />
+        ))}
+      </div>
+
+      {/* Floating save button on mobile */}
+      <div style={{
+        position: 'fixed',
+        bottom: 20,
+        right: 20,
+        zIndex: 50,
+      }}>
+        <button
+          onClick={handleSave}
+          disabled={saving || answeredCount === 0}
+          style={{
+            padding: '12px 28px',
+            background: saving ? '#475569' : 'linear-gradient(135deg, #3B82F6, #06B6D4)',
+            color: '#fff',
+            border: 'none',
+            borderRadius: 28,
+            cursor: saving || answeredCount === 0 ? 'not-allowed' : 'pointer',
+            fontSize: 14,
+            fontWeight: 600,
+            boxShadow: '0 4px 20px rgba(59,130,246,0.4)',
+            opacity: answeredCount === 0 ? 0.5 : 1,
+            transition: 'all 0.2s ease',
+          }}
+        >
+          {saving ? '保存中...' : `保存 (${answeredCount}問)`}
+        </button>
+      </div>
+    </AdminLayout>
+  )
+}
