@@ -11,7 +11,7 @@ import {
 import { useRouter, useSearchParams } from "next/navigation";
 import { mockRestaurants, mockScanResponse, type Restaurant } from "../api/mockApi";
 import Tesseract from "tesseract.js";
-import { FeedbackApi, EventApi, type VisionMenuItem, ContributionApi } from "../services/api";
+import { FeedbackApi, EventApi, type VisionMenuItem, ContributionApi, PhotoContributionApi } from "../services/api";
 import SuggestionModal from "../components/SuggestionModal";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -276,6 +276,9 @@ export default function CapturePage({
   });
   const [photoAdoptedCount, setPhotoAdoptedCount] = useState(0);
   const [compareTarget, setCompareTarget] = useState<{ name: string; taste_values: Record<string, number> } | null>(null);
+  const [photoUploading, setPhotoUploading] = useState<string | null>(null); // menu_uid being uploaded
+  const [photoResult, setPhotoResult] = useState<Record<string, { status: string; match_result: string }>>({});
+  const photoInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
   // マイグラフ: likedMenusの味覚平均を計算
   const myTasteAvg = useMemo(() => {
@@ -1408,6 +1411,25 @@ export default function CapturePage({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [restaurantSlug]);
 
+  const handlePhotoUpload = async (menuUid: string, file: File) => {
+    setPhotoUploading(menuUid);
+    try {
+      const res = await PhotoContributionApi.submit(menuUid, file, threadUid || undefined);
+      setPhotoResult(prev => ({ ...prev, [menuUid]: { status: res.result.status, match_result: res.result.match_result } }));
+      if (res.result.auto_published) {
+        setPhotoAdoptedCount(c => c + 1);
+      }
+    } catch (e: any) {
+      if (e.message === 'rate_limit') {
+        setPhotoResult(prev => ({ ...prev, [menuUid]: { status: 'rate_limit', match_result: '' } }));
+      } else {
+        setPhotoResult(prev => ({ ...prev, [menuUid]: { status: 'error', match_result: '' } }));
+      }
+    } finally {
+      setPhotoUploading(null);
+    }
+  };
+
   return (
     <div className="page capture-page" onClick={handleBackgroundClick}>
       <CaptureHeader
@@ -1432,7 +1454,7 @@ export default function CapturePage({
 
       {photoAdoptedCount > 0 && (
         <div style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: '#fff', textAlign: 'center', padding: '6px 12px', fontSize: 12, fontWeight: 600 }}>
-          📸 あなたの写真が{photoAdoptedCount}品のNFGに採用されました
+          📸 {activeLanguage === 'ja' ? `あなたの写真が${photoAdoptedCount}品のNFGに採用されました` : `Your photo was adopted for ${photoAdoptedCount} NFG item${photoAdoptedCount > 1 ? 's' : ''}`}
         </div>
       )}
 
@@ -1559,28 +1581,34 @@ export default function CapturePage({
                 /* NFGカード表示（チャット応答テキスト + カード） */
                 <div className="chat-row chat-row-assistant">
                   <div className="chat-content">
-                    {/* NFGカード1枚の時はintro非表示（カードに全情報あり）、複数枚の時はintro表示 */}
-                    {typingState[response.id]?.intro && response.visionItems!.length > 1 && (
-                      <div className="chat-message-wrapper" style={{ marginBottom: 8 }}>
-                        <div className="chat-bubble chat-bubble-assistant">
-                          <div className="assistant-intro">
-                            <ReactMarkdown
-                              remarkPlugins={[remarkGfm, remarkBreaks]}
-                              rehypePlugins={[rehypeHighlight]}
-                              components={{
-                                p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
-                                strong: ({ children }) => <strong className="font-semibold text-gray-900">{children}</strong>,
-                                ul: ({ children }) => <ul className="menu-list">{children}</ul>,
-                                ol: ({ children }) => <ol className="menu-list numbered">{children}</ol>,
-                                li: ({ children }) => <li className="menu-item">{children}</li>,
-                              }}
-                            >
-                              {escapeNumberedLists(typingState[response.id]?.intro ?? "")}
-                            </ReactMarkdown>
+                    {/* NFGカードがある時: 番号付きメニューリスト部分を除外し、導入文のみ表示 */}
+                    {(() => {
+                      const raw = typingState[response.id]?.intro ?? "";
+                      // 番号付きリスト行を除去して導入文だけ残す
+                      const stripped = raw.replace(/^\s*\d+\.\s+.+$/gm, "").trim();
+                      if (!stripped) return null;
+                      return (
+                        <div className="chat-message-wrapper" style={{ marginBottom: 8 }}>
+                          <div className="chat-bubble chat-bubble-assistant">
+                            <div className="assistant-intro">
+                              <ReactMarkdown
+                                remarkPlugins={[remarkGfm, remarkBreaks]}
+                                rehypePlugins={[rehypeHighlight]}
+                                components={{
+                                  p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
+                                  strong: ({ children }) => <strong className="font-semibold text-gray-900">{children}</strong>,
+                                  ul: ({ children }) => <ul className="menu-list">{children}</ul>,
+                                  ol: ({ children }) => <ol className="menu-list numbered">{children}</ol>,
+                                  li: ({ children }) => <li className="menu-item">{children}</li>,
+                                }}
+                              >
+                                {escapeNumberedLists(stripped)}
+                              </ReactMarkdown>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    )}
+                      );
+                    })()}
                     <div className="nfg-cards-container">
                       <div className="nfg-cards-header">
                         {response.output.title}
@@ -1610,7 +1638,57 @@ export default function CapturePage({
                                 {vi.image_url ? (
                                   <img src={vi.image_url} alt={vi.name_jp} loading="lazy" />
                                 ) : (
-                                  <div className="nfg-card-thumb-empty">📷</div>
+                                  <div
+                                    className="nfg-photo-upload"
+                                    onClick={() => {
+                                      const menuUid = (vi as any).menu_uid;
+                                      if (!menuUid || photoUploading) return;
+                                      photoInputRefs.current[menuUid]?.click();
+                                    }}
+                                  >
+                                    {photoUploading === (vi as any).menu_uid ? (
+                                      <div className="nfg-photo-spinner" />
+                                    ) : photoResult[(vi as any).menu_uid] ? (
+                                      <div className="nfg-photo-result">
+                                        {photoResult[(vi as any).menu_uid].match_result === 'match' || photoResult[(vi as any).menu_uid].status === 'approved'
+                                          ? '✅'
+                                          : photoResult[(vi as any).menu_uid].match_result === 'mismatch'
+                                          ? '❌'
+                                          : photoResult[(vi as any).menu_uid].status === 'rate_limit'
+                                          ? '⏳'
+                                          : '📤'}
+                                        <span className="nfg-photo-msg">
+                                          {photoResult[(vi as any).menu_uid].status === 'approved'
+                                            ? (activeLanguage === 'ja' ? '採用!' : 'Adopted!')
+                                            : photoResult[(vi as any).menu_uid].match_result === 'mismatch'
+                                            ? (activeLanguage === 'ja' ? '不一致' : 'Mismatch')
+                                            : photoResult[(vi as any).menu_uid].status === 'rate_limit'
+                                            ? (activeLanguage === 'ja' ? '上限' : 'Limit')
+                                            : photoResult[(vi as any).menu_uid].status === 'pending'
+                                            ? (activeLanguage === 'ja' ? '確認中' : 'Pending')
+                                            : (activeLanguage === 'ja' ? 'エラー' : 'Error')}
+                                        </span>
+                                      </div>
+                                    ) : (
+                                      <>
+                                        <span className="nfg-photo-icon">📷</span>
+                                        <span className="nfg-photo-label">{activeLanguage === 'ja' ? '写真を投稿' : 'Add photo'}</span>
+                                      </>
+                                    )}
+                                    <input
+                                      ref={el => { if ((vi as any).menu_uid) photoInputRefs.current[(vi as any).menu_uid] = el; }}
+                                      type="file"
+                                      accept="image/jpeg,image/png,image/webp"
+                                      capture="environment"
+                                      style={{ display: 'none' }}
+                                      onChange={(e) => {
+                                        const file = e.target.files?.[0];
+                                        const menuUid = (vi as any).menu_uid;
+                                        if (file && menuUid) handlePhotoUpload(menuUid, file);
+                                        e.target.value = '';
+                                      }}
+                                    />
+                                  </div>
                                 )}
                               </div>
                               {vi.taste_values && Object.keys(vi.taste_values).length > 0 && !((vi as any).dish_category === 'drink' && (() => { const vals = Object.values(vi.taste_values as Record<string,number>); return Math.max(...vals) - Math.min(...vals) <= 3; })()) && (() => {

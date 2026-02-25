@@ -1195,7 +1195,7 @@ export const SemanticSearchApi = {
     diet?: string; no?: string; scene?: string;
     mood?: string; area?: string; q?: string; category?: string;
     price_min?: number; price_max?: number;
-    page?: number; size?: number;
+    page?: number; size?: number; lang?: string;
   }): Promise<{
     result: { count: number; restaurants: SemanticSearchRestaurant[]; page: number; size: number; pages: number };
   }> => {
@@ -1211,6 +1211,7 @@ export const SemanticSearchApi = {
     if (params.price_max) sp.append('price_max', String(params.price_max));
     sp.append('page', String(params.page || 1));
     sp.append('size', String(params.size || 30));
+    if (params.lang) sp.append('lang', params.lang);
     const resp = await fetch(`${API_BASE_URL}/restaurants/search/semantic?${sp}`);
     if (!resp.ok) throw new Error('Semantic search failed');
     return resp.json();
@@ -1321,6 +1322,70 @@ export const ContributionApi = {
     });
     if (!resp.ok) throw new Error('Suggestion failed');
     return resp.json();
+  },
+};
+
+// Photo Contribution API (public, no auth)
+export interface PhotoContributionResult {
+  uid: string;
+  status: string;
+  match_result: string;
+  auto_published: boolean;
+}
+
+export const PhotoContributionApi = {
+  submit: async (menuUid: string, file: File, sessionId?: string): Promise<{ result: PhotoContributionResult; message: string }> => {
+    const formData = new FormData();
+    formData.append('image', file);
+    if (sessionId) formData.append('session_id', sessionId);
+
+    const resp = await fetch(`${API_BASE_URL}/contributions/photos/${menuUid}`, {
+      method: 'POST',
+      headers: { 'Accept': 'application/json' },
+      body: formData,
+    });
+
+    if (resp.status === 429) {
+      throw new Error('rate_limit');
+    }
+    if (!resp.ok) {
+      let msg = 'Upload failed';
+      try { const d = await resp.json(); msg = d.detail || msg; } catch {}
+      throw new Error(msg);
+    }
+    return resp.json();
+  },
+};
+
+// Photo Review API (admin, auth required)
+export interface PhotoReviewItem {
+  uid: string;
+  menu_uid: string;
+  menu_name: string;
+  menu_image_url: string | null;
+  restaurant_uid: string;
+  image_url: string;
+  status: string;
+  match_result: string;
+  match_reason: string | null;
+  created_at: string | null;
+}
+
+export const PhotoReviewApi = {
+  getAll: async (restaurantUid?: string, status?: string): Promise<{ result: PhotoReviewItem[] }> => {
+    const params = new URLSearchParams();
+    if (restaurantUid) params.append('restaurant_uid', restaurantUid);
+    if (status) params.append('status', status);
+    return apiClient.get(`/contributions/photos?${params.toString()}`);
+  },
+  approve: async (uid: string): Promise<{ result: any; message: string }> => {
+    return apiClient.post(`/contributions/photos/${uid}/approve`);
+  },
+  reject: async (uid: string): Promise<{ result: any; message: string }> => {
+    return apiClient.post(`/contributions/photos/${uid}/reject`);
+  },
+  remove: async (uid: string): Promise<{ message: string }> => {
+    return apiClient.delete(`/contributions/photos/${uid}`);
   },
 };
 

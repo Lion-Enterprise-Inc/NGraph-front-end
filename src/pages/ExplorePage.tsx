@@ -269,6 +269,7 @@ export default function ExplorePage() {
                 }))}
                 onSelect={handleSelect}
                 showDistance={false}
+                isJa={language === 'ja'}
               />
               {page < totalPages && (
                 <div style={{ padding: '12px 16px 24px', textAlign: 'center' }}>

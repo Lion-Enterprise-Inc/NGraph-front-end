@@ -593,10 +593,10 @@ const STYLES = [
 ] as const
 
 const FLOW_QUESTIONS: Record<string, { q1: string; q2: string; q3: string; q4: string; viewNow: string; searchMore: string; restart: string; otherGenre: string; otherArea: string; changeMore: string; startOver: string; searching: string; recoFallback: string; recoTitle: string; seeMore: string; restrictionOpen: string; restrictionClose: string; searchPlaceholder: string; all: string; back: string; results: string; score: string; menuCount: string; loading: string; empty: string; prev: string; next: string; footer: string }> = {
-  ja: { q1: '何を食べたいですか？', q2: 'どのあたりで探しますか？', q3: '予算は？', q4: 'スタイルは？', viewNow: '今すぐ見る', searchMore: 'もっと細かく探す', restart: '← やり直す', otherGenre: '他のジャンルも見る', otherArea: '他のエリア', changeMore: 'もう少し条件を変えてみよう', startOver: 'はじめから探す', searching: '探しています...', recoFallback: 'ぴったりは見つからなかったけど…こちらはどうですか？', recoTitle: 'おすすめのお店', seeMore: '他 {n} 件を見る', restrictionOpen: 'アレルギー・食事制限がある方', restrictionClose: 'アレルギー設定を閉じる', searchPlaceholder: '卵不使用・ハラール・昆布だし・店名で検索', all: 'すべて', back: '← 戻る', results: '{n} 件', score: 'スコア順', menuCount: 'メニュー数順', loading: '読み込み中...', empty: '該当する店舗がありません', prev: '前へ', next: '次へ', footer: '{r}店舗 · {m}メニュー · {e}構造化 · {c}都市' },
-  en: { q1: 'What do you want to eat?', q2: 'Which area?', q3: 'Budget?', q4: 'Style?', viewNow: 'View now', searchMore: 'Search with details', restart: '← Start over', otherGenre: 'Try other genres', otherArea: 'Other areas', changeMore: 'Try different options', startOver: 'Start from scratch', searching: 'Searching...', recoFallback: "Couldn't find an exact match, but how about these?", recoTitle: 'Recommended', seeMore: 'See {n} more', restrictionOpen: 'Allergies & dietary restrictions', restrictionClose: 'Close allergy settings', searchPlaceholder: 'No egg, halal, kelp stock, restaurant name...', all: 'All', back: '← Back', results: '{n} results', score: 'By score', menuCount: 'By menu count', loading: 'Loading...', empty: 'No restaurants found', prev: 'Prev', next: 'Next', footer: '{r} restaurants · {m} menus · {e} structured · {c} cities' },
-  ko: { q1: '무엇을 드시고 싶으세요?', q2: '어디서 찾으시나요?', q3: '예산은?', q4: '스타일은?', viewNow: '지금 보기', searchMore: '상세 검색', restart: '← 다시 시작', otherGenre: '다른 장르 보기', otherArea: '다른 지역', changeMore: '조건 변경', startOver: '처음부터', searching: '검색 중...', recoFallback: '정확한 결과는 없지만... 이런 건 어떠세요?', recoTitle: '추천 맛집', seeMore: '외 {n}건 보기', restrictionOpen: '알레르기・식이 제한', restrictionClose: '알레르기 설정 닫기', searchPlaceholder: '달걀 제외, 할랄, 다시마, 가게명 검색', all: '전체', back: '← 뒤로', results: '{n}건', score: '점수순', menuCount: '메뉴 수순', loading: '로딩 중...', empty: '해당 매장이 없습니다', prev: '이전', next: '다음', footer: '{r}매장 · {m}메뉴 · {e}구조화 · {c}도시' },
-  'zh-Hans': { q1: '想吃什么？', q2: '在哪里找？', q3: '预算？', q4: '风格？', viewNow: '立即查看', searchMore: '详细搜索', restart: '← 重新开始', otherGenre: '其他类型', otherArea: '其他地区', changeMore: '换个条件', startOver: '从头开始', searching: '搜索中...', recoFallback: '没找到完美匹配，这些怎么样？', recoTitle: '推荐', seeMore: '查看其余 {n} 家', restrictionOpen: '过敏・饮食限制', restrictionClose: '关闭过敏设置', searchPlaceholder: '无蛋、清真、昆布高汤、店名搜索', all: '全部', back: '← 返回', results: '{n} 家', score: '评分排序', menuCount: '菜品数排序', loading: '加载中...', empty: '没有符合的餐厅', prev: '上一页', next: '下一页', footer: '{r}餐厅 · {m}菜品 · {e}结构化 · {c}城市' },
+  ja: { q1: '何を食べたいですか？', q2: 'どのあたりで探しますか？', q3: '予算は？', q4: 'スタイルは？', viewNow: '今すぐ見る', searchMore: 'もっと細かく探す', restart: '← やり直す', otherGenre: '他のジャンルも見る', otherArea: '他のエリア', changeMore: 'もう少し条件を変えてみよう', startOver: 'はじめから探す', searching: '探しています...', recoFallback: 'ぴったりは見つからなかったけど…こちらはどうですか？', recoTitle: 'おすすめのお店', seeMore: '他 {n} 件を見る', restrictionOpen: 'アレルギー・食事制限がある方', restrictionClose: 'アレルギー設定を閉じる', searchPlaceholder: '料理名、食材、店名で検索…', all: 'すべて', back: '← 戻る', results: '{n} 件', score: 'スコア順', menuCount: 'メニュー数順', loading: '読み込み中...', empty: '該当する店舗がありません', prev: '前へ', next: '次へ', footer: '{r}店舗 · {m}メニュー · {e}構造化 · {c}都市' },
+  en: { q1: 'What do you want to eat?', q2: 'Which area?', q3: 'Budget?', q4: 'Style?', viewNow: 'View now', searchMore: 'Search with details', restart: '← Start over', otherGenre: 'Try other genres', otherArea: 'Other areas', changeMore: 'Try different options', startOver: 'Start from scratch', searching: 'Searching...', recoFallback: "Couldn't find an exact match, but how about these?", recoTitle: 'Recommended', seeMore: 'See {n} more', restrictionOpen: 'Allergies & dietary restrictions', restrictionClose: 'Close allergy settings', searchPlaceholder: 'Dish, ingredient, or restaurant name...', all: 'All', back: '← Back', results: '{n} results', score: 'By score', menuCount: 'By menu count', loading: 'Loading...', empty: 'No restaurants found', prev: 'Prev', next: 'Next', footer: '{r} restaurants · {m} menus · {e} structured · {c} cities' },
+  ko: { q1: '무엇을 드시고 싶으세요?', q2: '어디서 찾으시나요?', q3: '예산은?', q4: '스타일은?', viewNow: '지금 보기', searchMore: '상세 검색', restart: '← 다시 시작', otherGenre: '다른 장르 보기', otherArea: '다른 지역', changeMore: '조건 변경', startOver: '처음부터', searching: '검색 중...', recoFallback: '정확한 결과는 없지만... 이런 건 어떠세요?', recoTitle: '추천 맛집', seeMore: '외 {n}건 보기', restrictionOpen: '알레르기・식이 제한', restrictionClose: '알레르기 설정 닫기', searchPlaceholder: '요리명, 식재료, 가게명 검색…', all: '전체', back: '← 뒤로', results: '{n}건', score: '점수순', menuCount: '메뉴 수순', loading: '로딩 중...', empty: '해당 매장이 없습니다', prev: '이전', next: '다음', footer: '{r}매장 · {m}메뉴 · {e}구조화 · {c}도시' },
+  'zh-Hans': { q1: '想吃什么？', q2: '在哪里找？', q3: '预算？', q4: '风格？', viewNow: '立即查看', searchMore: '详细搜索', restart: '← 重新开始', otherGenre: '其他类型', otherArea: '其他地区', changeMore: '换个条件', startOver: '从头开始', searching: '搜索中...', recoFallback: '没找到完美匹配，这些怎么样？', recoTitle: '推荐', seeMore: '查看其余 {n} 家', restrictionOpen: '过敏・饮食限制', restrictionClose: '关闭过敏设置', searchPlaceholder: '菜名、食材、店名搜索…', all: '全部', back: '← 返回', results: '{n} 家', score: '评分排序', menuCount: '菜品数排序', loading: '加载中...', empty: '没有符合的餐厅', prev: '上一页', next: '下一页', footer: '{r}餐厅 · {m}菜品 · {e}结构化 · {c}城市' },
 }
 
 // アレルゲン（特定原材料8品目）
@@ -919,12 +919,12 @@ export default function HomePage() {
     setRecoLoading(true)
     setRecoFallback(false)
     try {
-      const res = await SemanticSearchApi.search({ ...params, size: 3 })
+      const res = await SemanticSearchApi.search({ ...params, size: 3, lang: language })
       if (res.result.restaurants.length > 0) {
         setRecoCards(res.result.restaurants)
         setRecoTotal(res.result.count)
       } else {
-        const fallback = await SemanticSearchApi.search({ size: 3 })
+        const fallback = await SemanticSearchApi.search({ size: 3, lang: language })
         setRecoCards(fallback.result.restaurants)
         setRecoTotal(fallback.result.count)
         setRecoFallback(true)
@@ -1053,7 +1053,7 @@ export default function HomePage() {
     setSearched(true)
     setLoading(true)
     try {
-      const res = await SemanticSearchApi.search(params)
+      const res = await SemanticSearchApi.search({ ...params, lang: language })
       const items: DisplayRestaurant[] = res.result.restaurants.map(r => ({
         ...r, _nfg: true, address: null, logo_url: null
       }))

@@ -15,9 +15,10 @@ type NearbyListProps = {
   items: NearbyItem[];
   onSelect: (slug: string) => void;
   showDistance?: boolean;
+  isJa?: boolean;
 };
 
-export default function NearbyList({ items, onSelect, showDistance = true }: NearbyListProps) {
+export default function NearbyList({ items, onSelect, showDistance = true, isJa = true }: NearbyListProps) {
   if (items.length === 0) {
     return (
       <div style={{ textAlign: 'center', padding: '32px 16px', color: 'rgba(255,255,255,0.5)' }}>
@@ -85,7 +86,7 @@ export default function NearbyList({ items, onSelect, showDistance = true }: Nea
               ) : (
                 <>
                   {item.city || item.address || ''}
-                  {item.menu_count != null && item.menu_count > 0 && ` · ${item.menu_count}品`}
+                  {item.menu_count != null && item.menu_count > 0 && ` · ${item.menu_count}${isJa ? '品' : ' items'}`}
                 </>
               )}
             </div>
