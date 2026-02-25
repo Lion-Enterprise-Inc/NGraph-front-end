@@ -1389,4 +1389,40 @@ export const PhotoReviewApi = {
   },
 };
 
+// NFG feedback (good/bad)
+export const NfgFeedbackApi = {
+  submit: async (menuUid: string, type: 'good' | 'bad', sessionId?: string): Promise<{ result: { status: string } }> => {
+    const form = new FormData();
+    form.append('type', type);
+    if (sessionId) form.append('session_id', sessionId);
+    const resp = await fetch(`${API_BASE_URL}/contributions/nfg-feedback/${menuUid}`, { method: 'POST', body: form });
+    if (!resp.ok) throw new Error('Feedback failed');
+    return resp.json();
+  },
+};
+
+// Liked menus
+export interface LikedMenuItem {
+  menu_uid: string;
+  name_jp: string;
+  name_en: string | null;
+  price: number | null;
+  image_url: string | null;
+  category: string | null;
+  dish_category: string | null;
+  restaurant_name: string | null;
+  restaurant_slug: string | null;
+  taste_values?: Record<string, number>;
+  narrative?: { description?: string };
+}
+
+export const LikedMenusApi = {
+  get: async (uids: string[]): Promise<{ result: LikedMenuItem[] }> => {
+    if (uids.length === 0) return { result: [] };
+    const resp = await fetch(`${API_BASE_URL}/menus/liked?uids=${uids.join(',')}`);
+    if (!resp.ok) throw new Error('Failed to fetch liked menus');
+    return resp.json();
+  },
+};
+
 export default apiClient;

@@ -11,7 +11,7 @@ import {
 import { useRouter, useSearchParams } from "next/navigation";
 import { mockRestaurants, mockScanResponse, type Restaurant } from "../api/mockApi";
 import Tesseract from "tesseract.js";
-import { FeedbackApi, EventApi, type VisionMenuItem, ContributionApi, PhotoContributionApi } from "../services/api";
+import { FeedbackApi, EventApi, type VisionMenuItem, ContributionApi, PhotoContributionApi, NfgFeedbackApi, LikedMenusApi, type LikedMenuItem } from "../services/api";
 import SuggestionModal from "../components/SuggestionModal";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -275,7 +275,9 @@ export default function CapturePage({
     try { return JSON.parse(localStorage.getItem('ngraph_taste_cache') || '{}'); } catch { return {}; }
   });
   const [photoAdoptedCount, setPhotoAdoptedCount] = useState(0);
-  const [compareTarget, setCompareTarget] = useState<{ name: string; taste_values: Record<string, number> } | null>(null);
+  const [nfgFeedback, setNfgFeedback] = useState<Record<string, 'good' | 'bad'>>({});
+  const [likedDrawerOpen, setLikedDrawerOpen] = useState(false);
+  const [likedItems, setLikedItems] = useState<LikedMenuItem[]>([]);
   const [photoUploading, setPhotoUploading] = useState<string | null>(null); // menu_uid being uploaded
   const [photoResult, setPhotoResult] = useState<Record<string, { status: string; match_result: string }>>({});
   const photoInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
@@ -1411,6 +1413,25 @@ export default function CapturePage({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [restaurantSlug]);
 
+  const handleNfgFeedback = async (menuUid: string, type: 'good' | 'bad') => {
+    const current = nfgFeedback[menuUid];
+    if (current === type) return; // already submitted
+    setNfgFeedback(prev => ({ ...prev, [menuUid]: type }));
+    try {
+      await NfgFeedbackApi.submit(menuUid, type, threadUidRef.current || undefined);
+    } catch {}
+  };
+
+  const openLikedDrawer = async () => {
+    setLikedDrawerOpen(true);
+    const uids = [...likedMenus];
+    if (uids.length === 0) return;
+    try {
+      const res = await LikedMenusApi.get(uids);
+      setLikedItems(res.result);
+    } catch {}
+  };
+
   const handlePhotoUpload = async (menuUid: string, file: File) => {
     setPhotoUploading(menuUid);
     try {
@@ -1455,6 +1476,73 @@ export default function CapturePage({
       {photoAdoptedCount > 0 && (
         <div style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: '#fff', textAlign: 'center', padding: '6px 12px', fontSize: 12, fontWeight: 600 }}>
           📸 {activeLanguage === 'ja' ? `あなたの写真が${photoAdoptedCount}品のNFGに採用されました` : `Your photo was adopted for ${photoAdoptedCount} NFG item${photoAdoptedCount > 1 ? 's' : ''}`}
+        </div>
+      )}
+
+      {likedMenus.size > 0 && (
+        <button
+          type="button"
+          onClick={openLikedDrawer}
+          style={{
+            position: 'fixed', bottom: 80, right: 16, zIndex: 50,
+            width: 44, height: 44, borderRadius: '50%',
+            background: 'rgba(255,80,80,0.9)', border: 'none',
+            color: '#fff', fontSize: 20, cursor: 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+          }}
+        >
+          ♥<span style={{ fontSize: 10, position: 'absolute', top: -4, right: -4, background: '#222', borderRadius: 8, padding: '1px 5px', fontWeight: 700 }}>{likedMenus.size}</span>
+        </button>
+      )}
+
+      {likedDrawerOpen && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 100, display: 'flex', flexDirection: 'column' }}>
+          <div style={{ flex: 1, background: 'rgba(0,0,0,0.6)' }} onClick={() => setLikedDrawerOpen(false)} />
+          <div style={{ background: '#1a1a1a', borderRadius: '16px 16px 0 0', maxHeight: '70vh', overflow: 'auto', padding: '16px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+              <span style={{ fontSize: 15, fontWeight: 600, color: '#f0f0f0' }}>♥ {activeLanguage === 'ja' ? 'お気に入り' : 'Favorites'} ({likedMenus.size})</span>
+              <button type="button" onClick={() => setLikedDrawerOpen(false)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)', fontSize: 18, cursor: 'pointer' }}>✕</button>
+            </div>
+            {likedItems.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: 24, color: 'rgba(255,255,255,0.4)', fontSize: 13 }}>
+                {activeLanguage === 'ja' ? '読み込み中...' : 'Loading...'}
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {likedItems.map(item => (
+                  <button
+                    key={item.menu_uid}
+                    type="button"
+                    onClick={() => { setLikedDrawerOpen(false); router.push(`/capture?restaurant=${item.restaurant_slug}`); }}
+                    style={{
+                      display: 'flex', gap: 10, padding: '10px 12px', background: 'rgba(255,255,255,0.04)',
+                      borderRadius: 10, border: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer', textAlign: 'left', width: '100%',
+                    }}
+                  >
+                    {item.image_url ? (
+                      <img src={item.image_url} alt="" style={{ width: 48, height: 48, borderRadius: 8, objectFit: 'cover', flexShrink: 0 }} />
+                    ) : (
+                      <div style={{ width: 48, height: 48, borderRadius: 8, background: 'rgba(255,255,255,0.08)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>🍽</div>
+                    )}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 14, fontWeight: 600, color: '#f0f0f0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {item.name_jp}
+                      </div>
+                      <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginTop: 2 }}>
+                        {item.restaurant_name}{item.price ? ` · ¥${item.price}` : ''}
+                      </div>
+                      {item.narrative?.description && (
+                        <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {item.narrative.description}
+                        </div>
+                      )}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       )}
 
@@ -1728,10 +1816,6 @@ export default function CapturePage({
                                         const myPoly = axes.map((a, i) => { const p = pt(i, R * (myTasteAvg[a] || 0) / 10); return `${p.x},${p.y}`; }).join(' ');
                                         return <polygon points={myPoly} fill="none" stroke="#4f8cff" strokeWidth="1.2" strokeDasharray="4,3" strokeLinejoin="round" opacity="0.7"/>;
                                       })()}
-                                      {compareTarget && compareTarget.name !== vi.name_jp && (() => {
-                                        const cPoly = axes.map((a, i) => { const p = pt(i, R * (compareTarget.taste_values[a] || 0) / 10); return `${p.x},${p.y}`; }).join(' ');
-                                        return <polygon points={cPoly} fill="none" stroke="#ffa500" strokeWidth="1.2" strokeDasharray="3,4" strokeLinejoin="round" opacity="0.6"/>;
-                                      })()}
                                       {axes.map((a, i) => { const v = (tv[a]||0)/10; const active = v > 0.3; const p = pt(i, R*v); return <circle key={i} cx={p.x} cy={p.y} r={active?3.5:2} fill={active?axisColors[a]:"#555"} stroke="#0a0a0a" strokeWidth="1"/>; })}
                                       {axes.map((a, i) => { const v = (tv[a]||0)/10; const active = v > 0.3; const p = pt(i, R*1.22); return <text key={i} x={p.x} y={p.y+3.5} textAnchor="middle" fontFamily="'DM Mono',monospace" fontSize={active?9:7.5} fill={active?axisColors[a]:"rgba(255,255,255,0.5)"}>{labels[a]}{active ? ` ${Math.round(v*100)}` : ''}</text>; })}
                                     </svg>
@@ -1800,30 +1884,31 @@ export default function CapturePage({
                                   >
                                     {(vi as any).menu_uid && likedMenus.has((vi as any).menu_uid) ? '♥' : '♡'}
                                   </button>
-                                  {vi.taste_values && Object.keys(vi.taste_values).length > 0 && (
-                                    <button
-                                      type="button"
-                                      className="nfg-badge"
-                                      style={{
-                                        cursor: 'pointer',
-                                        background: compareTarget?.name === vi.name_jp ? 'rgba(255,165,0,0.2)' : 'rgba(255,255,255,0.06)',
-                                        color: compareTarget?.name === vi.name_jp ? '#ffa500' : 'rgba(255,255,255,0.5)',
-                                        border: compareTarget?.name === vi.name_jp ? '1px solid rgba(255,165,0,0.4)' : '1px solid rgba(255,255,255,0.1)',
-                                      }}
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        if (compareTarget?.name === vi.name_jp) {
-                                          setCompareTarget(null);
-                                        } else {
-                                          setCompareTarget({ name: vi.name_jp, taste_values: vi.taste_values! });
-                                        }
-                                      }}
-                                    >
-                                      {compareTarget?.name === vi.name_jp
-                                        ? copy.capture.comparing
-                                        : copy.capture.compare
-                                      }
-                                    </button>
+                                  {(vi as any).menu_uid && (
+                                    <>
+                                      <button
+                                        type="button"
+                                        className="nfg-badge"
+                                        style={{
+                                          cursor: 'pointer',
+                                          background: nfgFeedback[(vi as any).menu_uid] === 'good' ? 'rgba(16,163,127,0.2)' : 'rgba(255,255,255,0.06)',
+                                          color: nfgFeedback[(vi as any).menu_uid] === 'good' ? '#10a37f' : 'rgba(255,255,255,0.5)',
+                                          border: nfgFeedback[(vi as any).menu_uid] === 'good' ? '1px solid rgba(16,163,127,0.4)' : '1px solid rgba(255,255,255,0.1)',
+                                        }}
+                                        onClick={(e) => { e.stopPropagation(); handleNfgFeedback((vi as any).menu_uid, 'good'); }}
+                                      >👍</button>
+                                      <button
+                                        type="button"
+                                        className="nfg-badge"
+                                        style={{
+                                          cursor: 'pointer',
+                                          background: nfgFeedback[(vi as any).menu_uid] === 'bad' ? 'rgba(255,80,80,0.2)' : 'rgba(255,255,255,0.06)',
+                                          color: nfgFeedback[(vi as any).menu_uid] === 'bad' ? '#ff5050' : 'rgba(255,255,255,0.5)',
+                                          border: nfgFeedback[(vi as any).menu_uid] === 'bad' ? '1px solid rgba(255,80,80,0.4)' : '1px solid rgba(255,255,255,0.1)',
+                                        }}
+                                        onClick={(e) => { e.stopPropagation(); handleNfgFeedback((vi as any).menu_uid, 'bad'); }}
+                                      >👎</button>
+                                    </>
                                   )}
                                   <button
                                     type="button"
