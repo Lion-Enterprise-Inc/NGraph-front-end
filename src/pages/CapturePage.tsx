@@ -1414,7 +1414,7 @@ export default function CapturePage({
   const handlePhotoUpload = async (menuUid: string, file: File) => {
     setPhotoUploading(menuUid);
     try {
-      const res = await PhotoContributionApi.submit(menuUid, file, threadUid || undefined);
+      const res = await PhotoContributionApi.submit(menuUid, file, threadUidRef.current || undefined);
       setPhotoResult(prev => ({ ...prev, [menuUid]: { status: res.result.status, match_result: res.result.match_result } }));
       if (res.result.auto_published) {
         setPhotoAdoptedCount(c => c + 1);
