@@ -547,13 +547,23 @@ const FOOD_TYPES = [
 ] as const
 
 const AREAS = [
+  { key: 'nearby', label: '現在地の近く', labelEn: 'Near me', labelKo: '내 주변', labelZh: '我附近', area: '' },
   { key: 'fukui', label: '福井市', labelEn: 'Fukui City', labelKo: '후쿠이시', labelZh: '福井市', area: '福井市' },
-  { key: 'echizen', label: '越前・鯖江', labelEn: 'Echizen / Sabae', labelKo: '에치젠・사바에', labelZh: '越前・�的江', area: '越前市' },
+  { key: 'echizen', label: '越前・鯖江', labelEn: 'Echizen / Sabae', labelKo: '에치젠・사바에', labelZh: '越前・鯖江', area: '越前市' },
   { key: 'tsuruga', label: '敦賀', labelEn: 'Tsuruga', labelKo: '쓰루가', labelZh: '敦贺', area: '敦賀市' },
   { key: 'awara', label: 'あわら', labelEn: 'Awara', labelKo: '아와라', labelZh: '芦原', area: 'あわら市' },
   { key: 'okuetsu', label: '奥越（大野・勝山）', labelEn: 'Okuetsu (Ono/Katsuyama)', labelKo: '오쿠에츠', labelZh: '奥越（大野・胜山）', area: '大野市,勝山市' },
   { key: 'anywhere', label: 'どこでもOK', labelEn: 'Anywhere', labelKo: '어디든 OK', labelZh: '都可以', area: '' },
 ] as const
+
+// 各エリアの代表座標（geolocation→最寄りエリア判定用）
+const AREA_COORDS: Record<string, { lat: number; lng: number }> = {
+  fukui: { lat: 36.0652, lng: 136.2219 },
+  echizen: { lat: 35.9045, lng: 136.1681 },
+  tsuruga: { lat: 35.6454, lng: 136.0556 },
+  awara: { lat: 36.2113, lng: 136.2300 },
+  okuetsu: { lat: 35.9811, lng: 136.4879 },
+}
 
 const BUDGETS = [
   { key: 'under1000', label: '~1,000円', labelEn: '~¥1,000', min: 0, max: 1000 },
@@ -613,7 +623,7 @@ type DisplayRestaurant = (SearchRestaurant | NfgSearchRestaurant) & { _nfg?: boo
 
 export default function HomePage() {
   const router = useRouter()
-  const { language, openLanguageModal } = useAppContext()
+  const { language, openLanguageModal, setGeoLocation } = useAppContext()
   const langBadge = LANG_BADGES[language] || language.slice(0, 2).toUpperCase()
   const isJa = language === 'ja'
   const fl = FLOW_QUESTIONS[language] || (language.startsWith('zh') ? FLOW_QUESTIONS['zh-Hans'] : null) || FLOW_QUESTIONS.en
@@ -949,6 +959,27 @@ export default function HomePage() {
   }
 
   const answerArea = (key: string) => {
+    if (key === 'nearby') {
+      if (!navigator.geolocation) { setFlowArea('anywhere'); advanceStep(); return }
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const { latitude: lat, longitude: lng } = pos.coords
+          setGeoLocation({ lat, lng })
+          // 最寄りエリアを判定
+          let best = 'fukui'
+          let bestDist = Infinity
+          for (const [k, c] of Object.entries(AREA_COORDS)) {
+            const d = (lat - c.lat) ** 2 + (lng - c.lng) ** 2
+            if (d < bestDist) { bestDist = d; best = k }
+          }
+          setFlowArea(best)
+          advanceStep()
+        },
+        () => { setFlowArea('anywhere'); advanceStep() },
+        { timeout: 8000 }
+      )
+      return
+    }
     setFlowArea(key)
     advanceStep()
   }
