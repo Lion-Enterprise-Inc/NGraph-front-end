@@ -27,6 +27,7 @@ export default function StoresPage() {
   const router = useRouter()
   const toast = useToast()
   const [filter, setFilter] = useState('all')
+  const [searchQuery, setSearchQuery] = useState('')
   const [stores, setStores] = useState<StoreDisplay[]>([])
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
@@ -145,9 +146,14 @@ export default function StoresPage() {
     }
   }
 
-  const filteredStores = filter === 'all'
-    ? stores
-    : stores.filter(s => s.location === filter)
+  const filteredStores = stores.filter(s => {
+    if (filter !== 'all' && s.location !== filter) return false
+    if (searchQuery.trim()) {
+      const q = searchQuery.trim().toLowerCase()
+      return s.name.toLowerCase().includes(q) || s.address.toLowerCase().includes(q) || s.location.toLowerCase().includes(q) || s.storeCode.toLowerCase().includes(q)
+    }
+    return true
+  })
 
   // 動的に都市リスト生成（店舗がある都市だけ表示）
   const locationCounts: Record<string, number> = {}
@@ -312,7 +318,7 @@ export default function StoresPage() {
   // Show full page loader before data is ready
   if (loading) {
     return (
-      <AdminLayout title="導入レストラン一覧">
+      <AdminLayout title="掲載レストラン一覧">
         <div style={{
           display: 'flex',
           flexDirection: 'column',
@@ -328,10 +334,10 @@ export default function StoresPage() {
   }
 
   return (
-    <AdminLayout title="導入レストラン一覧">
+    <AdminLayout title="掲載レストラン一覧">
       <div className="card" style={{ width: '100%', maxWidth: 'none' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-          <h2 className="card-title" style={{ margin: 0 }}>導入レストラン一覧</h2>
+          <h2 className="card-title" style={{ margin: 0 }}>掲載レストラン一覧</h2>
           <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
             <button className="btn btn-primary" onClick={() => setShowModal(true)}>
               新規レストランを登録
@@ -341,6 +347,20 @@ export default function StoresPage() {
               <span style={{ color: '#94A3B8', marginLeft: '5px' }}>レストラン</span>
             </div>
           </div>
+        </div>
+
+        <div style={{ marginBottom: '8px' }}>
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="店名・住所・コードで検索..."
+            style={{
+              width: '100%', maxWidth: '360px', padding: '8px 12px',
+              border: '1px solid var(--border-strong)', borderRadius: '6px',
+              background: 'var(--bg-input)', color: 'var(--text)', fontSize: '14px',
+            }}
+          />
         </div>
 
         <div style={{ display: 'flex', gap: '10px', marginBottom: '8px', flexWrap: 'wrap' }}>

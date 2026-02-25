@@ -92,8 +92,86 @@ function genWave(): [number, number][] {
   })
 }
 
+// パターン4: 五重塔
+function genPagoda(): [number, number][] {
+  return samplePixels(200, 200, ctx => {
+    ctx.fillStyle = '#000'
+    const cx = 100
+    // 相輪（頂部の飾り）
+    ctx.fillRect(cx - 2, 8, 4, 20)
+    ctx.beginPath(); ctx.arc(cx, 6, 4, 0, Math.PI * 2); ctx.fill()
+    // 5層の屋根+壁
+    const layers = [
+      { y: 28, roofW: 44, wallW: 20, h: 18 },
+      { y: 50, roofW: 56, wallW: 26, h: 18 },
+      { y: 72, roofW: 68, wallW: 32, h: 18 },
+      { y: 94, roofW: 80, wallW: 38, h: 18 },
+      { y: 116, roofW: 92, wallW: 44, h: 22 },
+    ]
+    for (const l of layers) {
+      // 屋根（反り）
+      ctx.beginPath()
+      ctx.moveTo(cx - l.roofW / 2, l.y + 6)
+      ctx.quadraticCurveTo(cx, l.y - 4, cx + l.roofW / 2, l.y + 6)
+      ctx.lineTo(cx + l.roofW / 2 - 4, l.y + 10)
+      ctx.quadraticCurveTo(cx, l.y + 2, cx - l.roofW / 2 + 4, l.y + 10)
+      ctx.fill()
+      // 壁
+      ctx.fillRect(cx - l.wallW / 2, l.y + 10, l.wallW, l.h - 10)
+    }
+    // 基壇
+    ctx.fillRect(cx - 50, 138, 100, 8)
+    ctx.fillRect(cx - 54, 146, 108, 6)
+  }, 2)
+}
+
+// パターン5: 城（天守閣）
+function genCastle(): [number, number][] {
+  return samplePixels(200, 200, ctx => {
+    ctx.fillStyle = '#000'
+    const cx = 100
+    // 最上階の屋根
+    ctx.beginPath()
+    ctx.moveTo(cx - 36, 42)
+    ctx.quadraticCurveTo(cx, 24, cx + 36, 42)
+    ctx.lineTo(cx + 32, 48)
+    ctx.quadraticCurveTo(cx, 32, cx - 32, 48)
+    ctx.fill()
+    // 最上階の壁
+    ctx.fillRect(cx - 22, 48, 44, 18)
+    // 2階の屋根
+    ctx.beginPath()
+    ctx.moveTo(cx - 50, 70)
+    ctx.quadraticCurveTo(cx, 54, cx + 50, 70)
+    ctx.lineTo(cx + 46, 76)
+    ctx.quadraticCurveTo(cx, 62, cx - 46, 76)
+    ctx.fill()
+    // 2階の壁
+    ctx.fillRect(cx - 32, 76, 64, 20)
+    // 1階の屋根
+    ctx.beginPath()
+    ctx.moveTo(cx - 64, 100)
+    ctx.quadraticCurveTo(cx, 82, cx + 64, 100)
+    ctx.lineTo(cx + 60, 106)
+    ctx.quadraticCurveTo(cx, 90, cx - 60, 106)
+    ctx.fill()
+    // 1階の壁
+    ctx.fillRect(cx - 42, 106, 84, 24)
+    // 石垣（台形）
+    ctx.beginPath()
+    ctx.moveTo(cx - 42, 130)
+    ctx.lineTo(cx - 60, 170)
+    ctx.lineTo(cx + 60, 170)
+    ctx.lineTo(cx + 42, 130)
+    ctx.fill()
+    // しゃちほこ
+    ctx.beginPath(); ctx.arc(cx - 30, 38, 5, 0, Math.PI * 2); ctx.fill()
+    ctx.beginPath(); ctx.arc(cx + 30, 38, 5, 0, Math.PI * 2); ctx.fill()
+  }, 2)
+}
+
 const _patternCache: [number, number][][] = []
-const PATTERN_GENERATORS = [genText, genTorii, genWave]
+const PATTERN_GENERATORS = [genText, genTorii, genWave, genPagoda, genCastle]
 let _patternIndex = 0
 function getNextPattern(): [number, number][] {
   if (_patternCache.length === 0) {
@@ -103,6 +181,12 @@ function getNextPattern(): [number, number][] {
   _patternIndex++
   return pattern
 }
+
+// ニコマコス倫理学 目次 → UTF-8 binary
+// "第一巻 善と幸福 第二巻 徳について ..." をビット列化
+// 全て集めてデコードすると原文が復元される裏設定
+const NICOMACHEAN_BITS = '11100111101011001010110011100100101110001000000011100101101101111011101100100000111001011001011010000100111000111000000110101000111001011011100110111000111001111010011010001111001000001110011110101100101011001110010010111010100011001110010110110111101110110010000011100101101111101011001111100011100000011010101111100011100000011010010011100011100000011000010011100011100000011010011000100000111001111010110010101100111001001011100010001001111001011011011110111011001000001110010110001011100001111110011010110000100101111110001110000001101010001110011110101111100000001110010110001000101101100010000011100111101011001010110011100101100110111001101111100101101101111011101100100000111010001010101110111000111001011011111010110011111000111000000110101011111000111000000110100100111000111000000110000100111000111000000110100110001000001110011110101100101011001110010010111010100101001110010110110111101110110010000011100110101011011010001111100111101111101010100100100000111001111010110010101100111001011000010110101101111001011011011110111011001000001110011110011111101001011110011010000000101001111110011110011010100001001110001110000001101010101110010110111110101100110010000011100111101011001010110011100100101110001000001111100101101101111011101100100000111001101000101010010001111001011000100010110110111000111000000110101000111001011011111110101011111001101010010110111101001000001110011110101100101011001110010110000101101010111110010110110111101110110010000011100101100011111000101111100110100001001001101100100000111001111010110010101100111001001011100110011101111001011011011110111011001000001110010110001111100010111110011010000100100110111110001110000001101011101110011110110110100110101110001110000001100011010010000011100111101011001010110011100101100011011000000111100101101101111011101100100000111001011011111110101011111001101010010110111101111000111000000110101000111010001010011010110011111001101000001110110011111001111001101010000100111001111001010010011111111001101011010010111011'
+let _bitIndex = 0
 
 function BinaryField({ pulseRef }: { pulseRef?: React.RefObject<{ x: number; y: number; strength: number }> }) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -170,7 +254,7 @@ function BinaryField({ pulseRef }: { pulseRef?: React.RefObject<{ x: number; y: 
         vy: Math.sin(angle) * speed,
         size,
         alpha: 0.08 + Math.random() * 0.18,
-        char: Math.random() > 0.5 ? '1' : '0',
+        char: NICOMACHEAN_BITS[_bitIndex++ % NICOMACHEAN_BITS.length],
         life: 0,
         maxLife: 300 + Math.random() * 400,
       }
@@ -450,23 +534,23 @@ function isNfgQuery(q: string): boolean {
 
 // Step 1: 食ジャンル — 最大の絞り込み
 const FOOD_TYPES = [
-  { key: 'crab', label: '蟹', labelEn: 'Crab', q: '蟹,カニ,かに,ズワイ,セイコ' },
-  { key: 'seafood', label: '海鮮・お刺身', labelEn: 'Seafood & Sashimi', q: '海鮮,刺身,魚', category: 'sashimi,seafood' },
-  { key: 'sushi', label: '寿司', labelEn: 'Sushi', q: '寿司,すし,にぎり', category: 'sushi,nigiri,gunkan,roll' },
-  { key: 'meat', label: '肉料理', labelEn: 'Meat', q: '肉,カツ,ステーキ,焼肉', category: 'meat' },
-  { key: 'nabe', label: '鍋', labelEn: 'Hot Pot', q: '鍋,しゃぶ,すき焼き', category: 'nabe,hotpot' },
-  { key: 'ramen', label: '麺類', labelEn: 'Noodles', q: '麺,ラーメン,そば,うどん', category: 'ramen,soba,noodle' },
-  { key: 'drinking', label: 'お酒に合うつまみ', labelEn: 'Bar Snacks', mood: 'drinking' },
-  { key: 'local', label: '福井の名物', labelEn: 'Fukui Specialties', mood: 'local' },
-  { key: 'light', label: 'あっさり', labelEn: 'Light & Healthy', q: 'サラダ,酢の物,蒸し', category: 'salad,steamed,vinegared' },
+  { key: 'crab', label: '蟹', labelEn: 'Crab', labelKo: '게', labelZh: '螃蟹', q: '蟹,カニ,かに,ズワイ,セイコ' },
+  { key: 'seafood', label: '海鮮・お刺身', labelEn: 'Seafood & Sashimi', labelKo: '해산물・회', labelZh: '海鲜・刺身', q: '海鮮,刺身,魚', category: 'sashimi,seafood' },
+  { key: 'sushi', label: '寿司', labelEn: 'Sushi', labelKo: '초밥', labelZh: '寿司', q: '寿司,すし,にぎり', category: 'sushi,nigiri,gunkan,roll' },
+  { key: 'meat', label: '肉料理', labelEn: 'Meat', labelKo: '고기 요리', labelZh: '肉料理', q: '肉,カツ,ステーキ,焼肉', category: 'meat' },
+  { key: 'nabe', label: '鍋', labelEn: 'Hot Pot', labelKo: '전골', labelZh: '火锅', q: '鍋,しゃぶ,すき焼き', category: 'nabe,hotpot' },
+  { key: 'ramen', label: '麺類', labelEn: 'Noodles', labelKo: '면류', labelZh: '面类', q: '麺,ラーメン,そば,うどん', category: 'ramen,soba,noodle' },
+  { key: 'drinking', label: 'お酒に合うつまみ', labelEn: 'Bar Snacks', labelKo: '안주', labelZh: '下酒菜', mood: 'drinking' },
+  { key: 'local', label: '福井の名物', labelEn: 'Fukui Specialties', labelKo: '후쿠이 명물', labelZh: '福井名产', mood: 'local' },
+  { key: 'light', label: 'あっさり', labelEn: 'Light & Healthy', labelKo: '가벼운 음식', labelZh: '清淡料理', q: 'サラダ,酢の物,蒸し', category: 'salad,steamed,vinegared' },
 ] as const
 
 const AREAS = [
-  { key: 'fukui', label: '福井駅周辺', labelEn: 'Fukui Station', area: '福井市' },
-  { key: 'echizen', label: '越前・鯖江', labelEn: 'Echizen / Sabae', area: '越前市' },
-  { key: 'tsuruga', label: '敦賀', labelEn: 'Tsuruga', area: '敦賀市' },
-  { key: 'awara', label: 'あわら', labelEn: 'Awara', area: 'あわら市' },
-  { key: 'anywhere', label: 'どこでもOK', labelEn: 'Anywhere', area: '' },
+  { key: 'fukui', label: '福井駅周辺', labelEn: 'Fukui Station', labelKo: '후쿠이역 주변', labelZh: '福井站周边', area: '福井市' },
+  { key: 'echizen', label: '越前・鯖江', labelEn: 'Echizen / Sabae', labelKo: '에치젠・사바에', labelZh: '越前・�的江', area: '越前市' },
+  { key: 'tsuruga', label: '敦賀', labelEn: 'Tsuruga', labelKo: '쓰루가', labelZh: '敦贺', area: '敦賀市' },
+  { key: 'awara', label: 'あわら', labelEn: 'Awara', labelKo: '아와라', labelZh: '芦原', area: 'あわら市' },
+  { key: 'anywhere', label: 'どこでもOK', labelEn: 'Anywhere', labelKo: '어디든 OK', labelZh: '都可以', area: '' },
 ] as const
 
 const BUDGETS = [
@@ -475,7 +559,7 @@ const BUDGETS = [
   { key: '2000to3000', label: '2,000~3,000円', labelEn: '¥2,000~3,000', min: 2000, max: 3000 },
   { key: '3000to5000', label: '3,000~5,000円', labelEn: '¥3,000~5,000', min: 3000, max: 5000 },
   { key: 'over5000', label: '5,000円~', labelEn: '¥5,000+', min: 5000, max: 0 },
-  { key: 'any', label: '気にしない', labelEn: "Don't mind", min: 0, max: 0 },
+  { key: 'any', label: '気にしない', labelEn: "Don't mind", labelKo: '상관없음', labelZh: '不限', min: 0, max: 0 },
 ] as const
 
 // 店名分割: 「個室居酒屋 ぼんた 本店」→ brand="個室居酒屋 ぼんた", suffix="本店"
@@ -490,27 +574,29 @@ function splitStoreName(name: string): { brand: string; suffix: string } {
 }
 
 const STYLES = [
-  { key: 'hearty', label: 'がっつり', labelEn: 'Hearty', mood: 'hearty' },
-  { key: 'budget', label: 'コスパ重視', labelEn: 'Budget', mood: 'budget' },
-  { key: 'drinking', label: '飲みメイン', labelEn: 'Drinks First', mood: 'drinking' },
-  { key: 'none', label: '特にこだわりなし', labelEn: 'No preference', mood: '' },
+  { key: 'hearty', label: 'がっつり', labelEn: 'Hearty', labelKo: '든든하게', labelZh: '吃饱', mood: 'hearty' },
+  { key: 'budget', label: 'コスパ重視', labelEn: 'Budget', labelKo: '가성비', labelZh: '性价比', mood: 'budget' },
+  { key: 'drinking', label: '飲みメイン', labelEn: 'Drinks First', labelKo: '술 위주', labelZh: '以酒为主', mood: 'drinking' },
+  { key: 'none', label: '特にこだわりなし', labelEn: 'No preference', labelKo: '특별히 없음', labelZh: '无偏好', mood: '' },
 ] as const
 
-const FLOW_QUESTIONS = {
+const FLOW_QUESTIONS: Record<string, { q1: string; q2: string; q3: string; q4: string; viewNow: string; searchMore: string; restart: string; otherGenre: string; changeMore: string; startOver: string; searching: string; recoFallback: string; recoTitle: string; seeMore: string; restrictionOpen: string; restrictionClose: string; searchPlaceholder: string; all: string; back: string; results: string; score: string; menuCount: string; loading: string; empty: string; prev: string; next: string; footer: string }> = {
   ja: { q1: '何を食べたいですか？', q2: 'どのあたりで探しますか？', q3: '予算は？', q4: 'スタイルは？', viewNow: '今すぐ見る', searchMore: 'もっと細かく探す', restart: '← やり直す', otherGenre: '他のジャンルも見る', changeMore: 'もう少し条件を変えてみよう', startOver: 'はじめから探す', searching: '探しています...', recoFallback: 'ぴったりは見つからなかったけど…こちらはどうですか？', recoTitle: 'おすすめのお店', seeMore: '他 {n} 件を見る', restrictionOpen: 'アレルギー・食事制限がある方', restrictionClose: 'アレルギー設定を閉じる', searchPlaceholder: '卵不使用・ハラール・昆布だし・店名で検索', all: 'すべて', back: '← 戻る', results: '{n} 件', score: 'スコア順', menuCount: 'メニュー数順', loading: '読み込み中...', empty: '該当する店舗がありません', prev: '前へ', next: '次へ', footer: '{r}店舗 · {m}メニュー · {e}構造化 · {c}都市' },
   en: { q1: 'What do you want to eat?', q2: 'Which area?', q3: 'Budget?', q4: 'Style?', viewNow: 'View now', searchMore: 'Search with details', restart: '← Start over', otherGenre: 'Try other genres', changeMore: 'Try different options', startOver: 'Start from scratch', searching: 'Searching...', recoFallback: "Couldn't find an exact match, but how about these?", recoTitle: 'Recommended', seeMore: 'See {n} more', restrictionOpen: 'Allergies & dietary restrictions', restrictionClose: 'Close allergy settings', searchPlaceholder: 'No egg, halal, kelp stock, restaurant name...', all: 'All', back: '← Back', results: '{n} results', score: 'By score', menuCount: 'By menu count', loading: 'Loading...', empty: 'No restaurants found', prev: 'Prev', next: 'Next', footer: '{r} restaurants · {m} menus · {e} structured · {c} cities' },
-} as const
+  ko: { q1: '무엇을 드시고 싶으세요?', q2: '어디서 찾으시나요?', q3: '예산은?', q4: '스타일은?', viewNow: '지금 보기', searchMore: '상세 검색', restart: '← 다시 시작', otherGenre: '다른 장르 보기', changeMore: '조건 변경', startOver: '처음부터', searching: '검색 중...', recoFallback: '정확한 결과는 없지만... 이런 건 어떠세요?', recoTitle: '추천 맛집', seeMore: '외 {n}건 보기', restrictionOpen: '알레르기・식이 제한', restrictionClose: '알레르기 설정 닫기', searchPlaceholder: '달걀 제외, 할랄, 다시마, 가게명 검색', all: '전체', back: '← 뒤로', results: '{n}건', score: '점수순', menuCount: '메뉴 수순', loading: '로딩 중...', empty: '해당 매장이 없습니다', prev: '이전', next: '다음', footer: '{r}매장 · {m}메뉴 · {e}구조화 · {c}도시' },
+  'zh-Hans': { q1: '想吃什么？', q2: '在哪里找？', q3: '预算？', q4: '风格？', viewNow: '立即查看', searchMore: '详细搜索', restart: '← 重新开始', otherGenre: '其他类型', changeMore: '换个条件', startOver: '从头开始', searching: '搜索中...', recoFallback: '没找到完美匹配，这些怎么样？', recoTitle: '推荐', seeMore: '查看其余 {n} 家', restrictionOpen: '过敏・饮食限制', restrictionClose: '关闭过敏设置', searchPlaceholder: '无蛋、清真、昆布高汤、店名搜索', all: '全部', back: '← 返回', results: '{n} 家', score: '评分排序', menuCount: '菜品数排序', loading: '加载中...', empty: '没有符合的餐厅', prev: '上一页', next: '下一页', footer: '{r}餐厅 · {m}菜品 · {e}结构化 · {c}城市' },
+}
 
 // 制約 — 安全フィルタ（別枠）
 const RESTRICTIONS = [
-  { key: 'shrimp', label: 'えび・かに×', labelEn: 'No Shrimp/Crab', no: 'shrimp,crab' },
-  { key: 'egg', label: '卵×', labelEn: 'No Egg', no: 'egg' },
-  { key: 'wheat', label: '小麦×', labelEn: 'No Wheat', no: 'wheat' },
-  { key: 'milk', label: '乳×', labelEn: 'No Dairy', no: 'milk' },
-  { key: 'soba', label: 'そば×', labelEn: 'No Soba', no: 'soba' },
-  { key: 'halal', label: 'ハラール', labelEn: 'Halal', diet: 'halal' },
-  { key: 'vegetarian', label: 'ベジタリアン', labelEn: 'Vegetarian', diet: 'vegetarian' },
-  { key: 'gluten_free', label: 'グルテンフリー', labelEn: 'Gluten Free', diet: 'gluten_free' },
+  { key: 'shrimp', label: 'えび・かに×', labelEn: 'No Shrimp/Crab', labelKo: '새우・게×', labelZh: '虾蟹×', no: 'shrimp,crab' },
+  { key: 'egg', label: '卵×', labelEn: 'No Egg', labelKo: '달걀×', labelZh: '鸡蛋×', no: 'egg' },
+  { key: 'wheat', label: '小麦×', labelEn: 'No Wheat', labelKo: '밀×', labelZh: '小麦×', no: 'wheat' },
+  { key: 'milk', label: '乳×', labelEn: 'No Dairy', labelKo: '유제품×', labelZh: '乳制品×', no: 'milk' },
+  { key: 'soba', label: 'そば×', labelEn: 'No Soba', labelKo: '소바×', labelZh: '荞麦×', no: 'soba' },
+  { key: 'halal', label: 'ハラール', labelEn: 'Halal', labelKo: '할랄', labelZh: '清真', diet: 'halal' },
+  { key: 'vegetarian', label: 'ベジタリアン', labelEn: 'Vegetarian', labelKo: '채식', labelZh: '素食', diet: 'vegetarian' },
+  { key: 'gluten_free', label: 'グルテンフリー', labelEn: 'Gluten Free', labelKo: '글루텐프리', labelZh: '无麸质', diet: 'gluten_free' },
 ] as const
 
 type SortKey = 'score' | 'menu_count'
@@ -521,8 +607,13 @@ export default function HomePage() {
   const { language, openLanguageModal } = useAppContext()
   const langBadge = LANG_BADGES[language] || language.slice(0, 2).toUpperCase()
   const isJa = language === 'ja'
-  const fl = isJa ? FLOW_QUESTIONS.ja : FLOW_QUESTIONS.en
-  const lb = (item: { label: string; labelEn: string }) => isJa ? item.label : item.labelEn
+  const fl = FLOW_QUESTIONS[language] || (language.startsWith('zh') ? FLOW_QUESTIONS['zh-Hans'] : null) || FLOW_QUESTIONS.en
+  const lb = (item: { label: string; labelEn: string; labelKo?: string; labelZh?: string }) => {
+    if (language === 'ja') return item.label
+    if (language === 'ko') return item.labelKo || item.labelEn
+    if (language.startsWith('zh')) return item.labelZh || item.labelEn
+    return item.labelEn
+  }
   const [query, setQuery] = useState('')
   const [city, setCity] = useState('')
   const [cities, setCities] = useState<CityCount[]>([])

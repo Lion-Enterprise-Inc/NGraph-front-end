@@ -3,6 +3,7 @@ import '../App.css'
 import { AppProvider } from '../components/AppProvider'
 import type { ReactNode } from 'react'
 import type { Metadata } from 'next'
+import Script from 'next/script'
 
 export const metadata: Metadata = {
   title: 'NGraph — 食を正しく伝える、データインフラ',
@@ -29,6 +30,10 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html lang="ja">
       <head>
         <link rel="icon" href="/favicon.png" />
+        <Script src="https://www.googletagmanager.com/gtag/js?id=G-6VCWBFY41D" strategy="afterInteractive" />
+        <Script id="ga-init" strategy="afterInteractive">
+          {`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-6VCWBFY41D');`}
+        </Script>
       </head>
       <body>
         <div id="root">

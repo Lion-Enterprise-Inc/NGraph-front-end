@@ -17,7 +17,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import remarkBreaks from "remark-breaks";
 import rehypeHighlight from "rehype-highlight";
-import { User, Bot, ChevronDown, Copy, Share2, Sparkles, ThumbsUp, ThumbsDown, Star } from "lucide-react";
+import { User, Bot, ChevronDown, Copy, Share2, Sparkles, ThumbsUp, ThumbsDown, Star, MapPin } from "lucide-react";
 import CaptureHeader from "../components/CaptureHeader";
 import CameraPrompt from "../components/CameraPrompt";
 import ChatDock from "../components/ChatDock";
@@ -36,6 +36,7 @@ type ApiRestaurant = {
   recommend_texts?: string[] | null
   recommend_texts_ja?: string[] | null
   google_review_url?: string | null
+  address?: string | null
   created_at: string
   updated_at: string
 };
@@ -62,7 +63,7 @@ function extractNumberedItems(text: string): { num: string; name: string }[] {
 }
 
 // Helper function to render text with bold formatting and proper structure
-const renderBoldText = (text: string) => {
+const renderBoldText = (text: string, mutedPrefixes: string[] = []) => {
   // Split by double newlines to get paragraphs
   const paragraphs = text.split('\n\n');
   
@@ -78,7 +79,9 @@ const renderBoldText = (text: string) => {
           if (!line.trim()) return null;
           
           // Check if this is a muted/indented line (starts with specific keywords)
-          const isMuted = /^(アレルゲン|宗教上の制約|味の特徴|推定カロリー|背景情報|関連提案):/i.test(line.trim());
+          const isMuted = mutedPrefixes.length > 0
+            ? mutedPrefixes.some(p => line.trim().startsWith(p + ':') || line.trim().startsWith(p + '：'))
+            : /^(アレルゲン|宗教上の制約|味の特徴|推定カロリー|背景情報|関連提案):/i.test(line.trim());
           
           // Parse bold text (**text**)
           const parts = line.split(/(\*\*.*?\*\*)/g);
@@ -426,6 +429,7 @@ export default function CapturePage({
                 recommend_texts: data.result.recommend_texts,
                 recommend_texts_ja: data.result.recommend_texts_ja,
                 google_review_url: data.result.google_review_url || null,
+                address: data.result.address || null,
                 created_at: '',
                 updated_at: ''
               });
@@ -952,7 +956,7 @@ export default function CapturePage({
             if (isNfgMode) {
               // NFGカード表示
               output = {
-                title: `メニュー解析結果（${items.length}品）`,
+                title: copy.capture.menuAnalysis.replace('{n}', String(items.length)),
                 intro: '',
                 body: [],
               };
@@ -973,16 +977,16 @@ export default function CapturePage({
                 const price = item.price > 0 ? ` — ¥${item.price.toLocaleString()}` : '';
                 parts.push(`${name}${price}`);
                 if (item.description) parts.push(item.description);
-                if (item.ingredients?.length) parts.push(`主な材料: ${item.ingredients.join(', ')}`);
-                if (item.allergens?.length) parts.push(`アレルゲン: ${item.allergens.join(', ')}`);
+                if (item.ingredients?.length) parts.push(`${copy.nfg.ingredients}: ${item.ingredients.join(', ')}`);
+                if (item.allergens?.length) parts.push(`${copy.nfg.allergens}: ${item.allergens.join(', ')}`);
                 return parts.join('\n');
               };
 
               output = {
-                title: `メニュー解析結果（${items.length}品）`,
+                title: copy.capture.menuAnalysis.replace('{n}', String(items.length)),
                 intro: trimmedMessage
-                  ? `「${trimmedMessage}」の画像を解析しました。`
-                  : 'メニュー画像を解析しました。',
+                  ? copy.capture.imageAnalyzedWith.replace('{q}', trimmedMessage)
+                  : copy.capture.imageAnalyzed,
                 body: items.map(formatItem),
               };
             }
@@ -1434,10 +1438,10 @@ export default function CapturePage({
             }}>
               <div style={{ fontSize: '48px' }}>🔍</div>
               <div style={{ fontSize: '16px', color: 'rgba(255,255,255,0.7)', textAlign: 'center' }}>
-                レストランが見つかりませんでした
+                {copy.capture.notFound}
               </div>
               <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.4)', textAlign: 'center' }}>
-                URLを確認してください
+                {copy.capture.checkUrl}
               </div>
             </div>
           ) : restaurantLoading ? (
@@ -1458,7 +1462,7 @@ export default function CapturePage({
                 marginBottom: '16px'
               }} />
               <div style={{ fontSize: '14px', color: 'rgba(255,255,255,0.4)', textAlign: 'center' }}>
-                読み込み中...
+                {copy.capture.loading}
               </div>
               <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
             </div>
@@ -1498,7 +1502,7 @@ export default function CapturePage({
               className="review-btn"
               onClick={() => setReviewOpen(true)}
             >
-              {activeLanguage === 'ja' ? '口コミを書く' : 'Write a review'}
+              {copy.capture.writeReview}
             </button>
           )}
 
@@ -1590,10 +1594,14 @@ export default function CapturePage({
                               </div>
                               {vi.taste_values && Object.keys(vi.taste_values).length > 0 && !((vi as any).dish_category === 'drink' && (() => { const vals = Object.values(vi.taste_values as Record<string,number>); return Math.max(...vals) - Math.min(...vals) <= 3; })()) && (() => {
                                 const axes = ['umami','richness','saltiness','sweetness','spiciness','lightness','sourness','bitterness','volume','locality'] as const;
-                                const labelsJa: Record<string,string> = {umami:"旨味",richness:"コク",saltiness:"塩味",sweetness:"甘味",spiciness:"辛味",lightness:"新鮮",sourness:"酸味",bitterness:"苦味",volume:"量",locality:"地元"};
-                                const labelsEn: Record<string,string> = {umami:"Umami",richness:"Rich",saltiness:"Salty",sweetness:"Sweet",spiciness:"Spicy",lightness:"Fresh",sourness:"Sour",bitterness:"Bitter",volume:"Volume",locality:"Local"};
+                                const labels: Record<string,string> = {
+                                  umami: copy.nfg.tasteUmami, richness: copy.nfg.tasteRichness,
+                                  saltiness: copy.nfg.tasteSaltiness, sweetness: copy.nfg.tasteSweetness,
+                                  spiciness: copy.nfg.tasteSpiciness, lightness: copy.nfg.tasteLightness,
+                                  sourness: copy.nfg.tasteSourness, bitterness: copy.nfg.tasteBitterness,
+                                  volume: copy.nfg.tasteVolume, locality: copy.nfg.tasteLocality,
+                                };
                                 const axisColors: Record<string,string> = {umami:"#00e896",richness:"#e8c050",saltiness:"#a0a0ff",sweetness:"#f0a050",spiciness:"#ff6b4a",lightness:"#80d0ff",sourness:"#50c8f0",bitterness:"#80c080",volume:"#c080ff",locality:"#ff80a0"};
-                                const labels = activeLanguage === 'ja' ? labelsJa : labelsEn;
                                 const N = axes.length, R = 88;
                                 const pt = (i: number, rv: number) => {
                                   const a = (2 * Math.PI * i / N) - Math.PI / 2;
@@ -1713,8 +1721,8 @@ export default function CapturePage({
                                       }}
                                     >
                                       {compareTarget?.name === vi.name_jp
-                                        ? (activeLanguage === 'ja' ? '比較中' : 'Comparing')
-                                        : (activeLanguage === 'ja' ? '比較' : 'Compare')
+                                        ? copy.capture.comparing
+                                        : copy.capture.compare
                                       }
                                     </button>
                                   )}
@@ -1748,8 +1756,8 @@ export default function CapturePage({
                                       onClick={(e) => { e.stopPropagation(); toggleDetails(response.id, idx); }}
                                     >
                                       {detailsOpen
-                                        ? (activeLanguage === 'ja' ? '閉じる' : 'Less')
-                                        : (activeLanguage === 'ja' ? '詳しく見る' : 'More details')
+                                        ? copy.capture.less
+                                        : copy.capture.moreDetails
                                       }
                                       <span className={`nfg-details-chevron${detailsOpen ? ' open' : ''}`}>▼</span>
                                     </button>
@@ -1792,6 +1800,12 @@ export default function CapturePage({
                                               {[vi.serving.style, vi.serving.portion, vi.serving.temperature].filter(Boolean).join(' / ')}
                                             </span>
                                           </div>
+                                          {vi.serving.abv_label && (
+                                            <div className="nfg-field">
+                                              <span className="nfg-field-label">{copy.nfg.abv}</span>
+                                              <span className="nfg-field-value">{vi.serving.abv_label}</span>
+                                            </div>
+                                          )}
                                         </div>
                                       )}
                                       <div className="nfg-card-fields">
@@ -1855,7 +1869,7 @@ export default function CapturePage({
                       return (
                         <div className="suggestion-mini-cards">
                           <div className="suggestion-mini-cards-label">
-                            {activeLanguage === 'ja' ? '関連メニュー' : 'Related'}
+                            {copy.capture.relatedMenu}
                           </div>
                           {items.map((item) => (
                             <button
@@ -1863,9 +1877,7 @@ export default function CapturePage({
                               className="suggestion-mini-card"
                               type="button"
                               onClick={() => handleSend(
-                                activeLanguage === 'ja'
-                                  ? `${item.num}の${item.name}について詳しく教えて`
-                                  : `Tell me more about #${item.num} ${item.name}`
+                                copy.capture.tellMeMore.replace('{num}', String(item.num)).replace('{name}', item.name)
                               )}
                             >
                               <span className="suggestion-mini-card-name">{item.name}</span>
@@ -1927,6 +1939,18 @@ export default function CapturePage({
                           >
                             <Star size={16} />
                             <span>{copy.restaurant.googleReview}</span>
+                          </a>
+                        )}
+                        {restaurantData?.address && response.id === responses[responses.length - 1]?.id && responses.length >= 2 && (
+                          <a
+                            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(restaurantData.address)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="feedback-btn action-btn"
+                            aria-label="Map"
+                          >
+                            <MapPin size={16} />
+                            <span>{copy.capture.openMap}</span>
                           </a>
                         )}
                       </div>
@@ -2054,6 +2078,18 @@ export default function CapturePage({
                                   <span>{copy.restaurant.googleReview}</span>
                                 </a>
                               )}
+                              {restaurantData?.address && response.id === responses[responses.length - 1]?.id && responses.length >= 2 && (
+                                <a
+                                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(restaurantData.address)}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="feedback-btn action-btn"
+                                  aria-label="Map"
+                                >
+                                  <MapPin size={16} />
+                                  <span>{copy.capture.openMap}</span>
+                                </a>
+                              )}
                             </div>
                           </div>
                         )}
@@ -2071,9 +2107,7 @@ export default function CapturePage({
                               className="quick-reply-chip"
                               type="button"
                               onClick={() => handleSend(
-                                activeLanguage === 'ja'
-                                  ? `${item.num}の${item.name}について詳しく教えて`
-                                  : `Tell me more about #${item.num} ${item.name}`
+                                copy.capture.tellMeMore.replace('{num}', String(item.num)).replace('{name}', item.name)
                               )}
                             >
                               {item.num}. {item.name}
@@ -2158,7 +2192,7 @@ export default function CapturePage({
           <div className="review-modal">
             <div className="review-handle" />
             <div className="review-title">
-              {activeLanguage === 'ja' ? '口コミを投稿' : 'Write a review'}
+              {copy.capture.submitReview}
             </div>
             <div className="review-subtitle">
               {restaurantData?.name || ''}
@@ -2167,9 +2201,7 @@ export default function CapturePage({
               className="review-textarea"
               value={reviewText}
               onChange={e => setReviewText(e.target.value)}
-              placeholder={activeLanguage === 'ja'
-                ? '料理の感想、お店の雰囲気、おすすめポイントなど'
-                : 'Food impressions, atmosphere, recommendations...'}
+              placeholder={copy.capture.reviewPlaceholder}
               rows={4}
             />
             <button
@@ -2204,12 +2236,12 @@ export default function CapturePage({
               }}
             >
               {reviewSubmitting
-                ? (activeLanguage === 'ja' ? '送信中...' : 'Sending...')
-                : (activeLanguage === 'ja' ? '投稿する' : 'Submit')}
+                ? copy.capture.submitting
+                : copy.capture.submit}
             </button>
             {reviewToast && (
               <div className="review-toast">
-                {activeLanguage === 'ja' ? '投稿しました！' : 'Review submitted!'}
+                {copy.capture.reviewSubmitted}
               </div>
             )}
           </div>

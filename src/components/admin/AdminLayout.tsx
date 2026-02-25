@@ -81,7 +81,7 @@ export default function AdminLayout({ children, title }: Props) {
   const platformOwnerNavItems: NavItem[] = [
     { key: 'dashboard', label: 'ダッシュボード', icon: '🏠', to: '/admin' },
     { key: 'users', label: 'ユーザー管理', icon: '👥', to: '/admin/users' },
-    { key: 'restaurant-list', label: '導入レストラン', icon: '🍽️', to: '/admin/stores' },
+    { key: 'restaurant-list', label: '掲載レストラン', icon: '🍽️', to: '/admin/stores' },
     { key: 'menu-analytics', label: 'メニュー分析', icon: '📊', to: '/admin/menu-analytics' },
     { key: 'conversations', label: '会話ログ', icon: '💬', to: '/admin/conversations' },
     { key: 'prompts', label: 'AI設定', icon: '🤖', to: '/admin/prompts' },

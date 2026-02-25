@@ -470,6 +470,7 @@ export const DISH_CATEGORIES: Record<string, string> = {
   drink: 'ドリンク',
   dessert: 'デザート',
   course: 'コース',
+  gozen: 'ご膳・定食',
   bento: '弁当',
   bread: 'パン',
   other: 'その他',
