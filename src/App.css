@@ -6674,15 +6674,20 @@ textarea.form-input {
   color: #34d399;
 }
 .new-restaurant-link {
-  color: rgba(255,255,255,0.55);
+  color: #34d399;
   cursor: pointer;
   transition: color 0.15s;
 }
 .new-restaurant-link:hover {
-  color: rgba(255,255,255,0.9);
+  color: #6ee7b7;
 }
 .new-restaurant-sep {
   color: rgba(255,255,255,0.15);
+}
+.new-restaurant-count {
+  font-size: 10px;
+  color: rgba(255,255,255,0.3);
+  margin-left: 2px;
 }
 
 /* Store info button & panel */

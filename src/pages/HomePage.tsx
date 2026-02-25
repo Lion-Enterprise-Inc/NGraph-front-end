@@ -1133,6 +1133,9 @@ export default function HomePage() {
                   >
                     {isJa ? '片町店' : 'Katamachi'}
                   </span>
+                  <span className="new-restaurant-count">
+                    {isJa ? '2件新規追加されました' : '2 new restaurants added'}
+                  </span>
                 </div>
               )}
 
