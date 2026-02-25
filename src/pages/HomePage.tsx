@@ -47,12 +47,15 @@ function project3D(points: Vec3[], w: number, h: number, rotY: number, rotX: num
   return { pts, depths }
 }
 
+// Randomized parametric generators — every call produces a unique shape
 function genTorus3D(n = 250): Vec3[] {
   const pts: Vec3[] = []
-  const R = 0.7, r = 0.3
+  const R = 0.5 + Math.random() * 0.4  // 0.5–0.9
+  const r = 0.15 + Math.random() * 0.25 // 0.15–0.4
+  const scatter = 5 + Math.random() * 5 // golden-ish angle step
   for (let i = 0; i < n; i++) {
     const u = (i / n) * Math.PI * 2
-    const v = (i * 7.31) % (Math.PI * 2) // golden-ish scatter
+    const v = (i * scatter) % (Math.PI * 2)
     pts.push([
       (R + r * Math.cos(v)) * Math.cos(u),
       (R + r * Math.cos(v)) * Math.sin(u),
@@ -65,13 +68,15 @@ function genTorus3D(n = 250): Vec3[] {
 function genFibSphere3D(n = 250): Vec3[] {
   const pts: Vec3[] = []
   const golden = (1 + Math.sqrt(5)) / 2
+  const radius = 0.65 + Math.random() * 0.35 // 0.65–1.0
+  const squeeze = 0.6 + Math.random() * 0.8  // Y-axis stretch
   for (let i = 0; i < n; i++) {
     const theta = Math.acos(1 - 2 * (i + 0.5) / n)
     const phi = 2 * Math.PI * i / golden
     pts.push([
-      0.85 * Math.sin(theta) * Math.cos(phi),
-      0.85 * Math.sin(theta) * Math.sin(phi),
-      0.85 * Math.cos(theta),
+      radius * Math.sin(theta) * Math.cos(phi),
+      radius * Math.sin(theta) * Math.sin(phi) * squeeze,
+      radius * Math.cos(theta),
     ])
   }
   return pts
@@ -79,8 +84,9 @@ function genFibSphere3D(n = 250): Vec3[] {
 
 function genHelix3D(n = 250): Vec3[] {
   const pts: Vec3[] = []
-  const turns = 3, r = 0.5
-  const half = Math.floor(n * 0.4) // each strand
+  const turns = 2 + Math.floor(Math.random() * 3) // 2–4
+  const r = 0.3 + Math.random() * 0.3 // 0.3–0.6
+  const half = Math.floor(n * 0.4)
   const rungs = n - half * 2
   for (let strand = 0; strand < 2; strand++) {
     const offset = strand * Math.PI
@@ -90,11 +96,10 @@ function genHelix3D(n = 250): Vec3[] {
       pts.push([r * Math.cos(t + offset), y, r * Math.sin(t + offset)])
     }
   }
-  // rungs connecting the two strands
   for (let i = 0; i < rungs; i++) {
     const t = (i / rungs) * turns * Math.PI * 2
     const y = (i / rungs) * 2 - 1
-    const frac = (i % 3) / 2 // 0, 0.5, 1
+    const frac = (i % 3) / 2
     const a1 = t, a2 = t + Math.PI
     const angle = a1 + (a2 - a1) * frac
     pts.push([r * Math.cos(angle), y, r * Math.sin(angle)])
@@ -104,10 +109,12 @@ function genHelix3D(n = 250): Vec3[] {
 
 function genLorenz3D(n = 250): Vec3[] {
   const pts: Vec3[] = []
-  let x = 0.1, y = 0, z = 0
-  const dt = 0.005
-  const sigma = 10, rho = 28, beta = 8 / 3
-  // warm up
+  // Randomize initial conditions — tiny changes → completely different trajectory
+  let x = 0.05 + Math.random() * 0.15
+  let y = Math.random() * 0.1
+  let z = Math.random() * 0.1
+  const dt = 0.003 + Math.random() * 0.004 // 0.003–0.007
+  const sigma = 10, rho = 26 + Math.random() * 4, beta = 8 / 3
   for (let i = 0; i < 500; i++) {
     x += sigma * (y - x) * dt
     y += (x * (rho - z) - y) * dt
@@ -120,7 +127,6 @@ function genLorenz3D(n = 250): Vec3[] {
     z += (x * y - beta * z) * dt
     raw.push([x, y, z])
   }
-  // normalize to [-1, 1]
   let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity, minZ = Infinity, maxZ = -Infinity
   for (const [px, py, pz] of raw) {
     if (px < minX) minX = px; if (px > maxX) maxX = px
@@ -141,28 +147,27 @@ function genLorenz3D(n = 250): Vec3[] {
 
 function genTrefoil3D(n = 250): Vec3[] {
   const pts: Vec3[] = []
+  const p = 1 + Math.floor(Math.random() * 3) // 1–3 lobes factor
+  const q = p + 1 + Math.floor(Math.random() * 2) // always > p
+  const zAmp = 0.3 + Math.random() * 0.5 // 0.3–0.8
   for (let i = 0; i < n; i++) {
     const t = (i / n) * Math.PI * 2
-    const r = Math.cos(1.5 * t) + 2
+    const r = Math.cos(q * t / 2) + 2
     pts.push([
-      r * Math.cos(t) / 3.5,
-      r * Math.sin(t) / 3.5,
-      Math.sin(1.5 * t) * 0.6,
+      r * Math.cos(p * t / 2) / 3.5,
+      r * Math.sin(p * t / 2) / 3.5,
+      Math.sin(q * t / 2) * zAmp,
     ])
   }
   return pts
 }
 
-const _pattern3DCache: Vec3[][] = []
 const PATTERN_3D_GENERATORS = [genTorus3D, genFibSphere3D, genHelix3D, genLorenz3D, genTrefoil3D]
 let _pattern3DIndex = 0
 function getNextPattern3D(): Vec3[] {
-  if (_pattern3DCache.length === 0) {
-    for (const gen of PATTERN_3D_GENERATORS) _pattern3DCache.push(gen())
-  }
-  const pattern = _pattern3DCache[_pattern3DIndex % _pattern3DCache.length]
+  const gen = PATTERN_3D_GENERATORS[_pattern3DIndex % PATTERN_3D_GENERATORS.length]
   _pattern3DIndex++
-  return pattern
+  return gen() // fresh every time — randomized params make each unique
 }
 
 // Canvas描画→ピクセルサンプリング共通
