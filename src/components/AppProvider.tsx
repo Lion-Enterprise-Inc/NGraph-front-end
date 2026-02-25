@@ -68,14 +68,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [onSelectThread, setOnSelectThread] = useState<((threadUid: string) => void) | null>(null);
   const [geoLocation, setGeoLocation] = useState<{ lat: number; lng: number } | null>(null);
 
-  useEffect(() => {
-    if (typeof navigator === 'undefined' || !navigator.geolocation) return;
-    navigator.geolocation.getCurrentPosition(
-      (pos) => setGeoLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-      () => {},
-      { enableHighAccuracy: true, timeout: 10000 }
-    );
-  }, []);
+  // Geolocation is requested on-demand (e.g. "現在地の近く" button), not on page load
 
   const setLanguage = (code: string, source = "unknown") => {
     setLanguageState(code);

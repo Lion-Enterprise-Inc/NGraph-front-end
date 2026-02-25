@@ -6412,7 +6412,7 @@ textarea.form-input {
 }
 .conv-reco-link:hover { color: #4fd1a5; }
 .conv-reco-more {
-  margin-top: 12px;
+  margin: 12px 24px 0;
   display: block;
   text-align: center;
   padding: 8px 16px;
@@ -6423,8 +6423,7 @@ textarea.form-input {
   font-size: 13px;
   cursor: pointer;
   transition: all 0.15s;
-  width: calc(100% - 48px);
-  margin-left: 24px;
+  width: auto;
 }
 .conv-reco-more:hover { background: rgba(16,163,127,0.08); }
 

@@ -439,7 +439,7 @@ function BinaryField({ pulseRef }: { pulseRef?: React.RefObject<{ x: number; y: 
           const ddy = particles[i].y - particles[j].y
           const d = Math.sqrt(ddx * ddx + ddy * ddy)
           if (d < SYNAPSE_DIST) {
-            const lineAlpha = Math.min(alphas[i], alphas[j]) * (1 - d / SYNAPSE_DIST) * 0.7
+            const lineAlpha = Math.min(Math.min(alphas[i], alphas[j]) * (1 - d / SYNAPSE_DIST) * 0.7, 0.1)
             ctx.beginPath()
             ctx.moveTo(particles[i].x, particles[i].y - particles[i].size * 0.3)
             ctx.lineTo(particles[j].x, particles[j].y - particles[j].size * 0.3)
@@ -455,7 +455,8 @@ function BinaryField({ pulseRef }: { pulseRef?: React.RefObject<{ x: number; y: 
       for (let i = 0; i < particles.length; i++) {
         if (alphas[i] < 0.005) continue
         const p = particles[i]
-        ctx.fillStyle = `rgba(16, 163, 127, ${alphas[i]})`
+        const cappedAlpha = Math.min(alphas[i] * 0.5, 0.15)
+        ctx.fillStyle = `rgba(16, 163, 127, ${cappedAlpha})`
         if (p.size !== 11) ctx.font = `${p.size}px 'SF Mono', 'Fira Code', monospace`
         ctx.fillText(p.char, p.x, p.y)
         if (p.size !== 11) ctx.font = `11px 'SF Mono', 'Fira Code', monospace`
@@ -550,6 +551,8 @@ const AREAS = [
   { key: 'echizen', label: '越前・鯖江', labelEn: 'Echizen / Sabae', labelKo: '에치젠・사바에', labelZh: '越前・�的江', area: '越前市' },
   { key: 'tsuruga', label: '敦賀', labelEn: 'Tsuruga', labelKo: '쓰루가', labelZh: '敦贺', area: '敦賀市' },
   { key: 'awara', label: 'あわら', labelEn: 'Awara', labelKo: '아와라', labelZh: '芦原', area: 'あわら市' },
+  { key: 'okuetsu', label: '奥越（大野・勝山）', labelEn: 'Okuetsu (Ono/Katsuyama)', labelKo: '오쿠에츠', labelZh: '奥越（大野・胜山）', area: '大野市' },
+  { key: 'fukui-wide', label: '福井市（広域）', labelEn: 'Fukui City (wide)', labelKo: '후쿠이시(광역)', labelZh: '福井市（广域）', area: '福井' },
   { key: 'anywhere', label: 'どこでもOK', labelEn: 'Anywhere', labelKo: '어디든 OK', labelZh: '都可以', area: '' },
 ] as const
 
@@ -587,13 +590,20 @@ const FLOW_QUESTIONS: Record<string, { q1: string; q2: string; q3: string; q4: s
   'zh-Hans': { q1: '想吃什么？', q2: '在哪里找？', q3: '预算？', q4: '风格？', viewNow: '立即查看', searchMore: '详细搜索', restart: '← 重新开始', otherGenre: '其他类型', changeMore: '换个条件', startOver: '从头开始', searching: '搜索中...', recoFallback: '没找到完美匹配，这些怎么样？', recoTitle: '推荐', seeMore: '查看其余 {n} 家', restrictionOpen: '过敏・饮食限制', restrictionClose: '关闭过敏设置', searchPlaceholder: '无蛋、清真、昆布高汤、店名搜索', all: '全部', back: '← 返回', results: '{n} 家', score: '评分排序', menuCount: '菜品数排序', loading: '加载中...', empty: '没有符合的餐厅', prev: '上一页', next: '下一页', footer: '{r}餐厅 · {m}菜品 · {e}结构化 · {c}城市' },
 }
 
-// 制約 — 安全フィルタ（別枠）
-const RESTRICTIONS = [
-  { key: 'shrimp', label: 'えび・かに×', labelEn: 'No Shrimp/Crab', labelKo: '새우・게×', labelZh: '虾蟹×', no: 'shrimp,crab' },
-  { key: 'egg', label: '卵×', labelEn: 'No Egg', labelKo: '달걀×', labelZh: '鸡蛋×', no: 'egg' },
-  { key: 'wheat', label: '小麦×', labelEn: 'No Wheat', labelKo: '밀×', labelZh: '小麦×', no: 'wheat' },
-  { key: 'milk', label: '乳×', labelEn: 'No Dairy', labelKo: '유제품×', labelZh: '乳制品×', no: 'milk' },
-  { key: 'soba', label: 'そば×', labelEn: 'No Soba', labelKo: '소바×', labelZh: '荞麦×', no: 'soba' },
+// アレルゲン（特定原材料8品目）
+const ALLERGENS_8 = [
+  { key: 'shrimp', label: 'えび', labelEn: 'Shrimp', labelKo: '새우', labelZh: '虾', no: 'shrimp' },
+  { key: 'crab_a', label: 'かに', labelEn: 'Crab', labelKo: '게', labelZh: '蟹', no: 'crab' },
+  { key: 'egg', label: '卵', labelEn: 'Egg', labelKo: '달걀', labelZh: '鸡蛋', no: 'egg' },
+  { key: 'wheat', label: '小麦', labelEn: 'Wheat', labelKo: '밀', labelZh: '小麦', no: 'wheat' },
+  { key: 'milk', label: '乳', labelEn: 'Dairy', labelKo: '유제품', labelZh: '乳制品', no: 'milk' },
+  { key: 'soba', label: 'そば', labelEn: 'Soba', labelKo: '소바', labelZh: '荞麦', no: 'soba' },
+  { key: 'peanut', label: '落花生', labelEn: 'Peanut', labelKo: '땅콩', labelZh: '花生', no: 'peanut' },
+  { key: 'walnut', label: 'くるみ', labelEn: 'Walnut', labelKo: '호두', labelZh: '核桃', no: 'walnut' },
+] as const
+
+// 食事制限
+const DIET_RESTRICTIONS = [
   { key: 'halal', label: 'ハラール', labelEn: 'Halal', labelKo: '할랄', labelZh: '清真', diet: 'halal' },
   { key: 'vegetarian', label: 'ベジタリアン', labelEn: 'Vegetarian', labelKo: '채식', labelZh: '素食', diet: 'vegetarian' },
   { key: 'gluten_free', label: 'グルテンフリー', labelEn: 'Gluten Free', labelKo: '글루텐프리', labelZh: '无麸质', diet: 'gluten_free' },
@@ -889,9 +899,10 @@ export default function HomePage() {
     const diets: string[] = []
     const allergens: string[] = []
     for (const key of flowRestrictions) {
-      const r = RESTRICTIONS.find(x => x.key === key)
-      if (r && 'diet' in r && r.diet) diets.push(r.diet)
-      if (r && 'no' in r && r.no) allergens.push(r.no)
+      const a = ALLERGENS_8.find(x => x.key === key)
+      if (a) allergens.push(a.no)
+      const d = DIET_RESTRICTIONS.find(x => x.key === key)
+      if (d && d.diet) diets.push(d.diet)
     }
     if (diets.length > 0) params.diet = diets.join(',')
     if (allergens.length > 0) params.no = allergens.join(',')
@@ -1157,11 +1168,25 @@ export default function HomePage() {
                     {showRestrictions ? fl.restrictionClose : fl.restrictionOpen}
                   </button>
                   {showRestrictions && (
-                    <div className="conv-chips" style={{ marginTop: 8 }}>
-                      {RESTRICTIONS.map(r => (
-                        <button key={r.key} className={`conv-chip ${flowRestrictions.has(r.key) ? 'selected' : ''}`}
-                          onClick={() => toggleSet(flowRestrictions, setFlowRestrictions, r.key)}>{lb(r)}</button>
-                      ))}
+                    <div style={{ marginTop: 8 }}>
+                      <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginBottom: 6 }}>
+                        {isJa ? 'アレルゲン（特定原材料8品目）' : 'Allergens'}
+                      </div>
+                      <div className="conv-chips">
+                        {ALLERGENS_8.map(r => (
+                          <button key={r.key} className={`conv-chip ${flowRestrictions.has(r.key) ? 'selected' : ''}`}
+                            onClick={() => toggleSet(flowRestrictions, setFlowRestrictions, r.key)}>{lb(r)}</button>
+                        ))}
+                      </div>
+                      <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginTop: 12, marginBottom: 6 }}>
+                        {isJa ? '食事制限' : 'Dietary'}
+                      </div>
+                      <div className="conv-chips">
+                        {DIET_RESTRICTIONS.map(r => (
+                          <button key={r.key} className={`conv-chip ${flowRestrictions.has(r.key) ? 'selected' : ''}`}
+                            onClick={() => toggleSet(flowRestrictions, setFlowRestrictions, r.key)}>{lb(r)}</button>
+                        ))}
+                      </div>
                     </div>
                   )}
                 </div>
@@ -1220,6 +1245,17 @@ export default function HomePage() {
                         <div className="conv-chips">
                           {FOOD_TYPES.filter(f => f.key !== flowFoodType).map(f => (
                             <button key={f.key} className="conv-chip conv-chip-small" onClick={() => switchFoodType(f.key)}>{lb(f)}</button>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="conv-switch" style={{ marginTop: 8 }}>
+                        <div className="conv-switch-label">{isJa ? '他のエリア' : 'Other areas'}</div>
+                        <div className="conv-chips">
+                          {availableAreas.filter(a => a.key !== flowArea).map(a => (
+                            <button key={a.key} className="conv-chip conv-chip-small" onClick={() => {
+                              setFlowArea(a.key)
+                              fetchReco(buildFlowParams({ areaKey: a.key }))
+                            }}>{lb(a)}</button>
                           ))}
                         </div>
                       </div>
