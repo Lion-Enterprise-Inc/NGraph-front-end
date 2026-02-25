@@ -1235,6 +1235,20 @@ export interface MenuSearchItem {
   restaurant_city: string | null;
 }
 
+export interface MenuNFGCard extends MenuSearchItem {
+  ingredients: string[];
+  allergens: string[];
+  restrictions: string[];
+  verification_rank: string | null;
+  taste_values: Record<string, number> | null;
+  narrative_full: Record<string, any> | null;
+  serving: Record<string, any> | null;
+  image_url: string | null;
+  score: number;
+  restaurant_lat: number | null;
+  restaurant_lng: number | null;
+}
+
 export const MenuSearchApi = {
   count: async (params: {
     category?: string; q?: string; diet?: string; no?: string;
@@ -1253,9 +1267,10 @@ export const MenuSearchApi = {
   },
   search: async (params: {
     category?: string; q?: string; diet?: string; no?: string;
-    mood?: string; area?: string; page?: number; size?: number;
+    mood?: string; area?: string; nfg?: boolean; lat?: number; lng?: number;
+    page?: number; size?: number;
   }): Promise<{
-    result: { count: number; menus: MenuSearchItem[]; page: number; size: number; pages: number };
+    result: { count: number; menus: (MenuSearchItem | MenuNFGCard)[]; page: number; size: number; pages: number };
   }> => {
     const sp = new URLSearchParams();
     if (params.category) sp.append('category', params.category);
@@ -1264,6 +1279,9 @@ export const MenuSearchApi = {
     if (params.no) sp.append('no', params.no);
     if (params.mood) sp.append('mood', params.mood);
     if (params.area) sp.append('area', params.area);
+    if (params.nfg) sp.append('nfg', 'true');
+    if (params.lat != null) sp.append('lat', String(params.lat));
+    if (params.lng != null) sp.append('lng', String(params.lng));
     sp.append('page', String(params.page || 1));
     sp.append('size', String(params.size || 20));
     const resp = await fetch(`${API_BASE_URL}/restaurants/search/menus?${sp}`);

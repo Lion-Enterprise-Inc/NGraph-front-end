@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { Search } from 'lucide-react'
-import { ExploreApi, SemanticSearchApi, MenuSearchApi, SearchRestaurant, NfgSearchRestaurant, SemanticSearchRestaurant, CityCount, PlatformStats, MenuSearchItem } from '../services/api'
+import { ExploreApi, SemanticSearchApi, MenuSearchApi, SearchRestaurant, NfgSearchRestaurant, SemanticSearchRestaurant, CityCount, PlatformStats, MenuNFGCard } from '../services/api'
 import { useAppContext } from '../components/AppProvider'
 
 const LANG_BADGES: Record<string, string> = {
@@ -667,7 +667,7 @@ export default function HomePage() {
   const [recoTotal, setRecoTotal] = useState(0)
   const [recoFallback, setRecoFallback] = useState(false)
   const composingRef = useRef(false)
-  const [menuResults, setMenuResults] = useState<MenuSearchItem[]>([])
+  const [menuResults, setMenuResults] = useState<MenuNFGCard[]>([])
 
   // Pulse binary particles toward count bar when count changes
   useEffect(() => {
@@ -728,9 +728,9 @@ export default function HomePage() {
     setLoading(true)
     setMenuResults([])
     try {
-      // メニュー検索も並列（2文字以上のテキスト検索時）
+      // NFGメニューカード検索（2文字以上のテキスト検索時）
       const menuPromise = q.length >= 2
-        ? MenuSearchApi.search({ q, area: c, size: 6 }).catch(() => null)
+        ? MenuSearchApi.search({ q, area: c, nfg: true, size: 20 }).catch(() => null)
         : Promise.resolve(null)
 
       if (q && isNfgQuery(q)) {
@@ -742,13 +742,13 @@ export default function HomePage() {
         setRestaurants(items)
         setTotal(res.result.total)
         setPages(res.result.pages)
-        if (menuRes?.result?.menus?.length) setMenuResults(menuRes.result.menus)
+        if (menuRes?.result?.menus?.length) setMenuResults(menuRes.result.menus as MenuNFGCard[])
       } else {
         const [res, menuRes] = await Promise.all([
           ExploreApi.search(q, c, p, 30),
           menuPromise,
         ])
-        if (menuRes?.result?.menus?.length) setMenuResults(menuRes.result.menus)
+        if (menuRes?.result?.menus?.length) setMenuResults(menuRes.result.menus as MenuNFGCard[])
         // fallback to NFG search if text search returns 0 and query is 2+ chars
         if (res.result.total === 0 && q.length >= 2) {
           const nfg = await ExploreApi.nfgSearch(q, c, p, 30)
@@ -1342,7 +1342,7 @@ export default function HomePage() {
         <div className="explore-body">
           {/* Back + search */}
           <div style={{ padding: '8px 24px 0', display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <span className="conv-reset" onClick={() => { setSearched(false); setQuery(''); setRestaurants([]); setTotal(0) }}>{fl.back}</span>
+            <span className="conv-reset" onClick={() => { setSearched(false); setQuery(''); setRestaurants([]); setTotal(0); resetFlow() }}>{fl.back}</span>
             <div style={{ position: 'relative' }}>
               <Search size={16} className="explore-search-icon" />
               <input
@@ -1382,30 +1382,49 @@ export default function HomePage() {
             )}
           </div>
 
-          {/* Menu matches */}
+          {/* NFG Menu Cards — メイン表示 */}
           {menuResults.length > 0 && (
-            <div className="menu-match-section">
-              <div className="menu-match-label">{isJa ? '一致するメニュー' : 'Matching dishes'}</div>
-              <div className="menu-match-scroll">
+            <div className="nfg-menu-section">
+              <div className="nfg-menu-label">{isJa ? '一致するメニュー' : 'Matching dishes'} ({menuResults.length})</div>
+              <div className="nfg-menu-list">
                 {menuResults.map(m => (
                   <button
                     key={m.uid}
-                    className="menu-match-card"
+                    className="nfg-menu-card"
                     onClick={() => router.push(`/capture?restaurant=${encodeURIComponent(m.restaurant_slug)}`)}
                   >
-                    <div className="menu-match-name">{m.name_jp}</div>
-                    {m.price > 0 && <div className="menu-match-price">¥{m.price.toLocaleString()}</div>}
-                    {m.narrative_snippet && <div className="menu-match-desc">{m.narrative_snippet}</div>}
-                    <div className="menu-match-restaurant">
+                    <div className="nfg-menu-card-header">
+                      <div className="nfg-menu-card-title">
+                        <span className="nfg-menu-name">{m.name_jp}</span>
+                        {m.verification_rank && (
+                          <span className={`nfg-rank-badge nfg-rank-${m.verification_rank}`}>{m.verification_rank}</span>
+                        )}
+                      </div>
+                      {m.price > 0 && <div className="nfg-menu-price">¥{m.price.toLocaleString()}</div>}
+                    </div>
+                    <div className="nfg-menu-card-restaurant">
                       {(() => { const s = splitStoreName(m.restaurant_name); return <>{s.brand}{s.suffix && <span className="store-suffix">{s.suffix}</span>}</> })()}
                       {m.restaurant_city ? ` · ${m.restaurant_city}` : ''}
-                      {!isJa && m.restaurant_name_romaji && <div className="store-romaji">{m.restaurant_name_romaji}</div>}
+                      {!isJa && m.restaurant_name_romaji && <span className="store-romaji"> {m.restaurant_name_romaji}</span>}
                     </div>
-                    {m.featured_tags.length > 0 && (
-                      <div className="menu-match-tags">
-                        {m.featured_tags.map((t, i) => <span key={i} className="menu-match-tag">{t}</span>)}
+                    {m.narrative_snippet && <div className="nfg-menu-narrative">{m.narrative_snippet}</div>}
+                    {m.ingredients.length > 0 && (
+                      <div className="nfg-menu-ingredients">
+                        {m.ingredients.slice(0, 5).map((ing, i) => <span key={i} className="nfg-ingredient-tag">{ing}</span>)}
+                        {m.ingredients.length > 5 && <span className="nfg-ingredient-tag nfg-more">+{m.ingredients.length - 5}</span>}
                       </div>
                     )}
+                    {m.allergens.length > 0 && (
+                      <div className="nfg-menu-allergens">
+                        {m.allergens.map((a, i) => <span key={i} className="nfg-allergen-badge">{a}</span>)}
+                      </div>
+                    )}
+                    {m.featured_tags.length > 0 && (
+                      <div className="nfg-menu-tags">
+                        {m.featured_tags.map((t, i) => <span key={i} className="nfg-featured-tag">{t}</span>)}
+                      </div>
+                    )}
+                    {m.score > 0 && <div className="nfg-menu-score">{m.score}pt</div>}
                   </button>
                 ))}
               </div>
