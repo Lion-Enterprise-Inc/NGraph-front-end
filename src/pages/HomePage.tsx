@@ -398,10 +398,11 @@ function BinaryField({ pulseRef }: { pulseRef?: React.RefObject<{ x: number; y: 
       const angle = Math.random() * Math.PI * 2
       const speed = 0.15 + Math.random() * 0.25
       const size = 9 + Math.floor(Math.random() * 3) * 2 // 9, 11, 13
-      const margin = 40
+      const cx = w / 2, cy = h / 2
+      const spread = Math.min(w, h) * 0.42
       return {
-        x: margin + Math.random() * (w - margin * 2),
-        y: margin + Math.random() * (h - margin * 2),
+        x: cx + (Math.random() - 0.5) * spread * 2,
+        y: cy + (Math.random() - 0.5) * spread * 2,
         vx: Math.cos(angle) * speed,
         vy: Math.sin(angle) * speed,
         size,
