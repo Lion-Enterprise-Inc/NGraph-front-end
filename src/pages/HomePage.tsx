@@ -21,6 +21,150 @@ interface Particle {
   tx?: number; ty?: number // target position for portrait formation
 }
 
+// --- 3D Pattern Generators ---
+type Vec3 = [number, number, number]
+
+function project3D(points: Vec3[], w: number, h: number, rotY: number, rotX: number): { pts: [number, number][]; depths: number[] } {
+  const cosY = Math.cos(rotY), sinY = Math.sin(rotY)
+  const cosX = Math.cos(rotX), sinX = Math.sin(rotX)
+  const fov = 2.5
+  const scale = Math.min(w, h) * 0.4
+  const cx = w / 2, cy = h / 2
+  const pts: [number, number][] = []
+  const depths: number[] = []
+  for (const [x, y, z] of points) {
+    // rotate Y
+    const x1 = x * cosY - z * sinY
+    const z1 = x * sinY + z * cosY
+    // rotate X
+    const y1 = y * cosX - z1 * sinX
+    const z2 = y * sinX + z1 * cosX
+    // perspective
+    const d = fov / (fov + z2)
+    pts.push([cx + x1 * d * scale, cy + y1 * d * scale])
+    depths.push(z2)
+  }
+  return { pts, depths }
+}
+
+function genTorus3D(n = 250): Vec3[] {
+  const pts: Vec3[] = []
+  const R = 0.7, r = 0.3
+  for (let i = 0; i < n; i++) {
+    const u = (i / n) * Math.PI * 2
+    const v = (i * 7.31) % (Math.PI * 2) // golden-ish scatter
+    pts.push([
+      (R + r * Math.cos(v)) * Math.cos(u),
+      (R + r * Math.cos(v)) * Math.sin(u),
+      r * Math.sin(v),
+    ])
+  }
+  return pts
+}
+
+function genFibSphere3D(n = 250): Vec3[] {
+  const pts: Vec3[] = []
+  const golden = (1 + Math.sqrt(5)) / 2
+  for (let i = 0; i < n; i++) {
+    const theta = Math.acos(1 - 2 * (i + 0.5) / n)
+    const phi = 2 * Math.PI * i / golden
+    pts.push([
+      0.85 * Math.sin(theta) * Math.cos(phi),
+      0.85 * Math.sin(theta) * Math.sin(phi),
+      0.85 * Math.cos(theta),
+    ])
+  }
+  return pts
+}
+
+function genHelix3D(n = 250): Vec3[] {
+  const pts: Vec3[] = []
+  const turns = 3, r = 0.5
+  const half = Math.floor(n * 0.4) // each strand
+  const rungs = n - half * 2
+  for (let strand = 0; strand < 2; strand++) {
+    const offset = strand * Math.PI
+    for (let i = 0; i < half; i++) {
+      const t = (i / half) * turns * Math.PI * 2
+      const y = (i / half) * 2 - 1
+      pts.push([r * Math.cos(t + offset), y, r * Math.sin(t + offset)])
+    }
+  }
+  // rungs connecting the two strands
+  for (let i = 0; i < rungs; i++) {
+    const t = (i / rungs) * turns * Math.PI * 2
+    const y = (i / rungs) * 2 - 1
+    const frac = (i % 3) / 2 // 0, 0.5, 1
+    const a1 = t, a2 = t + Math.PI
+    const angle = a1 + (a2 - a1) * frac
+    pts.push([r * Math.cos(angle), y, r * Math.sin(angle)])
+  }
+  return pts
+}
+
+function genLorenz3D(n = 250): Vec3[] {
+  const pts: Vec3[] = []
+  let x = 0.1, y = 0, z = 0
+  const dt = 0.005
+  const sigma = 10, rho = 28, beta = 8 / 3
+  // warm up
+  for (let i = 0; i < 500; i++) {
+    x += sigma * (y - x) * dt
+    y += (x * (rho - z) - y) * dt
+    z += (x * y - beta * z) * dt
+  }
+  const raw: Vec3[] = []
+  for (let i = 0; i < n; i++) {
+    x += sigma * (y - x) * dt
+    y += (x * (rho - z) - y) * dt
+    z += (x * y - beta * z) * dt
+    raw.push([x, y, z])
+  }
+  // normalize to [-1, 1]
+  let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity, minZ = Infinity, maxZ = -Infinity
+  for (const [px, py, pz] of raw) {
+    if (px < minX) minX = px; if (px > maxX) maxX = px
+    if (py < minY) minY = py; if (py > maxY) maxY = py
+    if (pz < minZ) minZ = pz; if (pz > maxZ) maxZ = pz
+  }
+  const rangeX = maxX - minX || 1, rangeY = maxY - minY || 1, rangeZ = maxZ - minZ || 1
+  const s = 1.6
+  for (const [px, py, pz] of raw) {
+    pts.push([
+      ((px - minX) / rangeX - 0.5) * s,
+      ((py - minY) / rangeY - 0.5) * s,
+      ((pz - minZ) / rangeZ - 0.5) * s,
+    ])
+  }
+  return pts
+}
+
+function genTrefoil3D(n = 250): Vec3[] {
+  const pts: Vec3[] = []
+  for (let i = 0; i < n; i++) {
+    const t = (i / n) * Math.PI * 2
+    const r = Math.cos(1.5 * t) + 2
+    pts.push([
+      r * Math.cos(t) / 3.5,
+      r * Math.sin(t) / 3.5,
+      Math.sin(1.5 * t) * 0.6,
+    ])
+  }
+  return pts
+}
+
+const _pattern3DCache: Vec3[][] = []
+const PATTERN_3D_GENERATORS = [genTorus3D, genFibSphere3D, genHelix3D, genLorenz3D, genTrefoil3D]
+let _pattern3DIndex = 0
+function getNextPattern3D(): Vec3[] {
+  if (_pattern3DCache.length === 0) {
+    for (const gen of PATTERN_3D_GENERATORS) _pattern3DCache.push(gen())
+  }
+  const pattern = _pattern3DCache[_pattern3DIndex % _pattern3DCache.length]
+  _pattern3DIndex++
+  return pattern
+}
+
 // Canvas描画→ピクセルサンプリング共通
 function samplePixels(w: number, h: number, draw: (ctx: CanvasRenderingContext2D) => void, step = 3): [number, number][] {
   if (typeof document === 'undefined') return []
@@ -211,11 +355,15 @@ function BinaryField({ pulseRef }: { pulseRef?: React.RefObject<{ x: number; y: 
     let portraitStrength = 0 // 0-1, fades in slowly
     let portraitFormedAt = 0 // timestamp when fully formed
     let portraitDone = false  // true after scatter cycle, won't re-trigger until interaction
+    let currentPattern: Vec3[] | null = null
+    let rotY = 0, rotX = 0
+    const zDepths: number[] = new Array(COUNT).fill(0)
 
     const resetIdle = () => {
       lastInteraction = Date.now()
       if (portraitActive) {
         portraitActive = false
+        currentPattern = null
         for (const p of particles) { p.tx = undefined; p.ty = undefined }
       }
       portraitDone = false // allow next idle cycle
@@ -245,11 +393,10 @@ function BinaryField({ pulseRef }: { pulseRef?: React.RefObject<{ x: number; y: 
       const angle = Math.random() * Math.PI * 2
       const speed = 0.15 + Math.random() * 0.25
       const size = 9 + Math.floor(Math.random() * 3) * 2 // 9, 11, 13
-      const cx = w / 2, cy = h / 2
-      const spread = Math.min(w, h) * 0.42
+      const margin = 40
       return {
-        x: cx + (Math.random() - 0.5) * spread * 2,
-        y: cy + (Math.random() - 0.5) * spread * 2,
+        x: margin + Math.random() * (w - margin * 2),
+        y: margin + Math.random() * (h - margin * 2),
         vx: Math.cos(angle) * speed,
         vy: Math.sin(angle) * speed,
         size,
@@ -273,15 +420,11 @@ function BinaryField({ pulseRef }: { pulseRef?: React.RefObject<{ x: number; y: 
     resize()
     window.addEventListener('resize', resize)
 
-    const SYNAPSE_DIST = 90
+    let SYNAPSE_DIST = 90
     const alphas: number[] = new Array(COUNT).fill(0)
 
     const draw = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height)
-
-      const cx = canvas.width / 2
-      const cy = canvas.height / 2
-      const radius = Math.min(canvas.width, canvas.height) * 0.45
 
       // Grow particles over time
       const now = Date.now()
@@ -293,42 +436,43 @@ function BinaryField({ pulseRef }: { pulseRef?: React.RefObject<{ x: number; y: 
         }
       }
 
-      // Portrait formation check (5 min idle)
+      // Portrait formation check (5s idle)
       const idleMs = Date.now() - lastInteraction
-      const IDLE_THRESHOLD = 5_000 // TEST: 5s (prod: 300_000)
+      const IDLE_THRESHOLD = 5_000
       if (idleMs > IDLE_THRESHOLD && !portraitActive && !portraitDone) {
         portraitActive = true
         portraitStrength = 0
         portraitFormedAt = 0
-        const pixels = getNextPattern()
-        if (pixels.length > 0) {
-          const scale = Math.min(canvas.width, canvas.height) * 0.7
-          const ox = canvas.width / 2 - scale * 0.5
-          const oy = canvas.height / 2 - scale * 0.5
-          for (let i = 0; i < particles.length; i++) {
-            const pi = i % pixels.length
-            const [px, py] = pixels[pi]
-            particles[i].tx = ox + px * scale + (Math.random() - 0.5) * 4
-            particles[i].ty = oy + py * scale + (Math.random() - 0.5) * 4
-          }
-        }
+        currentPattern = getNextPattern3D()
+        rotY = 0; rotX = 0
       }
-      if (portraitActive) {
-        portraitStrength = Math.min(portraitStrength + 0.001, 1) // ~17s to form
-        // Hold 3s after fully formed, then scatter
+      if (portraitActive && currentPattern) {
+        portraitStrength = Math.min(portraitStrength + 0.001, 1)
+        // Rotate slowly
+        rotY += 0.008
+        rotX += 0.003
+        // Project 3D → 2D
+        const { pts, depths } = project3D(currentPattern, canvas.width, canvas.height, rotY, rotX)
+        for (let i = 0; i < particles.length; i++) {
+          const pi = i % pts.length
+          particles[i].tx = pts[pi][0] + (Math.random() - 0.5) * 2
+          particles[i].ty = pts[pi][1] + (Math.random() - 0.5) * 2
+          zDepths[i] = depths[pi]
+        }
+        // Hold 5s after fully formed, then scatter
         if (portraitStrength >= 0.95 && portraitFormedAt === 0) {
           portraitFormedAt = Date.now()
         }
-        if (portraitFormedAt > 0 && Date.now() - portraitFormedAt > 3000) {
+        if (portraitFormedAt > 0 && Date.now() - portraitFormedAt > 5000) {
           portraitActive = false
           portraitDone = true
+          currentPattern = null
           for (const p of particles) {
             p.tx = undefined; p.ty = undefined
             const angle = Math.random() * Math.PI * 2
             p.vx += Math.cos(angle) * 1.5
             p.vy += Math.sin(angle) * 1.5
           }
-          // 散った後、再度アイドルで次パターンへ
           setTimeout(() => { portraitDone = false; lastInteraction = Date.now() }, 5000)
         }
       } else {
@@ -401,14 +545,23 @@ function BinaryField({ pulseRef }: { pulseRef?: React.RefObject<{ x: number; y: 
           : lifeRatio > 0.85 ? (1 - lifeRatio) / 0.15
           : 1
 
-        const dx = (p.x - cx) / radius
-        const dy = (p.y - cy) / radius
-        const dist = Math.sqrt(dx * dx + dy * dy)
-        const radialFade = Math.max(0, 1 - dist * dist)
+        // Edge fade — smooth fade near screen edges
+        const edgeMargin = 60
+        const edgeFadeX = Math.min(p.x / edgeMargin, (canvas.width - p.x) / edgeMargin, 1)
+        const edgeFadeY = Math.min(p.y / edgeMargin, (canvas.height - p.y) / edgeMargin, 1)
+        const edgeFade = Math.max(0, Math.min(edgeFadeX, edgeFadeY))
 
-        alphas[i] = p.alpha * lifeFade * radialFade
+        // Z-depth brightness: closer = brighter (during portrait)
+        let zBright = 1
+        if (portraitStrength > 0.1) {
+          const zNorm = (zDepths[i] + 1.5) / 3 // roughly -1.5 to 1.5 → 0 to 1
+          zBright = 0.4 + 0.6 * (1 - Math.min(Math.max(zNorm, 0), 1))
+        }
 
-        if (p.life >= p.maxLife || dist > 1.5) {
+        alphas[i] = p.alpha * lifeFade * edgeFade * zBright
+
+        const oob = p.x < -20 || p.x > canvas.width + 20 || p.y < -20 || p.y > canvas.height + 20
+        if (p.life >= p.maxLife || oob) {
           particles[i] = spawn(canvas.width, canvas.height)
           alphas[i] = 0
         }
@@ -431,6 +584,7 @@ function BinaryField({ pulseRef }: { pulseRef?: React.RefObject<{ x: number; y: 
       }
 
       // synapses — thin lines between nearby particles
+      SYNAPSE_DIST = portraitStrength > 0.3 ? 130 : 90
       for (let i = 0; i < particles.length; i++) {
         if (alphas[i] < 0.008) continue
         for (let j = i + 1; j < particles.length; j++) {
@@ -451,11 +605,13 @@ function BinaryField({ pulseRef }: { pulseRef?: React.RefObject<{ x: number; y: 
       }
 
       // draw characters
+      const portraitAlphaMax = portraitStrength > 0.3 ? 0.35 : 0.15
       ctx.font = `11px 'SF Mono', 'Fira Code', monospace`
       for (let i = 0; i < particles.length; i++) {
         if (alphas[i] < 0.005) continue
         const p = particles[i]
-        const cappedAlpha = Math.min(alphas[i] * 0.5, 0.15)
+        const mult = portraitStrength > 0.3 ? 0.8 : 0.5
+        const cappedAlpha = Math.min(alphas[i] * mult, portraitAlphaMax)
         ctx.fillStyle = `rgba(16, 163, 127, ${cappedAlpha})`
         if (p.size !== 11) ctx.font = `${p.size}px 'SF Mono', 'Fira Code', monospace`
         ctx.fillText(p.char, p.x, p.y)
