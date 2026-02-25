@@ -786,20 +786,17 @@ export default function HomePage() {
 
   const handleSearch = (q: string) => {
     setQuery(q)
-    if (composingRef.current) return // IME変換中は検索トリガーしない
-    triggerSearch(q)
   }
 
   const triggerSearch = (q: string) => {
     setPage(1)
-    if (debounceRef.current) clearTimeout(debounceRef.current)
-    if (q.length >= 2) {
+    if (q.length >= 1) {
       setSearched(true)
-      debounceRef.current = setTimeout(() => fetchRestaurants(q, city, 1), 400)
+      fetchRestaurants(q, city, 1)
     } else if (q.length === 0) {
       if (city) {
         setSearched(true)
-        debounceRef.current = setTimeout(() => fetchRestaurants('', city, 1), 300)
+        fetchRestaurants('', city, 1)
       } else {
         setSearched(false)
         setRestaurants([])
@@ -1125,14 +1122,14 @@ export default function HomePage() {
                   <span className="new-restaurant-label">NEW</span>
                   <span
                     className="new-restaurant-link"
-                    onClick={() => router.push(`/capture?restaurant=${encodeURIComponent('ジョルノ')}`)}
+                    onClick={() => router.push(`/capture?restaurant=${encodeURIComponent('ジョルノ')}&new=1`)}
                   >
                     {isJa ? 'ジョルノ 福井駅前店' : 'Giorno Fukui'}
                   </span>
                   <span className="new-restaurant-sep">|</span>
                   <span
                     className="new-restaurant-link"
-                    onClick={() => router.push(`/capture?restaurant=${encodeURIComponent('ジョルノ-片町店')}`)}
+                    onClick={() => router.push(`/capture?restaurant=${encodeURIComponent('ジョルノ-片町店')}&new=1`)}
                   >
                     {isJa ? '片町店' : 'Katamachi'}
                   </span>
@@ -1348,7 +1345,7 @@ export default function HomePage() {
                     value={query}
                     onChange={e => handleSearch(e.target.value)}
                     onCompositionStart={() => { composingRef.current = true }}
-                    onCompositionEnd={e => { composingRef.current = false; triggerSearch((e.target as HTMLInputElement).value) }}
+                    onCompositionEnd={() => { composingRef.current = false }}
                     onKeyDown={e => e.key === 'Enter' && !composingRef.current && handleSearchSubmit()}
                   />
                 </div>
@@ -1372,7 +1369,7 @@ export default function HomePage() {
                 value={query}
                 onChange={e => handleSearch(e.target.value)}
                 onCompositionStart={() => { composingRef.current = true }}
-                onCompositionEnd={e => { composingRef.current = false; triggerSearch((e.target as HTMLInputElement).value) }}
+                onCompositionEnd={() => { composingRef.current = false }}
                 onKeyDown={e => e.key === 'Enter' && !composingRef.current && handleSearchSubmit()}
                 autoFocus
               />

@@ -331,9 +331,21 @@ export default function CapturePage({
       .catch(() => {});
   }, [restaurantSlug]);
 
+  // new=1 パラメータで新規スレッド強制
+  const isNewVisit = searchParams?.get('new') === '1';
+  useEffect(() => {
+    if (typeof window === 'undefined' || !isNewVisit) return;
+    try {
+      sessionStorage.removeItem(`ngraph_responses_${restaurantSlug || 'default'}`);
+      sessionStorage.removeItem(`ngraph_threadUid_${restaurantSlug || 'default'}`);
+    } catch {}
+    threadUidRef.current = null;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // thread_uid復元 + 復元レスポンスのタイピング状態セット
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined' || isNewVisit) return;
     try {
       const key = `ngraph_threadUid_${restaurantSlug || 'default'}`;
       const saved = sessionStorage.getItem(key);
