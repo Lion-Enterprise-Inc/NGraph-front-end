@@ -1121,27 +1121,21 @@ export default function HomePage() {
 
               {/* New restaurant announcements */}
               {flowStep === 1 && (
-                <div className="new-restaurant-banners">
-                  <div
-                    className="new-restaurant-banner"
+                <div className="new-restaurant-links">
+                  <span className="new-restaurant-label">NEW</span>
+                  <span
+                    className="new-restaurant-link"
                     onClick={() => router.push(`/capture?restaurant=${encodeURIComponent('ジョルノ')}`)}
                   >
-                    <span className="new-badge">NEW</span>
-                    <span className="new-restaurant-text">
-                      {isJa ? 'ジョルノ 福井駅前店' : 'Giorno Fukui Ekimae'}
-                    </span>
-                    <span className="new-arrow">→</span>
-                  </div>
-                  <div
-                    className="new-restaurant-banner"
+                    {isJa ? 'ジョルノ 福井駅前店' : 'Giorno Fukui'}
+                  </span>
+                  <span className="new-restaurant-sep">|</span>
+                  <span
+                    className="new-restaurant-link"
                     onClick={() => router.push(`/capture?restaurant=${encodeURIComponent('ジョルノ-片町店')}`)}
                   >
-                    <span className="new-badge">NEW</span>
-                    <span className="new-restaurant-text">
-                      {isJa ? 'ジョルノ 片町店' : 'Giorno Katamachi'}
-                    </span>
-                    <span className="new-arrow">→</span>
-                  </div>
+                    {isJa ? '片町店' : 'Katamachi'}
+                  </span>
                 </div>
               )}
 

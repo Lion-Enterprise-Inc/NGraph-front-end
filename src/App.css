@@ -6657,54 +6657,32 @@ textarea.form-input {
   border-radius: 10px; font-size: 14px; font-weight: 500; z-index: 1100;
 }
 
-/* New restaurant announcement banners */
-.new-restaurant-banners {
-  display: flex;
-  gap: 8px;
-  margin: 0 24px 16px;
-  animation: convFadeIn 0.4s ease both;
-}
-.new-restaurant-banner {
+/* New restaurant announcement */
+.new-restaurant-links {
   display: flex;
   align-items: center;
-  gap: 6px;
-  flex: 1;
-  min-width: 0;
-  padding: 8px 12px;
-  background: rgba(52,211,153,0.06);
-  border: 1px solid rgba(52,211,153,0.15);
-  border-radius: 10px;
-  cursor: pointer;
-  transition: background 0.2s, border-color 0.2s;
+  gap: 8px;
+  padding: 0 24px;
+  margin-bottom: 12px;
+  font-size: 12px;
   animation: convFadeIn 0.4s ease both;
 }
-.new-restaurant-banner:hover {
-  background: rgba(52,211,153,0.12);
-  border-color: rgba(52,211,153,0.3);
-}
-.new-badge {
+.new-restaurant-label {
   font-size: 10px;
   font-weight: 700;
-  letter-spacing: 0.08em;
-  color: #0D0D0D;
-  background: #34d399;
-  padding: 2px 6px;
-  border-radius: 4px;
-  flex-shrink: 0;
+  letter-spacing: 0.06em;
+  color: #34d399;
 }
-.new-restaurant-text {
-  font-size: 13px;
-  color: rgba(255,255,255,0.8);
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.new-restaurant-link {
+  color: rgba(255,255,255,0.55);
+  cursor: pointer;
+  transition: color 0.15s;
 }
-.new-arrow {
-  font-size: 14px;
-  color: rgba(52,211,153,0.6);
-  flex-shrink: 0;
+.new-restaurant-link:hover {
+  color: rgba(255,255,255,0.9);
+}
+.new-restaurant-sep {
+  color: rgba(255,255,255,0.15);
 }
 
 /* Store info button & panel */
