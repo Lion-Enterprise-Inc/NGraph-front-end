@@ -1119,6 +1119,32 @@ export default function HomePage() {
           {!searched && (
             <>
 
+              {/* New restaurant announcements */}
+              {flowStep === 1 && (
+                <div className="new-restaurant-banners">
+                  <div
+                    className="new-restaurant-banner"
+                    onClick={() => router.push(`/capture?restaurant=${encodeURIComponent('ジョルノ')}`)}
+                  >
+                    <span className="new-badge">NEW</span>
+                    <span className="new-restaurant-text">
+                      {isJa ? 'ジョルノ 福井駅前店' : 'Giorno Fukui Ekimae'}
+                    </span>
+                    <span className="new-arrow">→</span>
+                  </div>
+                  <div
+                    className="new-restaurant-banner"
+                    onClick={() => router.push(`/capture?restaurant=${encodeURIComponent('ジョルノ-片町店')}`)}
+                  >
+                    <span className="new-badge">NEW</span>
+                    <span className="new-restaurant-text">
+                      {isJa ? 'ジョルノ 片町店' : 'Giorno Katamachi'}
+                    </span>
+                    <span className="new-arrow">→</span>
+                  </div>
+                </div>
+              )}
+
               {/* Answer Trail */}
               {flowStep > 1 && (
                 <div className="conv-trail">

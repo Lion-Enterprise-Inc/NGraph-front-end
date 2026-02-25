@@ -37,6 +37,14 @@ type ApiRestaurant = {
   recommend_texts_ja?: string[] | null
   google_review_url?: string | null
   address?: string | null
+  city?: string | null
+  phone_number?: string | null
+  opening_hours?: string | null
+  holidays?: string | null
+  access_info?: string | null
+  budget?: string | null
+  instagram_url?: string | null
+  business_type?: string | null
   created_at: string
   updated_at: string
 };
@@ -1407,6 +1415,7 @@ export default function CapturePage({
                 : selectedRestaurant?.name) || null
             : null
         }
+        restaurantData={selectedRestaurant}
       />
 
       {photoAdoptedCount > 0 && (

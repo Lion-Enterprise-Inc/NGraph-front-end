@@ -6656,3 +6656,147 @@ textarea.form-input {
   background: rgba(0,0,0,0.85); color: #fff; padding: 12px 24px;
   border-radius: 10px; font-size: 14px; font-weight: 500; z-index: 1100;
 }
+
+/* New restaurant announcement banners */
+.new-restaurant-banners {
+  display: flex;
+  gap: 8px;
+  margin: 0 24px 16px;
+  animation: convFadeIn 0.4s ease both;
+}
+.new-restaurant-banner {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+  padding: 8px 12px;
+  background: rgba(52,211,153,0.06);
+  border: 1px solid rgba(52,211,153,0.15);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+  animation: convFadeIn 0.4s ease both;
+}
+.new-restaurant-banner:hover {
+  background: rgba(52,211,153,0.12);
+  border-color: rgba(52,211,153,0.3);
+}
+.new-badge {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #0D0D0D;
+  background: #34d399;
+  padding: 2px 6px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+.new-restaurant-text {
+  font-size: 13px;
+  color: rgba(255,255,255,0.8);
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.new-arrow {
+  font-size: 14px;
+  color: rgba(52,211,153,0.6);
+  flex-shrink: 0;
+}
+
+/* Store info button & panel */
+.store-info-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: rgba(255,255,255,0.4);
+  cursor: pointer;
+  padding: 2px;
+  margin-left: 4px;
+  border-radius: 50%;
+  transition: color 0.15s, background 0.15s;
+  vertical-align: middle;
+}
+.store-info-btn:hover {
+  color: rgba(255,255,255,0.8);
+  background: rgba(255,255,255,0.08);
+}
+.store-info-panel {
+  background: var(--color-overlay);
+  border-bottom: 1px solid var(--color-border);
+  padding: 12px 16px;
+  animation: storeInfoSlide 0.2s ease;
+}
+@keyframes storeInfoSlide {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.store-info-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.store-info-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+.store-info-close {
+  background: none;
+  border: none;
+  color: rgba(255,255,255,0.4);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+}
+.store-info-close:hover {
+  color: rgba(255,255,255,0.8);
+}
+.store-info-type {
+  display: inline-block;
+  font-size: 11px;
+  color: rgba(255,255,255,0.5);
+  background: rgba(255,255,255,0.05);
+  padding: 2px 8px;
+  border-radius: 4px;
+  margin-bottom: 8px;
+}
+.store-info-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.store-info-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 12px;
+  color: rgba(255,255,255,0.7);
+}
+.store-info-row svg {
+  flex-shrink: 0;
+  margin-top: 1px;
+  color: rgba(255,255,255,0.35);
+}
+.store-info-sub {
+  padding-left: 22px;
+  font-size: 11px;
+  color: rgba(255,255,255,0.45);
+}
+.store-info-link {
+  color: #34d399;
+  text-decoration: none;
+}
+.store-info-link:hover {
+  text-decoration: underline;
+}
+.store-info-budget {
+  font-size: 11px;
+  color: rgba(255,255,255,0.5);
+}
