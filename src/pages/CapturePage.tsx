@@ -2050,24 +2050,36 @@ export default function CapturePage({
                       const fullText = [response.output?.intro, ...(response.output?.body || [])].filter(Boolean).join('\n');
                       const items = extractNumberedItems(fullText);
                       if (items.length < 2) return null;
+                      // Build name_jp → name_en map from NFG cards for non-ja display
+                      const nameMap: Record<string, string> = {};
+                      if (activeLanguage !== 'ja' && response.visionItems) {
+                        for (const vi of response.visionItems) {
+                          if (vi.name_jp && vi.name_en) {
+                            nameMap[vi.name_jp] = vi.name_en;
+                          }
+                        }
+                      }
                       return (
                         <div className="suggestion-mini-cards">
                           <div className="suggestion-mini-cards-label">
                             {copy.capture.relatedMenu}
                           </div>
-                          {items.map((item) => (
-                            <button
-                              key={item.num}
-                              className="suggestion-mini-card"
-                              type="button"
-                              onClick={() => handleSend(
-                                copy.capture.tellMeMore.replace('{num}', String(item.num)).replace('{name}', item.name)
-                              )}
-                            >
-                              <span className="suggestion-mini-card-name">{item.name}</span>
-                              <span className="suggestion-mini-card-arrow">›</span>
-                            </button>
-                          ))}
+                          {items.map((item) => {
+                            const displayName = nameMap[item.name] || item.name;
+                            return (
+                              <button
+                                key={item.num}
+                                className="suggestion-mini-card"
+                                type="button"
+                                onClick={() => handleSend(
+                                  copy.capture.tellMeMore.replace('{num}', String(item.num)).replace('{name}', displayName)
+                                )}
+                              >
+                                <span className="suggestion-mini-card-name">{displayName}</span>
+                                <span className="suggestion-mini-card-arrow">›</span>
+                              </button>
+                            );
+                          })}
                         </div>
                       );
                     })()}
