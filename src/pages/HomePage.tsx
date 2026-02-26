@@ -700,12 +700,19 @@ const FOOD_TYPES = [
   { key: 'crab', label: '蟹', labelEn: 'Crab', labelKo: '게', labelZh: '螃蟹', q: '蟹,カニ,かに,ズワイ,セイコ' },
   { key: 'seafood', label: '海鮮・お刺身', labelEn: 'Seafood & Sashimi', labelKo: '해산물・회', labelZh: '海鲜・刺身', q: '海鮮,刺身,魚', category: 'sashimi,seafood' },
   { key: 'sushi', label: '寿司', labelEn: 'Sushi', labelKo: '초밥', labelZh: '寿司', q: '寿司,すし,にぎり', category: 'sushi,nigiri,gunkan,roll' },
-  { key: 'meat', label: '肉料理', labelEn: 'Meat', labelKo: '고기 요리', labelZh: '肉料理', q: '肉,カツ,ステーキ,焼肉', category: 'meat' },
+  { key: 'meat', label: '肉料理', labelEn: 'Meat', labelKo: '고기 요리', labelZh: '肉料理', q: '肉,カツ,ステーキ,焼肉', category: 'meat', hasSub: true },
   { key: 'nabe', label: '鍋', labelEn: 'Hot Pot', labelKo: '전골', labelZh: '火锅', q: '鍋,しゃぶ,すき焼き', category: 'nabe,hotpot' },
   { key: 'ramen', label: '麺類', labelEn: 'Noodles', labelKo: '면류', labelZh: '面类', q: '麺,ラーメン,そば,うどん', category: 'ramen,soba,noodle' },
   { key: 'drinking', label: 'お酒に合うつまみ', labelEn: 'Bar Snacks', labelKo: '안주', labelZh: '下酒菜', mood: 'drinking' },
   { key: 'local', label: '福井の名物', labelEn: 'Fukui Specialties', labelKo: '후쿠이 명물', labelZh: '福井名产', mood: 'local' },
   { key: 'light', label: 'あっさり', labelEn: 'Light & Healthy', labelKo: '가벼운 음식', labelZh: '清淡料理', q: 'サラダ,酢の物,蒸し', category: 'salad,steamed,vinegared' },
+] as const
+
+const MEAT_SUBS = [
+  { key: 'chicken', label: '鶏肉料理', labelEn: 'Chicken', labelKo: '닭고기', labelZh: '鸡肉', q: '鶏,チキン,唐揚げ,焼き鳥,手羽,親子', category: 'meat' },
+  { key: 'beef', label: '牛肉料理', labelEn: 'Beef', labelKo: '소고기', labelZh: '牛肉', q: '牛,ビーフ,ステーキ,焼肉,牛タン,ローストビーフ', category: 'meat' },
+  { key: 'pork', label: '豚肉料理', labelEn: 'Pork', labelKo: '돼지고기', labelZh: '猪肉', q: '豚,ポーク,とんかつ,カツ,角煮,豚カルビ', category: 'meat' },
+  { key: 'any_meat', label: '特にこだわりなし', labelEn: 'No preference', labelKo: '상관없음', labelZh: '不限', q: '肉,カツ,ステーキ,焼肉', category: 'meat' },
 ] as const
 
 const AREAS = [
@@ -751,6 +758,7 @@ const STYLES = [
   { key: 'hearty', label: 'がっつり', labelEn: 'Hearty', labelKo: '든든하게', labelZh: '吃饱', mood: 'hearty' },
   { key: 'budget', label: 'コスパ重視', labelEn: 'Budget', labelKo: '가성비', labelZh: '性价比', mood: 'budget' },
   { key: 'drinking', label: '飲みメイン', labelEn: 'Drinks First', labelKo: '술 위주', labelZh: '以酒为主', mood: 'drinking' },
+  { key: 'entertainment', label: '接待・おもてなし', labelEn: 'Entertainment', labelKo: '접대', labelZh: '商务宴请', mood: 'entertainment' },
   { key: 'none', label: '特にこだわりなし', labelEn: 'No preference', labelKo: '특별히 없음', labelZh: '无偏好', mood: '' },
 ] as const
 
@@ -818,6 +826,7 @@ export default function HomePage() {
   // Conversational flow state
   const [flowStep, setFlowStep] = useState(0)
   const [flowFoodType, setFlowFoodType] = useState<string | null>(null)
+  const [flowMeatSub, setFlowMeatSub] = useState<string | null>(null)
   const [flowArea, setFlowArea] = useState<string | null>(null)
   const [flowBudget, setFlowBudget] = useState<string | null>(null)
   const [flowStyle, setFlowStyle] = useState<string | null>(null)
@@ -1043,8 +1052,15 @@ export default function HomePage() {
     const ft = FOOD_TYPES.find(f => f.key === ftKey)
     if (ft) {
       if ('mood' in ft && ft.mood) params.mood = ft.mood
-      if ('category' in ft && ft.category) params.category = ft.category
-      if ('q' in ft && ft.q) params.q = ft.q
+      // サブカテゴリがあればそちらのq/categoryを使う
+      const sub = flowMeatSub ? MEAT_SUBS.find(s => s.key === flowMeatSub) : null
+      if (sub) {
+        params.q = sub.q
+        params.category = sub.category
+      } else {
+        if ('category' in ft && ft.category) params.category = ft.category
+        if ('q' in ft && ft.q) params.q = ft.q
+      }
     }
     // Area
     const aKey = overrides?.areaKey ?? flowArea
@@ -1103,13 +1119,10 @@ export default function HomePage() {
     }
   }
 
-  const answerFoodType = (key: string) => {
-    setFlowFoodType(key)
-    // Auto-skip area step if only 1 real area (+ "どこでもOK")
+  const proceedAfterFoodType = () => {
     const realAreas = availableAreas.filter(a => a.area)
     if (realAreas.length <= 1) {
       setFlowArea(realAreas[0]?.key || 'anywhere')
-      // Skip step 2, go to step 3
       setFlowTransition('exiting')
       setTimeout(() => {
         setFlowStep(3)
@@ -1119,6 +1132,19 @@ export default function HomePage() {
     } else {
       advanceStep()
     }
+  }
+
+  const answerFoodType = (key: string) => {
+    setFlowFoodType(key)
+    setFlowMeatSub(null)
+    const ft = FOOD_TYPES.find(f => f.key === key)
+    if (ft && 'hasSub' in ft && ft.hasSub) return // サブカテゴリ表示待ち
+    proceedAfterFoodType()
+  }
+
+  const answerMeatSub = (key: string) => {
+    setFlowMeatSub(key)
+    proceedAfterFoodType()
   }
 
   const answerArea = (key: string) => {
@@ -1171,7 +1197,7 @@ export default function HomePage() {
   }
 
   const goToStep = (step: number) => {
-    if (step <= 1) { setFlowFoodType(null) }
+    if (step <= 1) { setFlowFoodType(null); setFlowMeatSub(null) }
     if (step <= 2) { setFlowArea(null) }
     if (step <= 3) { setFlowBudget(null) }
     if (step <= 4) { setFlowStyle(null); setRecoCards([]); setRecoTotal(0); setRecoFallback(false) }
@@ -1181,6 +1207,7 @@ export default function HomePage() {
 
   const resetFlow = () => {
     setFlowFoodType(null)
+    setFlowMeatSub(null)
     setFlowArea(null)
     setFlowBudget(null)
     setFlowStyle(null)
@@ -1206,7 +1233,7 @@ export default function HomePage() {
       setFlowLoading(false)
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [flowFoodType, flowArea, flowBudget, flowStyle, flowRestrictions, city])
+  }, [flowFoodType, flowMeatSub, flowArea, flowBudget, flowStyle, flowRestrictions, city])
 
   useEffect(() => {
     if (countDebounceRef.current) clearTimeout(countDebounceRef.current)
@@ -1310,7 +1337,8 @@ export default function HomePage() {
                 <div className="conv-trail">
                   {flowFoodType && (
                     <span className="conv-trail-item" onClick={() => goToStep(1)}>
-                      {lb(FOOD_TYPES.find(f => f.key === flowFoodType)!) }
+                      {lb(FOOD_TYPES.find(f => f.key === flowFoodType)!)}
+                      {flowMeatSub && ` › ${lb(MEAT_SUBS.find(s => s.key === flowMeatSub)!)}`}
                     </span>
                   )}
                   {flowArea && (
@@ -1335,12 +1363,26 @@ export default function HomePage() {
               {/* Step 1: 何を食べたい？ */}
               {flowStep === 1 && flowTransition !== 'exiting' && (
                 <div className={`conv-step ${flowTransition === 'entering' ? 'conv-entering' : ''}`}>
-                  <BinaryText key={`q1-${flowStep}`} text={fl.q1} className="conv-question" />
-                  <div className="conv-chips">
-                    {FOOD_TYPES.map(f => (
-                      <button key={f.key} className="conv-chip" onClick={() => answerFoodType(f.key)}>{lb(f)}</button>
-                    ))}
-                  </div>
+                  {flowFoodType === 'meat' && !flowMeatSub ? (
+                    <>
+                      <BinaryText key="q1-meat-sub" text={isJa ? 'どんなお肉？' : 'What kind of meat?'} className="conv-question" />
+                      <div className="conv-chips">
+                        {MEAT_SUBS.map(s => (
+                          <button key={s.key} className="conv-chip" onClick={() => answerMeatSub(s.key)}>{lb(s)}</button>
+                        ))}
+                      </div>
+                      <button className="conv-restriction-link" onClick={() => { setFlowFoodType(null); setFlowMeatSub(null) }}>{fl.back}</button>
+                    </>
+                  ) : (
+                    <>
+                      <BinaryText key={`q1-${flowStep}`} text={fl.q1} className="conv-question" />
+                      <div className="conv-chips">
+                        {FOOD_TYPES.map(f => (
+                          <button key={f.key} className="conv-chip" onClick={() => answerFoodType(f.key)}>{lb(f)}</button>
+                        ))}
+                      </div>
+                    </>
+                  )}
                 </div>
               )}
 
