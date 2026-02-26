@@ -759,25 +759,27 @@ const FLOW_QUESTIONS: Record<string, { q1: string; q2: string; q3: string; q4: s
   en: { q1: 'What do you want to eat?', q2: 'Which area?', q3: 'Budget?', q4: 'Style?', viewNow: 'View now', searchMore: 'Search with details', restart: '← Start over', otherGenre: 'Try other genres', otherArea: 'Other areas', changeMore: 'Try different options', startOver: 'Start from scratch', searching: 'Searching...', recoFallback: "Couldn't find an exact match, but how about these?", recoTitle: 'Recommended', seeMore: 'See {n} more', restrictionOpen: 'Allergies & dietary restrictions', restrictionClose: 'Close allergy settings', searchPlaceholder: 'Dish, ingredient, or restaurant name...', all: 'All', back: '← Back', results: '{n} results', score: 'By score', menuCount: 'By menu count', loading: 'Loading...', empty: 'No restaurants found', prev: 'Prev', next: 'Next', footer: '{r} restaurants · {m} menus · {e} structured · {c} cities' },
   ko: { q1: '무엇을 드시고 싶으세요?', q2: '어디서 찾으시나요?', q3: '예산은?', q4: '스타일은?', viewNow: '지금 보기', searchMore: '상세 검색', restart: '← 다시 시작', otherGenre: '다른 장르 보기', otherArea: '다른 지역', changeMore: '조건 변경', startOver: '처음부터', searching: '검색 중...', recoFallback: '정확한 결과는 없지만... 이런 건 어떠세요?', recoTitle: '추천 맛집', seeMore: '외 {n}건 보기', restrictionOpen: '알레르기・식이 제한', restrictionClose: '알레르기 설정 닫기', searchPlaceholder: '요리명, 식재료, 가게명 검색…', all: '전체', back: '← 뒤로', results: '{n}건', score: '점수순', menuCount: '메뉴 수순', loading: '로딩 중...', empty: '해당 매장이 없습니다', prev: '이전', next: '다음', footer: '{r}매장 · {m}메뉴 · {e}구조화 · {c}도시' },
   'zh-Hans': { q1: '想吃什么？', q2: '在哪里找？', q3: '预算？', q4: '风格？', viewNow: '立即查看', searchMore: '详细搜索', restart: '← 重新开始', otherGenre: '其他类型', otherArea: '其他地区', changeMore: '换个条件', startOver: '从头开始', searching: '搜索中...', recoFallback: '没找到完美匹配，这些怎么样？', recoTitle: '推荐', seeMore: '查看其余 {n} 家', restrictionOpen: '过敏・饮食限制', restrictionClose: '关闭过敏设置', searchPlaceholder: '菜名、食材、店名搜索…', all: '全部', back: '← 返回', results: '{n} 家', score: '评分排序', menuCount: '菜品数排序', loading: '加载中...', empty: '没有符合的餐厅', prev: '上一页', next: '下一页', footer: '{r}餐厅 · {m}菜品 · {e}结构化 · {c}城市' },
+  es: { q1: '¿Qué quieres comer?', q2: '¿En qué zona?', q3: '¿Presupuesto?', q4: '¿Estilo?', viewNow: 'Ver ahora', searchMore: 'Búsqueda detallada', restart: '← Reiniciar', otherGenre: 'Otros géneros', otherArea: 'Otras zonas', changeMore: 'Cambiar opciones', startOver: 'Desde el inicio', searching: 'Buscando...', recoFallback: 'No encontramos coincidencia exacta, ¿qué tal estos?', recoTitle: 'Recomendados', seeMore: 'Ver {n} más', restrictionOpen: 'Alergias y restricciones', restrictionClose: 'Cerrar ajustes de alergia', searchPlaceholder: 'Plato, ingrediente o restaurante...', all: 'Todo', back: '← Volver', results: '{n} resultados', score: 'Por puntuación', menuCount: 'Por cantidad', loading: 'Cargando...', empty: 'No se encontraron restaurantes', prev: 'Anterior', next: 'Siguiente', footer: '{r} restaurantes · {m} platos · {e} estructurados · {c} ciudades' },
+  fr: { q1: 'Que voulez-vous manger ?', q2: 'Dans quel quartier ?', q3: 'Budget ?', q4: 'Style ?', viewNow: 'Voir maintenant', searchMore: 'Recherche détaillée', restart: '← Recommencer', otherGenre: 'Autres genres', otherArea: 'Autres zones', changeMore: "Changer d'options", startOver: 'Depuis le début', searching: 'Recherche en cours...', recoFallback: "Pas de correspondance exacte, mais que pensez-vous de ceux-ci ?", recoTitle: 'Recommandés', seeMore: 'Voir {n} de plus', restrictionOpen: 'Allergies et restrictions', restrictionClose: 'Fermer les paramètres', searchPlaceholder: 'Plat, ingrédient ou restaurant...', all: 'Tout', back: '← Retour', results: '{n} résultats', score: 'Par score', menuCount: 'Par nombre', loading: 'Chargement...', empty: 'Aucun restaurant trouvé', prev: 'Précédent', next: 'Suivant', footer: '{r} restaurants · {m} plats · {e} structurés · {c} villes' },
 }
 
 // アレルゲン（特定原材料8品目）
 const ALLERGENS_8 = [
-  { key: 'shrimp', label: 'えび', labelEn: 'Shrimp', labelKo: '새우', labelZh: '虾', no: 'shrimp' },
-  { key: 'crab_a', label: 'かに', labelEn: 'Crab', labelKo: '게', labelZh: '蟹', no: 'crab' },
-  { key: 'egg', label: '卵', labelEn: 'Egg', labelKo: '달걀', labelZh: '鸡蛋', no: 'egg' },
-  { key: 'wheat', label: '小麦', labelEn: 'Wheat', labelKo: '밀', labelZh: '小麦', no: 'wheat' },
-  { key: 'milk', label: '乳', labelEn: 'Dairy', labelKo: '유제품', labelZh: '乳制品', no: 'milk' },
-  { key: 'soba', label: 'そば', labelEn: 'Soba', labelKo: '소바', labelZh: '荞麦', no: 'soba' },
-  { key: 'peanut', label: '落花生', labelEn: 'Peanut', labelKo: '땅콩', labelZh: '花生', no: 'peanut' },
-  { key: 'walnut', label: 'くるみ', labelEn: 'Walnut', labelKo: '호두', labelZh: '核桃', no: 'walnut' },
+  { key: 'shrimp', label: 'えび', labelEn: 'Shrimp', labelKo: '새우', labelZh: '虾', labelEs: 'Camarón', labelFr: 'Crevette', no: 'shrimp' },
+  { key: 'crab_a', label: 'かに', labelEn: 'Crab', labelKo: '게', labelZh: '蟹', labelEs: 'Cangrejo', labelFr: 'Crabe', no: 'crab' },
+  { key: 'egg', label: '卵', labelEn: 'Egg', labelKo: '달걀', labelZh: '鸡蛋', labelEs: 'Huevo', labelFr: 'Œuf', no: 'egg' },
+  { key: 'wheat', label: '小麦', labelEn: 'Wheat', labelKo: '밀', labelZh: '小麦', labelEs: 'Trigo', labelFr: 'Blé', no: 'wheat' },
+  { key: 'milk', label: '乳', labelEn: 'Dairy', labelKo: '유제품', labelZh: '乳制品', labelEs: 'Lácteos', labelFr: 'Lait', no: 'milk' },
+  { key: 'soba', label: 'そば', labelEn: 'Soba', labelKo: '소바', labelZh: '荞麦', labelEs: 'Soba', labelFr: 'Soba', no: 'soba' },
+  { key: 'peanut', label: '落花生', labelEn: 'Peanut', labelKo: '땅콩', labelZh: '花生', labelEs: 'Cacahuete', labelFr: 'Cacahuète', no: 'peanut' },
+  { key: 'walnut', label: 'くるみ', labelEn: 'Walnut', labelKo: '호두', labelZh: '核桃', labelEs: 'Nuez', labelFr: 'Noix', no: 'walnut' },
 ] as const
 
 // 食事制限
 const DIET_RESTRICTIONS = [
-  { key: 'halal', label: 'ハラール', labelEn: 'Halal', labelKo: '할랄', labelZh: '清真', diet: 'halal' },
-  { key: 'vegetarian', label: 'ベジタリアン', labelEn: 'Vegetarian', labelKo: '채식', labelZh: '素食', diet: 'vegetarian' },
-  { key: 'gluten_free', label: 'グルテンフリー', labelEn: 'Gluten Free', labelKo: '글루텐프리', labelZh: '无麸质', diet: 'gluten_free' },
+  { key: 'halal', label: 'ハラール', labelEn: 'Halal', labelKo: '할랄', labelZh: '清真', labelEs: 'Halal', labelFr: 'Halal', diet: 'halal' },
+  { key: 'vegetarian', label: 'ベジタリアン', labelEn: 'Vegetarian', labelKo: '채식', labelZh: '素食', labelEs: 'Vegetariano', labelFr: 'Végétarien', diet: 'vegetarian' },
+  { key: 'gluten_free', label: 'グルテンフリー', labelEn: 'Gluten Free', labelKo: '글루텐프리', labelZh: '无麸质', labelEs: 'Sin Gluten', labelFr: 'Sans Gluten', diet: 'gluten_free' },
 ] as const
 
 type SortKey = 'score' | 'menu_count'
@@ -789,10 +791,12 @@ export default function HomePage() {
   const langBadge = LANG_BADGES[language] || language.slice(0, 2).toUpperCase()
   const isJa = language === 'ja'
   const fl = FLOW_QUESTIONS[language] || (language.startsWith('zh') ? FLOW_QUESTIONS['zh-Hans'] : null) || FLOW_QUESTIONS.en
-  const lb = (item: { label: string; labelEn: string; labelKo?: string; labelZh?: string }) => {
+  const lb = (item: { label: string; labelEn: string; labelKo?: string; labelZh?: string; labelEs?: string; labelFr?: string }) => {
     if (language === 'ja') return item.label
     if (language === 'ko') return item.labelKo || item.labelEn
     if (language.startsWith('zh')) return item.labelZh || item.labelEn
+    if (language === 'es') return item.labelEs || item.labelEn
+    if (language === 'fr') return item.labelFr || item.labelEn
     return item.labelEn
   }
   const [query, setQuery] = useState('')
