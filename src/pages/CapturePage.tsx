@@ -1104,6 +1104,18 @@ export default function CapturePage({
                       ...prev,
                       [responseId]: { title: '', intro: streamedText, body: [] },
                     }));
+                  } else if (data.type === 'nfg_partial') {
+                    // Progressive NFG: 先行到着したカードを即表示
+                    const partialItems = data.nfg_items as VisionMenuItem[] | undefined;
+                    if (partialItems?.length) {
+                      setResponses((prev) =>
+                        prev.map((item) =>
+                          item.id === responseId
+                            ? { ...item, visionItems: [...(item.visionItems || []), ...partialItems] }
+                            : item
+                        )
+                      );
+                    }
                   } else if (data.type === 'error') {
                     console.log("sse_error", data.message);
                     throw new Error(data.message || 'Server error');
@@ -1111,11 +1123,20 @@ export default function CapturePage({
                     const nfgItems = data.nfg_items as VisionMenuItem[] | undefined;
                     const contextChips = data.context_chips as { label: string; query: string }[] | undefined;
                     setResponses((prev) =>
-                      prev.map((item) =>
-                        item.id === responseId
-                          ? { ...item, messageUid: data.message_uid, ...(nfgItems?.length ? { visionItems: nfgItems } : {}), ...(contextChips?.length ? { contextChips } : {}) }
-                          : item
-                      )
+                      prev.map((item) => {
+                        if (item.id !== responseId) return item;
+                        const existing = item.visionItems || [];
+                        const incoming = nfgItems || [];
+                        // Merge: keep partial cards + add new (deduplicate by name_jp)
+                        const seen = new Set(existing.map(v => v.name_jp));
+                        const merged = [...existing, ...incoming.filter(v => !seen.has(v.name_jp))];
+                        return {
+                          ...item,
+                          messageUid: data.message_uid,
+                          ...(merged.length ? { visionItems: merged } : {}),
+                          ...(contextChips?.length ? { contextChips } : {}),
+                        };
+                      })
                     );
                   }
                 } catch (parseErr) {
