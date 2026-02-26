@@ -86,6 +86,7 @@ export default function AdminLayout({ children, title }: Props) {
     { key: 'menu-analytics', label: 'メニュー分析', icon: '📊', to: '/admin/menu-analytics' },
     { key: 'conversations', label: '会話ログ', icon: '💬', to: '/admin/conversations' },
     { key: 'photo-review', label: '写真レビュー', icon: '📸', to: '/admin/photo-review' },
+    { key: 'search-logs', label: '検索ログ', icon: '🔍', to: '/admin/search-logs' },
     { key: 'prompts', label: 'AI設定', icon: '🤖', to: '/admin/prompts' },
   ]
 

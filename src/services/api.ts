@@ -954,6 +954,13 @@ export const ConversationApi = {
   },
 };
 
+// Search Logs API (admin)
+export const SearchLogsApi = {
+  getAll: async (page: number = 1, size: number = 50): Promise<{ result: { total: number; page: number; size: number; items: { id: number; query_text: string | null; filters: Record<string, string> | null; result_count: number | null; created_at: string | null }[] }; status_code: number }> => {
+    return apiClient.get(`/admin/search-logs?page=${page}&size=${size}`);
+  },
+};
+
 // Feedback API (public, no auth)
 export const FeedbackApi = {
   submit: async (messageUid: string, rating: 'good' | 'bad'): Promise<{ message: string; status_code: number }> => {
