@@ -1,6 +1,6 @@
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
-import { Menu, Info, X, MapPin, Clock, Phone, Instagram } from 'lucide-react'
+import { Menu, Info, X, MapPin, Clock, Phone, Instagram, ExternalLink } from 'lucide-react'
 import { getUiCopy } from '../i18n/uiCopy'
 import { useAppContext } from './AppProvider'
 
@@ -91,6 +91,15 @@ export default function CaptureHeader({ onMenu, onLanguage, restaurantName, rest
               <div className="store-info-row">
                 <MapPin size={14} />
                 <span>{restaurantData.address}</span>
+                <a
+                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(restaurantData.address)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="store-info-map-link"
+                >
+                  <ExternalLink size={12} />
+                  Map
+                </a>
               </div>
             )}
             {restaurantData.access_info && (

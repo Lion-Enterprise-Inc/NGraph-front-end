@@ -190,13 +190,13 @@ function samplePixels(w: number, h: number, draw: (ctx: CanvasRenderingContext2D
 
 // パターン1: Nicomacos Food Graph テキスト
 function genText(): [number, number][] {
-  return samplePixels(240, 80, ctx => {
+  return samplePixels(500, 180, ctx => {
     ctx.fillStyle = '#000'
-    ctx.font = "bold 28px 'Georgia', 'Times New Roman', serif"
+    ctx.font = "bold 64px 'Georgia', 'Times New Roman', serif"
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
-    ctx.fillText('Nicomacos', 120, 28)
-    ctx.fillText('Food Graph', 120, 52)
-  })
+    ctx.fillText('Nicomacos', 250, 65)
+    ctx.fillText('Food Graph', 250, 125)
+  }, 2)
 }
 
 // パターン2: 鳥居
@@ -697,32 +697,32 @@ function isNfgQuery(q: string): boolean {
 
 // Step 1: 食ジャンル — 最大の絞り込み
 const FOOD_TYPES = [
-  { key: 'crab', label: '蟹', labelEn: 'Crab', labelKo: '게', labelZh: '螃蟹', q: '蟹,カニ,かに,ズワイ,セイコ' },
-  { key: 'seafood', label: '海鮮・お刺身', labelEn: 'Seafood & Sashimi', labelKo: '해산물・회', labelZh: '海鲜・刺身', q: '海鮮,刺身,魚', category: 'sashimi,seafood' },
-  { key: 'sushi', label: '寿司', labelEn: 'Sushi', labelKo: '초밥', labelZh: '寿司', q: '寿司,すし,にぎり', category: 'sushi,nigiri,gunkan,roll' },
-  { key: 'meat', label: '肉料理', labelEn: 'Meat', labelKo: '고기 요리', labelZh: '肉料理', q: '肉,カツ,ステーキ,焼肉', category: 'meat', hasSub: true },
-  { key: 'nabe', label: '鍋', labelEn: 'Hot Pot', labelKo: '전골', labelZh: '火锅', q: '鍋,しゃぶ,すき焼き', category: 'nabe,hotpot' },
-  { key: 'ramen', label: '麺類', labelEn: 'Noodles', labelKo: '면류', labelZh: '面类', q: '麺,ラーメン,そば,うどん', category: 'ramen,soba,noodle' },
-  { key: 'drinking', label: 'お酒に合うつまみ', labelEn: 'Bar Snacks', labelKo: '안주', labelZh: '下酒菜', mood: 'drinking' },
-  { key: 'local', label: '福井の名物', labelEn: 'Fukui Specialties', labelKo: '후쿠이 명물', labelZh: '福井名产', mood: 'local' },
-  { key: 'light', label: 'あっさり', labelEn: 'Light & Healthy', labelKo: '가벼운 음식', labelZh: '清淡料理', q: 'サラダ,酢の物,蒸し', category: 'salad,steamed,vinegared' },
+  { key: 'crab', label: '蟹', labelEn: 'Crab', labelKo: '게', labelZh: '螃蟹', labelEs: 'Cangrejo', labelFr: 'Crabe', q: '蟹,カニ,かに,ズワイ,セイコ' },
+  { key: 'seafood', label: '海鮮・お刺身', labelEn: 'Seafood & Sashimi', labelKo: '해산물・회', labelZh: '海鲜・刺身', labelEs: 'Mariscos y Sashimi', labelFr: 'Fruits de mer & Sashimi', q: '海鮮,刺身,魚', category: 'sashimi,seafood' },
+  { key: 'sushi', label: '寿司', labelEn: 'Sushi', labelKo: '초밥', labelZh: '寿司', labelEs: 'Sushi', labelFr: 'Sushi', q: '寿司,すし,にぎり', category: 'sushi,nigiri,gunkan,roll' },
+  { key: 'meat', label: '肉料理', labelEn: 'Meat', labelKo: '고기 요리', labelZh: '肉料理', labelEs: 'Carne', labelFr: 'Viande', q: '肉,カツ,ステーキ,焼肉', category: 'meat', hasSub: true },
+  { key: 'nabe', label: '鍋', labelEn: 'Hot Pot', labelKo: '전골', labelZh: '火锅', labelEs: 'Olla caliente', labelFr: 'Fondue japonaise', q: '鍋,しゃぶ,すき焼き', category: 'nabe,hotpot' },
+  { key: 'ramen', label: '麺類', labelEn: 'Noodles', labelKo: '면류', labelZh: '面类', labelEs: 'Fideos', labelFr: 'Nouilles', q: '麺,ラーメン,そば,うどん', category: 'ramen,soba,noodle' },
+  { key: 'drinking', label: 'お酒に合うつまみ', labelEn: 'Bar Snacks', labelKo: '안주', labelZh: '下酒菜', labelEs: 'Tapas de bar', labelFr: 'Amuse-bouches', mood: 'drinking' },
+  { key: 'local', label: '福井の名物', labelEn: 'Fukui Specialties', labelKo: '후쿠이 명물', labelZh: '福井名产', labelEs: 'Especialidades de Fukui', labelFr: 'Spécialités de Fukui', mood: 'local' },
+  { key: 'light', label: 'あっさり', labelEn: 'Light & Healthy', labelKo: '가벼운 음식', labelZh: '清淡料理', labelEs: 'Ligero y saludable', labelFr: 'Léger et sain', q: 'サラダ,酢の物,蒸し', category: 'salad,steamed,vinegared' },
 ] as const
 
 const MEAT_SUBS = [
-  { key: 'chicken', label: '鶏肉料理', labelEn: 'Chicken', labelKo: '닭고기', labelZh: '鸡肉', q: '鶏,チキン,唐揚げ,焼き鳥,手羽,親子', category: 'meat' },
-  { key: 'beef', label: '牛肉料理', labelEn: 'Beef', labelKo: '소고기', labelZh: '牛肉', q: '牛,ビーフ,ステーキ,焼肉,牛タン,ローストビーフ', category: 'meat' },
-  { key: 'pork', label: '豚肉料理', labelEn: 'Pork', labelKo: '돼지고기', labelZh: '猪肉', q: '豚,ポーク,とんかつ,カツ,角煮,豚カルビ', category: 'meat' },
-  { key: 'any_meat', label: '特にこだわりなし', labelEn: 'No preference', labelKo: '상관없음', labelZh: '不限', q: '肉,カツ,ステーキ,焼肉', category: 'meat' },
+  { key: 'chicken', label: '鶏肉料理', labelEn: 'Chicken', labelKo: '닭고기', labelZh: '鸡肉', labelEs: 'Pollo', labelFr: 'Poulet', q: '鶏,チキン,唐揚げ,焼き鳥,手羽,親子', category: 'meat' },
+  { key: 'beef', label: '牛肉料理', labelEn: 'Beef', labelKo: '소고기', labelZh: '牛肉', labelEs: 'Res', labelFr: 'Bœuf', q: '牛,ビーフ,ステーキ,焼肉,牛タン,ローストビーフ', category: 'meat' },
+  { key: 'pork', label: '豚肉料理', labelEn: 'Pork', labelKo: '돼지고기', labelZh: '猪肉', labelEs: 'Cerdo', labelFr: 'Porc', q: '豚,ポーク,とんかつ,カツ,角煮,豚カルビ', category: 'meat' },
+  { key: 'any_meat', label: '特にこだわりなし', labelEn: 'No preference', labelKo: '상관없음', labelZh: '不限', labelEs: 'Sin preferencia', labelFr: 'Pas de préférence', q: '肉,カツ,ステーキ,焼肉', category: 'meat' },
 ] as const
 
 const AREAS = [
-  { key: 'nearby', label: '現在地の近く', labelEn: 'Near me', labelKo: '내 주변', labelZh: '我附近', area: '' },
-  { key: 'fukui', label: '福井市', labelEn: 'Fukui City', labelKo: '후쿠이시', labelZh: '福井市', area: '福井市' },
-  { key: 'echizen', label: '越前・鯖江', labelEn: 'Echizen / Sabae', labelKo: '에치젠・사바에', labelZh: '越前・鯖江', area: '越前市' },
-  { key: 'tsuruga', label: '敦賀', labelEn: 'Tsuruga', labelKo: '쓰루가', labelZh: '敦贺', area: '敦賀市' },
-  { key: 'awara', label: 'あわら', labelEn: 'Awara', labelKo: '아와라', labelZh: '芦原', area: 'あわら市' },
-  { key: 'okuetsu', label: '奥越（大野・勝山）', labelEn: 'Okuetsu (Ono/Katsuyama)', labelKo: '오쿠에츠', labelZh: '奥越（大野・胜山）', area: '大野市,勝山市' },
-  { key: 'anywhere', label: 'どこでもOK', labelEn: 'Anywhere', labelKo: '어디든 OK', labelZh: '都可以', area: '' },
+  { key: 'nearby', label: '現在地の近く', labelEn: 'Near me', labelKo: '내 주변', labelZh: '我附近', labelEs: 'Cerca de mí', labelFr: 'Près de moi', area: '' },
+  { key: 'fukui', label: '福井市', labelEn: 'Fukui City', labelKo: '후쿠이시', labelZh: '福井市', labelEs: 'Ciudad de Fukui', labelFr: 'Ville de Fukui', area: '福井市' },
+  { key: 'echizen', label: '越前・鯖江', labelEn: 'Echizen / Sabae', labelKo: '에치젠・사바에', labelZh: '越前・鯖江', labelEs: 'Echizen / Sabae', labelFr: 'Echizen / Sabae', area: '越前市' },
+  { key: 'tsuruga', label: '敦賀', labelEn: 'Tsuruga', labelKo: '쓰루가', labelZh: '敦贺', labelEs: 'Tsuruga', labelFr: 'Tsuruga', area: '敦賀市' },
+  { key: 'awara', label: 'あわら', labelEn: 'Awara', labelKo: '아와라', labelZh: '芦原', labelEs: 'Awara', labelFr: 'Awara', area: 'あわら市' },
+  { key: 'okuetsu', label: '奥越（大野・勝山）', labelEn: 'Okuetsu (Ono/Katsuyama)', labelKo: '오쿠에츠', labelZh: '奥越（大野・胜山）', labelEs: 'Okuetsu (Ono/Katsuyama)', labelFr: 'Okuetsu (Ono/Katsuyama)', area: '大野市,勝山市' },
+  { key: 'anywhere', label: 'どこでもOK', labelEn: 'Anywhere', labelKo: '어디든 OK', labelZh: '都可以', labelEs: 'Cualquier lugar', labelFr: "N'importe où", area: '' },
 ] as const
 
 // 各エリアの代表座標（geolocation→最寄りエリア判定用）
@@ -735,12 +735,12 @@ const AREA_COORDS: Record<string, { lat: number; lng: number }> = {
 }
 
 const BUDGETS = [
-  { key: 'under1000', label: '~1,000円', labelEn: '~¥1,000', min: 0, max: 1000 },
-  { key: '1000to2000', label: '1,000~2,000円', labelEn: '¥1,000~2,000', min: 1000, max: 2000 },
-  { key: '2000to3000', label: '2,000~3,000円', labelEn: '¥2,000~3,000', min: 2000, max: 3000 },
-  { key: '3000to5000', label: '3,000~5,000円', labelEn: '¥3,000~5,000', min: 3000, max: 5000 },
-  { key: 'over5000', label: '5,000円~', labelEn: '¥5,000+', min: 5000, max: 0 },
-  { key: 'any', label: '気にしない', labelEn: "Don't mind", labelKo: '상관없음', labelZh: '不限', min: 0, max: 0 },
+  { key: 'under1000', label: '~1,000円', labelEn: '~¥1,000', labelEs: '~¥1.000', labelFr: '~¥1 000', min: 0, max: 1000 },
+  { key: '1000to2000', label: '1,000~2,000円', labelEn: '¥1,000~2,000', labelEs: '¥1.000~2.000', labelFr: '¥1 000~2 000', min: 1000, max: 2000 },
+  { key: '2000to3000', label: '2,000~3,000円', labelEn: '¥2,000~3,000', labelEs: '¥2.000~3.000', labelFr: '¥2 000~3 000', min: 2000, max: 3000 },
+  { key: '3000to5000', label: '3,000~5,000円', labelEn: '¥3,000~5,000', labelEs: '¥3.000~5.000', labelFr: '¥3 000~5 000', min: 3000, max: 5000 },
+  { key: 'over5000', label: '5,000円~', labelEn: '¥5,000+', labelEs: '¥5.000+', labelFr: '¥5 000+', min: 5000, max: 0 },
+  { key: 'any', label: '気にしない', labelEn: "Don't mind", labelKo: '상관없음', labelZh: '不限', labelEs: 'No importa', labelFr: 'Peu importe', min: 0, max: 0 },
 ] as const
 
 // 店名分割: 「個室居酒屋 ぼんた 本店」→ brand="個室居酒屋 ぼんた", suffix="本店"
@@ -755,11 +755,11 @@ function splitStoreName(name: string): { brand: string; suffix: string } {
 }
 
 const STYLES = [
-  { key: 'hearty', label: 'がっつり', labelEn: 'Hearty', labelKo: '든든하게', labelZh: '吃饱', mood: 'hearty' },
-  { key: 'budget', label: 'コスパ重視', labelEn: 'Budget', labelKo: '가성비', labelZh: '性价比', mood: 'budget' },
-  { key: 'drinking', label: '飲みメイン', labelEn: 'Drinks First', labelKo: '술 위주', labelZh: '以酒为主', mood: 'drinking' },
-  { key: 'entertainment', label: '接待・おもてなし', labelEn: 'Entertainment', labelKo: '접대', labelZh: '商务宴请', mood: 'entertainment' },
-  { key: 'none', label: '特にこだわりなし', labelEn: 'No preference', labelKo: '특별히 없음', labelZh: '无偏好', mood: '' },
+  { key: 'hearty', label: 'がっつり', labelEn: 'Hearty', labelKo: '든든하게', labelZh: '吃饱', labelEs: 'Abundante', labelFr: 'Copieux', mood: 'hearty' },
+  { key: 'budget', label: 'コスパ重視', labelEn: 'Budget', labelKo: '가성비', labelZh: '性价比', labelEs: 'Económico', labelFr: 'Bon rapport qualité-prix', mood: 'budget' },
+  { key: 'drinking', label: '飲みメイン', labelEn: 'Drinks First', labelKo: '술 위주', labelZh: '以酒为主', labelEs: 'Bebidas primero', labelFr: "L'apéro d'abord", mood: 'drinking' },
+  { key: 'entertainment', label: '接待・おもてなし', labelEn: 'Entertainment', labelKo: '접대', labelZh: '商务宴请', labelEs: 'Entretenimiento', labelFr: 'Réception', mood: 'entertainment' },
+  { key: 'none', label: '特にこだわりなし', labelEn: 'No preference', labelKo: '특별히 없음', labelZh: '无偏好', labelEs: 'Sin preferencia', labelFr: 'Pas de préférence', mood: '' },
 ] as const
 
 const FLOW_QUESTIONS: Record<string, { q1: string; q2: string; q3: string; q4: string; viewNow: string; searchMore: string; restart: string; otherGenre: string; otherArea: string; changeMore: string; startOver: string; searching: string; recoFallback: string; recoTitle: string; seeMore: string; restrictionOpen: string; restrictionClose: string; searchPlaceholder: string; all: string; back: string; results: string; score: string; menuCount: string; loading: string; empty: string; prev: string; next: string; footer: string }> = {
@@ -795,7 +795,7 @@ type DisplayRestaurant = (SearchRestaurant | NfgSearchRestaurant) & { _nfg?: boo
 
 export default function HomePage() {
   const router = useRouter()
-  const { language, openLanguageModal, setGeoLocation } = useAppContext()
+  const { language, openLanguageModal, setGeoLocation, theme, toggleTheme } = useAppContext()
   const langBadge = LANG_BADGES[language] || language.slice(0, 2).toUpperCase()
   const isJa = language === 'ja'
   const fl = FLOW_QUESTIONS[language] || (language.startsWith('zh') ? FLOW_QUESTIONS['zh-Hans'] : null) || FLOW_QUESTIONS.en
@@ -1277,9 +1277,16 @@ export default function HomePage() {
                 <span className="explore-region glow-target">＠FUKUI</span>
               </div>
             </div>
-            <button className="header-lang-badge" type="button" onClick={openLanguageModal}>
-              {langBadge}
-            </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <button className="header-theme-toggle" type="button" onClick={toggleTheme} aria-label="Toggle theme">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={theme === 'dark' ? '#facc15' : '#888'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+                </svg>
+              </button>
+              <button className="header-lang-badge" type="button" onClick={openLanguageModal}>
+                {langBadge}
+              </button>
+            </div>
           </div>
         </header>
 
@@ -1466,8 +1473,10 @@ export default function HomePage() {
                             onClick={() => router.push(`/capture?restaurant=${encodeURIComponent(r.slug)}`)}
                           >
                             <div className="conv-reco-restaurant">
-                              {(() => { const s = splitStoreName(r.name); return <>{s.brand}{s.suffix && <span className="store-suffix">{s.suffix}</span>}</> })()}
-                              {!isJa && r.name_romaji && <div className="store-romaji">{r.name_romaji}</div>}
+                              {!isJa && r.name_romaji
+                                ? <>{r.name_romaji}<div className="store-romaji">{(() => { const s = splitStoreName(r.name); return <>{s.brand}{s.suffix && <span className="store-suffix">{s.suffix}</span>}</> })()}</div></>
+                                : (() => { const s = splitStoreName(r.name); return <>{s.brand}{s.suffix && <span className="store-suffix">{s.suffix}</span>}</> })()
+                              }
                             </div>
                             {r.match_reasons.length > 0 && (
                               <div className="conv-reco-reasons">
@@ -1675,8 +1684,10 @@ export default function HomePage() {
                   <div className="explore-row-main">
                     <div className="explore-row-info">
                       <span className="explore-row-name">
-                        {(() => { const s = splitStoreName(r.name); return <>{s.brand}{s.suffix && <span className="store-suffix">{s.suffix}</span>}</> })()}
-                        {!isJa && (r as any).name_romaji && <span className="store-romaji">{(r as any).name_romaji}</span>}
+                        {!isJa && (r as any).name_romaji
+                          ? <>{(r as any).name_romaji}<span className="store-romaji">{(() => { const s = splitStoreName(r.name); return <>{s.brand}{s.suffix && <span className="store-suffix">{s.suffix}</span>}</> })()}</span></>
+                          : (() => { const s = splitStoreName(r.name); return <>{s.brand}{s.suffix && <span className="store-suffix">{s.suffix}</span>}</> })()
+                        }
                       </span>
                       {r.city && <span className="explore-row-address">{r.city}</span>}
                     </div>

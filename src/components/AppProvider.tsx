@@ -19,6 +19,8 @@ type PendingAttachment = {
   source: "camera" | "library";
 };
 
+type Theme = "dark" | "light";
+
 type AppContextValue = {
   language: string;
   setLanguage: (code: string, source?: string) => void;
@@ -35,11 +37,14 @@ type AppContextValue = {
   setOnSelectThread: (fn: ((threadUid: string) => void) | null) => void;
   geoLocation: { lat: number; lng: number } | null;
   setGeoLocation: (loc: { lat: number; lng: number } | null) => void;
+  theme: Theme;
+  toggleTheme: () => void;
 };
 
 const AppContext = createContext<AppContextValue | undefined>(undefined);
 
 const LANGUAGE_STORAGE_KEY = "appLanguage";
+const THEME_STORAGE_KEY = "ngraph-theme";
 
 const logLanguageSelection = (entry: {
   language: string;
@@ -67,6 +72,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [onNewChat, setOnNewChat] = useState<(() => void) | null>(null);
   const [onSelectThread, setOnSelectThread] = useState<((threadUid: string) => void) | null>(null);
   const [geoLocation, setGeoLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [theme, setThemeState] = useState<Theme>("dark");
 
   // Geolocation is requested on-demand (e.g. "現在地の近く" button), not on page load
 
@@ -113,6 +119,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
     document.documentElement.lang = language;
   }, [language]);
 
+  const toggleTheme = () => {
+    const next: Theme = theme === "dark" ? "light" : "dark";
+    setThemeState(next);
+    try { localStorage.setItem(THEME_STORAGE_KEY, next); } catch {}
+    document.documentElement.setAttribute("data-theme", next);
+  };
+
+  useEffect(() => {
+    const stored = localStorage.getItem(THEME_STORAGE_KEY) as Theme | null;
+    if (stored === "light" || stored === "dark") {
+      setThemeState(stored);
+      document.documentElement.setAttribute("data-theme", stored);
+    }
+  }, []);
+
   return (
     <AuthProvider>
       <ToastProvider>
@@ -133,6 +154,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
           setOnSelectThread,
           geoLocation,
           setGeoLocation,
+          theme,
+          toggleTheme,
         }}
       >
         {children}

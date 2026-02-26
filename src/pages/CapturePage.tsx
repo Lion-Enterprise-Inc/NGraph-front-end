@@ -397,10 +397,10 @@ export default function CapturePage({
     });
   };
 
-  const isCardExpanded = (responseId: string, cardIndex: number, totalItems: number) => {
+  const isCardExpanded = (responseId: string, cardIndex: number, _totalItems: number) => {
     const expanded = expandedCards[responseId];
     if (expanded) return expanded.has(cardIndex);
-    return totalItems <= 2;
+    return cardIndex === 0;
   };
 
   const toggleDetails = (responseId: string, cardIndex: number) => {
@@ -1513,20 +1513,20 @@ export default function CapturePage({
             boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
           }}
         >
-          ♥<span style={{ fontSize: 10, position: 'absolute', top: -4, right: -4, background: '#222', borderRadius: 8, padding: '1px 5px', fontWeight: 700 }}>{likedMenus.size}</span>
+          ♥<span style={{ fontSize: 10, position: 'absolute', top: -4, right: -4, background: 'var(--color-surface)', borderRadius: 8, padding: '1px 5px', fontWeight: 700 }}>{likedMenus.size}</span>
         </button>
       )}
 
       {likedDrawerOpen && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 100, display: 'flex', flexDirection: 'column' }}>
           <div style={{ flex: 1, background: 'rgba(0,0,0,0.6)' }} onClick={() => setLikedDrawerOpen(false)} />
-          <div style={{ background: '#1a1a1a', borderRadius: '16px 16px 0 0', maxHeight: '70vh', overflow: 'auto', padding: '16px' }}>
+          <div style={{ background: 'var(--color-overlay)', borderRadius: '16px 16px 0 0', maxHeight: '70vh', overflow: 'auto', padding: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-              <span style={{ fontSize: 15, fontWeight: 600, color: '#f0f0f0' }}>♥ {activeLanguage === 'ja' ? 'お気に入り' : 'Favorites'} ({likedMenus.size})</span>
-              <button type="button" onClick={() => setLikedDrawerOpen(false)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)', fontSize: 18, cursor: 'pointer' }}>✕</button>
+              <span style={{ fontSize: 15, fontWeight: 600, color: 'var(--color-text)' }}>♥ {activeLanguage === 'ja' ? 'お気に入り' : 'Favorites'} ({likedMenus.size})</span>
+              <button type="button" onClick={() => setLikedDrawerOpen(false)} style={{ background: 'none', border: 'none', color: 'var(--color-text-half)', fontSize: 18, cursor: 'pointer' }}>✕</button>
             </div>
             {likedItems.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: 24, color: 'rgba(255,255,255,0.4)', fontSize: 13 }}>
+              <div style={{ textAlign: 'center', padding: 24, color: 'var(--color-text-dim)', fontSize: 13 }}>
                 {activeLanguage === 'ja' ? '読み込み中...' : 'Loading...'}
               </div>
             ) : (
@@ -1537,24 +1537,24 @@ export default function CapturePage({
                     type="button"
                     onClick={() => { setLikedDrawerOpen(false); router.push(`/capture?restaurant=${item.restaurant_slug}`); }}
                     style={{
-                      display: 'flex', gap: 10, padding: '10px 12px', background: 'rgba(255,255,255,0.04)',
-                      borderRadius: 10, border: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer', textAlign: 'left', width: '100%',
+                      display: 'flex', gap: 10, padding: '10px 12px', background: 'var(--color-surface-chip)',
+                      borderRadius: 10, border: '1px solid var(--color-surface-active)', cursor: 'pointer', textAlign: 'left', width: '100%',
                     }}
                   >
                     {item.image_url ? (
                       <img src={item.image_url} alt="" style={{ width: 48, height: 48, borderRadius: 8, objectFit: 'cover', flexShrink: 0 }} />
                     ) : (
-                      <div style={{ width: 48, height: 48, borderRadius: 8, background: 'rgba(255,255,255,0.08)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>🍽</div>
+                      <div style={{ width: 48, height: 48, borderRadius: 8, background: 'var(--color-surface-active)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>🍽</div>
                     )}
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 14, fontWeight: 600, color: '#f0f0f0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         {item.name_jp}
                       </div>
-                      <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginTop: 2 }}>
+                      <div style={{ fontSize: 11, color: 'var(--color-text-dim)', marginTop: 2 }}>
                         {item.restaurant_name}{item.price ? ` · ¥${item.price}` : ''}
                       </div>
                       {item.narrative?.description && (
-                        <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        <div style={{ fontSize: 11, color: 'var(--color-text-dim)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                           {item.narrative.description}
                         </div>
                       )}
@@ -1589,10 +1589,10 @@ export default function CapturePage({
               gap: '12px',
             }}>
               <div style={{ fontSize: '48px' }}>🔍</div>
-              <div style={{ fontSize: '16px', color: 'rgba(255,255,255,0.7)', textAlign: 'center' }}>
+              <div style={{ fontSize: '16px', color: 'var(--color-text-body)', textAlign: 'center' }}>
                 {copy.capture.notFound}
               </div>
-              <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.4)', textAlign: 'center' }}>
+              <div style={{ fontSize: '13px', color: 'var(--color-text-dim)', textAlign: 'center' }}>
                 {copy.capture.checkUrl}
               </div>
             </div>
@@ -1607,13 +1607,13 @@ export default function CapturePage({
               <div style={{
                 width: '32px',
                 height: '32px',
-                border: '2px solid rgba(255,255,255,0.1)',
-                borderTopColor: 'rgba(255,255,255,0.5)',
+                border: '2px solid var(--color-border-subtle)',
+                borderTopColor: 'var(--color-text-half)',
                 borderRadius: '50%',
                 animation: 'spin 1s linear infinite',
                 marginBottom: '16px'
               }} />
-              <div style={{ fontSize: '14px', color: 'rgba(255,255,255,0.4)', textAlign: 'center' }}>
+              <div style={{ fontSize: '14px', color: 'var(--color-text-dim)', textAlign: 'center' }}>
                 {copy.capture.loading}
               </div>
               <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
@@ -1723,9 +1723,10 @@ export default function CapturePage({
                         {response.output.title}
                       </div>
                       {response.visionItems.map((vi, idx) => {
+                        const cardOpen = isCardExpanded(response.id, idx, response.visionItems.length);
                         return (
-                          <div key={idx} className="nfg-card">
-                            <div className="nfg-card-header">
+                          <div key={idx} className={`nfg-card${cardOpen ? '' : ' nfg-card-collapsed'}`}>
+                            <div className="nfg-card-header" onClick={() => toggleCard(response.id, idx)} style={{ cursor: 'pointer' }}>
                               <div className="nfg-card-title-row">
                                 <span className="nfg-card-number">{idx + 1}.</span>
                                 <span className="nfg-card-name">
@@ -1734,13 +1735,22 @@ export default function CapturePage({
                                 {vi.price > 0 && (
                                   <span className="nfg-card-price">¥{vi.price.toLocaleString()}</span>
                                 )}
+                                {!cardOpen && (
+                                  <span className="nfg-card-expand-hint">▼</span>
+                                )}
                               </div>
-                              {(activeLanguage !== 'ja' ? vi.name_jp : vi.name_en) && (
+                              {cardOpen && (activeLanguage !== 'ja' ? vi.name_jp : vi.name_en) && (
                                 <div className="nfg-card-name-en">
                                   {activeLanguage !== 'ja' ? vi.name_jp : vi.name_en}
                                 </div>
                               )}
+                              {!cardOpen && vi.name_en && (
+                                <div className="nfg-card-name-en" style={{ paddingLeft: 22 }}>
+                                  {vi.name_en}
+                                </div>
+                              )}
                             </div>
+                            {cardOpen && <>
                             {/* === Hero: 画像 + Food Graph 横並び === */}
                             <div className="nfg-card-hero">
                               <div className="nfg-card-thumb">
@@ -1830,15 +1840,15 @@ export default function CapturePage({
                                         </radialGradient>
                                         <filter id={`glow-${uid}`}><feGaussianBlur stdDeviation="2.5" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
                                       </defs>
-                                      {[0.25,0.5,0.75,1].map(lv => <polygon key={lv} points={poly(R*lv)} fill="none" stroke={lv===1?"#2a2a2a":"#1a1a1a"} strokeWidth="0.5"/>)}
-                                      {axes.map((_, i) => { const p = pt(i, R); return <line key={i} x1={0} y1={0} x2={p.x} y2={p.y} stroke="#222" strokeWidth="0.5"/>; })}
+                                      {[0.25,0.5,0.75,1].map(lv => <polygon key={lv} points={poly(R*lv)} fill="none" stroke={lv===1?"var(--color-surface-active)":"var(--color-surface-hover)"} strokeWidth="0.5"/>)}
+                                      {axes.map((_, i) => { const p = pt(i, R); return <line key={i} x1={0} y1={0} x2={p.x} y2={p.y} stroke="var(--color-surface-active)" strokeWidth="0.5"/>; })}
                                       <polygon points={dataPoly} fill={`url(#rg-${uid})`} stroke="#00e896" strokeWidth="1.5" strokeLinejoin="round" filter={`url(#glow-${uid})`}/>
                                       {myTasteAvg && (() => {
                                         const myPoly = axes.map((a, i) => { const p = pt(i, R * (myTasteAvg[a] || 0) / 10); return `${p.x},${p.y}`; }).join(' ');
                                         return <polygon points={myPoly} fill="none" stroke="#4f8cff" strokeWidth="1.2" strokeDasharray="4,3" strokeLinejoin="round" opacity="0.7"/>;
                                       })()}
-                                      {axes.map((a, i) => { const v = (tv[a]||0)/10; const active = v > 0.3; const p = pt(i, R*v); return <circle key={i} cx={p.x} cy={p.y} r={active?3.5:2} fill={active?axisColors[a]:"#555"} stroke="#0a0a0a" strokeWidth="1"/>; })}
-                                      {axes.map((a, i) => { const v = (tv[a]||0)/10; const active = v > 0.3; const p = pt(i, R*1.22); return <text key={i} x={p.x} y={p.y+3.5} textAnchor="middle" fontFamily="'DM Mono',monospace" fontSize={active?9:7.5} fill={active?axisColors[a]:"rgba(255,255,255,0.5)"}>{labels[a]}{active ? ` ${Math.round(v*100)}` : ''}</text>; })}
+                                      {axes.map((a, i) => { const v = (tv[a]||0)/10; const active = v > 0.3; const p = pt(i, R*v); return <circle key={i} cx={p.x} cy={p.y} r={active?3.5:2} fill={active?axisColors[a]:"var(--color-text-dim)"} stroke="var(--color-bg)" strokeWidth="1"/>; })}
+                                      {axes.map((a, i) => { const v = (tv[a]||0)/10; const active = v > 0.3; const p = pt(i, R*1.22); return <text key={i} x={p.x} y={p.y+3.5} textAnchor="middle" fontFamily="'DM Mono',monospace" fontSize={active?10.5:9} fill={active?axisColors[a]:"var(--color-text-half)"}>{labels[a]}{active ? ` ${Math.round(v*100)}` : ''}</text>; })}
                                     </svg>
                                   </div>
                                 );
@@ -1874,9 +1884,9 @@ export default function CapturePage({
                                     className="nfg-badge"
                                     style={{
                                       cursor: 'pointer',
-                                      background: (vi as any).menu_uid && likedMenus.has((vi as any).menu_uid) ? 'rgba(255,80,80,0.18)' : 'rgba(255,255,255,0.06)',
-                                      color: (vi as any).menu_uid && likedMenus.has((vi as any).menu_uid) ? '#ff5050' : 'rgba(255,255,255,0.5)',
-                                      border: (vi as any).menu_uid && likedMenus.has((vi as any).menu_uid) ? '1px solid rgba(255,80,80,0.3)' : '1px solid rgba(255,255,255,0.1)',
+                                      background: (vi as any).menu_uid && likedMenus.has((vi as any).menu_uid) ? 'rgba(255,80,80,0.18)' : 'var(--color-surface-hover)',
+                                      color: (vi as any).menu_uid && likedMenus.has((vi as any).menu_uid) ? '#ff5050' : 'var(--color-text-half)',
+                                      border: (vi as any).menu_uid && likedMenus.has((vi as any).menu_uid) ? '1px solid rgba(255,80,80,0.3)' : '1px solid var(--color-border-subtle)',
                                     }}
                                     onClick={(e) => {
                                       e.stopPropagation();
@@ -1912,9 +1922,9 @@ export default function CapturePage({
                                         className="nfg-badge"
                                         style={{
                                           cursor: 'pointer',
-                                          background: nfgFeedback[(vi as any).menu_uid] === 'good' ? 'rgba(16,163,127,0.2)' : 'rgba(255,255,255,0.06)',
-                                          color: nfgFeedback[(vi as any).menu_uid] === 'good' ? '#10a37f' : 'rgba(255,255,255,0.5)',
-                                          border: nfgFeedback[(vi as any).menu_uid] === 'good' ? '1px solid rgba(16,163,127,0.4)' : '1px solid rgba(255,255,255,0.1)',
+                                          background: nfgFeedback[(vi as any).menu_uid] === 'good' ? 'rgba(16,163,127,0.2)' : 'var(--color-surface-hover)',
+                                          color: nfgFeedback[(vi as any).menu_uid] === 'good' ? '#10a37f' : 'var(--color-text-half)',
+                                          border: nfgFeedback[(vi as any).menu_uid] === 'good' ? '1px solid rgba(16,163,127,0.4)' : '1px solid var(--color-border-subtle)',
                                         }}
                                         onClick={(e) => { e.stopPropagation(); handleNfgFeedback((vi as any).menu_uid, 'good'); }}
                                       >👍</button>
@@ -1923,9 +1933,9 @@ export default function CapturePage({
                                         className="nfg-badge"
                                         style={{
                                           cursor: 'pointer',
-                                          background: nfgFeedback[(vi as any).menu_uid] === 'bad' ? 'rgba(255,80,80,0.2)' : 'rgba(255,255,255,0.06)',
-                                          color: nfgFeedback[(vi as any).menu_uid] === 'bad' ? '#ff5050' : 'rgba(255,255,255,0.5)',
-                                          border: nfgFeedback[(vi as any).menu_uid] === 'bad' ? '1px solid rgba(255,80,80,0.4)' : '1px solid rgba(255,255,255,0.1)',
+                                          background: nfgFeedback[(vi as any).menu_uid] === 'bad' ? 'rgba(255,80,80,0.2)' : 'var(--color-surface-hover)',
+                                          color: nfgFeedback[(vi as any).menu_uid] === 'bad' ? '#ff5050' : 'var(--color-text-half)',
+                                          border: nfgFeedback[(vi as any).menu_uid] === 'bad' ? '1px solid rgba(255,80,80,0.4)' : '1px solid var(--color-border-subtle)',
                                         }}
                                         onClick={(e) => { e.stopPropagation(); handleNfgFeedback((vi as any).menu_uid, 'bad'); }}
                                       >👎</button>
@@ -2054,6 +2064,7 @@ export default function CapturePage({
                                   </>
                                 );
                               })()}
+                            </>}
                           </div>
                         );
                       })}
