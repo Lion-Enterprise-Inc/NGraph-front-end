@@ -1734,7 +1734,7 @@ export default function CapturePage({
                         {response.output.title}
                       </div>
                       {response.visionItems.map((vi, idx) => {
-                        const cardOpen = isCardExpanded(response.id, idx, response.visionItems.length);
+                        const cardOpen = isCardExpanded(response.id, idx, response.visionItems!.length);
                         return (
                           <div key={idx} className={`nfg-card${cardOpen ? '' : ' nfg-card-collapsed'}`}>
                             <div className="nfg-card-header" onClick={() => toggleCard(response.id, idx)} style={{ cursor: 'pointer' }}>
