@@ -936,15 +936,13 @@ export default function CapturePage({
       }
     };
 
-    // Wait for React DOM update, then scroll repeatedly to catch layout shifts
+    // Wait for React DOM update, then scroll to show user's sent message
     requestAnimationFrame(() => {
       scrollToBottomImmediate();
       requestAnimationFrame(scrollToBottomImmediate);
     });
     setTimeout(scrollToBottomImmediate, 100);
     setTimeout(scrollToBottomImmediate, 300);
-    setTimeout(scrollToBottomImmediate, 600);
-    setTimeout(scrollToBottomImmediate, 1000);
 
     try {
       let output: MockOutput;
@@ -1164,14 +1162,6 @@ export default function CapturePage({
             );
             setIsTypingActive(false);
             setTypingComplete((prev) => new Set(prev).add(responseId));
-
-            // Scroll after NFG cards render
-            const snapBottom = () => {
-              const c = captureBodyRef.current;
-              if (c) c.scrollTop = c.scrollHeight;
-            };
-            setTimeout(snapBottom, 100);
-            setTimeout(snapBottom, 500);
 
             // Save to history drawer (localStorage)
             if (threadUidRef.current && restaurantSlug) {
