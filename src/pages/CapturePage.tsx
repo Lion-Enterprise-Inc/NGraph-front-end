@@ -1163,6 +1163,14 @@ export default function CapturePage({
             setIsTypingActive(false);
             setTypingComplete((prev) => new Set(prev).add(responseId));
 
+            // Scroll to user's sent message so response is readable from top
+            setTimeout(() => {
+              const el = document.getElementById(`msg-${responseId}`);
+              if (el) {
+                el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }
+            }, 150);
+
             // Save to history drawer (localStorage)
             if (threadUidRef.current && restaurantSlug) {
               try {
@@ -1664,7 +1672,7 @@ export default function CapturePage({
 
         <section className="capture-thread" ref={threadRef}>
           {responses.map((response) => (
-            <div key={response.id} className="chat-thread-item">
+            <div key={response.id} className="chat-thread-item" id={`msg-${response.id}`}>
               <div className="chat-row chat-row-user">
                 <div className="chat-content">
                   {response.input.text && (
