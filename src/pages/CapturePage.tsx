@@ -928,7 +928,7 @@ export default function CapturePage({
     setUserScrolledUp(false); // Reset scroll state for new message
     setIsTypingActive(false); // Ensure typing state is reset
 
-    // Immediate scroll to bottom - ChatGPT style
+    // Scroll to bottom after React renders the new message
     const scrollToBottomImmediate = () => {
       const container = captureBodyRef.current;
       if (container) {
@@ -936,12 +936,15 @@ export default function CapturePage({
       }
     };
 
-    // Scroll immediately and then keep scrolling as content loads
-    scrollToBottomImmediate();
-    requestAnimationFrame(scrollToBottomImmediate);
-    setTimeout(scrollToBottomImmediate, 50);
-    setTimeout(scrollToBottomImmediate, 150);
+    // Wait for React DOM update, then scroll repeatedly to catch layout shifts
+    requestAnimationFrame(() => {
+      scrollToBottomImmediate();
+      requestAnimationFrame(scrollToBottomImmediate);
+    });
+    setTimeout(scrollToBottomImmediate, 100);
     setTimeout(scrollToBottomImmediate, 300);
+    setTimeout(scrollToBottomImmediate, 600);
+    setTimeout(scrollToBottomImmediate, 1000);
 
     try {
       let output: MockOutput;
@@ -1161,6 +1164,14 @@ export default function CapturePage({
             );
             setIsTypingActive(false);
             setTypingComplete((prev) => new Set(prev).add(responseId));
+
+            // Scroll after NFG cards render
+            const snapBottom = () => {
+              const c = captureBodyRef.current;
+              if (c) c.scrollTop = c.scrollHeight;
+            };
+            setTimeout(snapBottom, 100);
+            setTimeout(snapBottom, 500);
 
             // Save to history drawer (localStorage)
             if (threadUidRef.current && restaurantSlug) {
