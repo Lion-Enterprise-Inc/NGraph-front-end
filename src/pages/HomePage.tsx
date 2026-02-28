@@ -735,11 +735,11 @@ const AREA_COORDS: Record<string, { lat: number; lng: number }> = {
 }
 
 const BUDGETS = [
-  { key: 'under1000', label: '~1,000円', labelEn: '~¥1,000', labelEs: '~¥1.000', labelFr: '~¥1 000', min: 0, max: 1000 },
-  { key: '1000to2000', label: '1,000~2,000円', labelEn: '¥1,000~2,000', labelEs: '¥1.000~2.000', labelFr: '¥1 000~2 000', min: 1000, max: 2000 },
-  { key: '2000to3000', label: '2,000~3,000円', labelEn: '¥2,000~3,000', labelEs: '¥2.000~3.000', labelFr: '¥2 000~3 000', min: 2000, max: 3000 },
-  { key: '3000to5000', label: '3,000~5,000円', labelEn: '¥3,000~5,000', labelEs: '¥3.000~5.000', labelFr: '¥3 000~5 000', min: 3000, max: 5000 },
-  { key: 'over5000', label: '5,000円~', labelEn: '¥5,000+', labelEs: '¥5.000+', labelFr: '¥5 000+', min: 5000, max: 0 },
+  { key: 'under1000', label: '~1,000円', labelEn: '~¥1,000', labelKo: '~¥1,000', labelZh: '~¥1,000', labelEs: '~¥1.000', labelFr: '~¥1 000', min: 0, max: 1000 },
+  { key: '1000to2000', label: '1,000~2,000円', labelEn: '¥1,000~2,000', labelKo: '¥1,000~2,000', labelZh: '¥1,000~2,000', labelEs: '¥1.000~2.000', labelFr: '¥1 000~2 000', min: 1000, max: 2000 },
+  { key: '2000to3000', label: '2,000~3,000円', labelEn: '¥2,000~3,000', labelKo: '¥2,000~3,000', labelZh: '¥2,000~3,000', labelEs: '¥2.000~3.000', labelFr: '¥2 000~3 000', min: 2000, max: 3000 },
+  { key: '3000to5000', label: '3,000~5,000円', labelEn: '¥3,000~5,000', labelKo: '¥3,000~5,000', labelZh: '¥3,000~5,000', labelEs: '¥3.000~5.000', labelFr: '¥3 000~5 000', min: 3000, max: 5000 },
+  { key: 'over5000', label: '5,000円~', labelEn: '¥5,000+', labelKo: '¥5,000+', labelZh: '¥5,000+', labelEs: '¥5.000+', labelFr: '¥5 000+', min: 5000, max: 0 },
   { key: 'any', label: '気にしない', labelEn: "Don't mind", labelKo: '상관없음', labelZh: '不限', labelEs: 'No importa', labelFr: 'Peu importe', min: 0, max: 0 },
 ] as const
 

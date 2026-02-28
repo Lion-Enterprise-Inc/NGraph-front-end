@@ -48,17 +48,17 @@ export default function HistoryDrawer({
         </div>
 
         <div className="sidebar-top">
-          <span className="sidebar-title">履歴</span>
+          <span className="sidebar-title">{(copy.history as any).sidebarTitle || "History"}</span>
         </div>
 
         <button className="sidebar-new-chat" onClick={() => { onNewChat?.(); onClose?.(); }}>
           <Plus size={16} strokeWidth={2} />
-          新しい会話
+          {(copy.history as any).newChat || "New chat"}
         </button>
 
         <div className="sidebar-threads">
           {threads.length === 0 ? (
-            <p className="sidebar-empty">まだ会話がありません</p>
+            <p className="sidebar-empty">{(copy.history as any).empty || "No conversations yet"}</p>
           ) : (
             threads.map(t => (
               <div

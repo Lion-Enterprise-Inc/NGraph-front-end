@@ -58,8 +58,8 @@ function escapeNumberedLists(text: string): string {
 // Extract numbered menu items from AI response for quick reply chips
 function extractNumberedItems(text: string): { num: string; name: string }[] {
   const items: { num: string; name: string }[] = [];
-  // Match patterns like "1. **料理名**" or "1. 料理名 —"
-  const regex = /^\s*(\d+)\.\s+\*{0,2}([^*\n—–\-]+?)\*{0,2}\s*(?:[—–\-]|$)/gm;
+  // Match patterns like "1. **料理名**" or "1. 料理名 —" (allow hyphens in names like kani-miso)
+  const regex = /^\s*(\d+)\.\s+\*{0,2}([^*\n—–]+?)\*{0,2}\s*(?:[—–]|$)/gm;
   let match;
   while ((match = regex.exec(text)) !== null) {
     const name = match[2].trim();
@@ -190,7 +190,7 @@ const logFeedback = (entry: FeedbackEntry) => {
 };
 
 const generateChatResponse = async (message: string, restaurant?: ApiRestaurant | null): Promise<string> => {
-  return "申し訳ございません、接続に問題がありました。もう一度お試しください。";
+  return "Sorry, there was a connection issue. Please try again.";
 };
 
 export default function CapturePage({
