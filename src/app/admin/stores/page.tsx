@@ -65,9 +65,9 @@ export default function StoresPage() {
           location: extractLocation(restaurant),
           address: restaurant.address || '',
           type: restaurant.business_type ? (BUSINESS_TYPES[restaurant.business_type] || restaurant.business_type) : '未設定',
-          plan: 'フリープラン',
-          planId: 'free',
-          planPrice: 0,
+          plan: (restaurant as any).subscription_plan === 'standard' ? '正規導入' : 'フリー',
+          planId: (restaurant as any).subscription_plan || 'free',
+          planPrice: (restaurant as any).subscription_plan === 'standard' ? 20000 : 0,
           menuCount: restaurant.menu_count || 0,
           lastUpdate: formatDate(restaurant.updated_at),
           status: restaurant.is_active ? 'active' : 'inactive'
@@ -147,7 +147,9 @@ export default function StoresPage() {
   }
 
   const filteredStores = stores.filter(s => {
-    if (filter !== 'all' && s.location !== filter) return false
+    if (filter === 'onboarded' && s.planId !== 'standard') return false
+    if (filter === 'free' && s.planId !== 'free') return false
+    if (filter !== 'all' && filter !== 'onboarded' && filter !== 'free' && s.location !== filter) return false
     if (searchQuery.trim()) {
       const q = searchQuery.trim().toLowerCase()
       return s.name.toLowerCase().includes(q) || s.address.toLowerCase().includes(q) || s.location.toLowerCase().includes(q) || s.storeCode.toLowerCase().includes(q)
@@ -370,6 +372,19 @@ export default function StoresPage() {
           >
             すべて ({stores.length})
           </button>
+          <button
+            className={`btn btn-secondary btn-small ${filter === 'onboarded' ? 'active' : ''}`}
+            onClick={() => setFilter('onboarded')}
+            style={filter === 'onboarded' ? { background: '#10B981', borderColor: '#10B981' } : {}}
+          >
+            正規導入 ({stores.filter(s => s.planId === 'standard').length})
+          </button>
+          <button
+            className={`btn btn-secondary btn-small ${filter === 'free' ? 'active' : ''}`}
+            onClick={() => setFilter('free')}
+          >
+            フリー ({stores.filter(s => s.planId === 'free').length})
+          </button>
           {cityFilters.map(([city, count]) => (
             <button
               key={city}
@@ -398,7 +413,7 @@ export default function StoresPage() {
                 </div>
                 <div className="store-status-compact">
                   {store.storeCode && <div className="store-id-badge">ID: {store.storeCode}</div>}
-                  <div className="badge badge-success">{store.plan}</div>
+                  <div className={`badge ${store.planId === 'standard' ? 'badge-success' : 'badge-secondary'}`} style={store.planId === 'standard' ? { background: '#10B981' } : { background: '#475569' }}>{store.plan}</div>
                   <div className="store-update-compact">更新: {store.lastUpdate}</div>
                 </div>
               </div>
