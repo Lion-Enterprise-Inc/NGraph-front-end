@@ -84,7 +84,7 @@ function Logo() {
 // --- Main Page ---
 export default function VerifyPage() {
   const params = useParams()
-  const token = params.token as string
+  const token = (params?.token ?? '') as string
 
   const [step, setStep] = useState<'passcode' | 'questions' | 'done'>('passcode')
   const [sessionToken, setSessionToken] = useState('')
