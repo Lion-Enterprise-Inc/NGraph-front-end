@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, Suspense } from 'react'
+import { useState, useCallback, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 
 const API = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://dev-backend.ngraph.jp/api'
@@ -84,6 +84,17 @@ function Logo() {
 function VerifyContent() {
   const searchParams = useSearchParams()
   const token = searchParams?.get('token') || ''
+
+  // Override global overflow:hidden from index.css
+  useEffect(() => {
+    document.documentElement.style.overflow = 'auto'
+    document.documentElement.style.height = 'auto'
+    document.body.style.overflow = 'auto'
+    document.body.style.height = 'auto'
+    document.body.style.background = '#f8fafc'
+    const root = document.getElementById('root')
+    if (root) { root.style.overflow = 'auto'; root.style.height = 'auto' }
+  }, [])
 
   const [step, setStep] = useState<'passcode' | 'questions' | 'done'>('passcode')
   const [sessionToken, setSessionToken] = useState('')
