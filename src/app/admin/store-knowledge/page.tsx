@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from 'react'
 import AdminLayout from '../../../components/admin/AdminLayout'
 import { apiClient, TokenService } from '../../../services/api'
 import { useToast } from '../../../components/admin/Toast'
-import { PHASES, Question } from './questions'
+import { PHASES, Question, Phase, getPhases } from './questions'
 
 interface StoreKnowledgeItem {
   uid: string
@@ -275,7 +275,7 @@ function QuestionCard({ q, answer, onAnswer }: {
 }
 
 function PhaseSection({ phase, answers, onAnswer, defaultOpen }: {
-  phase: typeof PHASES[0]
+  phase: Phase
   answers: Record<string, Answer>
   onAnswer: (questionId: string, value: string | string[], note: string) => void
   defaultOpen: boolean
@@ -345,11 +345,14 @@ export default function StoreKnowledgePage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [slug, setSlug] = useState<string | null>(null)
+  const [businessType, setBusinessType] = useState<string | null>(null)
   const toast = useToast()
+
+  const phases = getPhases(businessType)
 
   // Build key→question lookup
   const keyToQuestion = new Map<string, Question>()
-  for (const phase of PHASES) {
+  for (const phase of phases) {
     for (const q of phase.questions) {
       keyToQuestion.set(q.key, q)
     }
@@ -357,7 +360,7 @@ export default function StoreKnowledgePage() {
 
   // Build question id→key lookup
   const idToKey = new Map<string, string>()
-  for (const phase of PHASES) {
+  for (const phase of phases) {
     for (const q of phase.questions) {
       idToKey.set(q.id, q.key)
     }
@@ -384,15 +387,25 @@ export default function StoreKnowledgePage() {
 
   const loadData = async (restaurantSlug: string) => {
     try {
+      // Fetch restaurant info to get business_type
+      try {
+        const restaurantInfo = await apiClient.get<{ business_type?: string }>(`/restaurants/public/${restaurantSlug}`)
+        if (restaurantInfo?.business_type) {
+          setBusinessType(restaurantInfo.business_type)
+        }
+      } catch {
+        // Non-critical: fall back to default questions
+      }
+
       const items = await apiClient.get<StoreKnowledgeItem[]>(`/store-knowledge/${restaurantSlug}`)
       setExistingItems(items)
 
-      // Prefill answers from existing data
+      // Prefill answers from existing data — use all possible phases to match keys
+      const allPhases = [...getPhases(null), ...getPhases('カクテルバー')]
       const prefilled: Record<string, Answer> = {}
       for (const item of items) {
-        // Find question by key
         let questionId: string | null = null
-        for (const phase of PHASES) {
+        for (const phase of allPhases) {
           for (const q of phase.questions) {
             if (q.key === item.key) {
               questionId = q.id
@@ -479,7 +492,7 @@ export default function StoreKnowledgePage() {
   }
 
   // Overall progress
-  const allQuestions = PHASES.flatMap(p => p.questions)
+  const allQuestions = phases.flatMap(p => p.questions)
   const totalQuestions = allQuestions.length
   const answeredCount = allQuestions.filter(q => {
     const a = answers[q.id]
@@ -519,7 +532,7 @@ export default function StoreKnowledgePage() {
           <div>
             <h2 style={{ fontSize: 18, fontWeight: 600, margin: 0 }}>NFG構築ヒアリングシート</h2>
             <p style={{ fontSize: 13, color: 'var(--muted)', marginTop: 4 }}>
-              {slug} — 回答するとアレルゲン精度が向上します
+              {slug}{businessType ? ` (${businessType})` : ''} — 回答するとアレルゲン精度が向上します
             </p>
           </div>
           <button
@@ -550,7 +563,7 @@ export default function StoreKnowledgePage() {
 
       {/* Phases */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-        {PHASES.map((phase, i) => (
+        {phases.map((phase, i) => (
           <PhaseSection
             key={phase.id}
             phase={phase}
