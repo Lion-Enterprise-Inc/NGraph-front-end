@@ -509,7 +509,7 @@ export default function StoreKnowledgePage() {
         expires_in_days: surveyExpDays,
       })
       const baseUrl = typeof window !== 'undefined' ? window.location.origin : ''
-      setSurveyResult({ url: `${baseUrl}/verify/${data.token}`, passcode: data.passcode })
+      setSurveyResult({ url: `${baseUrl}/verify?token=${data.token}`, passcode: data.passcode })
       toast('success', 'サーベイを作成しました')
     } catch (err) {
       console.error('Survey creation failed:', err)

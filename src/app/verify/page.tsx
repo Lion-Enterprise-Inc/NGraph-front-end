@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useCallback } from 'react'
-import { useParams } from 'next/navigation'
+import { useState, useCallback, Suspense } from 'react'
+import { useSearchParams } from 'next/navigation'
 
 const API = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://dev-backend.ngraph.jp/api'
 
@@ -81,10 +81,9 @@ function Logo() {
   )
 }
 
-// --- Main Page ---
-export default function VerifyPage() {
-  const params = useParams()
-  const token = (params?.token ?? '') as string
+function VerifyContent() {
+  const searchParams = useSearchParams()
+  const token = searchParams.get('token') || ''
 
   const [step, setStep] = useState<'passcode' | 'questions' | 'done'>('passcode')
   const [sessionToken, setSessionToken] = useState('')
@@ -211,7 +210,6 @@ export default function VerifyPage() {
     setCorrecting(true)
     if (currentQ.field === 'allergens') {
       const current = Array.isArray(currentQ.current_value) ? currentQ.current_value : []
-      // Map JP names to EN names for the API
       const selected = allergens
         .filter(a => current.includes(a.name_jp))
         .map(a => a.name_en)
@@ -257,6 +255,17 @@ export default function VerifyPage() {
   const inputStyle: React.CSSProperties = {
     width: '100%', padding: '12px 16px', border: '1px solid #e2e8f0',
     borderRadius: 8, fontSize: 16, boxSizing: 'border-box',
+  }
+
+  if (!token) {
+    return (
+      <div style={containerStyle}>
+        <div style={{ ...cardStyle, marginTop: 60, textAlign: 'center' }}>
+          <Logo />
+          <p style={{ color: '#dc2626' }}>無効なURLです</p>
+        </div>
+      </div>
+    )
   }
 
   // --- STEP 1: Passcode ---
@@ -469,5 +478,17 @@ export default function VerifyPage() {
         </div>
       )}
     </div>
+  )
+}
+
+export default function VerifyPage() {
+  return (
+    <Suspense fallback={
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: '#f8fafc' }}>
+        <div style={{ color: '#64748b' }}>読み込み中...</div>
+      </div>
+    }>
+      <VerifyContent />
+    </Suspense>
   )
 }
