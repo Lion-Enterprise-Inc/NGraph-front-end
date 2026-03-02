@@ -355,6 +355,12 @@ export default function StoreKnowledgePage() {
   const [creatingSurvey, setCreatingSurvey] = useState(false)
   const [surveyResult, setSurveyResult] = useState<{ url: string; passcode: string } | null>(null)
 
+  // Upload link modal state
+  const [showUploadModal, setShowUploadModal] = useState(false)
+  const [uploadExpDays, setUploadExpDays] = useState(7)
+  const [creatingUpload, setCreatingUpload] = useState(false)
+  const [uploadResult, setUploadResult] = useState<{ url: string; passcode: string } | null>(null)
+
   const phases = getPhases(businessType)
 
   // Build key→question lookup
@@ -519,6 +525,26 @@ export default function StoreKnowledgePage() {
     }
   }
 
+  // Upload link creation
+  const handleCreateUploadLink = async () => {
+    if (!slug) return
+    setCreatingUpload(true)
+    try {
+      const data = await apiClient.post<{ url: string; passcode: string; token: string }>('/owner-upload/create', {
+        restaurant_slug: slug,
+        expires_in_days: uploadExpDays,
+      })
+      const baseUrl = typeof window !== 'undefined' ? window.location.origin : ''
+      setUploadResult({ url: `${baseUrl}/upload?token=${data.token}`, passcode: data.passcode })
+      toast('success', 'メニュー収集リンクを作成しました')
+    } catch (err) {
+      console.error('Upload link creation failed:', err)
+      toast('error', 'リンク作成に失敗しました')
+    } finally {
+      setCreatingUpload(false)
+    }
+  }
+
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text)
     toast('success', 'コピーしました')
@@ -569,6 +595,21 @@ export default function StoreKnowledgePage() {
             </p>
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
+            <button
+              onClick={() => { setUploadResult(null); setShowUploadModal(true) }}
+              style={{
+                padding: '10px 16px',
+                background: 'transparent',
+                color: '#16A34A',
+                border: '1px solid #16A34A',
+                borderRadius: 8,
+                cursor: 'pointer',
+                fontSize: 13,
+                fontWeight: 600,
+              }}
+            >
+              メニュー収集リンク作成
+            </button>
             <button
               onClick={() => { setSurveyResult(null); setShowSurveyModal(true) }}
               style={{
@@ -745,6 +786,96 @@ export default function StoreKnowledgePage() {
                   marginBottom: 8,
                 }}>LINE送信用テキストをコピー</button>
                 <button onClick={() => setShowSurveyModal(false)} style={{
+                  width: '100%', padding: '8px', background: 'transparent', color: 'var(--muted)',
+                  border: '1px solid var(--border)', borderRadius: 8, cursor: 'pointer', fontSize: 13,
+                }}>閉じる</button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+      {/* Upload link creation modal */}
+      {showUploadModal && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(0,0,0,0.6)', zIndex: 100,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }} onClick={() => setShowUploadModal(false)}>
+          <div style={{
+            background: 'var(--bg-surface, #1E293B)', borderRadius: 12,
+            padding: 24, width: 400, maxWidth: '90vw',
+            border: '1px solid var(--border, #334155)',
+          }} onClick={e => e.stopPropagation()}>
+            <h3 style={{ margin: '0 0 16px', fontSize: 16, fontWeight: 600 }}>メニュー収集リンク作成</h3>
+            <p style={{ fontSize: 13, color: 'var(--muted, #94A3B8)', marginBottom: 16 }}>
+              {slug} のメニュー収集URLを発行します。店主がスマホで写真を撮ってメニューを登録できます。
+            </p>
+
+            {!uploadResult ? (
+              <>
+                <div style={{ marginBottom: 16 }}>
+                  <label style={{ fontSize: 13, display: 'block', marginBottom: 4 }}>有効期限（日数）</label>
+                  <input
+                    type="number" min={1} max={30} value={uploadExpDays}
+                    onChange={e => setUploadExpDays(Number(e.target.value))}
+                    style={{
+                      width: '100%', padding: '8px 12px',
+                      background: 'var(--bg-input, #0F172A)', color: 'var(--text, #fff)',
+                      border: '1px solid var(--border-strong, #475569)', borderRadius: 8, fontSize: 14,
+                    }}
+                  />
+                </div>
+                <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+                  <button onClick={() => setShowUploadModal(false)} style={{
+                    padding: '8px 16px', background: 'transparent', color: 'var(--muted)',
+                    border: '1px solid var(--border)', borderRadius: 8, cursor: 'pointer', fontSize: 13,
+                  }}>キャンセル</button>
+                  <button onClick={handleCreateUploadLink} disabled={creatingUpload} style={{
+                    padding: '8px 16px', background: '#16A34A', color: '#fff',
+                    border: 'none', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: 600,
+                    opacity: creatingUpload ? 0.6 : 1,
+                  }}>{creatingUpload ? '作成中...' : '作成'}</button>
+                </div>
+              </>
+            ) : (
+              <>
+                <div style={{
+                  background: 'var(--bg-input, #0F172A)', borderRadius: 8, padding: 16, marginBottom: 12,
+                }}>
+                  <div style={{ marginBottom: 12 }}>
+                    <label style={{ fontSize: 11, color: 'var(--muted)', display: 'block', marginBottom: 4 }}>URL</label>
+                    <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                      <code style={{ fontSize: 12, flex: 1, wordBreak: 'break-all', color: '#16A34A' }}>
+                        {uploadResult.url}
+                      </code>
+                      <button onClick={() => copyToClipboard(uploadResult.url)} style={{
+                        padding: '4px 10px', background: '#334155', color: '#fff', border: 'none',
+                        borderRadius: 6, cursor: 'pointer', fontSize: 12, whiteSpace: 'nowrap',
+                      }}>コピー</button>
+                    </div>
+                  </div>
+                  <div>
+                    <label style={{ fontSize: 11, color: 'var(--muted)', display: 'block', marginBottom: 4 }}>パスコード</label>
+                    <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                      <code style={{ fontSize: 20, fontWeight: 700, letterSpacing: 4 }}>
+                        {uploadResult.passcode}
+                      </code>
+                      <button onClick={() => copyToClipboard(uploadResult.passcode)} style={{
+                        padding: '4px 10px', background: '#334155', color: '#fff', border: 'none',
+                        borderRadius: 6, cursor: 'pointer', fontSize: 12,
+                      }}>コピー</button>
+                    </div>
+                  </div>
+                </div>
+                <button onClick={() => {
+                  const msg = `メニュー登録のお願い\n\nURL: ${uploadResult.url}\nパスコード: ${uploadResult.passcode}\n\n上のURLを開いてパスコードを入力し、メニュー表の写真を撮影してください。AIが自動でメニューを読み取ります。`
+                  copyToClipboard(msg)
+                }} style={{
+                  width: '100%', padding: '10px', background: '#16A34A', color: '#fff',
+                  border: 'none', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: 600,
+                  marginBottom: 8,
+                }}>LINE送信用テキストをコピー</button>
+                <button onClick={() => setShowUploadModal(false)} style={{
                   width: '100%', padding: '8px', background: 'transparent', color: 'var(--muted)',
                   border: '1px solid var(--border)', borderRadius: 8, cursor: 'pointer', fontSize: 13,
                 }}>閉じる</button>
