@@ -295,7 +295,10 @@ export default function MenuTable({
             const itemIsNew = isNew(item.createdAt)
             return (
               <div key={item.uid} className="mobile-card">
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px', gap: '8px' }}>
+                  {item.imageUrl && (
+                    <img src={item.imageUrl} alt="" style={{ width: 48, height: 48, borderRadius: 4, objectFit: 'cover', flexShrink: 0 }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
+                  )}
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: '11px', color: '#94A3B8', marginBottom: '2px' }}>#{rowNum}</div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>

@@ -55,26 +55,35 @@ export default function StoresPage() {
   const fetchRestaurants = async () => {
     setLoading(true)
     try {
-      const response = await RestaurantApi.getAll()
-      if (response.result && response.result.items) {
-        const formattedStores: StoreDisplay[] = response.result.items.map((restaurant: Restaurant, index: number) => ({
-          id: index + 1,
-          uid: restaurant.uid,
-          storeCode: restaurant.uid.substring(0, 8).toUpperCase(),
-          name: restaurant.name,
-          location: extractLocation(restaurant),
-          address: restaurant.address || '',
-          type: restaurant.business_type ? (BUSINESS_TYPES[restaurant.business_type] || restaurant.business_type) : '未設定',
-          plan: (restaurant as any).subscription_plan === 'standard' ? '正規導入' : 'フリー',
-          planId: (restaurant as any).subscription_plan || 'free',
-          planPrice: (restaurant as any).subscription_plan === 'standard' ? 20000 : 0,
-          menuCount: restaurant.menu_count || 0,
-          lastUpdate: formatDate(restaurant.updated_at),
-          status: restaurant.is_active ? 'active' : 'inactive'
-        }))
-        setStores(formattedStores)
-        setTotalRestaurants(response.result.total)
+      let allItems: Restaurant[] = []
+      let page = 1
+      const size = 100
+      let total = 0
+      while (true) {
+        const response = await RestaurantApi.getAll(page, size)
+        if (!response.result?.items) break
+        allItems = allItems.concat(response.result.items)
+        total = response.result.total
+        if (allItems.length >= total) break
+        page++
       }
+      const formattedStores: StoreDisplay[] = allItems.map((restaurant: Restaurant, index: number) => ({
+        id: index + 1,
+        uid: restaurant.uid,
+        storeCode: restaurant.uid.substring(0, 8).toUpperCase(),
+        name: restaurant.name,
+        location: extractLocation(restaurant),
+        address: restaurant.address || '',
+        type: restaurant.business_type ? (BUSINESS_TYPES[restaurant.business_type] || restaurant.business_type) : '未設定',
+        plan: (restaurant as any).subscription_plan === 'standard' ? '正規導入' : 'フリー',
+        planId: (restaurant as any).subscription_plan || 'free',
+        planPrice: (restaurant as any).subscription_plan === 'standard' ? 20000 : 0,
+        menuCount: restaurant.menu_count || 0,
+        lastUpdate: formatDate(restaurant.updated_at),
+        status: restaurant.is_active ? 'active' : 'inactive'
+      }))
+      setStores(formattedStores)
+      setTotalRestaurants(total)
     } catch (error) {
       console.error('Failed to fetch restaurants:', error)
     } finally {

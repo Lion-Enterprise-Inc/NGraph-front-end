@@ -6092,6 +6092,7 @@ textarea.form-input {
 }
 
 .nfg-card-thumb {
+  position: relative;
   flex-shrink: 0;
   width: 130px;
   height: 130px;
@@ -6106,6 +6107,74 @@ textarea.form-input {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  cursor: pointer;
+}
+/* --- Carousel dots --- */
+.carousel-dots {
+  position: absolute;
+  bottom: 4px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  pointer-events: none;
+}
+.image-rank-badge {
+  position: absolute;
+  bottom: 2px;
+  left: 2px;
+  font-size: 8px;
+  color: rgba(255,255,255,0.85);
+  background: rgba(0,0,0,0.45);
+  padding: 1px 4px;
+  border-radius: 3px;
+  pointer-events: none;
+  line-height: 1.3;
+}
+.carousel-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.5);
+  pointer-events: auto;
+  cursor: pointer;
+}
+.carousel-dot.active {
+  background: #fff;
+}
+/* --- Lightbox --- */
+.lightbox-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(0,0,0,0.92);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.lightbox-img {
+  max-width: 92vw;
+  max-height: 88vh;
+  object-fit: contain;
+  border-radius: 8px;
+  cursor: default;
+}
+.lightbox-close {
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 32px;
+  cursor: pointer;
+  line-height: 1;
+  opacity: 0.8;
+}
+.lightbox-close:hover {
+  opacity: 1;
 }
 .nfg-card-thumb-empty {
   font-size: 28px;
@@ -6291,6 +6360,20 @@ textarea.form-input {
 .nfg-fg-dot { width:4px; height:4px; border-radius:50%; background:#00e896; animation:nfg-pulse 2s infinite; }
 @keyframes nfg-pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
 .nfg-radar { max-width:160px; width:100%; height:auto; overflow:visible; }
+.nfg-hero-desc {
+  flex: 1;
+  min-width: 0;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--color-text-secondary);
+  padding: 4px 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 5;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.nfg-card-hero--no-image .nfg-taste-chart { flex-shrink: 0; }
+.nfg-card-hero--no-image .nfg-radar { max-width:130px; }
 .nfg-narrative { margin:10px 0; padding: 0 16px; }
 .nfg-narrative-story { font-size:13px; color:var(--color-text-body); line-height:1.5; margin-bottom:8px; font-style:italic; }
 .nfg-serving { margin:8px 0; padding: 0 16px; }

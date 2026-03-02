@@ -24,6 +24,7 @@ import ChatDock from "../components/ChatDock";
 import { useAppContext } from "../components/AppProvider";
 import { getUiCopy, type LanguageCode } from "../i18n/uiCopy";
 import { recordVisit, saveThread, getThreads } from "../utils/storage";
+import ImageViewer from "../components/ImageViewer";
 
 type ApiRestaurant = {
   uid: string
@@ -1761,64 +1762,30 @@ export default function CapturePage({
                             </div>
                             {cardOpen && <>
                             {/* === Hero: 画像 + Food Graph 横並び === */}
-                            <div className="nfg-card-hero">
-                              <div className="nfg-card-thumb">
-                                {vi.image_url ? (
-                                  <img src={vi.image_url} alt={vi.name_jp} loading="lazy" />
-                                ) : (
-                                  <div
-                                    className="nfg-photo-upload"
-                                    onClick={() => {
-                                      const menuUid = (vi as any).menu_uid;
-                                      if (!menuUid || photoUploading) return;
-                                      photoInputRefs.current[menuUid]?.click();
-                                    }}
-                                  >
-                                    {photoUploading === (vi as any).menu_uid ? (
-                                      <div className="nfg-photo-spinner" />
-                                    ) : photoResult[(vi as any).menu_uid] ? (
-                                      <div className="nfg-photo-result">
-                                        {photoResult[(vi as any).menu_uid].match_result === 'match' || photoResult[(vi as any).menu_uid].status === 'approved'
-                                          ? '✅'
-                                          : photoResult[(vi as any).menu_uid].match_result === 'mismatch'
-                                          ? '❌'
-                                          : photoResult[(vi as any).menu_uid].status === 'rate_limit'
-                                          ? '⏳'
-                                          : '📤'}
-                                        <span className="nfg-photo-msg">
-                                          {photoResult[(vi as any).menu_uid].status === 'approved'
-                                            ? (activeLanguage === 'ja' ? '採用!' : 'Adopted!')
-                                            : photoResult[(vi as any).menu_uid].match_result === 'mismatch'
-                                            ? (activeLanguage === 'ja' ? '不一致' : 'Mismatch')
-                                            : photoResult[(vi as any).menu_uid].status === 'rate_limit'
-                                            ? (activeLanguage === 'ja' ? '上限' : 'Limit')
-                                            : photoResult[(vi as any).menu_uid].status === 'pending'
-                                            ? (activeLanguage === 'ja' ? '確認中' : 'Pending')
-                                            : (activeLanguage === 'ja' ? 'エラー' : 'Error')}
-                                        </span>
-                                      </div>
-                                    ) : (
-                                      <>
-                                        <span className="nfg-photo-icon">📷</span>
-                                        <span className="nfg-photo-label">{activeLanguage === 'ja' ? '写真を投稿' : 'Add photo'}</span>
-                                      </>
-                                    )}
-                                    <input
-                                      ref={el => { if ((vi as any).menu_uid) photoInputRefs.current[(vi as any).menu_uid] = el; }}
-                                      type="file"
-                                      accept="image/jpeg,image/png,image/webp"
-                                      capture="environment"
-                                      style={{ display: 'none' }}
-                                      onChange={(e) => {
-                                        const file = e.target.files?.[0];
-                                        const menuUid = (vi as any).menu_uid;
-                                        if (file && menuUid) handlePhotoUpload(menuUid, file);
-                                        e.target.value = '';
-                                      }}
-                                    />
-                                  </div>
-                                )}
-                              </div>
+                            <div className={`nfg-card-hero${vi.image_url ? '' : ' nfg-card-hero--no-image'}`}>
+                              {vi.image_url ? (
+                                <ImageViewer
+                                  images={[vi.image_url]}
+                                  alt={vi.name_jp}
+                                  imageRank={(vi as any).image_rank || 'C'}
+                                  isJa={activeLanguage === 'ja'}
+                                />
+                              ) : vi.description ? (
+                                <div className="nfg-hero-desc">{vi.description}</div>
+                              ) : null}
+                              <input
+                                ref={el => { if ((vi as any).menu_uid) photoInputRefs.current[(vi as any).menu_uid] = el; }}
+                                type="file"
+                                accept="image/jpeg,image/png,image/webp"
+                                capture="environment"
+                                style={{ display: 'none' }}
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0];
+                                  const menuUid = (vi as any).menu_uid;
+                                  if (file && menuUid) handlePhotoUpload(menuUid, file);
+                                  e.target.value = '';
+                                }}
+                              />
                               {vi.taste_values && Object.keys(vi.taste_values).length > 0 && !((vi as any).dish_category === 'drink' && (() => { const vals = Object.values(vi.taste_values as Record<string,number>); return Math.max(...vals) - Math.min(...vals) <= 3; })()) && (() => {
                                 const axes = ['umami','richness','saltiness','sweetness','spiciness','lightness','sourness','bitterness','volume','locality'] as const;
                                 const labels: Record<string,string> = {
@@ -1865,7 +1832,7 @@ export default function CapturePage({
                             </div>
                             {/* === Brief: 説明 + アレルゲン + バッジ === */}
                             <div className="nfg-card-brief">
-                                {vi.description && (
+                                {vi.description && vi.image_url && (
                                   <div className="nfg-card-desc">{vi.description}</div>
                                 )}
                                 {vi.allergens?.length > 0 && (
@@ -1880,11 +1847,12 @@ export default function CapturePage({
                                   {(() => {
                                     const rank = (vi as any).verification_rank || 'C';
                                     const isVad = rank === 'S' || rank === 'A';
+                                    const label = isVad
+                                      ? (activeLanguage === 'ja' ? '店主確認' : 'Verified')
+                                      : (activeLanguage === 'ja' ? 'AI推定' : 'AI Est.');
                                     return (
                                       <span className={`nfg-badge nfg-rank nfg-rank-${rank.toLowerCase()}`}>
-                                        <span className="nfg-rank-source">{isVad ? 'VAD' : 'GPT-4o'}</span>
-                                        <span className="nfg-rank-dot">∙</span>
-                                        <span className="nfg-rank-letter">{rank}</span>
+                                        {label}
                                       </span>
                                     );
                                   })()}
@@ -1949,6 +1917,20 @@ export default function CapturePage({
                                         onClick={(e) => { e.stopPropagation(); handleNfgFeedback((vi as any).menu_uid, 'bad'); }}
                                       >👎</button>
                                     </>
+                                  )}
+                                  {!vi.image_url && (vi as any).menu_uid && (
+                                    <button
+                                      type="button"
+                                      className="nfg-badge"
+                                      style={{ cursor: 'pointer', background: 'var(--color-surface-hover)', color: 'var(--color-text-half)', border: '1px solid var(--color-border-subtle)' }}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        const menuUid = (vi as any).menu_uid;
+                                        if (!photoUploading) photoInputRefs.current[menuUid]?.click();
+                                      }}
+                                    >
+                                      {photoUploading === (vi as any).menu_uid ? '...' : '📷'}
+                                    </button>
                                   )}
                                   <button
                                     type="button"
