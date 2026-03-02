@@ -83,7 +83,7 @@ function Logo() {
 
 function VerifyContent() {
   const searchParams = useSearchParams()
-  const token = searchParams.get('token') || ''
+  const token = searchParams?.get('token') || ''
 
   const [step, setStep] = useState<'passcode' | 'questions' | 'done'>('passcode')
   const [sessionToken, setSessionToken] = useState('')
