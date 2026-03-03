@@ -1,11 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import type { QuickExplainItem } from "../services/api";
 
 type Props = {
   items: QuickExplainItem[];
   language: string;
+  likedMenus?: Set<string>;
+  onLike?: (menuUid: string) => void;
+  onSuggestEdit?: (info: { name_jp: string; menu_uid?: string }) => void;
+  onPhotoUpload?: (menuUid: string, file: File) => void;
+  photoUploading?: string | null;
   copy: {
     verified: string;
     aiEstimate: string;
@@ -21,6 +26,7 @@ type Props = {
     servingStyle: string;
     kidFriendly: string;
     notKidFriendly: string;
+    suggestEdit: string;
     tasteUmami: string;
     tasteSweetness: string;
     tasteSourness: string;
@@ -81,8 +87,9 @@ function TasteChart({ values, labels }: { values: Record<string, number>; labels
   );
 }
 
-export default function QuickExplainCard({ items, language, copy }: Props) {
+export default function QuickExplainCard({ items, language, likedMenus, onLike, onSuggestEdit, onPhotoUpload, photoUploading, copy }: Props) {
   const [expandedIdx, setExpandedIdx] = useState<Set<number>>(new Set());
+  const photoRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
   const toggle = (idx: number) => {
     setExpandedIdx((prev) => {
@@ -110,18 +117,26 @@ export default function QuickExplainCard({ items, language, copy }: Props) {
         const subName = language !== "ja" ? item.name_jp : item.name_en;
         const hasNfg = isDb && (item.narrative || item.taste_values || item.serving || item.restrictions?.length || item.estimated_calories);
         const hasDetails = item.allergens?.length || item.ingredients?.length || hasNfg;
+        const liked = item.menu_uid ? likedMenus?.has(item.menu_uid) : false;
 
         return (
           <div key={idx} className="qe-card" onClick={() => toggle(idx)}>
+            {/* Header row: number + name + price + badges + like */}
             <div className="qe-card-main">
               <div className="qe-card-left">
-                <div className="qe-card-name">{displayName}</div>
+                <div className="qe-card-name">
+                  <span className="qe-card-number">{idx + 1}.</span>
+                  {displayName}
+                </div>
                 {subName && <div className="qe-card-subname">{subName}</div>}
                 {item.price > 0 && (
                   <div className="qe-card-price">¥{item.price.toLocaleString()}</div>
                 )}
               </div>
               <div className="qe-card-right">
+                {item.category && (
+                  <span className="qe-badge qe-badge-category">{item.category}</span>
+                )}
                 {isDb ? (
                   <span className="qe-badge qe-badge-verified">{copy.verified}</span>
                 ) : (
@@ -129,6 +144,15 @@ export default function QuickExplainCard({ items, language, copy }: Props) {
                 )}
                 {item.is_new && (
                   <span className="qe-badge qe-badge-new">{copy.newItem}</span>
+                )}
+                {item.menu_uid && onLike && (
+                  <button
+                    type="button"
+                    className={`qe-like-btn${liked ? ' liked' : ''}`}
+                    onClick={(e) => { e.stopPropagation(); onLike(item.menu_uid!); }}
+                  >
+                    {liked ? '♥' : '♡'}
+                  </button>
                 )}
               </div>
             </div>
@@ -138,6 +162,12 @@ export default function QuickExplainCard({ items, language, copy }: Props) {
             )}
             {open && (
               <div className="qe-card-details">
+                {/* 画像 */}
+                {item.image_url && (
+                  <div className="qe-card-image">
+                    <img src={item.image_url} alt={item.name_jp} loading="lazy" />
+                  </div>
+                )}
                 {/* 味チャート */}
                 {item.taste_values && Object.keys(item.taste_values).length > 0 && (
                   <TasteChart values={item.taste_values} labels={tasteLabels} />
@@ -217,6 +247,49 @@ export default function QuickExplainCard({ items, language, copy }: Props) {
                   <div className="qe-field">
                     <span className="qe-field-label">{copy.confidence}</span>
                     <span className="qe-field-value">{item.confidence}%</span>
+                  </div>
+                )}
+                {/* Action row: photo upload + suggest edit */}
+                {item.menu_uid && (
+                  <div className="qe-card-actions">
+                    {!item.image_url && onPhotoUpload && (
+                      <>
+                        <input
+                          ref={el => { photoRefs.current[item.menu_uid!] = el; }}
+                          type="file"
+                          accept="image/jpeg,image/png,image/webp"
+                          capture="environment"
+                          style={{ display: 'none' }}
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file && item.menu_uid) onPhotoUpload(item.menu_uid, file);
+                            e.target.value = '';
+                          }}
+                        />
+                        <button
+                          type="button"
+                          className="qe-action-btn"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (!photoUploading) photoRefs.current[item.menu_uid!]?.click();
+                          }}
+                        >
+                          {photoUploading === item.menu_uid ? '...' : '📷'}
+                        </button>
+                      </>
+                    )}
+                    {onSuggestEdit && (
+                      <button
+                        type="button"
+                        className="qe-action-btn qe-action-edit"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onSuggestEdit({ name_jp: item.name_jp, menu_uid: item.menu_uid });
+                        }}
+                      >
+                        {copy.suggestEdit}
+                      </button>
+                    )}
                   </div>
                 )}
               </div>

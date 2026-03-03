@@ -680,6 +680,7 @@ export interface QuickExplainItem {
   restrictions?: string[];
   estimated_calories?: string;
   confidence?: number;
+  category?: string;
 }
 
 export interface QuickExplainResult {

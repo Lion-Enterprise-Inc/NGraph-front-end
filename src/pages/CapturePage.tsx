@@ -1733,6 +1733,37 @@ export default function CapturePage({
                       <QuickExplainCard
                         items={response.quickExplainItems}
                         language={activeLanguage}
+                        likedMenus={likedMenus}
+                        onLike={(menuUid) => {
+                          const next = new Set(likedMenus);
+                          const isAdding = !next.has(menuUid);
+                          if (isAdding) next.add(menuUid); else next.delete(menuUid);
+                          setLikedMenus(next);
+                          localStorage.setItem('ngraph_liked_menus', JSON.stringify([...next]));
+                          const qItem = response.quickExplainItems?.find(i => i.menu_uid === menuUid);
+                          if (isAdding && qItem?.taste_values) {
+                            const tc = { ...tasteCache, [menuUid]: qItem.taste_values };
+                            setTasteCache(tc);
+                            try { localStorage.setItem('ngraph_taste_cache', JSON.stringify(tc)); } catch {}
+                          } else if (!isAdding) {
+                            const tc = { ...tasteCache };
+                            delete tc[menuUid];
+                            setTasteCache(tc);
+                            try { localStorage.setItem('ngraph_taste_cache', JSON.stringify(tc)); } catch {}
+                          }
+                          if (isAdding && restaurantSlug) {
+                            EventApi.log({ restaurant_slug: restaurantSlug, event: 'dish_like', meta: { menu_uid: menuUid } });
+                          }
+                        }}
+                        onSuggestEdit={(info) => {
+                          setSuggestionTarget({
+                            name_jp: info.name_jp,
+                            menu_uid: info.menu_uid,
+                            restaurant_uid: selectedRestaurant?.uid,
+                          });
+                        }}
+                        onPhotoUpload={handlePhotoUpload}
+                        photoUploading={photoUploading}
                         copy={{
                           verified: (copy as any).quickExplain?.verified || "Verified",
                           aiEstimate: (copy as any).quickExplain?.aiEstimate || "AI Estimate",
@@ -1748,6 +1779,7 @@ export default function CapturePage({
                           servingStyle: copy.nfg.servingStyle,
                           kidFriendly: copy.nfg.kidFriendly,
                           notKidFriendly: copy.nfg.notKidFriendly,
+                          suggestEdit: copy.nfg.suggestEdit || 'この情報を修正',
                           tasteUmami: copy.nfg.tasteUmami,
                           tasteSweetness: copy.nfg.tasteSweetness,
                           tasteSourness: copy.nfg.tasteSourness,
