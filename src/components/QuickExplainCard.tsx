@@ -74,12 +74,6 @@ export default function QuickExplainCard({ items, language, copy }: Props) {
                     <span className="qe-detail-value">{item.ingredients.join(", ")}</span>
                   </div>
                 )}
-                {item.verification_rank && (
-                  <div className="qe-card-detail-row">
-                    <span className="qe-detail-label">Rank</span>
-                    <span className="qe-detail-value">{item.verification_rank}</span>
-                  </div>
-                )}
               </div>
             )}
             {!open && (item.allergens?.length || item.ingredients?.length) && (
