@@ -660,6 +660,65 @@ export const ScrapingApi = {
   }
 };
 
+// Quick Explain types
+export interface QuickExplainItem {
+  name_jp: string;
+  name_en: string;
+  price: number;
+  description: string;
+  description_local?: string;
+  allergens?: string[];
+  ingredients?: string[];
+  source: "db" | "ai";
+  is_new?: boolean;
+  menu_uid?: string;
+  image_url?: string;
+  narrative?: Record<string, any>;
+  verification_rank?: string;
+}
+
+export interface QuickExplainResult {
+  items: QuickExplainItem[];
+  items_count: number;
+}
+
+export interface QuickExplainResponse {
+  result: QuickExplainResult;
+  message: string;
+  status_code: number;
+}
+
+export const QuickExplainApi = {
+  analyze: async (
+    image: File,
+    restaurantSlug?: string,
+    language: string = "ja",
+  ): Promise<QuickExplainResponse> => {
+    const formData = new FormData();
+    formData.append('image', image);
+    if (restaurantSlug) formData.append('restaurant_slug', restaurantSlug);
+    formData.append('language', language);
+
+    const url = `${API_BASE_URL}/menus/quick-explain`;
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Accept': 'application/json' },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      let errorMessage = `Server error ${response.status}`;
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.detail || errorMessage;
+      } catch {}
+      throw new Error(errorMessage);
+    }
+
+    return response.json();
+  },
+};
+
 // Vision Analysis types
 export interface VisionMenuItem {
   name_jp: string;

@@ -11,7 +11,7 @@ import {
 import { useRouter, useSearchParams } from "next/navigation";
 import { mockRestaurants, mockScanResponse, type Restaurant } from "../api/mockApi";
 import Tesseract from "tesseract.js";
-import { FeedbackApi, EventApi, type VisionMenuItem, ContributionApi, PhotoContributionApi, NfgFeedbackApi, LikedMenusApi, type LikedMenuItem } from "../services/api";
+import { FeedbackApi, EventApi, type VisionMenuItem, ContributionApi, PhotoContributionApi, NfgFeedbackApi, LikedMenusApi, type LikedMenuItem, QuickExplainApi, type QuickExplainItem } from "../services/api";
 import SuggestionModal from "../components/SuggestionModal";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -25,6 +25,7 @@ import { useAppContext } from "../components/AppProvider";
 import { getUiCopy, type LanguageCode } from "../i18n/uiCopy";
 import { recordVisit, saveThread, getThreads } from "../utils/storage";
 import ImageViewer from "../components/ImageViewer";
+import QuickExplainCard from "../components/QuickExplainCard";
 
 type ApiRestaurant = {
   uid: string
@@ -141,6 +142,7 @@ type ResponseItem = {
   messageUid: string | null;
   streaming?: boolean;
   visionItems?: VisionMenuItem[];
+  quickExplainItems?: QuickExplainItem[];
   contextChips?: { label: string; query: string }[];
 };
 
@@ -428,6 +430,7 @@ export default function CapturePage({
   const isInStore = searchParams?.get("source") === "qr";
   const scanLoggedRef = useRef(false);
   const isNfgMode = searchParams?.get("nfg") === "true";
+  const isQuickMode = searchParams?.get("mode") === "quick";
   
   const selectedRestaurant = restaurantData;
 
@@ -952,6 +955,28 @@ export default function CapturePage({
       if (attachmentSnapshot?.file) {
         // Image attached → use Vision API for menu analysis
         try {
+          if (isQuickMode) {
+            // Quick Explain モード: 軽量API
+            const qeCopy = (copy as any).quickExplain || { title: "Quick Explain ({n} items)" };
+            const qeResponse = await QuickExplainApi.analyze(
+              attachmentSnapshot.file,
+              selectedRestaurant?.slug,
+              activeLanguage,
+            );
+            const qeItems: QuickExplainItem[] = qeResponse.result?.items || [];
+            output = {
+              title: qeCopy.title.replace('{n}', String(qeItems.length)),
+              intro: '',
+              body: [],
+            };
+            typingStartedRef.current.add(responseId);
+            setResponses((prev) =>
+              prev.map((item) =>
+                item.id === responseId ? { ...item, quickExplainItems: qeItems } : item
+              )
+            );
+            setTypingComplete((prev) => new Set(prev).add(responseId));
+          } else {
           const formData = new FormData();
           formData.append('image', attachmentSnapshot.file);
           if (selectedRestaurant?.slug) {
@@ -1020,6 +1045,7 @@ export default function CapturePage({
           } else {
             throw new Error(`Vision API failed: ${visionResponse.status}`);
           }
+          } // end else (not quick mode)
         } catch (visionError) {
           console.log("vision_api_error", visionError);
           // Fallback: OCR → chat
@@ -1696,7 +1722,29 @@ export default function CapturePage({
                 </div>
               </div>
 
-              {response.output && response.visionItems && response.visionItems.length > 0 ? (
+              {response.output && response.quickExplainItems && response.quickExplainItems.length > 0 ? (
+                /* Quick Explain カード表示 */
+                <div className="chat-row chat-row-assistant">
+                  <div className="chat-content">
+                    <div className="nfg-cards-container">
+                      <div className="nfg-cards-header">
+                        {response.output.title}
+                      </div>
+                      <QuickExplainCard
+                        items={response.quickExplainItems}
+                        language={activeLanguage}
+                        copy={{
+                          verified: (copy as any).quickExplain?.verified || "Verified",
+                          aiEstimate: (copy as any).quickExplain?.aiEstimate || "AI Estimate",
+                          newItem: (copy as any).quickExplain?.newItem || "New",
+                          ingredients: copy.nfg.ingredients,
+                          allergens: copy.nfg.allergens,
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              ) : response.output && response.visionItems && response.visionItems.length > 0 ? (
                 /* NFGカード表示（チャット応答テキスト + カード） */
                 <div className="chat-row chat-row-assistant">
                   <div className="chat-content">

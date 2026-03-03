@@ -191,6 +191,13 @@ const uiCopy = {
       tasteVolume: "Volume",
       tasteLocality: "Local",
     },
+    quickExplain: {
+      scanning: "Analyzing...",
+      verified: "Verified",
+      aiEstimate: "AI Estimate",
+      newItem: "New",
+      title: "Quick Explain ({n} items)",
+    },
     feedback: {
       copy: "Copy",
       copied: "Copied!",
@@ -378,6 +385,13 @@ const uiCopy = {
       tasteLightness: "新鮮",
       tasteVolume: "量",
       tasteLocality: "地元",
+    },
+    quickExplain: {
+      scanning: "解析中...",
+      verified: "店主確認済み",
+      aiEstimate: "AI推定",
+      newItem: "新メニュー",
+      title: "Quick Explain ({n}品)",
     },
     feedback: {
       copy: "コピー",
@@ -4763,6 +4777,9 @@ export const getUiCopy = (language?: string): UiCopy => {
   }
   if (!('capture' in copy)) {
     result.capture = uiCopy.en.capture;
+  }
+  if (!('quickExplain' in copy)) {
+    result.quickExplain = uiCopy.en.quickExplain;
   }
   return result as UiCopy;
 };
