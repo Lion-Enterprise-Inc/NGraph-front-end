@@ -1742,6 +1742,44 @@ export default function CapturePage({
                         }}
                       />
                     </div>
+                    <div className="feedback-row">
+                      <div className="feedback-actions">
+                        <button
+                          className={`feedback-btn${response.feedback === 'good' ? ' active good' : ''}`}
+                          type="button"
+                          onClick={() => handleFeedback(response.id, 'good')}
+                          aria-label="Good"
+                        >
+                          <ThumbsUp size={16} />
+                        </button>
+                        <button
+                          className={`feedback-btn${response.feedback === 'bad' ? ' active bad' : ''}`}
+                          type="button"
+                          onClick={() => handleFeedback(response.id, 'bad')}
+                          aria-label="Bad"
+                        >
+                          <ThumbsDown size={16} />
+                        </button>
+                        <button
+                          className="feedback-btn action-btn"
+                          type="button"
+                          onClick={() => handleCopyResponse(response.id)}
+                          aria-label="Copy"
+                        >
+                          <Copy size={16} />
+                          <span>{copiedId === response.id ? copy.feedback.copied : copy.feedback.copy}</span>
+                        </button>
+                        <button
+                          className="feedback-btn action-btn"
+                          type="button"
+                          onClick={handleShare}
+                          aria-label="Share"
+                        >
+                          <Share2 size={16} />
+                          <span>{copiedId === '__share__' ? copy.feedback.copied : copy.feedback.share}</span>
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
               ) : response.output && response.visionItems && response.visionItems.length > 0 ? (
