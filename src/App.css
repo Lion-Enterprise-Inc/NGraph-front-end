@@ -7100,3 +7100,50 @@ textarea.form-input {
   color: var(--color-text-half, #666);
   margin-top: 4px;
 }
+
+/* QE NFG details */
+.qe-taste-chart {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 8px 0;
+}
+.qe-fg-label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  color: #f97316;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+.qe-fg-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #f97316;
+}
+.qe-narrative {
+  margin-top: 6px;
+}
+.qe-narrative-story {
+  font-size: 12px;
+  color: var(--color-text-dim, #aaa);
+  line-height: 1.5;
+  margin-bottom: 6px;
+}
+.qe-field {
+  display: flex;
+  gap: 6px;
+  font-size: 11px;
+  margin-top: 4px;
+  line-height: 1.4;
+}
+.qe-field-label {
+  color: var(--color-text-half, #888);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.qe-field-value {
+  color: var(--color-text-dim, #ccc);
+}

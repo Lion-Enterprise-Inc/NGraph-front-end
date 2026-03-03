@@ -675,6 +675,11 @@ export interface QuickExplainItem {
   image_url?: string;
   narrative?: Record<string, any>;
   verification_rank?: string;
+  taste_values?: Record<string, number>;
+  serving?: { style?: string; portion?: string; temperature?: string; abv_label?: string };
+  restrictions?: string[];
+  estimated_calories?: string;
+  confidence?: number;
 }
 
 export interface QuickExplainResult {
