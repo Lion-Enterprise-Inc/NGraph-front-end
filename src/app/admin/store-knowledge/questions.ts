@@ -26,12 +26,12 @@ export interface Phase {
 const COMMON_PHASE_1: Phase = {
   id: 1,
   title: 'Phase 1: 調理環境',
-  description: 'Q1-Q4 — 回答1つで全品に波及',
+  description: 'Q1-Q9 — 回答1つで全品に波及',
   questions: [
     {
       id: 'q1a',
       key: 'frying_oil_shared',
-      label: 'Q1a. 揚げ物の油は全メニュー同じですか？',
+      label: 'Q1. 揚げ物の油は全メニュー同じですか？',
       type: 'single',
       options: ['全部同じ油', '海鮮と肉で分けてる', 'メニューごとに専用', '揚げ物メニューはない', 'わからない'],
       category: 'cooking_environment',
@@ -40,7 +40,7 @@ const COMMON_PHASE_1: Phase = {
     {
       id: 'q1b',
       key: 'frying_oil_type',
-      label: 'Q1b. 油の種類は？',
+      label: 'Q2. 油の種類は？',
       type: 'single',
       options: ['キャノーラ油（菜種油）', '大豆油', '米油', 'ラード（動物性）', 'わからない', 'その他'],
       category: 'cooking_environment',
@@ -49,7 +49,7 @@ const COMMON_PHASE_1: Phase = {
     {
       id: 'q1b2',
       key: 'frying_oil_shellfish',
-      label: 'Q1b-2. その油で、えび・かにも揚げますか？',
+      label: 'Q3. その油で、えび・かにも揚げますか？',
       type: 'single',
       options: ['はい', 'いいえ（甲殻類だけは別）', 'わからない'],
       category: 'cooking_environment',
@@ -58,7 +58,7 @@ const COMMON_PHASE_1: Phase = {
     {
       id: 'q1d',
       key: 'peanut_oil',
-      label: 'Q1d. 落花生油（ピーナッツオイル）は使ってますか？',
+      label: 'Q4. 落花生油（ピーナッツオイル）は使ってますか？',
       type: 'single',
       options: ['使ってない', '使ってる', 'わからない'],
       category: 'cooking_environment',
@@ -67,7 +67,7 @@ const COMMON_PHASE_1: Phase = {
     {
       id: 'q2a',
       key: 'utensil_sharing',
-      label: 'Q2a. えび・かにを扱う道具（まな板・包丁・鍋等）は？',
+      label: 'Q5. えび・かにを扱う道具（まな板・包丁・鍋等）は？',
       type: 'single',
       options: ['他の料理と共有してる', '甲殻類専用の道具がある', '特に意識して分けてない', 'わからない'],
       category: 'cooking_environment',
@@ -76,7 +76,7 @@ const COMMON_PHASE_1: Phase = {
     {
       id: 'q2b',
       key: 'utensil_wash_timing',
-      label: 'Q2b. 洗浄のタイミングは？',
+      label: 'Q6. 洗浄のタイミングは？',
       type: 'single',
       options: ['使うたびに洗う', 'まとめて洗う', '特に決めてない', 'わからない'],
       category: 'cooking_environment',
@@ -85,7 +85,7 @@ const COMMON_PHASE_1: Phase = {
     {
       id: 'q3a',
       key: 'boiling_water_shared',
-      label: 'Q3a. 蕎麦とうどんの茹で湯は？',
+      label: 'Q7. 蕎麦とうどんの茹で湯は？',
       type: 'single',
       options: ['同じ鍋で茹でてる', '鍋を分けてる', '蕎麦は外注', 'わからない'],
       category: 'cooking_environment',
@@ -94,7 +94,7 @@ const COMMON_PHASE_1: Phase = {
     {
       id: 'q3b',
       key: 'soba_supplier',
-      label: 'Q3b. 蕎麦はどこから仕入れてますか？',
+      label: 'Q8. 蕎麦はどこから仕入れてますか？',
       type: 'text',
       category: 'cooking_environment',
       applies_to_categories: ['soba'],
@@ -103,7 +103,7 @@ const COMMON_PHASE_1: Phase = {
     {
       id: 'q4a',
       key: 'grill_sharing',
-      label: 'Q4a. 炭火焼き・鉄板は、肉と魚で分けてますか？',
+      label: 'Q9. 炭火焼き・鉄板は、肉と魚で分けてますか？',
       type: 'single',
       options: ['同じグリルで焼いてる', '肉と魚で分けてる', 'メニューごとに違う', 'わからない'],
       category: 'cooking_environment',
@@ -118,12 +118,12 @@ const COMMON_PHASE_1: Phase = {
 const COMMON_PHASE_2: Phase = {
   id: 2,
   title: 'Phase 2: 調味料・ベース',
-  description: 'Q5-Q8 — 数十品に波及',
+  description: 'Q1-Q8 — 数十品に波及',
   questions: [
     {
       id: 'q5a',
       key: 'soy_sauce_type',
-      label: 'Q5a. 使ってる醤油はどれですか？',
+      label: 'Q1. 使ってる醤油はどれですか？',
       type: 'single',
       options: ['普通の醤油（小麦入り）のみ', 'たまり醤油（小麦なし）のみ', '両方使い分けてる', 'わからない'],
       category: 'seasoning',
@@ -132,7 +132,7 @@ const COMMON_PHASE_2: Phase = {
     {
       id: 'q5b',
       key: 'tamari_usage',
-      label: 'Q5b. たまり醤油を使うのは？（複数OK）',
+      label: 'Q2. たまり醤油を使うのは？（複数OK）',
       type: 'multi',
       options: ['刺身のつけ醤油', '寿司', '焼き鳥のタレ', '煮物', '茶漬け', 'その他'],
       category: 'seasoning',
@@ -141,7 +141,7 @@ const COMMON_PHASE_2: Phase = {
     {
       id: 'q6a',
       key: 'dashi_type',
-      label: 'Q6a. メインで使ってる出汁は？（複数OK）',
+      label: 'Q3. メインで使ってる出汁は？（複数OK）',
       type: 'multi',
       options: ['鰹出汁', '昆布出汁', '合わせ出汁（鰹+昆布）', '鶏ガラ', '豚骨', 'あごだし', '化学調味料・顆粒だし', 'わからない'],
       category: 'seasoning',
@@ -150,7 +150,7 @@ const COMMON_PHASE_2: Phase = {
     {
       id: 'q6b',
       key: 'dashi_by_dish',
-      label: 'Q6b. 料理によって出汁を使い分けてますか？',
+      label: 'Q4. 料理によって出汁を使い分けてますか？',
       type: 'single',
       options: ['全部同じ', '使い分けてる'],
       category: 'seasoning',
@@ -159,7 +159,7 @@ const COMMON_PHASE_2: Phase = {
     {
       id: 'q7a',
       key: 'miso_type',
-      label: 'Q7a. 使ってる味噌の種類は？',
+      label: 'Q5. 使ってる味噌の種類は？',
       type: 'single',
       options: ['合わせ味噌', '赤味噌', '白味噌', '複数使い分け', 'わからない'],
       category: 'seasoning',
@@ -168,7 +168,7 @@ const COMMON_PHASE_2: Phase = {
     {
       id: 'q7b',
       key: 'miso_dashi_included',
-      label: 'Q7b. 味噌にだし入りのものを使ってますか？',
+      label: 'Q6. 味噌にだし入りのものを使ってますか？',
       type: 'single',
       options: ['だし入り味噌を使ってる', 'だしなし（別で出汁をとってる）', 'わからない'],
       category: 'seasoning',
@@ -177,7 +177,7 @@ const COMMON_PHASE_2: Phase = {
     {
       id: 'q8a',
       key: 'dressing_type',
-      label: 'Q8a. ドレッシングやソースは自家製ですか？既製品ですか？',
+      label: 'Q7. ドレッシングやソースは自家製ですか？既製品ですか？',
       type: 'single',
       options: ['ほぼ自家製', 'ほぼ既製品', 'ものによる', 'わからない'],
       category: 'seasoning',
@@ -186,7 +186,7 @@ const COMMON_PHASE_2: Phase = {
     {
       id: 'q8b',
       key: 'caesar_ingredients',
-      label: 'Q8b. シーザードレッシングに入ってるものは？（複数OK）',
+      label: 'Q8. シーザードレッシングに入ってるものは？（複数OK）',
       type: 'multi',
       options: ['マヨネーズ', '卵黄', 'アンチョビ（魚介）', 'パルメザンチーズ', 'にんにく', 'わからない', 'その他'],
       category: 'seasoning',
@@ -201,12 +201,12 @@ const COMMON_PHASE_2: Phase = {
 const COMMON_PHASE_6: Phase = {
   id: 6,
   title: 'Phase 6: お店の強み',
-  description: 'Q29-Q31 — narrative用',
+  description: 'Q1-Q7 — narrative用',
   questions: [
     {
       id: 'q29a',
       key: 'popular_top3',
-      label: 'Q29. 一番出るメニューベスト3は？',
+      label: 'Q1. 一番出るメニューベスト3は？',
       type: 'text',
       category: 'store_strength',
       applies_to_categories: ['main'],
@@ -215,7 +215,7 @@ const COMMON_PHASE_6: Phase = {
     {
       id: 'q29b',
       key: 'chef_recommend',
-      label: 'Q29. 店長が自信あるメニューは？',
+      label: 'Q2. 店長が自信あるメニューは？',
       type: 'text',
       category: 'store_strength',
       applies_to_categories: ['main'],
@@ -223,7 +223,7 @@ const COMMON_PHASE_6: Phase = {
     {
       id: 'q30a',
       key: 'fish_source',
-      label: 'Q30. 食材の仕入れは？',
+      label: 'Q3. 食材の仕入れは？',
       type: 'single',
       options: ['産地から直送', '市場経由', '業者から仕入れ', 'その他'],
       category: 'store_strength',
@@ -233,7 +233,7 @@ const COMMON_PHASE_6: Phase = {
     {
       id: 'q30b',
       key: 'charcoal_type',
-      label: 'Q30. 炭火焼きの炭は？',
+      label: 'Q4. 炭火焼きの炭は？',
       type: 'single',
       options: ['備長炭', 'オガ炭', 'その他', 'わからない'],
       category: 'store_strength',
@@ -242,7 +242,7 @@ const COMMON_PHASE_6: Phase = {
     {
       id: 'q30c',
       key: 'vinegar_source',
-      label: 'Q30. 酢飯の酢はどこの？',
+      label: 'Q5. 酢飯の酢はどこの？',
       type: 'text',
       category: 'store_strength',
       applies_to_categories: ['sushi', 'rice'],
@@ -250,14 +250,14 @@ const COMMON_PHASE_6: Phase = {
     {
       id: 'q31a',
       key: 'store_uniqueness',
-      label: 'Q31. お店が他と一番違うところは？',
+      label: 'Q6. お店が他と一番違うところは？',
       type: 'text',
       category: 'store_strength',
     },
     {
       id: 'q31b',
       key: 'local_ingredient',
-      label: 'Q31. 地元の食材で特にこだわってるものは？',
+      label: 'Q7. 地元の食材で特にこだわってるものは？',
       type: 'text',
       category: 'store_strength',
     },
@@ -270,12 +270,12 @@ const COMMON_PHASE_6: Phase = {
 const BONTA_PHASE_3: Phase = {
   id: 3,
   title: 'Phase 3: 特定原材料8品目',
-  description: 'Q9-Q16 — 表示義務のある8品目',
+  description: 'Q1-Q19 — 表示義務のある8品目',
   questions: [
     {
       id: 'q9a',
       key: 'shrimp_hidden',
-      label: 'Q9a. えびを直接使う料理以外で、えびを使う料理はありますか？',
+      label: 'Q1. えびを直接使う料理以外で、えびを使う料理はありますか？',
       type: 'single',
       options: ['ない', 'ある', 'わからない'],
       category: 'allergen_8',
@@ -285,7 +285,7 @@ const BONTA_PHASE_3: Phase = {
     {
       id: 'q9b',
       key: 'shrimp_in_tempura',
-      label: 'Q9b. 季節の天婦羅盛り合わせにえびは入りますか？',
+      label: 'Q2. 季節の天婦羅盛り合わせにえびは入りますか？',
       type: 'single',
       options: ['必ず入る', '日によって変わる', '入らない'],
       category: 'allergen_8',
@@ -294,7 +294,7 @@ const BONTA_PHASE_3: Phase = {
     {
       id: 'q9c',
       key: 'shrimp_in_sashimi',
-      label: 'Q9c. 旬のお刺身盛合せ7種にえびは入りますか？',
+      label: 'Q3. 旬のお刺身盛合せ7種にえびは入りますか？',
       type: 'single',
       options: ['必ず入る', '日によって変わる', '入らない'],
       category: 'allergen_8',
@@ -303,7 +303,7 @@ const BONTA_PHASE_3: Phase = {
     {
       id: 'q10a',
       key: 'crab_hidden',
-      label: 'Q10a. かにを直接使う料理以外で、かにを使う料理はありますか？',
+      label: 'Q4. かにを直接使う料理以外で、かにを使う料理はありますか？',
       type: 'single',
       options: ['ない', 'ある', 'わからない'],
       category: 'allergen_8',
@@ -313,7 +313,7 @@ const BONTA_PHASE_3: Phase = {
     {
       id: 'q10b',
       key: 'crab_extract',
-      label: 'Q10b. かに味噌やかにエキスを使う料理はありますか？',
+      label: 'Q5. かに味噌やかにエキスを使う料理はありますか？',
       type: 'single',
       options: ['ない', 'ある', 'わからない'],
       category: 'allergen_8',
@@ -323,7 +323,7 @@ const BONTA_PHASE_3: Phase = {
     {
       id: 'q11a',
       key: 'wheat_batter',
-      label: 'Q11a. 天婦羅・唐揚げの衣は小麦粉ですか？',
+      label: 'Q6. 天婦羅・唐揚げの衣は小麦粉ですか？',
       type: 'single',
       options: ['全部小麦粉', '一部片栗粉', '全部片栗粉', 'わからない'],
       category: 'allergen_8',
@@ -333,7 +333,7 @@ const BONTA_PHASE_3: Phase = {
     {
       id: 'q11b',
       key: 'breadcrumb_usage',
-      label: 'Q11b. パン粉を使うメニューは？（複数OK）',
+      label: 'Q7. パン粉を使うメニューは？（複数OK）',
       type: 'multi',
       options: ['レアアジフライ', '紅ズワイ蟹クリームコロッケ', '酒粕香るクリームチーズとレーズンの春巻き', '他にもある', 'パン粉は使ってない'],
       category: 'allergen_8',
@@ -342,7 +342,7 @@ const BONTA_PHASE_3: Phase = {
     {
       id: 'q12a',
       key: 'soba_flour_hidden',
-      label: 'Q12a. 蕎麦以外でそば粉を使うメニューはありますか？',
+      label: 'Q8. 蕎麦以外でそば粉を使うメニューはありますか？',
       type: 'single',
       options: ['ない', 'ある', 'わからない'],
       category: 'allergen_8',
@@ -352,7 +352,7 @@ const BONTA_PHASE_3: Phase = {
     {
       id: 'q13a',
       key: 'egg_state',
-      label: 'Q13a. 以下の料理、卵の状態は？',
+      label: 'Q9. 以下の料理、卵の状態は？',
       type: 'table',
       tableRows: ['海鮮ごまだれユッケ', '割烹だし巻き', 'セイコ蟹の茶碗蒸し', 'ズワイ蟹天おろし蕎麦', '純けいのつくね（つなぎ）'],
       tableColumns: ['生', '半熟', '加熱', '卵不使用'],
@@ -362,7 +362,7 @@ const BONTA_PHASE_3: Phase = {
     {
       id: 'q13b',
       key: 'mayo_type',
-      label: 'Q13b. マヨネーズは市販品ですか？自家製ですか？',
+      label: 'Q10. マヨネーズは市販品ですか？自家製ですか？',
       type: 'single',
       options: ['市販品（キューピー等）', '自家製', 'わからない'],
       category: 'allergen_8',
@@ -371,7 +371,7 @@ const BONTA_PHASE_3: Phase = {
     {
       id: 'q13c',
       key: 'tempura_egg',
-      label: 'Q13c. 天婦羅の衣に卵を使ってますか？',
+      label: 'Q11. 天婦羅の衣に卵を使ってますか？',
       type: 'single',
       options: ['使ってる', '使ってない（水と小麦粉のみ）', 'わからない'],
       category: 'allergen_8',
@@ -380,7 +380,7 @@ const BONTA_PHASE_3: Phase = {
     {
       id: 'q13d',
       key: 'egg_hidden',
-      label: 'Q13d. 上記以外で卵を使う料理はありますか？',
+      label: 'Q12. 上記以外で卵を使う料理はありますか？',
       type: 'single',
       options: ['ない', 'ある'],
       category: 'allergen_8',
@@ -390,7 +390,7 @@ const BONTA_PHASE_3: Phase = {
     {
       id: 'q14a',
       key: 'dairy_hidden',
-      label: 'Q14a. バター・クリーム・チーズの隠れ使用はありますか？',
+      label: 'Q13. バター・クリーム・チーズの隠れ使用はありますか？',
       type: 'single',
       options: ['ない', 'ある', 'わからない'],
       category: 'allergen_8',
@@ -400,7 +400,7 @@ const BONTA_PHASE_3: Phase = {
     {
       id: 'q14c',
       key: 'habutae_ice_dairy',
-      label: 'Q14c. 羽二重アイス最中のアイスは？',
+      label: 'Q14. 羽二重アイス最中のアイスは？',
       type: 'single',
       options: ['乳製品入り（普通のアイス）', '豆乳・植物性ベース', 'わからない'],
       category: 'allergen_8',
@@ -409,7 +409,7 @@ const BONTA_PHASE_3: Phase = {
     {
       id: 'q15a',
       key: 'peanut_usage',
-      label: 'Q15a. 落花生（ピーナッツ）を使う料理はありますか？',
+      label: 'Q15. 落花生（ピーナッツ）を使う料理はありますか？',
       type: 'single',
       options: ['ない', 'ある', 'わからない'],
       category: 'allergen_8',
@@ -419,7 +419,7 @@ const BONTA_PHASE_3: Phase = {
     {
       id: 'q16a',
       key: 'walnut_usage',
-      label: 'Q16a. くるみを使う料理はありますか？',
+      label: 'Q16. くるみを使う料理はありますか？',
       type: 'single',
       options: ['ない', 'ある', 'わからない'],
       category: 'allergen_8',
@@ -429,7 +429,7 @@ const BONTA_PHASE_3: Phase = {
     {
       id: 'q16b',
       key: 'walnut_salad_topping',
-      label: 'Q16b. サラダのトッピング等に入る可能性は？',
+      label: 'Q17. サラダのトッピング等に入る可能性は？',
       type: 'single',
       options: ['ない', '時期やメニューによってはある', 'わからない'],
       category: 'allergen_8',
@@ -438,7 +438,7 @@ const BONTA_PHASE_3: Phase = {
     {
       id: 'q16c',
       key: 'crab_boil_shared',
-      label: 'Q16c. 蟹を茹でる鍋は他の料理にも使いますか？',
+      label: 'Q18. 蟹を茹でる鍋は他の料理にも使いますか？',
       type: 'single',
       options: ['蟹専用', '他の料理と共有', 'わからない'],
       category: 'allergen_8',
@@ -447,7 +447,7 @@ const BONTA_PHASE_3: Phase = {
     {
       id: 'q16d',
       key: 'spring_roll_batter',
-      label: 'Q16d. 春巻きの皮に卵は入ってますか？',
+      label: 'Q19. 春巻きの皮に卵は入ってますか？',
       type: 'single',
       options: ['入ってる', '入ってない', 'わからない'],
       category: 'allergen_8',
@@ -462,12 +462,12 @@ const BONTA_PHASE_3: Phase = {
 const BONTA_PHASE_4: Phase = {
   id: 4,
   title: 'Phase 4: 推奨表示品目',
-  description: 'Q17-Q21 — アレルギー事故が多い品目',
+  description: 'Q1-Q8 — アレルギー事故が多い品目',
   questions: [
     {
       id: 'q17a',
       key: 'nuts_usage',
-      label: 'Q17a. アーモンド・カシューナッツ等を使う料理はありますか？',
+      label: 'Q1. アーモンド・カシューナッツ等を使う料理はありますか？',
       type: 'single',
       options: ['ない', 'ある', 'わからない'],
       category: 'allergen_recommended',
@@ -477,7 +477,7 @@ const BONTA_PHASE_4: Phase = {
     {
       id: 'q17b',
       key: 'nuts_dessert_topping',
-      label: 'Q17b. デザートのトッピングにナッツ類は？',
+      label: 'Q2. デザートのトッピングにナッツ類は？',
       type: 'single',
       options: ['ない', 'ある', 'わからない'],
       category: 'allergen_recommended',
@@ -487,7 +487,7 @@ const BONTA_PHASE_4: Phase = {
     {
       id: 'q18a',
       key: 'sesame_usage',
-      label: 'Q18a. 海鮮ごまだれユッケ以外で、ごまを使う料理はありますか？（複数OK）',
+      label: 'Q3. 海鮮ごまだれユッケ以外で、ごまを使う料理はありますか？（複数OK）',
       type: 'multi',
       options: ['ドレッシングに入ってる', '焼き鳥のタレに入ってる', '和え物に使ってる', 'ごま油だけ（粒ごまは使わない）', '他にもある', '海鮮ごまだれユッケだけ'],
       category: 'allergen_recommended',
@@ -496,7 +496,7 @@ const BONTA_PHASE_4: Phase = {
     {
       id: 'q19a',
       key: 'yam_hidden',
-      label: 'Q19a. 割烹だし巻き以外に山芋・長芋・とろろを使う料理はありますか？',
+      label: 'Q4. 割烹だし巻き以外に山芋・長芋・とろろを使う料理はありますか？',
       type: 'single',
       options: ['ない', 'ある', 'わからない'],
       category: 'allergen_recommended',
@@ -506,7 +506,7 @@ const BONTA_PHASE_4: Phase = {
     {
       id: 'q20a',
       key: 'gelatin_usage',
-      label: 'Q20a. デザートにゼラチンを使ってますか？',
+      label: 'Q5. デザートにゼラチンを使ってますか？',
       type: 'single',
       options: ['使ってる', '使ってない（寒天等を使用）', 'わからない'],
       category: 'allergen_recommended',
@@ -516,7 +516,7 @@ const BONTA_PHASE_4: Phase = {
     {
       id: 'q21a',
       key: 'squid_usage',
-      label: 'Q21a. いかを使う料理はありますか？',
+      label: 'Q6. いかを使う料理はありますか？',
       type: 'single',
       options: ['ない', 'ある'],
       category: 'allergen_recommended',
@@ -526,7 +526,7 @@ const BONTA_PHASE_4: Phase = {
     {
       id: 'q21b',
       key: 'squid_in_sashimi',
-      label: 'Q21b. 旬のお刺身盛合せ7種にいかは入りますか？',
+      label: 'Q7. 旬のお刺身盛合せ7種にいかは入りますか？',
       type: 'single',
       options: ['必ず入る', '日によって変わる', '入らない'],
       category: 'allergen_recommended',
@@ -535,7 +535,7 @@ const BONTA_PHASE_4: Phase = {
     {
       id: 'q21c',
       key: 'squid_in_tempura',
-      label: 'Q21c. 季節の天婦羅盛り合わせにいかは入りますか？',
+      label: 'Q8. 季節の天婦羅盛り合わせにいかは入りますか？',
       type: 'single',
       options: ['必ず入る', '日によって変わる', '入らない'],
       category: 'allergen_recommended',
@@ -550,12 +550,12 @@ const BONTA_PHASE_4: Phase = {
 const BONTA_PHASE_5: Phase = {
   id: 5,
   title: 'Phase 5: 個別メニュー確認',
-  description: 'Q22-Q28 — Aランク品の詳細確認',
+  description: 'Q1-Q17 — Aランク品の詳細確認',
   questions: [
     {
       id: 'q23a',
       key: 'course_allergens',
-      label: 'Q23a. 各コースに必ず入るアレルゲン食材は？',
+      label: 'Q1. 各コースに必ず入るアレルゲン食材は？',
       type: 'table',
       tableRows: ['越前ズワイ蟹とセイコ蟹のフルコース ¥55,000', '越前ズワイ蟹と福井の幸堪能コース ¥34,100', '越前紅ズワイ蟹と福井の幸コース ¥15,400', '極、福井コース ¥8,800', '福井美味いもんコース ¥6,600', '越前コース ¥3,850'],
       tableColumns: ['えび・かに', '小麦', '卵', '乳', 'そば'],
@@ -565,7 +565,7 @@ const BONTA_PHASE_5: Phase = {
     {
       id: 'q23b',
       key: 'course_seasonal',
-      label: 'Q23b. コース内容は季節で変わりますか？',
+      label: 'Q2. コース内容は季節で変わりますか？',
       type: 'single',
       options: ['固定（通年同じ）', '季節で一部入れ替え', '毎回違う（おまかせ）'],
       category: 'individual_menu',
@@ -575,7 +575,7 @@ const BONTA_PHASE_5: Phase = {
     {
       id: 'q23c',
       key: 'course_allergy_response',
-      label: 'Q23c. コースでアレルギー対応はしてますか？',
+      label: 'Q3. コースでアレルギー対応はしてますか？',
       type: 'single',
       options: ['事前に言ってもらえれば対応する', '対応していない', 'その他'],
       category: 'individual_menu',
@@ -585,7 +585,7 @@ const BONTA_PHASE_5: Phase = {
     {
       id: 'q24a',
       key: 'winter_period',
-      label: 'Q24a. 冬限定メニューの提供期間は？',
+      label: 'Q4. 冬限定メニューの提供期間は？',
       type: 'single',
       options: ['11月〜2月', '11月〜3月', '品によって違う', 'その他'],
       category: 'individual_menu',
@@ -595,7 +595,7 @@ const BONTA_PHASE_5: Phase = {
     {
       id: 'q24b',
       key: 'shirako_type',
-      label: 'Q24b. 白子の種類は？',
+      label: 'Q5. 白子の種類は？',
       type: 'single',
       options: ['真鱈の白子', '河豚の白子', 'その他'],
       category: 'individual_menu',
@@ -604,7 +604,7 @@ const BONTA_PHASE_5: Phase = {
     {
       id: 'q24c',
       key: 'seiko_crab_period',
-      label: 'Q24c. セイコ蟹はいつまで？',
+      label: 'Q6. セイコ蟹はいつまで？',
       type: 'single',
       options: ['解禁期間のみ（11月〜12月末）', '冷凍ストックで冬の間ずっと', 'その他'],
       category: 'individual_menu',
@@ -613,7 +613,7 @@ const BONTA_PHASE_5: Phase = {
     {
       id: 'q27a',
       key: 'wagyu_origin',
-      label: 'Q27a. 若狭牛の産地は？',
+      label: 'Q7. 若狭牛の産地は？',
       type: 'single',
       options: ['福井県産', '他県産', '仕入れ状況で変わる', 'わからない'],
       category: 'individual_menu',
@@ -623,7 +623,7 @@ const BONTA_PHASE_5: Phase = {
     {
       id: 'q27c',
       key: 'yukke_sauce',
-      label: 'Q27c. ユッケのタレに入ってるものは？（複数OK）',
+      label: 'Q8. ユッケのタレに入ってるものは？（複数OK）',
       type: 'multi',
       options: ['卵黄（生）', 'ごま油', '醤油', 'コチュジャン', 'にんにく', 'その他'],
       category: 'individual_menu',
@@ -632,7 +632,7 @@ const BONTA_PHASE_5: Phase = {
     {
       id: 'q28a',
       key: 'sashimi_assort',
-      label: 'Q28a. 旬のお刺身盛合せ7種、通常どんなネタが入りますか？（複数OK）',
+      label: 'Q9. 旬のお刺身盛合せ7種、通常どんなネタが入りますか？（複数OK）',
       type: 'multi',
       options: ['まぐろ', 'サーモン', 'ぶり/はまち', '甘海老', 'いか', 'たこ', '白身魚', '貝類', 'カンパチ', '福井サーモン', '水たこ', 'のどぐろ', '日によって全然違う', 'その他'],
       category: 'individual_menu',
@@ -641,7 +641,7 @@ const BONTA_PHASE_5: Phase = {
     {
       id: 'q28b',
       key: 'tempura_assort',
-      label: 'Q28b. 季節の天婦羅盛り合わせ、通常どんなネタが入りますか？（複数OK）',
+      label: 'Q10. 季節の天婦羅盛り合わせ、通常どんなネタが入りますか？（複数OK）',
       type: 'multi',
       options: ['えび', 'いか', '白身魚', 'ズワイ蟹', 'なす', 'さつまいも', 'しいたけ', '大葉', '日によって変わる', 'その他'],
       category: 'individual_menu',
@@ -650,7 +650,7 @@ const BONTA_PHASE_5: Phase = {
     {
       id: 'q28d',
       key: 'crab_nabe_ingredients',
-      label: 'Q28d. 蟹と海鮮鍋の具材は固定？日替わり？',
+      label: 'Q11. 蟹と海鮮鍋の具材は固定？日替わり？',
       type: 'single',
       options: ['固定', '日替わり', '季節で変わる'],
       category: 'individual_menu',
@@ -659,7 +659,7 @@ const BONTA_PHASE_5: Phase = {
     {
       id: 'q28e',
       key: 'crab_nabe_dashi',
-      label: 'Q28e. 蟹と海鮮鍋の出汁ベースは？',
+      label: 'Q12. 蟹と海鮮鍋の出汁ベースは？',
       type: 'single',
       options: ['鰹出汁', '昆布出汁', '合わせ出汁', '鶏ガラ', 'その他'],
       category: 'individual_menu',
@@ -668,7 +668,7 @@ const BONTA_PHASE_5: Phase = {
     {
       id: 'q28f',
       key: 'pizza_dough',
-      label: 'Q28f. ピッツァの生地は自家製？既製品？',
+      label: 'Q13. ピッツァの生地は自家製？既製品？',
       type: 'single',
       options: ['自家製', '既製品', 'わからない'],
       category: 'individual_menu',
@@ -677,7 +677,7 @@ const BONTA_PHASE_5: Phase = {
     {
       id: 'q28g',
       key: 'cream_croquette',
-      label: 'Q28g. 蟹クリームコロッケの中身は？（複数OK）',
+      label: 'Q14. 蟹クリームコロッケの中身は？（複数OK）',
       type: 'multi',
       options: ['蟹身', '牛乳/生クリーム', 'バター', '小麦粉（ホワイトソース）', '卵（衣）', 'パン粉', 'その他'],
       category: 'individual_menu',
@@ -686,7 +686,7 @@ const BONTA_PHASE_5: Phase = {
     {
       id: 'q28h',
       key: 'dessert_gogatsu',
-      label: 'Q28h. 五月ヶ瀬アイスの原材料は？（複数OK）',
+      label: 'Q15. 五月ヶ瀬アイスの原材料は？（複数OK）',
       type: 'multi',
       options: ['五月ヶ瀬（小麦・落花生）', '牛乳/生クリーム', '卵', '砂糖', 'その他'],
       category: 'individual_menu',
@@ -695,7 +695,7 @@ const BONTA_PHASE_5: Phase = {
     {
       id: 'q28i',
       key: 'wara_yaki_method',
-      label: 'Q28i. 藁焼きの藁は何の藁？煙の影響で他の食材に付着するか？',
+      label: 'Q16. 藁焼きの藁は何の藁？煙の影響で他の食材に付着するか？',
       type: 'single',
       options: ['稲藁', '他の藁', 'わからない'],
       category: 'individual_menu',
@@ -705,7 +705,7 @@ const BONTA_PHASE_5: Phase = {
     {
       id: 'q28j',
       key: 'fish_daily_change',
-      label: 'Q28j. 刺身のネタは日替わりですか？仕入れはどこから？',
+      label: 'Q17. 刺身のネタは日替わりですか？仕入れはどこから？',
       type: 'text',
       category: 'individual_menu',
       applies_to_categories: ['sashimi'],
@@ -720,12 +720,12 @@ const BONTA_PHASE_5: Phase = {
 const GIORNO_PHASE_3: Phase = {
   id: 3,
   title: 'Phase 3: 特定原材料8品目',
-  description: 'カクテルバー向け — 表示義務のある8品目',
+  description: 'Q1-Q8 — 表示義務のある8品目',
   questions: [
     {
       id: 'g9a',
       key: 'bar_shrimp_usage',
-      label: 'Q9a. ガーニッシュや前菜にえびを使いますか？',
+      label: 'Q1. ガーニッシュや前菜にえびを使いますか？',
       type: 'single',
       options: ['使わない', '使う', 'わからない'],
       category: 'allergen_8',
@@ -735,7 +735,7 @@ const GIORNO_PHASE_3: Phase = {
     {
       id: 'g10a',
       key: 'bar_crab_usage',
-      label: 'Q10a. かにを使う料理やドリンクはありますか？',
+      label: 'Q2. かにを使う料理やドリンクはありますか？',
       type: 'single',
       options: ['ない', 'ある', 'わからない'],
       category: 'allergen_8',
@@ -745,7 +745,7 @@ const GIORNO_PHASE_3: Phase = {
     {
       id: 'g11a',
       key: 'bar_wheat_usage',
-      label: 'Q11a. パスタ以外で小麦を使うメニューは？',
+      label: 'Q3. パスタ以外で小麦を使うメニューは？',
       type: 'single',
       options: ['パスタのみ', 'ピザ生地も自家製', '他にもある', '小麦メニューなし', 'わからない'],
       category: 'allergen_8',
@@ -755,7 +755,7 @@ const GIORNO_PHASE_3: Phase = {
     {
       id: 'g12a',
       key: 'bar_soba_usage',
-      label: 'Q12a. そば粉を使うメニューはありますか？',
+      label: 'Q4. そば粉を使うメニューはありますか？',
       type: 'single',
       options: ['ない', 'ある', 'わからない'],
       category: 'allergen_8',
@@ -765,7 +765,7 @@ const GIORNO_PHASE_3: Phase = {
     {
       id: 'g13a',
       key: 'bar_egg_usage',
-      label: 'Q13a. 卵を使うメニューは？（複数OK）',
+      label: 'Q5. 卵を使うメニューは？（複数OK）',
       type: 'multi',
       options: ['デザート（プリン・ケーキ等）', 'カクテル（サワー系の卵白）', '前菜・フード', '使ってない', 'わからない'],
       category: 'allergen_8',
@@ -775,7 +775,7 @@ const GIORNO_PHASE_3: Phase = {
     {
       id: 'g14a',
       key: 'bar_dairy_usage',
-      label: 'Q14a. 乳製品を使うメニューは？（複数OK）',
+      label: 'Q6. 乳製品を使うメニューは？（複数OK）',
       type: 'multi',
       options: ['クリーム系カクテル', 'デザート（アイス・チーズケーキ等）', 'チーズ盛り合わせ', 'パスタソース', '使ってない', 'わからない'],
       category: 'allergen_8',
@@ -785,7 +785,7 @@ const GIORNO_PHASE_3: Phase = {
     {
       id: 'g15a',
       key: 'bar_peanut_usage',
-      label: 'Q15a. 落花生（ピーナッツ）を使うメニューは？（複数OK）',
+      label: 'Q7. 落花生（ピーナッツ）を使うメニューは？（複数OK）',
       type: 'multi',
       options: ['おつまみナッツに含まれる', 'ガーニッシュに使用', '料理に使用', 'ない', 'わからない'],
       category: 'allergen_8',
@@ -795,7 +795,7 @@ const GIORNO_PHASE_3: Phase = {
     {
       id: 'g16a',
       key: 'bar_walnut_usage',
-      label: 'Q16a. くるみを使うメニューやドリンクは？',
+      label: 'Q8. くるみを使うメニューやドリンクは？',
       type: 'single',
       options: ['ない', 'ある', 'わからない'],
       category: 'allergen_8',
@@ -811,12 +811,12 @@ const GIORNO_PHASE_3: Phase = {
 const GIORNO_PHASE_4: Phase = {
   id: 4,
   title: 'Phase 4: 推奨表示品目',
-  description: 'カクテルバー向け — アレルギー事故が多い品目',
+  description: 'Q1-Q6 — アレルギー事故が多い品目',
   questions: [
     {
       id: 'g17a',
       key: 'bar_nuts_snack',
-      label: 'Q17a. おつまみナッツの種類は？（複数OK）',
+      label: 'Q1. おつまみナッツの種類は？（複数OK）',
       type: 'multi',
       options: ['アーモンド', 'カシューナッツ', 'マカダミア', 'ピスタチオ', 'くるみ', '落花生', 'ミックス（詳細不明）', 'ナッツ提供なし'],
       category: 'allergen_recommended',
@@ -825,7 +825,7 @@ const GIORNO_PHASE_4: Phase = {
     {
       id: 'g17b',
       key: 'bar_nuts_garnish',
-      label: 'Q17b. ガーニッシュにナッツを使うカクテルは？',
+      label: 'Q2. ガーニッシュにナッツを使うカクテルは？',
       type: 'single',
       options: ['ない', 'ある', 'わからない'],
       category: 'allergen_recommended',
@@ -835,7 +835,7 @@ const GIORNO_PHASE_4: Phase = {
     {
       id: 'g18a',
       key: 'bar_sesame_usage',
-      label: 'Q18a. 前菜でゴマ油やゴマを使いますか？（複数OK）',
+      label: 'Q3. 前菜でゴマ油やゴマを使いますか？（複数OK）',
       type: 'multi',
       options: ['ごま油を使うメニューがある', '粒ゴマ・すりゴマを使うメニューがある', '全メニューで不使用', 'わからない'],
       category: 'allergen_recommended',
@@ -845,7 +845,7 @@ const GIORNO_PHASE_4: Phase = {
     {
       id: 'g19a',
       key: 'bar_fruit_list',
-      label: 'Q19a. フルーツカクテルに使う果物は？（複数OK）',
+      label: 'Q4. フルーツカクテルに使う果物は？（複数OK）',
       type: 'multi',
       options: ['キウイ', 'もも', 'りんご', 'バナナ', 'オレンジ', 'グレープフルーツ', 'レモン', 'ライム', 'パイナップル', 'マンゴー', 'いちご', 'ぶどう', 'その他'],
       category: 'allergen_recommended',
@@ -855,7 +855,7 @@ const GIORNO_PHASE_4: Phase = {
     {
       id: 'g19b',
       key: 'bar_fruit_fresh',
-      label: 'Q19b. フルーツは生を使いますか？冷凍/缶詰ですか？',
+      label: 'Q5. フルーツは生を使いますか？冷凍/缶詰ですか？',
       type: 'single',
       options: ['全部生', '一部冷凍/缶詰', 'ほぼ冷凍/缶詰', 'ものによる'],
       category: 'allergen_recommended',
@@ -864,7 +864,7 @@ const GIORNO_PHASE_4: Phase = {
     {
       id: 'g20a',
       key: 'bar_gelatin_usage',
-      label: 'Q20a. デザートにゼラチンを使ってますか？',
+      label: 'Q6. デザートにゼラチンを使ってますか？',
       type: 'single',
       options: ['使ってる', '使ってない（寒天等）', 'デザートなし', 'わからない'],
       category: 'allergen_recommended',
@@ -880,12 +880,12 @@ const GIORNO_PHASE_4: Phase = {
 const GIORNO_PHASE_5: Phase = {
   id: 5,
   title: 'Phase 5: 個別メニュー確認',
-  description: 'THEシリーズ・フード・デザートの詳細',
+  description: 'Q1-Q7 — THEシリーズ・フード・デザートの詳細',
   questions: [
     {
       id: 'g22a',
       key: 'the_series_base',
-      label: 'Q22a. THEシリーズ13種の共通ベースは？（複数OK）',
+      label: 'Q1. THEシリーズ13種の共通ベースは？（複数OK）',
       type: 'multi',
       options: ['ウォッカ', 'シロップ', 'フレッシュフルーツ', '炭酸', 'その他'],
       category: 'individual_menu',
@@ -894,7 +894,7 @@ const GIORNO_PHASE_5: Phase = {
     {
       id: 'g22b',
       key: 'the_series_hidden_allergen',
-      label: 'Q22b. THEシリーズで乳製品やナッツリキュールを使うものは？',
+      label: 'Q2. THEシリーズで乳製品やナッツリキュールを使うものは？',
       type: 'single',
       options: ['ない', 'ある', 'わからない'],
       category: 'individual_menu',
@@ -904,7 +904,7 @@ const GIORNO_PHASE_5: Phase = {
     {
       id: 'g22c',
       key: 'cream_cocktails',
-      label: 'Q22c. クリーム系カクテル（乳製品使用）はどれですか？（複数OK）',
+      label: 'Q3. クリーム系カクテル（乳製品使用）はどれですか？（複数OK）',
       type: 'multi',
       options: ['ホワイトルシアン', 'カルーアミルク', 'アレキサンダー', 'グラスホッパー', '他にもある', 'クリーム系はない'],
       category: 'individual_menu',
@@ -914,7 +914,7 @@ const GIORNO_PHASE_5: Phase = {
     {
       id: 'g23a',
       key: 'food_appetizer_allergens',
-      label: 'Q23a. 前菜（ナッツ/生ハム/チーズ等）のアレルゲンは？',
+      label: 'Q4. 前菜（ナッツ/生ハム/チーズ等）のアレルゲンは？',
       type: 'multi',
       options: ['ナッツ類', '乳製品（チーズ）', '卵', '小麦（クラッカー等）', '魚介', 'わからない'],
       category: 'individual_menu',
@@ -923,7 +923,7 @@ const GIORNO_PHASE_5: Phase = {
     {
       id: 'g23b',
       key: 'pasta_sauce_allergens',
-      label: 'Q23b. パスタソースの原材料は？（複数OK）',
+      label: 'Q5. パスタソースの原材料は？（複数OK）',
       type: 'multi',
       options: ['トマトソース', 'クリームソース（乳）', 'オイルベース', 'チーズ', '卵', 'アンチョビ（魚介）', 'その他'],
       category: 'individual_menu',
@@ -932,7 +932,7 @@ const GIORNO_PHASE_5: Phase = {
     {
       id: 'g24a',
       key: 'table_charge_content',
-      label: 'Q24a. テーブルチャージ/お通しの内容は？',
+      label: 'Q6. テーブルチャージ/お通しの内容は？',
       type: 'single',
       options: ['固定（いつも同じ）', '日によって変わる', 'お通しなし'],
       category: 'individual_menu',
@@ -942,7 +942,7 @@ const GIORNO_PHASE_5: Phase = {
     {
       id: 'g25a',
       key: 'dessert_detail',
-      label: 'Q25a. 各デザートの主な原材料は？',
+      label: 'Q7. 各デザートの主な原材料は？',
       type: 'text',
       category: 'individual_menu',
       applies_to_categories: ['dessert'],
