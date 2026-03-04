@@ -1521,11 +1521,9 @@ export default function CapturePage({
         }
         onLanguage={openLanguageModal ?? openLanguageModalFromContext}
         restaurantName={
-          (message.trim().length > 0 || responses.length > 0 || loading)
-            ? (activeLanguage !== 'ja' && selectedRestaurant?.name_romaji
-                ? selectedRestaurant.name_romaji
-                : selectedRestaurant?.name) || null
-            : null
+          (activeLanguage !== 'ja' && selectedRestaurant?.name_romaji
+            ? selectedRestaurant.name_romaji
+            : selectedRestaurant?.name) || null
         }
         restaurantData={selectedRestaurant}
       />

@@ -18,20 +18,6 @@ export const languageOptions: LanguageOption[] = [
   { code: "th", label: "ไทย" },
   { code: "vi", label: "Tiếng Việt" },
   { code: "id", label: "Bahasa Indonesia" },
-  { code: "ms", label: "Bahasa Melayu" },
-  { code: "ar", label: "العربية" },
-  { code: "hi", label: "हिन्दी" },
-  { code: "tr", label: "Türkçe" },
-  { code: "bn", label: "বাংলা / Bengali" },
-  { code: "my", label: "မြန်မာဘာသာ" },
-  { code: "tl", label: "Filipino / Tagalog" },
-  { code: "lo", label: "ລາວ" },
-  { code: "km", label: "ភាសាខ្មែរ" },
-  { code: "ne", label: "नेपाली" },
-  { code: "mn", label: "Монгол" },
-  { code: "fa", label: "فارسی" },
-  { code: "uk", label: "Українська" },
-  { code: "pl", label: "Polski" },
 ];
 
 const languageLabelMap = new Map(
