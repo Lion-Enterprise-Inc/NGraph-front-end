@@ -398,6 +398,16 @@ export default function StoreKnowledgePage() {
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
+  // UIDs更新のみ（保存後に使う）
+  const reloadExistingItems = async (restaurantSlug: string) => {
+    try {
+      const items = await apiClient.get<StoreKnowledgeItem[]>(`/store-knowledge/${restaurantSlug}`)
+      setExistingItems(items)
+    } catch (err) {
+      console.error('Failed to reload existing items:', err)
+    }
+  }
+
   const loadData = async (restaurantSlug: string) => {
     try {
       // Fetch restaurant info to get business_type
@@ -476,6 +486,7 @@ export default function StoreKnowledgePage() {
 
     try {
       const promises: Promise<unknown>[] = []
+      let itemCount = 0
 
       for (const [questionId, answer] of Object.entries(answers)) {
         const key = idToKey.get(questionId)
@@ -485,6 +496,7 @@ export default function StoreKnowledgePage() {
         const serialized = serializeAnswer(answer)
         if (!serialized) continue
 
+        itemCount++
         // Check if this key already exists
         const existing = existingItems.find(item => item.key === key)
 
@@ -509,21 +521,29 @@ export default function StoreKnowledgePage() {
         }
       }
 
+      if (promises.length === 0) {
+        toast('warning', '保存対象がありません')
+        setSaving(false)
+        return
+      }
+
       const results = await Promise.allSettled(promises)
-      const failed = results.filter(r => r.status === 'rejected').length
-      if (failed > 0) {
-        toast('warning', `${results.length - failed}件保存、${failed}件失敗`)
+      const failed = results.filter(r => r.status === 'rejected')
+      if (failed.length > 0) {
+        const firstErr = failed[0].status === 'rejected' ? (failed[0] as PromiseRejectedResult).reason : ''
+        toast('error', `${failed.length}件失敗: ${firstErr}`)
+        console.error('Save failures:', failed)
       } else {
         toast('success', `${results.length}件保存しました`)
         // 保存成功したら下書きをクリア
         try { localStorage.removeItem(storageKey) } catch { /* ignore */ }
       }
 
-      // Reload to get updated UIDs
-      await loadData(slug)
+      // UIDsだけ更新（answersはリセットしない）
+      await reloadExistingItems(slug)
     } catch (err) {
       console.error('Save failed:', err)
-      toast('error', '保存に失敗しました')
+      toast('error', `保存に失敗: ${err instanceof Error ? err.message : err}`)
     } finally {
       setSaving(false)
     }
