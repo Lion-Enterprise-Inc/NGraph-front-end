@@ -401,7 +401,8 @@ export default function StoreKnowledgePage() {
   // UIDs更新のみ（保存後に使う）
   const reloadExistingItems = async (restaurantSlug: string) => {
     try {
-      const items = await apiClient.get<StoreKnowledgeItem[]>(`/store-knowledge/${restaurantSlug}`)
+      const resp = await apiClient.get<{ result: StoreKnowledgeItem[] }>(`/store-knowledge/${restaurantSlug}`)
+      const items = Array.isArray(resp) ? resp : (resp?.result || [])
       setExistingItems(items)
     } catch (err) {
       console.error('Failed to reload existing items:', err)
@@ -412,7 +413,8 @@ export default function StoreKnowledgePage() {
     try {
       // Fetch restaurant info to get business_type
       try {
-        const restaurantInfo = await apiClient.get<{ business_type?: string }>(`/restaurants/public/${restaurantSlug}`)
+        const resp = await apiClient.get<{ result: { business_type?: string } }>(`/restaurants/public/${restaurantSlug}`)
+        const restaurantInfo = resp?.result || resp
         if (restaurantInfo?.business_type) {
           setBusinessType(restaurantInfo.business_type)
         }
@@ -420,7 +422,8 @@ export default function StoreKnowledgePage() {
         // Non-critical: fall back to default questions
       }
 
-      const items = await apiClient.get<StoreKnowledgeItem[]>(`/store-knowledge/${restaurantSlug}`)
+      const resp = await apiClient.get<{ result: StoreKnowledgeItem[] }>(`/store-knowledge/${restaurantSlug}`)
+      const items = Array.isArray(resp) ? resp : (resp?.result || [])
       setExistingItems(items)
 
       // Prefill answers from existing data — use all possible phases to match keys
