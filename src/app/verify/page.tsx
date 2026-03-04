@@ -216,6 +216,14 @@ function VerifyContent() {
     }
   }
 
+  const goBack = () => {
+    if (currentIdx <= 0) return
+    setCorrecting(false)
+    setCorrectionValue('')
+    setSelectedAllergens([])
+    setCurrentIdx(i => i - 1)
+  }
+
   // Open correction
   const openCorrection = () => {
     setCorrecting(true)
@@ -484,6 +492,11 @@ function VerifyContent() {
               <button onClick={handleSkip} disabled={loading} style={btnGhost}>
                 スキップ
               </button>
+              {currentIdx > 0 && (
+                <button onClick={goBack} disabled={loading} style={{ ...btnGhost, color: '#94a3b8', borderColor: '#f1f5f9' }}>
+                  ← 前の質問に戻る
+                </button>
+              )}
             </div>
           )}
         </div>

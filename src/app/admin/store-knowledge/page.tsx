@@ -440,12 +440,35 @@ export default function StoreKnowledgePage() {
     }
   }
 
+  // localStorage自動保存キー
+  const storageKey = `store-knowledge-draft-${slug}`
+
+  // localStorageから下書き復元
+  useEffect(() => {
+    if (!slug) return
+    try {
+      const saved = localStorage.getItem(`store-knowledge-draft-${slug}`)
+      if (saved) {
+        const draft = JSON.parse(saved) as Record<string, Answer>
+        setAnswers(prev => {
+          // API既存データを優先、localStorageで補完
+          const merged = { ...draft, ...prev }
+          return merged
+        })
+      }
+    } catch { /* ignore */ }
+  }, [slug]) // eslint-disable-line react-hooks/exhaustive-deps
+
   const handleAnswer = useCallback((questionId: string, value: string | string[], note: string) => {
-    setAnswers(prev => ({
-      ...prev,
-      [questionId]: { value, note },
-    }))
-  }, [])
+    setAnswers(prev => {
+      const next = { ...prev, [questionId]: { value, note } }
+      // localStorageに自動保存
+      try {
+        localStorage.setItem(storageKey, JSON.stringify(next))
+      } catch { /* quota exceeded等 */ }
+      return next
+    })
+  }, [storageKey])
 
   const handleSave = async () => {
     if (!slug) return
@@ -492,6 +515,8 @@ export default function StoreKnowledgePage() {
         toast('warning', `${results.length - failed}件保存、${failed}件失敗`)
       } else {
         toast('success', `${results.length}件保存しました`)
+        // 保存成功したら下書きをクリア
+        try { localStorage.removeItem(storageKey) } catch { /* ignore */ }
       }
 
       // Reload to get updated UIDs
