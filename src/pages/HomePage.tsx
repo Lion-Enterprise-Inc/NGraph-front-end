@@ -1619,7 +1619,51 @@ export default function HomePage() {
             )}
           </div>
 
-          {/* NFG Menu Cards — メイン表示 */}
+          {/* Restaurant list — 店舗名マッチは先に表示 */}
+          <div className="explore-list">
+            {loading ? (
+              <div className="explore-loading">{fl.loading}</div>
+            ) : restaurants.length === 0 ? (
+              <div className="explore-empty">{fl.empty}</div>
+            ) : (
+              restaurants.map(r => (
+                <button
+                  key={r.uid}
+                  className="explore-row"
+                  onClick={() => router.push(`/capture?restaurant=${encodeURIComponent(r.slug)}`)}
+                >
+                  <div className="explore-row-main">
+                    <div className="explore-row-info">
+                      <span className="explore-row-name">
+                        {!isJa && (r as any).name_romaji
+                          ? <>{(r as any).name_romaji}<span className="store-romaji">{(() => { const s = splitStoreName(r.name); return <>{s.brand}{s.suffix && <span className="store-suffix">{s.suffix}</span>}</> })()}</span></>
+                          : (() => { const s = splitStoreName(r.name); return <>{s.brand}{s.suffix && <span className="store-suffix">{s.suffix}</span>}</> })()
+                        }
+                      </span>
+                      {r.city && <span className="explore-row-address">{r.city}</span>}
+                    </div>
+                    {r.menu_count > 0 && (
+                      <span className="explore-row-count">{r.menu_count}</span>
+                    )}
+                  </div>
+                  {r._nfg && 'match_reasons' in r && (r as NfgSearchRestaurant).match_reasons.length > 0 && (
+                    <div className="explore-row-reasons">
+                      {(r as NfgSearchRestaurant).score > 0 && (
+                        <span className="explore-score-badge">
+                          {(r as NfgSearchRestaurant).score}pt
+                        </span>
+                      )}
+                      {(r as NfgSearchRestaurant).match_reasons.map((reason, i) => (
+                        <span key={i} className="explore-match-tag">{reason}</span>
+                      ))}
+                    </div>
+                  )}
+                </button>
+              ))
+            )}
+          </div>
+
+          {/* NFG Menu Cards — 店舗リストの後に表示 */}
           {menuResults.length > 0 && (
             <div className="nfg-menu-section">
               <div className="nfg-menu-label">{isJa ? '一致するメニュー' : 'Matching dishes'} ({menuResults.length})</div>
@@ -1667,50 +1711,6 @@ export default function HomePage() {
               </div>
             </div>
           )}
-
-          {/* Restaurant list */}
-          <div className="explore-list">
-            {loading ? (
-              <div className="explore-loading">{fl.loading}</div>
-            ) : restaurants.length === 0 ? (
-              <div className="explore-empty">{fl.empty}</div>
-            ) : (
-              restaurants.map(r => (
-                <button
-                  key={r.uid}
-                  className="explore-row"
-                  onClick={() => router.push(`/capture?restaurant=${encodeURIComponent(r.slug)}`)}
-                >
-                  <div className="explore-row-main">
-                    <div className="explore-row-info">
-                      <span className="explore-row-name">
-                        {!isJa && (r as any).name_romaji
-                          ? <>{(r as any).name_romaji}<span className="store-romaji">{(() => { const s = splitStoreName(r.name); return <>{s.brand}{s.suffix && <span className="store-suffix">{s.suffix}</span>}</> })()}</span></>
-                          : (() => { const s = splitStoreName(r.name); return <>{s.brand}{s.suffix && <span className="store-suffix">{s.suffix}</span>}</> })()
-                        }
-                      </span>
-                      {r.city && <span className="explore-row-address">{r.city}</span>}
-                    </div>
-                    {r.menu_count > 0 && (
-                      <span className="explore-row-count">{r.menu_count}</span>
-                    )}
-                  </div>
-                  {r._nfg && 'match_reasons' in r && (r as NfgSearchRestaurant).match_reasons.length > 0 && (
-                    <div className="explore-row-reasons">
-                      {(r as NfgSearchRestaurant).score > 0 && (
-                        <span className="explore-score-badge">
-                          {(r as NfgSearchRestaurant).score}pt
-                        </span>
-                      )}
-                      {(r as NfgSearchRestaurant).match_reasons.map((reason, i) => (
-                        <span key={i} className="explore-match-tag">{reason}</span>
-                      ))}
-                    </div>
-                  )}
-                </button>
-              ))
-            )}
-          </div>
 
           {/* Pagination */}
           {pages > 1 && (

@@ -2,8 +2,14 @@ import '../index.css'
 import '../App.css'
 import { AppProvider } from '../components/AppProvider'
 import type { ReactNode } from 'react'
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import Script from 'next/script'
+
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+}
 
 export const metadata: Metadata = {
   title: 'NGraph — 食を正しく伝える、データインフラ',
