@@ -961,10 +961,10 @@ export default function HomePage() {
 
   const handleSearch = (q: string) => {
     setQuery(q)
-    // debounce: 500ms後に自動検索
+    // debounce: 500ms後に自動検索（IME composing中はスキップ）
     if (debounceRef.current) clearTimeout(debounceRef.current)
     debounceRef.current = setTimeout(() => {
-      triggerSearch(q)
+      if (!composingRef.current) triggerSearch(q)
     }, 500)
   }
 
