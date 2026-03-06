@@ -5130,6 +5130,15 @@ textarea.form-input {
   border-color: var(--color-text-muted);
 }
 
+.explore-search-spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: translateY(-50%) rotate(0deg); }
+  to { transform: translateY(-50%) rotate(360deg); }
+}
+
 .explore-search::placeholder {
   color: var(--color-text-muted);
   font-weight: 300;

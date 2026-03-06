@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { Search } from 'lucide-react'
+import { Search, Loader2 } from 'lucide-react'
 import { ExploreApi, SemanticSearchApi, MenuSearchApi, SearchRestaurant, NfgSearchRestaurant, SemanticSearchRestaurant, CityCount, PlatformStats, MenuNFGCard } from '../services/api'
 import { useAppContext } from '../components/AppProvider'
 
@@ -961,6 +961,11 @@ export default function HomePage() {
 
   const handleSearch = (q: string) => {
     setQuery(q)
+    // debounce: 500ms後に自動検索
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(() => {
+      triggerSearch(q)
+    }, 500)
   }
 
   const triggerSearch = (q: string) => {
@@ -982,6 +987,8 @@ export default function HomePage() {
   }
 
   const handleSearchSubmit = () => {
+    // Enter押したらdebounceキャンセルして即検索
+    if (debounceRef.current) clearTimeout(debounceRef.current)
     if (query.length >= 1) {
       setSearched(true)
       fetchRestaurants(query, city, 1)
@@ -1557,7 +1564,7 @@ export default function HomePage() {
               <div className="explore-search-wrap explore-search-secondary">
                 <div className="explore-search-sub">{fl.searchMore}</div>
                 <div style={{ position: 'relative' }}>
-                  <Search size={16} className="explore-search-icon" />
+                  {loading ? <Loader2 size={16} className="explore-search-icon explore-search-spinner" /> : <Search size={16} className="explore-search-icon" />}
                   <input
                     className="explore-search"
                     type="text"
@@ -1581,7 +1588,7 @@ export default function HomePage() {
           <div style={{ padding: '8px 24px 0', display: 'flex', flexDirection: 'column', gap: 8 }}>
             <span className="conv-reset" onClick={() => { setSearched(false); setQuery(''); setRestaurants([]); setTotal(0); resetFlow() }}>{fl.back}</span>
             <div style={{ position: 'relative' }}>
-              <Search size={16} className="explore-search-icon" />
+              {loading ? <Loader2 size={16} className="explore-search-icon explore-search-spinner" /> : <Search size={16} className="explore-search-icon" />}
               <input
                 className="explore-search"
                 type="text"
