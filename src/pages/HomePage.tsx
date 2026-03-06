@@ -905,7 +905,7 @@ export default function HomePage() {
     try {
       // NFGメニューカード検索（2文字以上のテキスト検索時）
       const menuPromise = q.length >= 2
-        ? MenuSearchApi.search({ q, area: c, nfg: true, size: 20 }).catch(() => null)
+        ? MenuSearchApi.search({ q, area: c, nfg: true, size: 20, lang: language }).catch(() => null)
         : Promise.resolve(null)
 
       if (q && isNfgQuery(q)) {
@@ -943,7 +943,7 @@ export default function HomePage() {
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [language])
 
   useEffect(() => {
     ExploreApi.cities().then(res => setCities(res.result)).catch(() => {})

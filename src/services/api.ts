@@ -1341,7 +1341,7 @@ export const MenuSearchApi = {
   search: async (params: {
     category?: string; q?: string; diet?: string; no?: string;
     mood?: string; area?: string; nfg?: boolean; lat?: number; lng?: number;
-    page?: number; size?: number;
+    page?: number; size?: number; lang?: string;
   }): Promise<{
     result: { count: number; menus: (MenuSearchItem | MenuNFGCard)[]; page: number; size: number; pages: number };
   }> => {
@@ -1355,6 +1355,7 @@ export const MenuSearchApi = {
     if (params.nfg) sp.append('nfg', 'true');
     if (params.lat != null) sp.append('lat', String(params.lat));
     if (params.lng != null) sp.append('lng', String(params.lng));
+    if (params.lang) sp.append('lang', params.lang);
     sp.append('page', String(params.page || 1));
     sp.append('size', String(params.size || 20));
     const resp = await fetch(`${API_BASE_URL}/restaurants/search/menus?${sp}`);
