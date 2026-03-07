@@ -28,6 +28,28 @@ import ImageViewer from "../components/ImageViewer";
 import QuickExplainCard from "../components/QuickExplainCard";
 import NFGCard from "../components/NFGCard";
 
+function visionToQuickExplain(vi: VisionMenuItem): QuickExplainItem {
+  return {
+    name_jp: vi.name_jp,
+    name_en: vi.name_en || '',
+    price: 0,
+    description: vi.description || '',
+    allergens: vi.allergens,
+    ingredients: vi.ingredients,
+    restrictions: vi.restrictions,
+    source: vi.source || 'db',
+    menu_uid: (vi as any).menu_uid,
+    image_url: vi.image_url,
+    narrative: vi.narrative,
+    verification_rank: vi.verification_rank,
+    taste_values: vi.taste_values,
+    serving: vi.serving,
+    estimated_calories: vi.estimated_calories,
+    confidence: vi.confidence,
+    category: vi.category,
+  };
+}
+
 type ApiRestaurant = {
   uid: string
   name: string
@@ -1868,333 +1890,68 @@ export default function CapturePage({
                       <div className="nfg-cards-header">
                         {response.output.title}
                       </div>
-                      {response.visionItems.map((vi, idx) => {
-                        const cardOpen = isCardExpanded(response.id, idx, response.visionItems!.length);
-                        return (
-                          <div key={idx} className={`nfg-card${cardOpen ? '' : ' nfg-card-collapsed'}`}>
-                            <div className="nfg-card-header" onClick={() => toggleCard(response.id, idx)} style={{ cursor: 'pointer' }}>
-                              <div className="nfg-card-title-row">
-                                <span className="nfg-card-number">{idx + 1}.</span>
-                                <span className="nfg-card-name">
-                                  {activeLanguage !== 'ja' && vi.name_en ? vi.name_en : vi.name_jp}
-                                </span>
-                                {vi.price > 0 && (
-                                  <span className="nfg-card-price">¥{vi.price.toLocaleString()}</span>
-                                )}
-                                {!cardOpen && (
-                                  <span className="nfg-card-expand-hint">▼</span>
-                                )}
-                              </div>
-                              {cardOpen && (activeLanguage !== 'ja' ? vi.name_jp : vi.name_en) && (
-                                <div className="nfg-card-name-en">
-                                  {activeLanguage !== 'ja' ? vi.name_jp : vi.name_en}
-                                </div>
-                              )}
-                              {!cardOpen && vi.name_en && (
-                                <div className="nfg-card-name-en" style={{ paddingLeft: 22 }}>
-                                  {vi.name_en}
-                                </div>
-                              )}
-                            </div>
-                            {cardOpen && <>
-                            {/* === Hero: 画像 + Food Graph 横並び === */}
-                            <div className={`nfg-card-hero${vi.image_url ? '' : ' nfg-card-hero--no-image'}`}>
-                              {vi.image_url ? (
-                                <ImageViewer
-                                  images={[vi.image_url]}
-                                  alt={vi.name_jp}
-                                  imageRank={(vi as any).image_rank || 'C'}
-                                  isJa={activeLanguage === 'ja'}
-                                />
-                              ) : vi.description ? (
-                                <div className="nfg-hero-desc">{vi.description}</div>
-                              ) : null}
-                              <input
-                                ref={el => { if ((vi as any).menu_uid) photoInputRefs.current[(vi as any).menu_uid] = el; }}
-                                type="file"
-                                accept="image/jpeg,image/png,image/webp"
-                                capture="environment"
-                                style={{ display: 'none' }}
-                                onChange={(e) => {
-                                  const file = e.target.files?.[0];
-                                  const menuUid = (vi as any).menu_uid;
-                                  if (file && menuUid) handlePhotoUpload(menuUid, file);
-                                  e.target.value = '';
-                                }}
-                              />
-                              {vi.taste_values && Object.keys(vi.taste_values).length > 0 && !((vi as any).dish_category === 'drink' && (() => { const vals = Object.values(vi.taste_values as Record<string,number>); return Math.max(...vals) - Math.min(...vals) <= 3; })()) && (() => {
-                                const axes = ['umami','richness','saltiness','sweetness','spiciness','lightness','sourness','bitterness','volume','locality'] as const;
-                                const labels: Record<string,string> = {
-                                  umami: copy.nfg.tasteUmami, richness: copy.nfg.tasteRichness,
-                                  saltiness: copy.nfg.tasteSaltiness, sweetness: copy.nfg.tasteSweetness,
-                                  spiciness: copy.nfg.tasteSpiciness, lightness: copy.nfg.tasteLightness,
-                                  sourness: copy.nfg.tasteSourness, bitterness: copy.nfg.tasteBitterness,
-                                  volume: copy.nfg.tasteVolume, locality: copy.nfg.tasteLocality,
-                                };
-                                const axisColors: Record<string,string> = {umami:"#00e896",richness:"#e8c050",saltiness:"#a0a0ff",sweetness:"#f0a050",spiciness:"#ff6b4a",lightness:"#80d0ff",sourness:"#50c8f0",bitterness:"#80c080",volume:"#c080ff",locality:"#ff80a0"};
-                                const N = axes.length, R = 88;
-                                const pt = (i: number, rv: number) => {
-                                  const a = (2 * Math.PI * i / N) - Math.PI / 2;
-                                  return { x: rv * Math.cos(a), y: rv * Math.sin(a) };
-                                };
-                                const poly = (rv: number) => axes.map((_, i) => { const p = pt(i, rv); return `${p.x},${p.y}`; }).join(' ');
-                                const tv = vi.taste_values as Record<string,number>;
-                                const dataPoly = axes.map((a, i) => { const p = pt(i, R * (tv[a] || 0) / 10); return `${p.x},${p.y}`; }).join(' ');
-                                const uid = `fg-${response.id}-${idx}`;
-                                return (
-                                  <div className="nfg-taste-chart">
-                                    <div className="nfg-fg-label"><div className="nfg-fg-dot" /> NFG</div>
-                                    <svg className="nfg-radar" viewBox="-110 -110 220 220">
-                                      <defs>
-                                        <radialGradient id={`rg-${uid}`} cx="50%" cy="50%" r="50%">
-                                          <stop offset="0%" stopColor="#00e896" stopOpacity="0.25"/>
-                                          <stop offset="100%" stopColor="#00e896" stopOpacity="0.03"/>
-                                        </radialGradient>
-                                        <filter id={`glow-${uid}`}><feGaussianBlur stdDeviation="2.5" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-                                      </defs>
-                                      {[0.25,0.5,0.75,1].map(lv => <polygon key={lv} points={poly(R*lv)} fill="none" stroke={lv===1?"var(--color-surface-active)":"var(--color-surface-hover)"} strokeWidth="0.5"/>)}
-                                      {axes.map((_, i) => { const p = pt(i, R); return <line key={i} x1={0} y1={0} x2={p.x} y2={p.y} stroke="var(--color-surface-active)" strokeWidth="0.5"/>; })}
-                                      <polygon points={dataPoly} fill={`url(#rg-${uid})`} stroke="#00e896" strokeWidth="1.5" strokeLinejoin="round" filter={`url(#glow-${uid})`}/>
-                                      {myTasteAvg && (() => {
-                                        const myPoly = axes.map((a, i) => { const p = pt(i, R * (myTasteAvg[a] || 0) / 10); return `${p.x},${p.y}`; }).join(' ');
-                                        return <polygon points={myPoly} fill="none" stroke="#4f8cff" strokeWidth="1.2" strokeDasharray="4,3" strokeLinejoin="round" opacity="0.7"/>;
-                                      })()}
-                                      {axes.map((a, i) => { const v = (tv[a]||0)/10; const active = v > 0.3; const p = pt(i, R*v); return <circle key={i} cx={p.x} cy={p.y} r={active?3.5:2} fill={active?axisColors[a]:"var(--color-text-dim)"} stroke="var(--color-bg)" strokeWidth="1"/>; })}
-                                      {axes.map((a, i) => { const v = (tv[a]||0)/10; const active = v > 0.3; const p = pt(i, R*1.22); return <text key={i} x={p.x} y={p.y+3.5} textAnchor="middle" fontFamily="'DM Mono',monospace" fontSize={active?10.5:9} fill={active?axisColors[a]:"var(--color-text-half)"}>{labels[a]}{active ? ` ${Math.round(v*100)}` : ''}</text>; })}
-                                    </svg>
-                                  </div>
-                                );
-                              })()}
-                            </div>
-                            {/* === Brief: 説明 + アレルゲン + バッジ === */}
-                            <div className="nfg-card-brief">
-                                {vi.description && vi.image_url && (
-                                  <div className="nfg-card-desc">{vi.description}</div>
-                                )}
-                                {vi.allergens?.length > 0 && (
-                                  <div className="nfg-card-fields">
-                                    <div className="nfg-field nfg-field-allergen">
-                                      <span className="nfg-field-label">{copy.nfg.allergens}</span>
-                                      <span className="nfg-field-value">{vi.allergens.join(activeLanguage === 'ja' ? '、' : ', ')}</span>
-                                    </div>
-                                  </div>
-                                )}
-                                <div className="nfg-card-badge-row">
-                                  {(() => {
-                                    const rank = (vi as any).verification_rank || 'C';
-                                    const isVad = rank === 'S' || rank === 'A';
-                                    const label = isVad
-                                      ? (activeLanguage === 'ja' ? '店主確認' : 'Verified')
-                                      : (activeLanguage === 'ja' ? 'AI推定' : 'AI Est.');
-                                    return (
-                                      <span className={`nfg-badge nfg-rank nfg-rank-${rank.toLowerCase()}`}>
-                                        {label}
-                                      </span>
-                                    );
-                                  })()}
-                                  <button
-                                    type="button"
-                                    className="nfg-badge"
-                                    style={{
-                                      cursor: 'pointer',
-                                      background: (vi as any).menu_uid && likedMenus.has((vi as any).menu_uid) ? 'rgba(255,80,80,0.18)' : 'var(--color-surface-hover)',
-                                      color: (vi as any).menu_uid && likedMenus.has((vi as any).menu_uid) ? '#ff5050' : 'var(--color-text-half)',
-                                      border: (vi as any).menu_uid && likedMenus.has((vi as any).menu_uid) ? '1px solid rgba(255,80,80,0.3)' : '1px solid var(--color-border-subtle)',
-                                    }}
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      const menuUid = (vi as any).menu_uid;
-                                      if (!menuUid) return;
-                                      const next = new Set(likedMenus);
-                                      const isAdding = !next.has(menuUid);
-                                      if (isAdding) { next.add(menuUid); } else { next.delete(menuUid); }
-                                      setLikedMenus(next);
-                                      localStorage.setItem('ngraph_liked_menus', JSON.stringify([...next]));
-                                      // taste_valuesキャッシュ更新
-                                      if (isAdding && vi.taste_values) {
-                                        const tc = { ...tasteCache, [menuUid]: vi.taste_values };
-                                        setTasteCache(tc);
-                                        try { localStorage.setItem('ngraph_taste_cache', JSON.stringify(tc)); } catch {}
-                                      } else if (!isAdding) {
-                                        const tc = { ...tasteCache };
-                                        delete tc[menuUid];
-                                        setTasteCache(tc);
-                                        try { localStorage.setItem('ngraph_taste_cache', JSON.stringify(tc)); } catch {}
-                                      }
-                                      if (isAdding && restaurantSlug) {
-                                        EventApi.log({ restaurant_slug: restaurantSlug, event: 'dish_like', meta: { menu_uid: menuUid } });
-                                      }
-                                    }}
-                                  >
-                                    {(vi as any).menu_uid && likedMenus.has((vi as any).menu_uid) ? '♥' : '♡'}
-                                  </button>
-                                  {(vi as any).menu_uid && (
-                                    <>
-                                      <button
-                                        type="button"
-                                        className="nfg-badge"
-                                        style={{
-                                          cursor: 'pointer',
-                                          background: nfgFeedback[(vi as any).menu_uid] === 'good' ? 'rgba(16,163,127,0.2)' : 'var(--color-surface-hover)',
-                                          color: nfgFeedback[(vi as any).menu_uid] === 'good' ? '#10a37f' : 'var(--color-text-half)',
-                                          border: nfgFeedback[(vi as any).menu_uid] === 'good' ? '1px solid rgba(16,163,127,0.4)' : '1px solid var(--color-border-subtle)',
-                                        }}
-                                        onClick={(e) => { e.stopPropagation(); handleNfgFeedback((vi as any).menu_uid, 'good'); }}
-                                      >👍</button>
-                                      <button
-                                        type="button"
-                                        className="nfg-badge"
-                                        style={{
-                                          cursor: 'pointer',
-                                          background: nfgFeedback[(vi as any).menu_uid] === 'bad' ? 'rgba(255,80,80,0.2)' : 'var(--color-surface-hover)',
-                                          color: nfgFeedback[(vi as any).menu_uid] === 'bad' ? '#ff5050' : 'var(--color-text-half)',
-                                          border: nfgFeedback[(vi as any).menu_uid] === 'bad' ? '1px solid rgba(255,80,80,0.4)' : '1px solid var(--color-border-subtle)',
-                                        }}
-                                        onClick={(e) => { e.stopPropagation(); handleNfgFeedback((vi as any).menu_uid, 'bad'); }}
-                                      >👎</button>
-                                    </>
-                                  )}
-                                  {!vi.image_url && (vi as any).menu_uid && (
-                                    <button
-                                      type="button"
-                                      className="nfg-badge"
-                                      style={{ cursor: 'pointer', background: 'var(--color-surface-hover)', color: 'var(--color-text-half)', border: '1px solid var(--color-border-subtle)' }}
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        const menuUid = (vi as any).menu_uid;
-                                        if (!photoUploading) photoInputRefs.current[menuUid]?.click();
-                                      }}
-                                    >
-                                      {photoUploading === (vi as any).menu_uid ? '...' : '📷'}
-                                    </button>
-                                  )}
-                                  <button
-                                    type="button"
-                                    className="nfg-badge"
-                                    style={{ marginLeft: 'auto', cursor: 'pointer', background: 'rgba(79,140,255,0.15)', color: '#4f8cff', border: '1px solid rgba(79,140,255,0.3)' }}
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setSuggestionTarget({
-                                        name_jp: vi.name_jp,
-                                        menu_uid: (vi as any).menu_uid,
-                                        restaurant_uid: selectedRestaurant?.uid,
-                                      });
-                                    }}
-                                  >
-                                    {copy.nfg.suggestEdit || 'この情報を修正'}
-                                  </button>
-                                </div>
-                              </div>
-                              {/* === 詳しく見るで展開 === */}
-                              {(() => {
-                                const hasDetails = vi.image_url || vi.narrative || (vi.serving && (vi.serving.style || vi.serving.portion || vi.serving.temperature)) || (vi.ingredients?.length > 0) || (vi.restrictions && vi.restrictions.length > 0) || vi.flavor_profile || vi.estimated_calories || vi.tax_note || (vi.confidence != null && vi.confidence > 0);
-                                if (!hasDetails) return null;
-                                const detailsOpen = isDetailsExpanded(response.id, idx);
-                                return (
-                                  <>
-                                    <button
-                                      type="button"
-                                      className="nfg-details-toggle"
-                                      onClick={(e) => { e.stopPropagation(); toggleDetails(response.id, idx); }}
-                                    >
-                                      {detailsOpen
-                                        ? copy.capture.less
-                                        : copy.capture.moreDetails
-                                      }
-                                      <span className={`nfg-details-chevron${detailsOpen ? ' open' : ''}`}>▼</span>
-                                    </button>
-                                    <div className={`nfg-card-details${detailsOpen ? ' open' : ''}`}>
-                                      {vi.narrative && (
-                                        <div className="nfg-narrative">
-                                          {vi.narrative.story && (
-                                            <div className="nfg-narrative-story">{vi.narrative.story}</div>
-                                          )}
-                                          {vi.narrative.texture && (
-                                            <div className="nfg-field">
-                                              <span className="nfg-field-label">{copy.nfg.texture}</span>
-                                              <span className="nfg-field-value">{vi.narrative.texture}</span>
-                                            </div>
-                                          )}
-                                          {vi.narrative.how_to_eat && (
-                                            <div className="nfg-field">
-                                              <span className="nfg-field-label">{copy.nfg.howToEat}</span>
-                                              <span className="nfg-field-value">{vi.narrative.how_to_eat}</span>
-                                            </div>
-                                          )}
-                                          {vi.narrative.pairing && (
-                                            <div className="nfg-field">
-                                              <span className="nfg-field-label">{copy.nfg.pairing}</span>
-                                              <span className="nfg-field-value">{vi.narrative.pairing}</span>
-                                            </div>
-                                          )}
-                                          {vi.narrative.kid_friendly != null && (
-                                            <div className="nfg-field">
-                                              <span className="nfg-field-label">{vi.narrative.kid_friendly ? copy.nfg.kidFriendly : copy.nfg.notKidFriendly}</span>
-                                            </div>
-                                          )}
-                                        </div>
-                                      )}
-                                      {vi.serving && (vi.serving.style || vi.serving.portion || vi.serving.temperature) && (
-                                        <div className="nfg-serving">
-                                          <div className="nfg-field">
-                                            <span className="nfg-field-label">{copy.nfg.servingStyle}</span>
-                                            <span className="nfg-field-value">
-                                              {[vi.serving.style, vi.serving.portion, vi.serving.temperature].filter(Boolean).join(' / ')}
-                                            </span>
-                                          </div>
-                                          {vi.serving.abv_label && (
-                                            <div className="nfg-field">
-                                              <span className="nfg-field-label">{copy.nfg.abv}</span>
-                                              <span className="nfg-field-value">{vi.serving.abv_label}</span>
-                                            </div>
-                                          )}
-                                        </div>
-                                      )}
-                                      <div className="nfg-card-fields">
-                                        {vi.ingredients?.length > 0 && (
-                                          <div className="nfg-field">
-                                            <span className="nfg-field-label">{copy.nfg.ingredients}</span>
-                                            <span className="nfg-field-value">{vi.ingredients.join(activeLanguage === 'ja' ? '、' : ', ')}</span>
-                                          </div>
-                                        )}
-                                        {vi.restrictions && vi.restrictions.length > 0 && (
-                                          <div className="nfg-field">
-                                            <span className="nfg-field-label">{copy.nfg.restrictions}</span>
-                                            <span className="nfg-field-value">{vi.restrictions.join(activeLanguage === 'ja' ? '、' : ', ')}</span>
-                                          </div>
-                                        )}
-                                        {vi.flavor_profile && (
-                                          <div className="nfg-field">
-                                            <span className="nfg-field-label">{copy.nfg.flavorProfile}</span>
-                                            <span className="nfg-field-value">{vi.flavor_profile}</span>
-                                          </div>
-                                        )}
-                                        {vi.estimated_calories && (
-                                          <div className="nfg-field">
-                                            <span className="nfg-field-label">{copy.nfg.calories}</span>
-                                            <span className="nfg-field-value">{vi.estimated_calories}</span>
-                                          </div>
-                                        )}
-                                        {vi.tax_note && (
-                                          <div className="nfg-field">
-                                            <span className="nfg-field-label">{copy.nfg.taxNote}</span>
-                                            <span className="nfg-field-value">{vi.tax_note}</span>
-                                          </div>
-                                        )}
-                                      </div>
-                                      {vi.confidence != null && vi.confidence > 0 && (
-                                        <div className="nfg-card-badge-row" style={{ marginBottom: 0 }}>
-                                          <span className="nfg-badge nfg-badge-confidence">{copy.nfg.confidence} {vi.confidence}%</span>
-                                        </div>
-                                      )}
-                                    </div>
-                                  </>
-                                );
-                              })()}
-                            </>}
-                          </div>
-                        );
-                      })}
+                      <NFGCard
+                        items={response.visionItems.map(visionToQuickExplain)}
+                        language={activeLanguage}
+                        likedMenus={likedMenus}
+                        onLike={(menuUid) => {
+                          const next = new Set(likedMenus);
+                          const isAdding = !next.has(menuUid);
+                          if (isAdding) next.add(menuUid); else next.delete(menuUid);
+                          setLikedMenus(next);
+                          localStorage.setItem('ngraph_liked_menus', JSON.stringify([...next]));
+                          const vi = response.visionItems?.find(i => (i as any).menu_uid === menuUid);
+                          if (isAdding && vi?.taste_values) {
+                            const tc = { ...tasteCache, [menuUid]: vi.taste_values };
+                            setTasteCache(tc);
+                            try { localStorage.setItem('ngraph_taste_cache', JSON.stringify(tc)); } catch {}
+                          } else if (!isAdding) {
+                            const tc = { ...tasteCache };
+                            delete tc[menuUid];
+                            setTasteCache(tc);
+                            try { localStorage.setItem('ngraph_taste_cache', JSON.stringify(tc)); } catch {}
+                          }
+                          if (isAdding && restaurantSlug) {
+                            EventApi.log({ restaurant_slug: restaurantSlug, event: 'dish_like', meta: { menu_uid: menuUid } });
+                          }
+                        }}
+                        onSuggestEdit={(info) => {
+                          setSuggestionTarget({
+                            name_jp: info.name_jp,
+                            menu_uid: info.menu_uid,
+                            restaurant_uid: selectedRestaurant?.uid,
+                          });
+                        }}
+                        onPhotoUpload={handlePhotoUpload}
+                        photoUploading={photoUploading}
+                        copy={{
+                          verified: (copy as any).quickExplain?.verified || "Verified",
+                          aiEstimate: (copy as any).quickExplain?.aiEstimate || "AI Estimate",
+                          newItem: (copy as any).quickExplain?.newItem || "New",
+                          ingredients: copy.nfg.ingredients,
+                          allergens: copy.nfg.allergens,
+                          restrictions: copy.nfg.restrictions,
+                          calories: copy.nfg.calories,
+                          confidence: copy.nfg.confidence,
+                          texture: copy.nfg.texture,
+                          pairing: copy.nfg.pairing,
+                          howToEat: copy.nfg.howToEat,
+                          servingStyle: copy.nfg.servingStyle,
+                          kidFriendly: copy.nfg.kidFriendly,
+                          notKidFriendly: copy.nfg.notKidFriendly,
+                          suggestEdit: copy.nfg.suggestEdit || 'この情報を修正',
+                          tasteUmami: copy.nfg.tasteUmami,
+                          tasteSweetness: copy.nfg.tasteSweetness,
+                          tasteSourness: copy.nfg.tasteSourness,
+                          tasteSaltiness: copy.nfg.tasteSaltiness,
+                          tasteBitterness: copy.nfg.tasteBitterness,
+                          tasteSpiciness: copy.nfg.tasteSpiciness,
+                          tasteRichness: copy.nfg.tasteRichness,
+                          tasteLightness: copy.nfg.tasteLightness,
+                          tasteVolume: copy.nfg.tasteVolume,
+                          tasteLocality: copy.nfg.tasteLocality,
+                        }}
+                      />
                     </div>
                     {response.contextChips && response.contextChips.length > 0 && (
                       <div className="context-chips">
