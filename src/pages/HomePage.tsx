@@ -3,8 +3,30 @@
 import { useRouter } from 'next/navigation'
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { Search, Loader2 } from 'lucide-react'
-import { ExploreApi, SemanticSearchApi, MenuSearchApi, SearchRestaurant, NfgSearchRestaurant, SemanticSearchRestaurant, CityCount, PlatformStats, MenuNFGCard } from '../services/api'
+import { ExploreApi, SemanticSearchApi, MenuSearchApi, SearchRestaurant, NfgSearchRestaurant, SemanticSearchRestaurant, CityCount, PlatformStats, MenuNFGCard, QuickExplainItem } from '../services/api'
 import { useAppContext } from '../components/AppProvider'
+import NFGCard from '../components/NFGCard'
+import { getUiCopy } from '../i18n/uiCopy'
+
+function menuNFGToQuickExplain(m: MenuNFGCard): QuickExplainItem {
+  return {
+    name_jp: m.name_jp,
+    name_en: m.name_en || '',
+    price: 0,
+    description: m.narrative_snippet || m.description || '',
+    allergens: m.allergens,
+    ingredients: m.ingredients,
+    restrictions: m.restrictions,
+    source: 'db' as const,
+    menu_uid: m.uid,
+    image_url: m.image_url || undefined,
+    narrative: m.narrative_full || undefined,
+    verification_rank: m.verification_rank || undefined,
+    taste_values: m.taste_values || undefined,
+    serving: m.serving || undefined,
+    category: m.category_label || m.category,
+  };
+}
 
 const LANG_BADGES: Record<string, string> = {
   ja: 'JP', en: 'US', 'zh-Hans': 'CN', 'zh-Hant': 'TW',
@@ -1674,48 +1696,47 @@ export default function HomePage() {
           {menuResults.length > 0 && (
             <div className="nfg-menu-section">
               <div className="nfg-menu-label">{isJa ? '一致するメニュー' : 'Matching dishes'} ({menuResults.length})</div>
-              <div className="nfg-menu-list">
-                {menuResults.map(m => (
-                  <button
-                    key={m.uid}
-                    className="nfg-menu-card"
-                    onClick={() => router.push(`/capture?restaurant=${encodeURIComponent(m.restaurant_slug)}`)}
-                  >
-                    <div className="nfg-menu-card-header">
-                      <div className="nfg-menu-card-title">
-                        <span className="nfg-menu-name">{m.name_jp}</span>
-                        {m.verification_rank && (
-                          <span className={`nfg-rank-badge nfg-rank-${m.verification_rank}`}>{m.verification_rank}</span>
-                        )}
-                      </div>
-                      {m.price > 0 && <div className="nfg-menu-price">¥{m.price.toLocaleString()}</div>}
-                    </div>
-                    <div className="nfg-menu-card-restaurant">
-                      {(() => { const s = splitStoreName(m.restaurant_name); return <>{s.brand}{s.suffix && <span className="store-suffix">{s.suffix}</span>}</> })()}
-                      {m.restaurant_city ? ` · ${m.restaurant_city}` : ''}
-                      {!isJa && m.restaurant_name_romaji && <span className="store-romaji"> {m.restaurant_name_romaji}</span>}
-                    </div>
-                    {m.narrative_snippet && <div className="nfg-menu-narrative">{m.narrative_snippet}</div>}
-                    {m.ingredients.length > 0 && (
-                      <div className="nfg-menu-ingredients">
-                        {m.ingredients.slice(0, 5).map((ing, i) => <span key={i} className="nfg-ingredient-tag">{ing}</span>)}
-                        {m.ingredients.length > 5 && <span className="nfg-ingredient-tag nfg-more">+{m.ingredients.length - 5}</span>}
-                      </div>
-                    )}
-                    {m.allergens.length > 0 && (
-                      <div className="nfg-menu-allergens">
-                        {m.allergens.map((a, i) => <span key={i} className="nfg-allergen-badge">{a}</span>)}
-                      </div>
-                    )}
-                    {m.featured_tags.length > 0 && (
-                      <div className="nfg-menu-tags">
-                        {m.featured_tags.map((t, i) => <span key={i} className="nfg-featured-tag">{t}</span>)}
-                      </div>
-                    )}
-                    {m.score > 0 && <div className="nfg-menu-score">{m.score}pt</div>}
-                  </button>
-                ))}
-              </div>
+              {(() => {
+                const copy = getUiCopy(language);
+                return menuResults.map(m => (
+                  <div key={m.uid} onClick={() => router.push(`/capture?restaurant=${encodeURIComponent(m.restaurant_slug)}`)}>
+                    <NFGCard
+                      items={[menuNFGToQuickExplain(m)]}
+                      language={language}
+                      showRestaurantInfo
+                      restaurantName={m.restaurant_name}
+                      restaurantCity={m.restaurant_city || undefined}
+                      copy={{
+                        verified: copy.nfg.vadBadge,
+                        aiEstimate: copy.nfg.aiBadge,
+                        newItem: 'New',
+                        ingredients: copy.nfg.ingredients,
+                        allergens: copy.nfg.allergens,
+                        restrictions: copy.nfg.restrictions,
+                        calories: copy.nfg.calories,
+                        confidence: copy.nfg.confidence,
+                        texture: copy.nfg.texture,
+                        pairing: copy.nfg.pairing,
+                        howToEat: copy.nfg.howToEat,
+                        servingStyle: copy.nfg.servingStyle,
+                        kidFriendly: copy.nfg.kidFriendly,
+                        notKidFriendly: copy.nfg.notKidFriendly,
+                        suggestEdit: copy.nfg.suggestEdit,
+                        tasteUmami: copy.nfg.tasteUmami,
+                        tasteSweetness: copy.nfg.tasteSweetness,
+                        tasteSourness: copy.nfg.tasteSourness,
+                        tasteSaltiness: copy.nfg.tasteSaltiness,
+                        tasteBitterness: copy.nfg.tasteBitterness,
+                        tasteSpiciness: copy.nfg.tasteSpiciness,
+                        tasteRichness: copy.nfg.tasteRichness,
+                        tasteLightness: copy.nfg.tasteLightness,
+                        tasteVolume: copy.nfg.tasteVolume,
+                        tasteLocality: copy.nfg.tasteLocality,
+                      }}
+                    />
+                  </div>
+                ));
+              })()}
             </div>
           )}
 

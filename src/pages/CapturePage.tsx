@@ -26,6 +26,7 @@ import { getUiCopy, type LanguageCode } from "../i18n/uiCopy";
 import { recordVisit, saveThread, getThreads } from "../utils/storage";
 import ImageViewer from "../components/ImageViewer";
 import QuickExplainCard from "../components/QuickExplainCard";
+import NFGCard from "../components/NFGCard";
 
 type ApiRestaurant = {
   uid: string
@@ -1728,7 +1729,7 @@ export default function CapturePage({
                       <div className="nfg-cards-header">
                         {response.output.title}
                       </div>
-                      <QuickExplainCard
+                      <NFGCard
                         items={response.quickExplainItems}
                         language={activeLanguage}
                         likedMenus={likedMenus}

@@ -7227,3 +7227,263 @@ textarea.form-input {
   color: #4f8cff;
   border-color: rgba(79, 140, 255, 0.3);
 }
+
+/* ===== Unified NFGCard ===== */
+.nfgcard-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px 12px;
+}
+.nfgcard-user-photo {
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 4px;
+}
+.nfgcard-user-photo img {
+  width: 100%;
+  max-height: 220px;
+  object-fit: cover;
+  border-radius: 10px;
+}
+.nfgcard {
+  background: var(--color-bg-secondary, #1a1a2e);
+  border-radius: 12px;
+  padding: 12px 14px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.nfgcard:hover {
+  background: var(--color-bg-tertiary, #222240);
+}
+.nfgcard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+}
+.nfgcard-header-left {
+  flex: 1;
+  min-width: 0;
+}
+.nfgcard-header-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  flex-shrink: 0;
+}
+.nfgcard-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-text-primary, #fff);
+  line-height: 1.3;
+}
+.nfgcard-number {
+  color: var(--color-text-half, #888);
+  font-weight: 600;
+  margin-right: 4px;
+  font-size: 13px;
+}
+.nfgcard-subname {
+  font-size: 12px;
+  color: var(--color-text-half, #999);
+  margin-top: 1px;
+}
+.nfgcard-restaurant {
+  font-size: 12px;
+  color: var(--color-text-dim, #aaa);
+  margin-top: 2px;
+}
+
+/* Badges */
+.nfgcard-badge {
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.nfgcard-badge-verified {
+  background: rgba(72, 187, 120, 0.2);
+  color: #48bb78;
+}
+.nfgcard-badge-ai {
+  background: rgba(160, 160, 180, 0.15);
+  color: var(--color-text-half, #999);
+}
+.nfgcard-badge-new {
+  background: rgba(99, 179, 237, 0.2);
+  color: #63b3ed;
+}
+.nfgcard-badge-category {
+  background: rgba(79, 140, 255, 0.12);
+  color: #6c9bff;
+}
+.nfgcard-like-btn {
+  background: var(--color-surface-hover, rgba(255,255,255,0.06));
+  border: 1px solid var(--color-border-subtle, rgba(255,255,255,0.08));
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-size: 13px;
+  cursor: pointer;
+  color: var(--color-text-half, #999);
+}
+.nfgcard-like-btn.liked {
+  background: rgba(255, 80, 80, 0.18);
+  color: #ff5050;
+  border-color: rgba(255, 80, 80, 0.3);
+}
+
+/* Description */
+.nfgcard-description {
+  font-size: 13px;
+  color: var(--color-text-secondary, #ccc);
+  margin-top: 6px;
+  line-height: 1.5;
+}
+.nfgcard-description-local {
+  font-size: 11px;
+  color: var(--color-text-half, #888);
+  margin-top: 2px;
+}
+
+/* Always-visible: allergens, ingredients, restrictions */
+.nfgcard-allergens {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+.nfgcard-allergen-tag {
+  font-size: 10px;
+  padding: 2px 7px;
+  border-radius: 10px;
+  background: rgba(220, 38, 38, 0.15);
+  color: rgba(248, 113, 113, 0.9);
+}
+.nfgcard-ingredients {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+.nfgcard-ingredient-tag {
+  font-size: 10px;
+  padding: 2px 7px;
+  border-radius: 10px;
+  background: var(--color-surface-hover, rgba(255,255,255,0.06));
+  color: var(--color-text-half, #999);
+}
+.nfgcard-restrictions {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+.nfgcard-restriction-tag {
+  font-size: 10px;
+  padding: 2px 7px;
+  border-radius: 10px;
+  background: rgba(168, 85, 247, 0.15);
+  color: rgba(192, 132, 252, 0.9);
+}
+
+/* Image (always visible) */
+.nfgcard-image {
+  margin-top: 8px;
+  border-radius: 6px;
+  overflow: hidden;
+}
+.nfgcard-image img {
+  width: 100%;
+  max-height: 180px;
+  object-fit: cover;
+  border-radius: 6px;
+}
+
+/* Expandable details */
+.nfgcard-details {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.nfgcard-taste-chart {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 8px 0;
+}
+.nfgcard-fg-label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  color: #f97316;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+.nfgcard-fg-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #f97316;
+}
+.nfgcard-narrative {
+  margin-top: 6px;
+}
+.nfgcard-narrative-story {
+  font-size: 12px;
+  color: var(--color-text-dim, #aaa);
+  line-height: 1.5;
+  margin-bottom: 6px;
+}
+.nfgcard-field {
+  display: flex;
+  gap: 6px;
+  font-size: 11px;
+  margin-top: 4px;
+  line-height: 1.4;
+}
+.nfgcard-field-label {
+  color: var(--color-text-half, #888);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.nfgcard-field-value {
+  color: var(--color-text-dim, #ccc);
+}
+
+/* Actions */
+.nfgcard-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  padding-top: 6px;
+  border-top: 1px solid var(--color-border-subtle, rgba(255,255,255,0.06));
+}
+.nfgcard-action-btn {
+  background: var(--color-surface-hover, rgba(255,255,255,0.06));
+  border: 1px solid var(--color-border-subtle, rgba(255,255,255,0.08));
+  border-radius: 4px;
+  padding: 3px 8px;
+  font-size: 11px;
+  cursor: pointer;
+  color: var(--color-text-half, #999);
+}
+.nfgcard-action-edit {
+  margin-left: auto;
+  background: rgba(79, 140, 255, 0.15);
+  color: #4f8cff;
+  border-color: rgba(79, 140, 255, 0.3);
+}
+.nfgcard-expand-hint {
+  text-align: center;
+  font-size: 10px;
+  color: var(--color-text-half, #666);
+  margin-top: 4px;
+}
