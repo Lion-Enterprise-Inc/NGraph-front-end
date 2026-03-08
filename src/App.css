@@ -434,8 +434,9 @@ body {
 }
 
 .page.capture-page {
-  height: 100vh;
-  height: 100dvh;
+  position: fixed;
+  inset: 0;
+  height: 100%;
   min-height: unset;
   overflow: hidden;
   width: 100%;
