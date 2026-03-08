@@ -6875,7 +6875,8 @@ textarea.form-input {
 .new-restaurant-links {
   display: flex;
   align-items: center;
-  gap: 8px;
+  flex-wrap: wrap;
+  gap: 4px 8px;
   padding: 0 24px;
   margin-bottom: 12px;
   font-size: 12px;
@@ -6886,11 +6887,13 @@ textarea.form-input {
   font-weight: 700;
   letter-spacing: 0.06em;
   color: #34d399;
+  white-space: nowrap;
 }
 .new-restaurant-link {
   color: #34d399;
   cursor: pointer;
   transition: color 0.15s;
+  white-space: nowrap;
 }
 .new-restaurant-link:hover {
   color: #6ee7b7;
@@ -6902,6 +6905,7 @@ textarea.form-input {
   font-size: 10px;
   color: var(--color-text-dim);
   margin-left: 2px;
+  white-space: nowrap;
 }
 
 /* Store info button & panel */
