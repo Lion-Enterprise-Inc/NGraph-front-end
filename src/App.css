@@ -434,14 +434,15 @@ body {
 }
 
 .page.capture-page {
-  position: fixed;
-  inset: 0;
-  height: 100%;
+  height: 100vh;
+  height: 100dvh;
   min-height: unset;
   overflow: hidden;
-  width: 100%;
-  max-width: 100%;
+  width: 100vw;
+  max-width: 100vw;
   padding: 0;
+  margin: 0;
+  transform: translateZ(0);
 }
 
 .browser-shell {
