@@ -668,8 +668,8 @@ body {
   flex-shrink: 0;
   position: relative;
   z-index: 10;
-  padding: 8px 12px 10px;
-  gap: 10px;
+  padding: 4px 12px 4px;
+  gap: 8px;
 }
 
 .capture-header-center {
@@ -852,10 +852,10 @@ body {
   width: 100%;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   background: var(--color-bg);
   border-radius: 16px;
-  padding: 10px 12px;
+  padding: 6px 12px;
   box-shadow: none;
   max-width: var(--page-max-width);
   margin-left: auto;
@@ -911,7 +911,7 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Hiragino Kaku Gothic ProN", sans-serif;
   color: var(--color-text);
   background: transparent;
-  padding: 10px;
+  padding: 6px 10px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1111,7 +1111,7 @@ body {
   flex-direction: column;
   align-items: stretch;
   gap: 16px;
-  padding: 0 12px 120px;
+  padding: 0 12px 80px;
 }
 
 .capture-results {
