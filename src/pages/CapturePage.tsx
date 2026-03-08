@@ -285,6 +285,8 @@ export default function CapturePage({
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
   const [showScrollButton, setShowScrollButton] = useState(false);
   const [userScrolledUp, setUserScrolledUp] = useState(false);
+  const [headerHidden, setHeaderHidden] = useState(false);
+  const lastScrollTopRef = useRef(0);
   const [expandedCards, setExpandedCards] = useState<Record<string, Set<number>>>({});
   const [expandedDetails, setExpandedDetails] = useState<Record<string, Set<number>>>({});
   const [suggestionTarget, setSuggestionTarget] = useState<{ name_jp: string; menu_uid?: string; restaurant_uid?: string } | null>(null);
@@ -905,6 +907,15 @@ export default function CapturePage({
 
     // Show scroll button if user is scrolled up
     setShowScrollButton(!isNearBottom);
+
+    // Hide header on scroll down, show on scroll up
+    const delta = scrollTop - lastScrollTopRef.current;
+    if (delta > 8 && scrollTop > 60) {
+      setHeaderHidden(true);
+    } else if (delta < -8 || scrollTop < 30) {
+      setHeaderHidden(false);
+    }
+    lastScrollTopRef.current = scrollTop;
 
     // Only track user scroll position when typing is not active
     if (!isTypingActive) {
@@ -1535,6 +1546,7 @@ export default function CapturePage({
 
   return (
     <div className="page capture-page" onClick={handleBackgroundClick}>
+      <div className={`capture-header-wrap${headerHidden ? ' header-hidden' : ''}`}>
       <CaptureHeader
         onMenu={
           onOpenMenu ??
@@ -1552,6 +1564,7 @@ export default function CapturePage({
         }
         restaurantData={selectedRestaurant}
       />
+      </div>
 
       {photoAdoptedCount > 0 && (
         <div style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: '#fff', textAlign: 'center', padding: '6px 12px', fontSize: 12, fontWeight: 600 }}>
