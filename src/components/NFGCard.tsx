@@ -66,7 +66,7 @@ function TasteChart({ values, labels }: { values: Record<string, number>; labels
   return (
     <div className="nfgcard-taste-chart">
       <div className="nfgcard-fg-label"><div className="nfgcard-fg-dot" /> NFG</div>
-      <svg viewBox="-110 -110 220 220" style={{ width: '100%', maxWidth: 220 }}>
+      <svg viewBox="-130 -130 260 260" style={{ width: '100%', maxWidth: 240 }}>
         <defs>
           <radialGradient id={`rg-${uid}`} cx="50%" cy="50%" r="50%">
             <stop offset="0%" stopColor="#00e896" stopOpacity="0.25" />
@@ -91,10 +91,10 @@ function TasteChart({ values, labels }: { values: Record<string, number>; labels
         {TASTE_AXES.map((a, i) => {
           const v = (values[a] || 0) / 10;
           const active = v > 0.3;
-          const p = pt(i, R * 1.22);
+          const p = pt(i, R * 1.35);
           return (
             <text key={`lbl-${i}`} x={p.x} y={p.y + 3.5} textAnchor="middle" fontFamily="'DM Mono',monospace"
-              fontSize={active ? 10.5 : 9} fill={active ? AXIS_COLORS[a] : "#888"}>
+              fontSize={active ? 10 : 8.5} fill={active ? AXIS_COLORS[a] : "#888"}>
               {labels[a] || a}{active ? ` ${Math.round(v * 100)}` : ''}
             </text>
           );
