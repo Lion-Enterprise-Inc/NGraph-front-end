@@ -47,7 +47,7 @@ export default function CaptureHeader({ onMenu, onLanguage, restaurantName, rest
     <>
       <header className="capture-header sticky">
         <button className="icon-button" type="button" aria-label={copy.captureHeader.menu} onClick={onMenu}>
-          <Menu size={22} strokeWidth={1.75} color="rgba(255,255,255,0.9)" />
+          <Menu size={22} strokeWidth={1.75} color="currentColor" />
         </button>
         <div className="capture-header-center">
           <button className="capture-header-home" type="button" onClick={() => router.push('/')}>

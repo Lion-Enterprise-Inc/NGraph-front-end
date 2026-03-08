@@ -482,6 +482,7 @@ body {
   padding: 6px;
   display: flex;
   align-items: center;
+  color: var(--color-text, #fff);
   justify-content: center;
   cursor: pointer;
   border-radius: 8px;
@@ -655,14 +656,14 @@ body {
 }
 
 .capture-header {
-  background: transparent;
+  background: var(--color-bg, #0d0d0d);
   width: 100%;
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-shrink: 0;
   position: relative;
-  z-index: 5;
+  z-index: 10;
   padding: 8px 6px 10px;
   gap: 10px;
 }

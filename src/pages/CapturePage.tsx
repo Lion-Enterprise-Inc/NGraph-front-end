@@ -1216,8 +1216,10 @@ export default function CapturePage({
             // Scroll to user's sent message so response is readable from top
             setTimeout(() => {
               const el = document.getElementById(`msg-${responseId}`);
-              if (el) {
-                el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              const container = captureBodyRef.current;
+              if (el && container) {
+                const top = el.offsetTop - container.offsetTop;
+                container.scrollTo({ top, behavior: 'smooth' });
               }
             }, 150);
 
