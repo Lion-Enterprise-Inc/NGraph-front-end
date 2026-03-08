@@ -41,7 +41,13 @@ export default function HistoryDrawer({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="sidebar-brand">
-          <img src="/ngraph-text-logo.svg" alt="NGraph" className="sidebar-text-logo" />
+          <img
+            src="/ngraph-text-logo.svg"
+            alt="NGraph"
+            className="sidebar-text-logo"
+            style={{ cursor: 'pointer' }}
+            onClick={() => { router.push('/'); onClose?.(); }}
+          />
           <button className="icon-button" type="button" onClick={onClose}>
             <X size={20} strokeWidth={1.75} color="rgba(255,255,255,0.6)" />
           </button>

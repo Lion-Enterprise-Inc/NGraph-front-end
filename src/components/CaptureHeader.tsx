@@ -50,12 +50,8 @@ export default function CaptureHeader({ onMenu, onLanguage, restaurantName, rest
           <Menu size={22} strokeWidth={1.75} color="currentColor" />
         </button>
         <div className="capture-header-center">
-          <button className="capture-header-home" type="button" onClick={() => router.push('/')}>
-            NGraph
-          </button>
-          {restaurantName && (
+          {restaurantName ? (
             <>
-              <span className="capture-header-sep">/</span>
               <span className="capture-header-name">{restaurantName}</span>
               {hasInfo && (
                 <button
@@ -68,6 +64,8 @@ export default function CaptureHeader({ onMenu, onLanguage, restaurantName, rest
                 </button>
               )}
             </>
+          ) : (
+            <span className="capture-header-name">NGraph</span>
           )}
         </div>
         <button className="header-lang-badge" type="button" onClick={onLanguage}>
