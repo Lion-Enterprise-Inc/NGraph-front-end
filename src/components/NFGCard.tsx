@@ -75,18 +75,18 @@ function TasteChart({ values, labels }: { values: Record<string, number>; labels
           <filter id={`glow-${uid}`}><feGaussianBlur stdDeviation="2.5" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
         </defs>
         {[0.25, 0.5, 0.75, 1].map(f => (
-          <polygon key={f} points={poly(R * f)} fill="none" stroke={f === 1 ? "var(--color-surface-active, rgba(255,255,255,0.15))" : "var(--color-surface-hover, rgba(255,255,255,0.08))"} strokeWidth="0.5" />
+          <polygon key={f} points={poly(R * f)} fill="none" stroke={f === 1 ? "rgba(255,255,255,0.15)" : "rgba(255,255,255,0.08)"} strokeWidth="0.5" />
         ))}
         {TASTE_AXES.map((_, i) => {
           const p = pt(i, R);
-          return <line key={i} x1="0" y1="0" x2={p.x} y2={p.y} stroke="var(--color-surface-active, rgba(255,255,255,0.15))" strokeWidth="0.5" />;
+          return <line key={i} x1="0" y1="0" x2={p.x} y2={p.y} stroke="rgba(255,255,255,0.15)" strokeWidth="0.5" />;
         })}
         <polygon points={dataPoly} fill={`url(#rg-${uid})`} stroke="#00e896" strokeWidth="1.5" strokeLinejoin="round" filter={`url(#glow-${uid})`} />
         {TASTE_AXES.map((a, i) => {
           const v = (values[a] || 0) / 10;
           const active = v > 0.3;
           const p = pt(i, R * v);
-          return <circle key={`dot-${i}`} cx={p.x} cy={p.y} r={active ? 3.5 : 2} fill={active ? AXIS_COLORS[a] : "var(--color-text-dim, #888)"} stroke="var(--color-bg, #0d0d0d)" strokeWidth="1" />;
+          return <circle key={`dot-${i}`} cx={p.x} cy={p.y} r={active ? 3.5 : 2} fill={active ? AXIS_COLORS[a] : "#888"} stroke="#0d0d0d" strokeWidth="1" />;
         })}
         {TASTE_AXES.map((a, i) => {
           const v = (values[a] || 0) / 10;
@@ -94,7 +94,7 @@ function TasteChart({ values, labels }: { values: Record<string, number>; labels
           const p = pt(i, R * 1.22);
           return (
             <text key={`lbl-${i}`} x={p.x} y={p.y + 3.5} textAnchor="middle" fontFamily="'DM Mono',monospace"
-              fontSize={active ? 10.5 : 9} fill={active ? AXIS_COLORS[a] : "var(--color-text-half, #888)"}>
+              fontSize={active ? 10.5 : 9} fill={active ? AXIS_COLORS[a] : "#888"}>
               {labels[a] || a}{active ? ` ${Math.round(v * 100)}` : ''}
             </text>
           );

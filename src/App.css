@@ -438,6 +438,9 @@ body {
   height: 100dvh;
   min-height: unset;
   overflow: hidden;
+  width: 100%;
+  max-width: 100%;
+  padding: 0;
 }
 
 .browser-shell {
@@ -7251,14 +7254,15 @@ textarea.form-input {
   border-radius: 10px;
 }
 .nfgcard {
-  background: var(--color-bg-secondary, #1a1a2e);
+  background: #1a1a2e;
   border-radius: 12px;
   padding: 12px 14px;
   cursor: pointer;
   transition: background 0.15s;
+  color: #eee;
 }
 .nfgcard:hover {
-  background: var(--color-bg-tertiary, #222240);
+  background: #222240;
 }
 .nfgcard-header {
   display: flex;
@@ -7280,23 +7284,23 @@ textarea.form-input {
 .nfgcard-name {
   font-size: 15px;
   font-weight: 600;
-  color: var(--color-text-primary, #fff);
+  color: #fff;
   line-height: 1.3;
 }
 .nfgcard-number {
-  color: var(--color-text-half, #888);
+  color: #888;
   font-weight: 600;
   margin-right: 4px;
   font-size: 13px;
 }
 .nfgcard-subname {
   font-size: 13px;
-  color: var(--color-text-secondary, #ccc);
+  color: #ccc;
   margin-top: 2px;
 }
 .nfgcard-restaurant {
   font-size: 12px;
-  color: var(--color-text-dim, #aaa);
+  color: #aaa;
   margin-top: 2px;
 }
 
@@ -7314,7 +7318,7 @@ textarea.form-input {
 }
 .nfgcard-badge-ai {
   background: rgba(160, 160, 180, 0.15);
-  color: var(--color-text-half, #999);
+  color: #999;
 }
 .nfgcard-badge-new {
   background: rgba(99, 179, 237, 0.2);
@@ -7325,13 +7329,13 @@ textarea.form-input {
   color: #6c9bff;
 }
 .nfgcard-like-btn {
-  background: var(--color-surface-hover, rgba(255,255,255,0.06));
-  border: 1px solid var(--color-border-subtle, rgba(255,255,255,0.08));
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.08);
   border-radius: 4px;
   padding: 2px 6px;
   font-size: 13px;
   cursor: pointer;
-  color: var(--color-text-half, #999);
+  color: #999;
 }
 .nfgcard-like-btn.liked {
   background: rgba(255, 80, 80, 0.18);
@@ -7342,13 +7346,13 @@ textarea.form-input {
 /* Description */
 .nfgcard-description {
   font-size: 14px;
-  color: var(--color-text, #eee);
+  color: #eee;
   margin-top: 6px;
   line-height: 1.6;
 }
 .nfgcard-description-local {
   font-size: 12px;
-  color: var(--color-text-secondary, #ccc);
+  color: #ccc;
   margin-top: 3px;
   line-height: 1.5;
 }
@@ -7378,7 +7382,7 @@ textarea.form-input {
   padding: 3px 8px;
   border-radius: 10px;
   background: rgba(255,255,255,0.1);
-  color: var(--color-text-secondary, #ddd);
+  color: #ddd;
 }
 .nfgcard-restrictions {
   display: flex;
@@ -7411,7 +7415,7 @@ textarea.form-input {
 .nfgcard-details {
   margin-top: 8px;
   padding-top: 8px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-top: 1px solid rgba(255,255,255,0.08);
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -7442,7 +7446,7 @@ textarea.form-input {
 }
 .nfgcard-narrative-story {
   font-size: 13px;
-  color: var(--color-text-secondary, #ddd);
+  color: #ddd;
   line-height: 1.6;
   margin-bottom: 8px;
 }
@@ -7454,12 +7458,12 @@ textarea.form-input {
   line-height: 1.5;
 }
 .nfgcard-field-label {
-  color: var(--color-text-half, #aaa);
+  color: #aaa;
   white-space: nowrap;
   flex-shrink: 0;
 }
 .nfgcard-field-value {
-  color: var(--color-text, #eee);
+  color: #eee;
 }
 
 /* Actions */
@@ -7469,16 +7473,16 @@ textarea.form-input {
   gap: 8px;
   margin-top: 8px;
   padding-top: 6px;
-  border-top: 1px solid var(--color-border-subtle, rgba(255,255,255,0.06));
+  border-top: 1px solid rgba(255,255,255,0.06);
 }
 .nfgcard-action-btn {
-  background: var(--color-surface-hover, rgba(255,255,255,0.06));
-  border: 1px solid var(--color-border-subtle, rgba(255,255,255,0.08));
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.08);
   border-radius: 4px;
   padding: 3px 8px;
   font-size: 11px;
   cursor: pointer;
-  color: var(--color-text-half, #999);
+  color: #999;
 }
 .nfgcard-action-edit {
   margin-left: auto;
@@ -7489,6 +7493,6 @@ textarea.form-input {
 .nfgcard-expand-hint {
   text-align: center;
   font-size: 10px;
-  color: var(--color-text-half, #666);
+  color: #666;
   margin-top: 4px;
 }
