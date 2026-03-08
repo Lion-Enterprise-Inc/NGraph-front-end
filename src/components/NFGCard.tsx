@@ -46,9 +46,15 @@ type Props = {
 
 const TASTE_AXES = ['umami','richness','saltiness','sweetness','spiciness','lightness','sourness','bitterness','volume','locality'] as const;
 
+const AXIS_COLORS: Record<string, string> = {
+  umami: "#00e896", richness: "#e8c050", saltiness: "#a0a0ff", sweetness: "#f0a050",
+  spiciness: "#ff6b4a", lightness: "#80d0ff", sourness: "#50c8f0", bitterness: "#80c080",
+  volume: "#c080ff", locality: "#ff80a0",
+};
+
 function TasteChart({ values, labels }: { values: Record<string, number>; labels: Record<string, string> }) {
   const N = TASTE_AXES.length;
-  const R = 40;
+  const R = 88;
   const pt = (i: number, rv: number) => {
     const a = (2 * Math.PI * i / N) - Math.PI / 2;
     return { x: rv * Math.cos(a), y: rv * Math.sin(a) };
@@ -60,29 +66,36 @@ function TasteChart({ values, labels }: { values: Record<string, number>; labels
   return (
     <div className="nfgcard-taste-chart">
       <div className="nfgcard-fg-label"><div className="nfgcard-fg-dot" /> NFG</div>
-      <svg viewBox="-58 -58 116 116" width="140" height="140">
+      <svg viewBox="-110 -110 220 220" style={{ width: '100%', maxWidth: 220 }}>
         <defs>
-          <linearGradient id={uid} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#f97316" stopOpacity="0.5" />
-            <stop offset="100%" stopColor="#f59e0b" stopOpacity="0.2" />
-          </linearGradient>
+          <radialGradient id={`rg-${uid}`} cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#00e896" stopOpacity="0.25" />
+            <stop offset="100%" stopColor="#00e896" stopOpacity="0.03" />
+          </radialGradient>
+          <filter id={`glow-${uid}`}><feGaussianBlur stdDeviation="2.5" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
         </defs>
         {[0.25, 0.5, 0.75, 1].map(f => (
-          <polygon key={f} points={poly(R * f)} fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="0.5" />
+          <polygon key={f} points={poly(R * f)} fill="none" stroke={f === 1 ? "var(--color-surface-active, rgba(255,255,255,0.15))" : "var(--color-surface-hover, rgba(255,255,255,0.08))"} strokeWidth="0.5" />
         ))}
         {TASTE_AXES.map((_, i) => {
           const p = pt(i, R);
-          return <line key={i} x1="0" y1="0" x2={p.x} y2={p.y} stroke="rgba(255,255,255,0.08)" strokeWidth="0.5" />;
+          return <line key={i} x1="0" y1="0" x2={p.x} y2={p.y} stroke="var(--color-surface-active, rgba(255,255,255,0.15))" strokeWidth="0.5" />;
         })}
-        <polygon points={dataPoly} fill={`url(#${uid})`} stroke="#f97316" strokeWidth="1.2" />
+        <polygon points={dataPoly} fill={`url(#rg-${uid})`} stroke="#00e896" strokeWidth="1.5" strokeLinejoin="round" filter={`url(#glow-${uid})`} />
         {TASTE_AXES.map((a, i) => {
-          const p = pt(i, R + 14);
-          const v = values[a] || 0;
-          if (v === 0) return null;
+          const v = (values[a] || 0) / 10;
+          const active = v > 0.3;
+          const p = pt(i, R * v);
+          return <circle key={`dot-${i}`} cx={p.x} cy={p.y} r={active ? 3.5 : 2} fill={active ? AXIS_COLORS[a] : "var(--color-text-dim, #888)"} stroke="var(--color-bg, #0d0d0d)" strokeWidth="1" />;
+        })}
+        {TASTE_AXES.map((a, i) => {
+          const v = (values[a] || 0) / 10;
+          const active = v > 0.3;
+          const p = pt(i, R * 1.22);
           return (
-            <text key={a} x={p.x} y={p.y} textAnchor="middle" dominantBaseline="central"
-              fill="rgba(255,255,255,0.7)" fontSize="5" fontWeight="500">
-              {labels[a] || a} {v * 10}
+            <text key={`lbl-${i}`} x={p.x} y={p.y + 3.5} textAnchor="middle" fontFamily="'DM Mono',monospace"
+              fontSize={active ? 10.5 : 9} fill={active ? AXIS_COLORS[a] : "var(--color-text-half, #888)"}>
+              {labels[a] || a}{active ? ` ${Math.round(v * 100)}` : ''}
             </text>
           );
         })}
@@ -147,7 +160,7 @@ export default function NFGCard({
                 {subName && <div className="nfgcard-subname">{subName}</div>}
               </div>
               <div className="nfgcard-header-right">
-                {item.category && (
+                {item.category && item.category !== 'bento' && (
                   <span className="nfgcard-badge nfgcard-badge-category">{item.category}</span>
                 )}
                 {isDb ? (
