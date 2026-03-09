@@ -1941,7 +1941,7 @@ export default function CapturePage({
                         }}
                       />
                     </div>
-                    {response.contextChips && response.contextChips.length > 0 && (
+                    {typingComplete.has(response.id) && response.contextChips && response.contextChips.length > 0 && (
                       <div className="context-chips">
                         {response.contextChips.map((chip, i) => (
                           <button key={i} className="context-chip" onClick={() => handleSend(chip.query)}>
@@ -2192,7 +2192,7 @@ export default function CapturePage({
                         </div>
                       );
                     })()}
-                    {response.contextChips && response.contextChips.length > 0 && (
+                    {typingComplete.has(response.id) && response.contextChips && response.contextChips.length > 0 && (
                       <div className="context-chips">
                         {response.contextChips.map((chip, i) => (
                           <button key={i} className="context-chip" onClick={() => handleSend(chip.query)}>
