@@ -2192,6 +2192,15 @@ export default function CapturePage({
                         </div>
                       );
                     })()}
+                    {response.contextChips && response.contextChips.length > 0 && (
+                      <div className="context-chips">
+                        {response.contextChips.map((chip, i) => (
+                          <button key={i} className="context-chip" onClick={() => handleSend(chip.query)}>
+                            {chip.label}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
               ) : null}
