@@ -1075,8 +1075,8 @@ body {
   border: none !important;
   border-top: none !important;
   border-radius: 0 !important;
-  padding: 8px 10px;
-  padding-bottom: max(8px, env(safe-area-inset-bottom, 0px));
+  padding: 4px 10px;
+  padding-bottom: max(4px, env(safe-area-inset-bottom, 0px));
   background: var(--color-bg);
   transition: bottom 0.18s ease, transform 0.18s ease;
   box-sizing: border-box;
@@ -1086,7 +1086,7 @@ body {
   background: var(--color-surface-input);
   border: 1px solid var(--color-border);
   border-radius: 22px;
-  padding: 6px;
+  padding: 3px;
 }
 
 .chat-dock.elevated {
