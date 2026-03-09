@@ -613,28 +613,14 @@ export default function CapturePage({
         ? selectedRestaurant.name_romaji
         : selectedRestaurant.name;
 
-      // Use custom recommend_texts if set (already translated by backend)
-      if (selectedRestaurant.recommend_texts && selectedRestaurant.recommend_texts.length > 0) {
-        return {
-          guide: copy.restaurant.chatPlaceholder,
-          chips: selectedRestaurant.recommend_texts
-        };
-      }
-
-      // Default restaurant-specific suggestions
-      const chips = [
-        copy.restaurant.signatureDish,
-        copy.restaurant.bestTime,
-        copy.restaurant.dietaryOptions
-      ];
-
-      if ('cuisine' in selectedRestaurant) {
-        chips.splice(1, 0, copy.restaurant.aboutCuisine.replace('{cuisine}', (selectedRestaurant as any).cuisine));
-      }
-
+      // Fixed 3 quick taps for all restaurants (Session 71)
       return {
         guide: copy.restaurant.chatPlaceholder,
-        chips
+        chips: [
+          copy.restaurant.signatureDish,
+          copy.restaurant.bestTime,
+          copy.restaurant.dietaryOptions
+        ]
       };
     }
     return copy.suggestions;
