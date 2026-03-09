@@ -17,7 +17,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import remarkBreaks from "remark-breaks";
 import rehypeHighlight from "rehype-highlight";
-import { User, Bot, ChevronDown, Copy, Share2, Sparkles, ThumbsUp, ThumbsDown, Star, MapPin } from "lucide-react";
+import { User, Bot, ChevronDown, Copy, Share2, Sparkles, ThumbsUp, ThumbsDown, Star } from "lucide-react";
 import CaptureHeader from "../components/CaptureHeader";
 import CameraPrompt from "../components/CameraPrompt";
 import ChatDock from "../components/ChatDock";
@@ -2055,18 +2055,6 @@ export default function CapturePage({
                             <span>{copy.restaurant.googleReview}</span>
                           </a>
                         )}
-                        {restaurantData?.address && response.id === responses[responses.length - 1]?.id && responses.length >= 2 && (
-                          <a
-                            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(restaurantData.address)}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="feedback-btn action-btn"
-                            aria-label="Map"
-                          >
-                            <MapPin size={16} />
-                            <span>{copy.capture.openMap}</span>
-                          </a>
-                        )}
                       </div>
                     </div>
                   </div>
@@ -2190,18 +2178,6 @@ export default function CapturePage({
                                 >
                                   <Star size={16} />
                                   <span>{copy.restaurant.googleReview}</span>
-                                </a>
-                              )}
-                              {restaurantData?.address && response.id === responses[responses.length - 1]?.id && responses.length >= 2 && (
-                                <a
-                                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(restaurantData.address)}`}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="feedback-btn action-btn"
-                                  aria-label="Map"
-                                >
-                                  <MapPin size={16} />
-                                  <span>{copy.capture.openMap}</span>
                                 </a>
                               )}
                             </div>
