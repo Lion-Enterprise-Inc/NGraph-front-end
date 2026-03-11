@@ -11,7 +11,7 @@ import {
 import { useRouter, useSearchParams } from "next/navigation";
 import { mockRestaurants, mockScanResponse, type Restaurant } from "../api/mockApi";
 import Tesseract from "tesseract.js";
-import { FeedbackApi, EventApi, type VisionMenuItem, ContributionApi, PhotoContributionApi, NfgFeedbackApi, LikedMenusApi, type LikedMenuItem, QuickExplainApi, type QuickExplainItem } from "../services/api";
+import { FeedbackApi, EventApi, type VisionMenuItem, ContributionApi, PhotoContributionApi, NfgFeedbackApi, LikedMenusApi, type LikedMenuItem, QuickExplainApi, type QuickExplainItem, MenuSearchApi, type MenuNFGCard } from "../services/api";
 import SuggestionModal from "../components/SuggestionModal";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -613,13 +613,13 @@ export default function CapturePage({
         ? selectedRestaurant.name_romaji
         : selectedRestaurant.name;
 
-      // Fixed 3 quick taps for all restaurants (Session 71)
+      // Quick tap round 1: 名物/おすすめ/迷ってる (Session 73)
       return {
         guide: copy.restaurant.chatPlaceholder,
         chips: [
           copy.restaurant.signatureDish,
           copy.restaurant.bestTime,
-          copy.restaurant.dietaryOptions
+          copy.restaurant.undecided
         ]
       };
     }
@@ -1320,6 +1320,96 @@ export default function CapturePage({
     setHideRecommendations(true);
   };
 
+  const handleRound2Click = async (round1: string, menuGroup: string) => {
+    if (!selectedRestaurant) return;
+    const slug = selectedRestaurant.slug;
+    const round1Label = round1 === 'signatureDish' ? copy.restaurant.signatureDish : copy.restaurant.bestTime;
+    const groupLabels: Record<string, string> = {
+      hearty: copy.restaurant.hearty,
+      single: copy.restaurant.singleDish,
+      light: copy.restaurant.lightAppetizer,
+    };
+    const inputText = `${round1Label} → ${groupLabels[menuGroup] || menuGroup}`;
+    const responseId = `${Date.now()}`;
+    setHideRecommendations(true);
+    setUserScrolledUp(false);
+
+    setResponses((prev) => [
+      ...prev,
+      {
+        id: responseId,
+        input: { text: inputText, attachment: null, imageUrl: null },
+        output: null,
+        language: activeLanguage,
+        feedback: null,
+        messageUid: null,
+        streaming: true,
+      },
+    ]);
+
+    try {
+      const q = round1 === 'signatureDish' ? '名物,看板,おすすめ' : '';
+      const result = await MenuSearchApi.search({
+        restaurant_slug: slug,
+        menu_group: menuGroup,
+        q,
+        nfg: true,
+        lang: activeLanguage,
+        size: 5,
+      });
+      const menus = Array.isArray(result?.result?.menus) ? result.result.menus : [];
+      const items: QuickExplainItem[] = menus.map((m: MenuNFGCard) => ({
+        name_jp: m.name_jp,
+        name_en: m.name_en || '',
+        price: m.price,
+        description: m.description || '',
+        allergens: m.allergens,
+        ingredients: m.ingredients,
+        restrictions: m.restrictions,
+        source: 'db' as const,
+        menu_uid: m.uid,
+        image_url: m.image_url || undefined,
+        narrative: m.narrative_full || undefined,
+        verification_rank: m.verification_rank || undefined,
+        taste_values: m.taste_values || undefined,
+        serving: m.serving || undefined,
+        category: m.category,
+      }));
+
+      const intro = items.length > 0
+        ? (activeLanguage === 'ja' ? `${items.length}品見つかりました` : `Found ${items.length} dishes`)
+        : (activeLanguage === 'ja' ? 'メニューが見つかりませんでした' : 'No dishes found');
+
+      setResponses((prev) =>
+        prev.map((r) =>
+          r.id === responseId
+            ? { ...r, output: { title: '', intro, body: [] }, streaming: false, quickExplainItems: items }
+            : r
+        )
+      );
+      typingStartedRef.current.add(responseId);
+      setTypingState((prev) => ({ ...prev, [responseId]: { title: '', intro, body: [] } }));
+      setTypingComplete((prev) => new Set(prev).add(responseId));
+    } catch (err) {
+      const errMsg = activeLanguage === 'ja' ? '検索に失敗しました' : 'Search failed';
+      setResponses((prev) =>
+        prev.map((r) =>
+          r.id === responseId
+            ? { ...r, output: { title: '', intro: errMsg, body: [] }, streaming: false }
+            : r
+        )
+      );
+      typingStartedRef.current.add(responseId);
+      setTypingState((prev) => ({ ...prev, [responseId]: { title: '', intro: errMsg, body: [] } }));
+      setTypingComplete((prev) => new Set(prev).add(responseId));
+    }
+
+    requestAnimationFrame(() => {
+      const container = captureBodyRef.current;
+      if (container) container.scrollTop = container.scrollHeight;
+    });
+  };
+
   const handleAttachment = (file: File | null, source = "library") => {
     if (!file) return;
     const preview = URL.createObjectURL(file);
@@ -1685,10 +1775,10 @@ export default function CapturePage({
                 if (cached) {
                   handleCachedRecommendation(text, cached);
                 } else {
-                  // Send text as-is (translated for non-ja, original for ja)
                   handleSend(text);
                 }
               }}
+              onRound2Click={handleRound2Click}
             />
           )}
 

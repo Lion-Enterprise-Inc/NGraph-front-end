@@ -1325,7 +1325,7 @@ export interface MenuNFGCard extends MenuSearchItem {
 export const MenuSearchApi = {
   count: async (params: {
     category?: string; q?: string; diet?: string; no?: string;
-    mood?: string; area?: string;
+    mood?: string; area?: string; restaurant_slug?: string; menu_group?: string;
   }): Promise<{ result: { count: number } }> => {
     const sp = new URLSearchParams();
     if (params.category) sp.append('category', params.category);
@@ -1334,13 +1334,16 @@ export const MenuSearchApi = {
     if (params.no) sp.append('no', params.no);
     if (params.mood) sp.append('mood', params.mood);
     if (params.area) sp.append('area', params.area);
+    if (params.restaurant_slug) sp.append('restaurant_slug', params.restaurant_slug);
+    if (params.menu_group) sp.append('menu_group', params.menu_group);
     const resp = await fetch(`${API_BASE_URL}/restaurants/search/menus/count?${sp}`);
     if (!resp.ok) throw new Error('Menu count failed');
     return resp.json();
   },
   search: async (params: {
     category?: string; q?: string; diet?: string; no?: string;
-    mood?: string; area?: string; nfg?: boolean; lat?: number; lng?: number;
+    mood?: string; area?: string; restaurant_slug?: string; menu_group?: string;
+    nfg?: boolean; lat?: number; lng?: number;
     page?: number; size?: number; lang?: string;
   }): Promise<{
     result: { count: number; menus: (MenuSearchItem | MenuNFGCard)[]; page: number; size: number; pages: number };
@@ -1352,6 +1355,8 @@ export const MenuSearchApi = {
     if (params.no) sp.append('no', params.no);
     if (params.mood) sp.append('mood', params.mood);
     if (params.area) sp.append('area', params.area);
+    if (params.restaurant_slug) sp.append('restaurant_slug', params.restaurant_slug);
+    if (params.menu_group) sp.append('menu_group', params.menu_group);
     if (params.nfg) sp.append('nfg', 'true');
     if (params.lat != null) sp.append('lat', String(params.lat));
     if (params.lng != null) sp.append('lng', String(params.lng));

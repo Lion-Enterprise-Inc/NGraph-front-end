@@ -1,4 +1,5 @@
-import { Camera } from 'lucide-react'
+import { useState } from 'react'
+import { Camera, ArrowLeft } from 'lucide-react'
 import { getUiCopy } from '../i18n/uiCopy'
 import { useAppContext } from './AppProvider'
 
@@ -33,6 +34,8 @@ const STORE_GREETINGS: Record<string, string> = {
   pl: 'Witamy.',
 }
 
+type Round1Choice = 'signatureDish' | 'bestTime' | 'undecided'
+
 type CameraPromptProps = {
   heading: string
   sub: string
@@ -43,6 +46,7 @@ type CameraPromptProps = {
   restaurantNameRomaji?: string | null
   recommendations?: string[]
   onRecommendationClick?: (text: string) => void
+  onRound2Click?: (round1: Round1Choice, menuGroup: string) => void
 }
 
 export default function CameraPrompt({
@@ -55,14 +59,37 @@ export default function CameraPrompt({
   restaurantNameRomaji,
   recommendations,
   onRecommendationClick,
+  onRound2Click,
 }: CameraPromptProps) {
   const { language } = useAppContext()
   const copy = getUiCopy(language)
+  const [round1Choice, setRound1Choice] = useState<Round1Choice | null>(null)
 
-  // Split brand name and branch name (e.g. "蟹と海鮮ぼんた くるふ福井駅前店")
   const nameParts = (restaurantName || '').split(/\s+/);
   const brandName = nameParts[0] || heading;
   const branchName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : null;
+
+  const round2Chips = [
+    { label: copy.restaurant.hearty, group: 'hearty' },
+    { label: copy.restaurant.singleDish, group: 'single' },
+    { label: copy.restaurant.lightAppetizer, group: 'light' },
+  ]
+
+  const handleRound1Click = (text: string, index: number) => {
+    const keys: Round1Choice[] = ['signatureDish', 'bestTime', 'undecided']
+    const key = keys[index]
+    if (key === 'undecided') {
+      onRecommendationClick?.(text)
+      return
+    }
+    setRound1Choice(key)
+  }
+
+  const handleRound2Click = (group: string) => {
+    if (round1Choice) {
+      onRound2Click?.(round1Choice, group)
+    }
+  }
 
   return (
     <div className="store-home">
@@ -93,15 +120,35 @@ export default function CameraPrompt({
       </button>
 
       <div className="store-home-chips">
-        {recommendations?.map((text, i) => (
-          <button
-            key={i}
-            className="store-home-chip"
-            onClick={() => onRecommendationClick?.(text)}
-          >
-            {text}
-          </button>
-        ))}
+        {!round1Choice ? (
+          recommendations?.map((text, i) => (
+            <button
+              key={i}
+              className="store-home-chip"
+              onClick={() => handleRound1Click(text, i)}
+            >
+              {text}
+            </button>
+          ))
+        ) : (
+          <>
+            <button
+              className="store-home-chip store-home-chip-back"
+              onClick={() => setRound1Choice(null)}
+            >
+              <ArrowLeft size={14} />
+            </button>
+            {round2Chips.map((chip) => (
+              <button
+                key={chip.group}
+                className="store-home-chip"
+                onClick={() => handleRound2Click(chip.group)}
+              >
+                {chip.label}
+              </button>
+            ))}
+          </>
+        )}
       </div>
     </div>
   )
