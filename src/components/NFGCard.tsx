@@ -214,7 +214,7 @@ export default function NFGCard({
             )}
             {item.image_url && (
               <div className="nfgcard-image">
-                <img src={item.image_url} alt={item.name_jp} loading="lazy" />
+                <img src={item.image_url} alt={item.name_jp} loading="lazy" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
               </div>
             )}
 

@@ -1682,7 +1682,7 @@ export default function CapturePage({
                     }}
                   >
                     {item.image_url ? (
-                      <img src={item.image_url} alt="" style={{ width: 48, height: 48, borderRadius: 8, objectFit: 'cover', flexShrink: 0 }} />
+                      <img src={item.image_url} alt="" style={{ width: 48, height: 48, borderRadius: 8, objectFit: 'cover', flexShrink: 0 }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                     ) : (
                       <div style={{ width: 48, height: 48, borderRadius: 8, background: 'var(--color-surface-active)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>🍽</div>
                     )}
