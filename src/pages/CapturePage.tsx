@@ -11,7 +11,7 @@ import {
 import { useRouter, useSearchParams } from "next/navigation";
 import { mockRestaurants, mockScanResponse, type Restaurant } from "../api/mockApi";
 import Tesseract from "tesseract.js";
-import { FeedbackApi, EventApi, type VisionMenuItem, ContributionApi, PhotoContributionApi, NfgFeedbackApi, LikedMenusApi, type LikedMenuItem, QuickExplainApi, type QuickExplainItem, MenuSearchApi, type MenuNFGCard } from "../services/api";
+import { FeedbackApi, EventApi, type VisionMenuItem, PhotoContributionApi, NfgFeedbackApi, LikedMenusApi, type LikedMenuItem, QuickExplainApi, type QuickExplainItem, MenuSearchApi, type MenuNFGCard } from "../services/api";
 import SuggestionModal from "../components/SuggestionModal";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -288,10 +288,6 @@ export default function CapturePage({
   const [expandedCards, setExpandedCards] = useState<Record<string, Set<number>>>({});
   const [expandedDetails, setExpandedDetails] = useState<Record<string, Set<number>>>({});
   const [suggestionTarget, setSuggestionTarget] = useState<{ name_jp: string; menu_uid?: string; restaurant_uid?: string } | null>(null);
-  const [reviewOpen, setReviewOpen] = useState(false);
-  const [reviewText, setReviewText] = useState('');
-  const [reviewSubmitting, setReviewSubmitting] = useState(false);
-  const [reviewToast, setReviewToast] = useState(false);
   const [likedMenus, setLikedMenus] = useState<Set<string>>(() => {
     if (typeof window === 'undefined') return new Set();
     try { return new Set(JSON.parse(localStorage.getItem('ngraph_liked_menus') || '[]')); } catch { return new Set(); }
@@ -1386,13 +1382,8 @@ export default function CapturePage({
         label,
         query: label,
       }));
-      if (activeLanguage === 'ja') {
-        nextChips.push({ label: '季節メニューは？', query: '季節メニューは？' });
-        nextChips.push({ label: 'ドリンクは？', query: 'ドリンクは？' });
-      } else {
-        nextChips.push({ label: 'Seasonal?', query: 'seasonal menu?' });
-        nextChips.push({ label: 'Drinks?', query: 'drinks?' });
-      }
+      nextChips.push({ label: copy.restaurant.seasonalMenu, query: copy.restaurant.seasonalMenu });
+      nextChips.push({ label: copy.restaurant.drinksMenu, query: copy.restaurant.drinksMenu });
 
       setResponses((prev) =>
         prev.map((r) =>
@@ -1796,16 +1787,6 @@ export default function CapturePage({
             />
           )}
 
-          {/* 口コミボタン */}
-          {restaurantData && (
-            <button
-              type="button"
-              className="review-btn"
-              onClick={() => setReviewOpen(true)}
-            >
-              {copy.capture.writeReview}
-            </button>
-          )}
 
         </main>
 
@@ -2383,68 +2364,6 @@ export default function CapturePage({
         onSubmit={() => setSuggestionTarget(null)}
       />
 
-      {/* Review modal */}
-      {reviewOpen && (
-        <>
-          <div className="review-backdrop" onClick={() => setReviewOpen(false)} />
-          <div className="review-modal">
-            <div className="review-handle" />
-            <div className="review-title">
-              {copy.capture.submitReview}
-            </div>
-            <div className="review-subtitle">
-              {restaurantData?.name || ''}
-            </div>
-            <textarea
-              className="review-textarea"
-              value={reviewText}
-              onChange={e => setReviewText(e.target.value)}
-              placeholder={copy.capture.reviewPlaceholder}
-              rows={4}
-            />
-            <button
-              type="button"
-              className="review-submit"
-              disabled={!reviewText.trim() || reviewSubmitting}
-              onClick={async () => {
-                if (!reviewText.trim() || !restaurantData?.uid) return;
-                setReviewSubmitting(true);
-                try {
-                  await ContributionApi.suggest({
-                    restaurant_uid: restaurantData.uid,
-                    field: 'review',
-                    suggested_value: reviewText.trim(),
-                    session_id: (() => {
-                      let id = localStorage.getItem('ngraph_session_id');
-                      if (!id) { id = crypto.randomUUID(); localStorage.setItem('ngraph_session_id', id); }
-                      return id;
-                    })(),
-                  });
-                  setReviewToast(true);
-                  setTimeout(() => {
-                    setReviewToast(false);
-                    setReviewText('');
-                    setReviewOpen(false);
-                  }, 1200);
-                } catch (e) {
-                  console.error('Review submit error:', e);
-                } finally {
-                  setReviewSubmitting(false);
-                }
-              }}
-            >
-              {reviewSubmitting
-                ? copy.capture.submitting
-                : copy.capture.submit}
-            </button>
-            {reviewToast && (
-              <div className="review-toast">
-                {copy.capture.reviewSubmitted}
-              </div>
-            )}
-          </div>
-        </>
-      )}
     </div>
   );
 }

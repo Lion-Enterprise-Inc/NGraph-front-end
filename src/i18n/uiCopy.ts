@@ -147,6 +147,8 @@ const uiCopy = {
       hearty: "Full meal",
       singleDish: "Small dish",
       lightAppetizer: "Appetizer / Salad",
+      seasonalMenu: "Seasonal?",
+      drinksMenu: "Drinks?",
       googleReview: "Review",
     },
     nfg: {
@@ -346,6 +348,8 @@ const uiCopy = {
       hearty: "がっつり",
       singleDish: "一品料理",
       lightAppetizer: "前菜・サラダ",
+      seasonalMenu: "季節メニューは？",
+      drinksMenu: "ドリンクは？",
       googleReview: "クチコミ",
     },
     nfg: {
@@ -545,6 +549,8 @@ const uiCopy = {
       hearty: "든든하게",
       singleDish: "일품요리",
       lightAppetizer: "전채·샐러드",
+      seasonalMenu: "계절 메뉴는?",
+      drinksMenu: "음료는?",
       googleReview: "리뷰",
     },
     nfg: {
@@ -731,6 +737,8 @@ const uiCopy = {
       hearty: "吃饱",
       singleDish: "单品",
       lightAppetizer: "前菜·沙拉",
+      seasonalMenu: "季节菜单？",
+      drinksMenu: "饮品？",
       googleReview: "评价",
     },
     nfg: {
@@ -904,6 +912,8 @@ const uiCopy = {
       hearty: "吃飽",
       singleDish: "單品",
       lightAppetizer: "前菜·沙拉",
+      seasonalMenu: "季節菜單？",
+      drinksMenu: "飲品？",
       googleReview: "評價",
     },
     nfg: {
@@ -1073,6 +1083,8 @@ const uiCopy = {
       hearty: "Plato fuerte",
       singleDish: "Un plato",
       lightAppetizer: "Entrante / Ensalada",
+      seasonalMenu: "¿Menú de temporada?",
+      drinksMenu: "¿Bebidas?",
       googleReview: "Reseña",
     },
     nfg: {
@@ -1242,6 +1254,8 @@ const uiCopy = {
       hearty: "Plat copieux",
       singleDish: "Un plat",
       lightAppetizer: "Entrée / Salade",
+      seasonalMenu: "Menu de saison ?",
+      drinksMenu: "Boissons ?",
       googleReview: "Avis",
     },
     nfg: {
@@ -1411,6 +1425,8 @@ const uiCopy = {
       hearty: "Herzhaft",
       singleDish: "Einzelgericht",
       lightAppetizer: "Vorspeise / Salat",
+      seasonalMenu: "Saisonmenü?",
+      drinksMenu: "Getränke?",
       googleReview: "Bewertung",
     },
     nfg: {
@@ -1580,6 +1596,8 @@ const uiCopy = {
       hearty: "Piatto abbondante",
       singleDish: "Un piatto",
       lightAppetizer: "Antipasto / Insalata",
+      seasonalMenu: "Menu stagionale?",
+      drinksMenu: "Bevande?",
       googleReview: "Recensione",
     },
     nfg: {
@@ -1749,6 +1767,8 @@ const uiCopy = {
       hearty: "Prato reforçado",
       singleDish: "Um prato",
       lightAppetizer: "Entrada / Salada",
+      seasonalMenu: "Menu sazonal?",
+      drinksMenu: "Bebidas?",
       googleReview: "Avaliação",
     },
     nfg: {
@@ -1918,6 +1938,8 @@ const uiCopy = {
       hearty: "Сытное блюдо",
       singleDish: "Одно блюдо",
       lightAppetizer: "Закуска / Салат",
+      seasonalMenu: "Сезонное меню?",
+      drinksMenu: "Напитки?",
       googleReview: "Отзыв",
     },
     nfg: {
@@ -2087,6 +2109,8 @@ const uiCopy = {
       hearty: "จานหนัก",
       singleDish: "จานเดียว",
       lightAppetizer: "ออเดิร์ฟ / สลัด",
+      seasonalMenu: "เมนูตามฤดูกาล?",
+      drinksMenu: "เครื่องดื่ม?",
       googleReview: "รีวิว",
     },
     nfg: {
@@ -2256,6 +2280,8 @@ const uiCopy = {
       hearty: "Ăn no",
       singleDish: "Một món",
       lightAppetizer: "Khai vị / Salad",
+      seasonalMenu: "Menu theo mùa?",
+      drinksMenu: "Đồ uống?",
       googleReview: "Đánh giá",
     },
     nfg: {
@@ -2425,6 +2451,8 @@ const uiCopy = {
       hearty: "Yang mengenyangkan",
       singleDish: "Satu porsi",
       lightAppetizer: "Pembuka / Salad",
+      seasonalMenu: "Menu musiman?",
+      drinksMenu: "Minuman?",
       googleReview: "Ulasan",
     },
     nfg: {
@@ -2594,6 +2622,8 @@ const uiCopy = {
       hearty: "Yang mengenyangkan",
       singleDish: "Satu hidangan",
       lightAppetizer: "Pembuka / Salad",
+      seasonalMenu: "Menu bermusim?",
+      drinksMenu: "Minuman?",
       googleReview: "Ulasan",
     },
     nfg: {
@@ -2763,6 +2793,8 @@ const uiCopy = {
       hearty: "وجبة دسمة",
       singleDish: "طبق واحد",
       lightAppetizer: "مقبلات / سلطة",
+      seasonalMenu: "قائمة موسمية؟",
+      drinksMenu: "مشروبات؟",
       googleReview: "تقييم",
     },
     nfg: {
@@ -2932,6 +2964,8 @@ const uiCopy = {
       hearty: "भरपेट",
       singleDish: "एक डिश",
       lightAppetizer: "स्टार्टर / सलाद",
+      seasonalMenu: "सीज़नल मेनू?",
+      drinksMenu: "ड्रिंक्स?",
       googleReview: "समीक्षा",
     },
     nfg: {
@@ -3101,6 +3135,8 @@ const uiCopy = {
       hearty: "Doyurucu",
       singleDish: "Tek tabak",
       lightAppetizer: "Meze / Salata",
+      seasonalMenu: "Mevsim menüsü?",
+      drinksMenu: "İçecekler?",
       googleReview: "Yorum",
     },
     nfg: {
@@ -3270,6 +3306,8 @@ const uiCopy = {
       hearty: "ভরপেট",
       singleDish: "একটা ডিশ",
       lightAppetizer: "স্টার্টার / সালাদ",
+      seasonalMenu: "সিজনাল মেনু?",
+      drinksMenu: "পানীয়?",
       googleReview: "রিভিউ",
     },
     nfg: {
@@ -3439,6 +3477,8 @@ const uiCopy = {
       hearty: "ဗိုက်ပြည့်အောင်",
       singleDish: "တစ်ပွဲ",
       lightAppetizer: "အရှေ့ဟင်း / သုပ်",
+      seasonalMenu: "ရာသီမီနူး?",
+      drinksMenu: "အချိုရည်?",
       googleReview: "သုံးသပ်ချက်",
     },
     nfg: {
@@ -3608,6 +3648,8 @@ const uiCopy = {
       hearty: "Busog na pagkain",
       singleDish: "Isang ulam",
       lightAppetizer: "Pampagana / Salad",
+      seasonalMenu: "Seasonal menu?",
+      drinksMenu: "Inumin?",
       googleReview: "Review",
     },
     nfg: {
@@ -3777,6 +3819,8 @@ const uiCopy = {
       hearty: "ອາຫານຈານໜັກ",
       singleDish: "ອາຫານຈານດຽວ",
       lightAppetizer: "ອາຫານເບົາ / ສະລັດ",
+      seasonalMenu: "ເມນູຕາມລະດູ?",
+      drinksMenu: "ເຄື່ອງດື່ມ?",
       googleReview: "ລີວິວ",
     },
     nfg: {
@@ -3946,6 +3990,8 @@ const uiCopy = {
       hearty: "អាហារពេញមួយចាន",
       singleDish: "មុខម្ហូបមួយ",
       lightAppetizer: "មុខម្ហូបសម្រន់ / សាឡាត",
+      seasonalMenu: "ម៉ឺនុយតាមរដូវ?",
+      drinksMenu: "ភេសជ្ជៈ?",
       googleReview: "វាយតម្លៃ",
     },
     nfg: {
@@ -4115,6 +4161,8 @@ const uiCopy = {
       hearty: "पेट भरी",
       singleDish: "एउटा डिश",
       lightAppetizer: "स्टार्टर / सलाद",
+      seasonalMenu: "सिजनल मेनू?",
+      drinksMenu: "पेयपदार्थ?",
       googleReview: "समीक्षा",
     },
     nfg: {
@@ -4284,6 +4332,8 @@ const uiCopy = {
       hearty: "Цадтал",
       singleDish: "Нэг таваг",
       lightAppetizer: "Зууш / Салат",
+      seasonalMenu: "Улирлын цэс?",
+      drinksMenu: "Ундаа?",
       googleReview: "Сэтгэгдэл",
     },
     nfg: {
@@ -4453,6 +4503,8 @@ const uiCopy = {
       hearty: "غذای سنگین",
       singleDish: "یه بشقاب",
       lightAppetizer: "پیش‌غذا / سالاد",
+      seasonalMenu: "منوی فصلی؟",
+      drinksMenu: "نوشیدنی؟",
       googleReview: "نظر",
     },
     nfg: {
@@ -4622,6 +4674,8 @@ const uiCopy = {
       hearty: "Ситна страва",
       singleDish: "Одна страва",
       lightAppetizer: "Закуска / Салат",
+      seasonalMenu: "Сезонне меню?",
+      drinksMenu: "Напої?",
       googleReview: "Відгук",
     },
     nfg: {
@@ -4791,6 +4845,8 @@ const uiCopy = {
       hearty: "Coś sytego",
       singleDish: "Jedno danie",
       lightAppetizer: "Przystawka / Sałatka",
+      seasonalMenu: "Menu sezonowe?",
+      drinksMenu: "Napoje?",
       googleReview: "Opinia",
     },
     nfg: {
