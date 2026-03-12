@@ -1380,10 +1380,24 @@ export default function CapturePage({
         ? (activeLanguage === 'ja' ? `${items.length}品見つかりました` : `Found ${items.length} dishes`)
         : (activeLanguage === 'ja' ? 'メニューが見つかりませんでした' : 'No dishes found');
 
+      // 次の導線チップを生成（別のカテゴリ + ドリンク + 季節）
+      const otherGroups = Object.entries(groupLabels).filter(([k]) => k !== menuGroup);
+      const nextChips: { label: string; query: string }[] = otherGroups.map(([, label]) => ({
+        label,
+        query: label,
+      }));
+      if (activeLanguage === 'ja') {
+        nextChips.push({ label: '季節メニューは？', query: '季節メニューは？' });
+        nextChips.push({ label: 'ドリンクは？', query: 'ドリンクは？' });
+      } else {
+        nextChips.push({ label: 'Seasonal?', query: 'seasonal menu?' });
+        nextChips.push({ label: 'Drinks?', query: 'drinks?' });
+      }
+
       setResponses((prev) =>
         prev.map((r) =>
           r.id === responseId
-            ? { ...r, output: { title: '', intro, body: [] }, streaming: false, quickExplainItems: items }
+            ? { ...r, output: { title: '', intro, body: [] }, streaming: false, quickExplainItems: items, contextChips: nextChips }
             : r
         )
       );
@@ -1892,6 +1906,15 @@ export default function CapturePage({
                         }}
                       />
                     </div>
+                    {typingComplete.has(response.id) && response.contextChips && response.contextChips.length > 0 && (
+                      <div className="context-chips">
+                        {response.contextChips.map((chip, i) => (
+                          <button key={i} className="context-chip" onClick={() => handleSend(chip.query)}>
+                            {chip.label}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                     <div className="feedback-row">
                       <div className="feedback-actions">
                         <button
