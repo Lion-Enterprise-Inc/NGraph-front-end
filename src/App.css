@@ -7317,12 +7317,17 @@ textarea.form-input {
   flex: 1;
   min-width: 0;
 }
-.nfgcard-header-right {
+.nfgcard-badges {
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
+  flex-wrap: wrap;
   gap: 4px;
   flex-shrink: 0;
+}
+.nfgcard-action-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
 }
 .nfgcard-name {
   font-size: 15px;
@@ -7372,15 +7377,18 @@ textarea.form-input {
   color: #6c9bff;
 }
 .nfgcard-share-btn {
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 4px;
-  padding: 2px 6px;
-  font-size: 13px;
+  background: rgba(0, 232, 150, 0.1);
+  border: 1px solid rgba(0, 232, 150, 0.25);
+  border-radius: 6px;
+  padding: 3px 10px;
+  font-size: 11px;
+  font-weight: 500;
   cursor: pointer;
-  color: #999;
+  color: #00e896;
+  letter-spacing: 0.3px;
 }
 .nfgcard-share-btn.copied {
+  background: rgba(0, 232, 150, 0.2);
   color: #00e896;
 }
 .nfgcard-like-btn {

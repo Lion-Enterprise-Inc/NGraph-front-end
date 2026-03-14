@@ -170,7 +170,7 @@ export default function NFGCard({
 
         return (
           <div key={idx} className={`nfgcard${open ? ' nfgcard-open' : ''}`} data-nfg-code={item.nfg_code || undefined} onClick={() => toggle(idx)}>
-            {/* Header: name + badges */}
+            {/* Header */}
             <div className="nfgcard-header">
               <div className="nfgcard-header-left">
                 <div className="nfgcard-name">
@@ -179,7 +179,7 @@ export default function NFGCard({
                 </div>
                 {subName && <div className="nfgcard-subname">{subName}</div>}
               </div>
-              <div className="nfgcard-header-right">
+              <div className="nfgcard-badges">
                 {item.category && item.category !== 'bento' && (
                   <span className="nfgcard-badge nfgcard-badge-category">{item.category}</span>
                 )}
@@ -191,26 +191,28 @@ export default function NFGCard({
                 {item.is_new && (
                   <span className="nfgcard-badge nfgcard-badge-new">{copy.newItem}</span>
                 )}
-                {item.nfg_code && cleanUrlBase && (
-                  <button
-                    type="button"
-                    className={`nfgcard-share-btn${copiedNfgCode === item.nfg_code ? ' copied' : ''}`}
-                    onClick={(e) => handleShareCard(e, item)}
-                    title="Share"
-                  >
-                    {copiedNfgCode === item.nfg_code ? '\u2705' : '\uD83D\uDD17'}
-                  </button>
-                )}
-                {item.menu_uid && onLike && (
-                  <button
-                    type="button"
-                    className={`nfgcard-like-btn${liked ? ' liked' : ''}`}
-                    onClick={(e) => { e.stopPropagation(); onLike(item.menu_uid!); }}
-                  >
-                    {liked ? '\u2665' : '\u2661'}
-                  </button>
-                )}
               </div>
+            </div>
+            {/* Action row: like + share */}
+            <div className="nfgcard-action-row">
+              {item.menu_uid && onLike && (
+                <button
+                  type="button"
+                  className={`nfgcard-like-btn${liked ? ' liked' : ''}`}
+                  onClick={(e) => { e.stopPropagation(); onLike(item.menu_uid!); }}
+                >
+                  {liked ? '\u2665' : '\u2661'}
+                </button>
+              )}
+              {item.nfg_code && cleanUrlBase && (
+                <button
+                  type="button"
+                  className={`nfgcard-share-btn${copiedNfgCode === item.nfg_code ? ' copied' : ''}`}
+                  onClick={(e) => handleShareCard(e, item)}
+                >
+                  {copiedNfgCode === item.nfg_code ? '\u2705 Copied' : 'Share'}
+                </button>
+              )}
             </div>
 
             {/* Restaurant info (for search results) */}
