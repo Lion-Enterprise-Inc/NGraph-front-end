@@ -523,7 +523,7 @@ export default function CapturePage({
   // Auto-load top menus when accessed via clean URL or nfg share link
   const autoLoadDone = useRef(false);
   useEffect(() => {
-    if (autoLoadDone.current || !restaurantData || !cleanUrlMatch || responses.length > 0) return;
+    if (autoLoadDone.current || !restaurantData || !cleanUrlMatch || responses.length > 0 || isWebMode) return;
     autoLoadDone.current = true;
     const slug = restaurantData.slug;
     TopMenusApi.fetch(slug, 20, activeLanguage).then((data) => {
