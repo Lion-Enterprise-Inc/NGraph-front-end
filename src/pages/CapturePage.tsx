@@ -11,7 +11,7 @@ import {
 import { useRouter, useSearchParams } from "next/navigation";
 import { mockRestaurants, mockScanResponse, type Restaurant } from "../api/mockApi";
 import Tesseract from "tesseract.js";
-import { FeedbackApi, EventApi, type VisionMenuItem, PhotoContributionApi, NfgFeedbackApi, LikedMenusApi, type LikedMenuItem, QuickExplainApi, type QuickExplainItem, MenuSearchApi, type MenuNFGCard } from "../services/api";
+import { FeedbackApi, EventApi, type VisionMenuItem, PhotoContributionApi, NfgFeedbackApi, LikedMenusApi, type LikedMenuItem, QuickExplainApi, type QuickExplainItem, MenuSearchApi, type MenuNFGCard, TopMenusApi } from "../services/api";
 import SuggestionModal from "../components/SuggestionModal";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -70,6 +70,9 @@ type ApiRestaurant = {
   budget?: string | null
   instagram_url?: string | null
   business_type?: string | null
+  url_slug?: string | null
+  prefecture_slug?: string | null
+  city_slug?: string | null
   created_at: string
   updated_at: string
 };
@@ -229,7 +232,12 @@ export default function CapturePage({
 }: CapturePageProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const restaurantSlug = searchParams?.get("restaurant");
+
+  // Support clean URLs: /{prefecture}/{city}/{url_slug}[/nfg/{nfg_code}]
+  const cleanUrlMatch = typeof window !== 'undefined'
+    ? window.location.pathname.match(/^\/([a-z]+)\/([a-z]+)\/([a-z0-9]+)(?:\/nfg\/([a-z]+[0-9]+))?$/)
+    : null;
+  const restaurantSlug = searchParams?.get("restaurant") || (cleanUrlMatch ? cleanUrlMatch[3] : null);
   const [restaurantData, setRestaurantData] = useState<ApiRestaurant | null>(null);
   const [restaurantLoading, setRestaurantLoading] = useState(false);
   const {
@@ -453,6 +461,14 @@ export default function CapturePage({
   const isWebMode = searchParams?.get("mode") === "web";
   
   const selectedRestaurant = restaurantData;
+  const nfgParam = searchParams?.get("nfg") || (cleanUrlMatch ? cleanUrlMatch[4] : null);
+
+  // Build clean URL base for NFG card sharing (e.g., https://app.ngraph.jp/fukui/fukui/kanitokaisenbonta)
+  const cleanUrlBase = useMemo(() => {
+    if (!restaurantData?.url_slug || !restaurantData?.prefecture_slug || !restaurantData?.city_slug) return null;
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://app.ngraph.jp';
+    return `${origin}/${restaurantData.prefecture_slug}/${restaurantData.city_slug}/${restaurantData.url_slug}`;
+  }, [restaurantData?.url_slug, restaurantData?.prefecture_slug, restaurantData?.city_slug]);
 
   // Fetch restaurant data from public API endpoint
   useEffect(() => {
@@ -479,6 +495,9 @@ export default function CapturePage({
                 recommend_texts_ja: data.result.recommend_texts_ja,
                 google_review_url: data.result.google_review_url || null,
                 address: data.result.address || null,
+                url_slug: data.result.url_slug || null,
+                prefecture_slug: data.result.prefecture_slug || null,
+                city_slug: data.result.city_slug || null,
                 created_at: '',
                 updated_at: ''
               });
@@ -500,6 +519,62 @@ export default function CapturePage({
   }, [restaurantSlug, activeLanguage]);
 
 
+
+  // Auto-load top menus when accessed via clean URL or nfg share link
+  const autoLoadDone = useRef(false);
+  useEffect(() => {
+    if (autoLoadDone.current || !restaurantData || !cleanUrlMatch || responses.length > 0) return;
+    autoLoadDone.current = true;
+    const slug = restaurantData.slug;
+    TopMenusApi.fetch(slug, 20, activeLanguage).then((data) => {
+      const menus = Array.isArray(data?.result?.menus) ? data.result.menus : [];
+      if (menus.length === 0) return;
+      const items: QuickExplainItem[] = menus.map((m: any) => ({
+        name_jp: m.name_jp || '',
+        name_en: m.name_en || '',
+        price: m.price || 0,
+        description: m.description || '',
+        allergens: m.allergens || [],
+        ingredients: m.ingredients || [],
+        restrictions: m.restrictions || [],
+        source: m.source || 'db',
+        menu_uid: m.menu_uid,
+        image_url: m.image_url,
+        narrative: m.narrative,
+        verification_rank: m.verification_rank,
+        taste_values: m.taste_values,
+        serving: m.serving,
+        estimated_calories: m.estimated_calories,
+        confidence: m.confidence,
+        category: m.category,
+        nfg_code: m.nfg_code,
+      }));
+      const r: ResponseItem = {
+        id: 'auto-nfg',
+        input: { text: '', attachment: null, imageUrl: null },
+        output: { title: restaurantData.name_romaji || restaurantData.name, intro: '', body: [] },
+        language: activeLanguage,
+        feedback: null,
+        messageUid: null,
+        quickExplainItems: items,
+      };
+      setResponses([r]);
+    }).catch(() => {});
+  }, [restaurantData, cleanUrlMatch, activeLanguage]);
+
+  // Scroll to specific NFG card when ?nfg=xxx is present
+  const nfgScrollDone = useRef(false);
+  useEffect(() => {
+    if (!nfgParam || nfgScrollDone.current) return;
+    const el = document.querySelector(`[data-nfg-code="${nfgParam}"]`);
+    if (el) {
+      nfgScrollDone.current = true;
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      (el as HTMLElement).click(); // expand the card
+      el.classList.add('nfgcard-highlight');
+      setTimeout(() => el.classList.remove('nfgcard-highlight'), 3000);
+    }
+  }, [nfgParam, responses]);
 
   // Sync slug to AppContext for sidebar
   useEffect(() => {
@@ -1476,7 +1551,7 @@ export default function CapturePage({
   };
 
   const handleShare = () => {
-    const url = window.location.href;
+    const url = cleanUrlBase || window.location.href;
     if (navigator.share) {
       navigator.share({ title: restaurantData?.name || 'NGraph', url }).catch(() => {});
     } else {
@@ -1885,6 +1960,7 @@ export default function CapturePage({
                         }}
                         onPhotoUpload={handlePhotoUpload}
                         photoUploading={photoUploading}
+                        cleanUrlBase={cleanUrlBase || undefined}
                         copy={{
                           verified: (copy as any).quickExplain?.verified || "Verified",
                           aiEstimate: (copy as any).quickExplain?.aiEstimate || "AI Estimate",
@@ -2033,6 +2109,7 @@ export default function CapturePage({
                         }}
                         onPhotoUpload={handlePhotoUpload}
                         photoUploading={photoUploading}
+                        cleanUrlBase={cleanUrlBase || undefined}
                         copy={{
                           verified: (copy as any).quickExplain?.verified || "Verified",
                           aiEstimate: (copy as any).quickExplain?.aiEstimate || "AI Estimate",

@@ -681,6 +681,7 @@ export interface QuickExplainItem {
   estimated_calories?: string;
   confidence?: number;
   category?: string;
+  nfg_code?: string;
 }
 
 export interface QuickExplainResult {

@@ -15,6 +15,7 @@ type Props = {
   restaurantName?: string;
   restaurantCity?: string;
   showRestaurantInfo?: boolean;
+  cleanUrlBase?: string;
   copy: {
     verified: string;
     aiEstimate: string;
@@ -106,10 +107,29 @@ function TasteChart({ values, labels }: { values: Record<string, number>; labels
 
 export default function NFGCard({
   items, language, likedMenus, onLike, onSuggestEdit, onPhotoUpload,
-  photoUploading, userPhoto, restaurantName, restaurantCity, showRestaurantInfo, copy,
+  photoUploading, userPhoto, restaurantName, restaurantCity, showRestaurantInfo, cleanUrlBase, copy,
 }: Props) {
   const [expandedIdx, setExpandedIdx] = useState<Set<number>>(new Set());
+  const [copiedNfgCode, setCopiedNfgCode] = useState<string | null>(null);
   const photoRefs = useRef<Record<string, HTMLInputElement | null>>({});
+
+  const handleShareCard = (e: React.MouseEvent, item: QuickExplainItem) => {
+    e.stopPropagation();
+    const nfgCode = item.nfg_code;
+    if (!nfgCode || !cleanUrlBase) return;
+    const url = `${cleanUrlBase}/nfg/${nfgCode}`;
+    const displayName = language !== 'ja' && item.name_en ? item.name_en : item.name_jp;
+    const subName = language !== 'ja' ? item.name_jp : item.name_en;
+    const text = `${displayName}${subName ? ` - ${subName}` : ''}`;
+    if (navigator.share) {
+      navigator.share({ title: item.name_jp, text, url }).catch(() => {});
+    } else {
+      navigator.clipboard.writeText(`${text}\n${url}`).then(() => {
+        setCopiedNfgCode(nfgCode);
+        setTimeout(() => setCopiedNfgCode(null), 2000);
+      });
+    }
+  };
 
   const toggle = (idx: number) => {
     setExpandedIdx((prev) => {
@@ -149,7 +169,7 @@ export default function NFGCard({
         const liked = item.menu_uid ? likedMenus?.has(item.menu_uid) : false;
 
         return (
-          <div key={idx} className={`nfgcard${open ? ' nfgcard-open' : ''}`} onClick={() => toggle(idx)}>
+          <div key={idx} className={`nfgcard${open ? ' nfgcard-open' : ''}`} data-nfg-code={item.nfg_code || undefined} onClick={() => toggle(idx)}>
             {/* Header: name + badges */}
             <div className="nfgcard-header">
               <div className="nfgcard-header-left">
@@ -315,6 +335,15 @@ export default function NFGCard({
                         }}
                       >
                         {copy.suggestEdit}
+                      </button>
+                    )}
+                    {item.nfg_code && cleanUrlBase && (
+                      <button
+                        type="button"
+                        className="nfgcard-action-btn nfgcard-action-share"
+                        onClick={(e) => handleShareCard(e, item)}
+                      >
+                        {copiedNfgCode === item.nfg_code ? '\u2705' : '\uD83D\uDD17'}
                       </button>
                     )}
                   </div>
