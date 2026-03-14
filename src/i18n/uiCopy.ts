@@ -229,6 +229,14 @@ const uiCopy = {
       tellMeMore: "Tell me more about #{num} {name}",
       openMap: "Map",
     },
+    webLanding: {
+      exploreMenu: "Explore Menu",
+      makeReservation: "Make a Reservation",
+      scanMenu: "Scan Menu",
+      hours: "Hours",
+      access: "Access",
+      closed: "Closed",
+    },
   },
   ja: {
     common: {
@@ -430,6 +438,14 @@ const uiCopy = {
       tellMeMore: "{num}の{name}について詳しく教えて",
       openMap: "地図で見る",
     },
+    webLanding: {
+      exploreMenu: "メニューを見る",
+      makeReservation: "予約する",
+      scanMenu: "メニューを撮影",
+      hours: "営業時間",
+      access: "アクセス",
+      closed: "定休日",
+    },
   },
   ko: {
     common: {
@@ -618,6 +634,14 @@ const uiCopy = {
       tellMeMore: "#{num} {name}에 대해 자세히 알려주세요",
       openMap: "지도",
     },
+    webLanding: {
+      exploreMenu: "메뉴 보기",
+      makeReservation: "예약하기",
+      scanMenu: "메뉴 촬영",
+      hours: "영업시간",
+      access: "오시는 길",
+      closed: "휴무일",
+    },
   },
   "zh-Hans": {
     common: {
@@ -792,6 +816,14 @@ const uiCopy = {
       relatedMenu: "相关菜单",
       tellMeMore: "请告诉我更多关于#{num} {name}",
       openMap: "地图",
+    },
+    webLanding: {
+      exploreMenu: "浏览菜单",
+      makeReservation: "预约",
+      scanMenu: "拍摄菜单",
+      hours: "营业时间",
+      access: "交通",
+      closed: "休息日",
     },
   },
   "zh-Hant": {
@@ -4934,6 +4966,9 @@ export const getUiCopy = (language?: string): UiCopy => {
   }
   if (!('quickExplain' in copy)) {
     result.quickExplain = uiCopy.en.quickExplain;
+  }
+  if (!('webLanding' in copy)) {
+    result.webLanding = uiCopy.en.webLanding;
   }
   return result as UiCopy;
 };

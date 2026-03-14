@@ -450,6 +450,7 @@ export default function CapturePage({
   const scanLoggedRef = useRef(false);
   const isNfgMode = searchParams?.get("nfg") === "true";
   const isQuickMode = searchParams?.get("mode") === "quick";
+  const isWebMode = searchParams?.get("mode") === "web";
   
   const selectedRestaurant = restaurantData;
 
@@ -568,7 +569,7 @@ export default function CapturePage({
         const resp = await fetch(`${apiBaseUrl}/public-chat/${encodeURIComponent(slug)}/stream`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message: activeLanguage === 'ja' ? jaText : text, in_store: isInStore, language: activeLanguage }),
+          body: JSON.stringify({ message: activeLanguage === 'ja' ? jaText : text, in_store: isInStore, language: activeLanguage, ...(isWebMode ? { mode: 'web' } : {}) }),
           signal: controller.signal,
         });
         if (resp.ok && resp.body) {
@@ -1082,6 +1083,7 @@ export default function CapturePage({
               in_store: isInStore,
               thread_uid: threadUidRef.current,
               language: activeLanguage,
+              ...(isWebMode ? { mode: 'web' } : {}),
             }),
             signal: abortController.signal,
           });
@@ -1784,6 +1786,31 @@ export default function CapturePage({
                 }
               }}
               onRound2Click={handleRound2Click}
+              isWebMode={isWebMode}
+              restaurantAddress={selectedRestaurant?.address}
+              restaurantAccess={selectedRestaurant?.access_info}
+              restaurantHours={selectedRestaurant?.opening_hours}
+              restaurantHolidays={selectedRestaurant?.holidays}
+              onReservationClick={() => {
+                const reservationMessages: Record<string, string> = {
+                  ja: '予約をしたいのですが',
+                  en: "I'd like to make a reservation",
+                  ko: '예약하고 싶습니다',
+                  'zh-Hans': '我想预约',
+                  'zh-Hant': '我想預約',
+                  es: 'Me gustaría hacer una reserva',
+                  fr: 'Je voudrais faire une réservation',
+                };
+                handleSend(reservationMessages[activeLanguage] || reservationMessages.en);
+              }}
+              onExploreMenuClick={() => {
+                const cached = recommendCacheRef.current[currentSuggestions.chips?.[0] || ''];
+                if (cached) {
+                  handleCachedRecommendation(currentSuggestions.chips?.[0] || '', cached);
+                } else {
+                  handleSend(currentSuggestions.chips?.[0] || copy.restaurant.signatureDish);
+                }
+              }}
             />
           )}
 
