@@ -191,6 +191,16 @@ export default function NFGCard({
                 {item.is_new && (
                   <span className="nfgcard-badge nfgcard-badge-new">{copy.newItem}</span>
                 )}
+                {item.nfg_code && cleanUrlBase && (
+                  <button
+                    type="button"
+                    className={`nfgcard-share-btn${copiedNfgCode === item.nfg_code ? ' copied' : ''}`}
+                    onClick={(e) => handleShareCard(e, item)}
+                    title="Share"
+                  >
+                    {copiedNfgCode === item.nfg_code ? '\u2705' : '\uD83D\uDD17'}
+                  </button>
+                )}
                 {item.menu_uid && onLike && (
                   <button
                     type="button"
@@ -335,15 +345,6 @@ export default function NFGCard({
                         }}
                       >
                         {copy.suggestEdit}
-                      </button>
-                    )}
-                    {item.nfg_code && cleanUrlBase && (
-                      <button
-                        type="button"
-                        className="nfgcard-action-btn nfgcard-action-share"
-                        onClick={(e) => handleShareCard(e, item)}
-                      >
-                        {copiedNfgCode === item.nfg_code ? '\u2705' : '\uD83D\uDD17'}
                       </button>
                     )}
                   </div>

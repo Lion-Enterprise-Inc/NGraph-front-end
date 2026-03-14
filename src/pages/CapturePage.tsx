@@ -502,6 +502,7 @@ export default function CapturePage({
                 updated_at: ''
               });
               recordVisit(data.result.slug, data.result.name);
+              document.title = `${data.result.name_romaji || data.result.name} | NGraph`;
               return;
             }
           }
@@ -526,10 +527,11 @@ export default function CapturePage({
     if (autoLoadDone.current || !restaurantData || !cleanUrlMatch || responses.length > 0 || isWebMode) return;
     autoLoadDone.current = true;
     const slug = restaurantData.slug;
+    const rName = restaurantData.name_romaji || restaurantData.name;
     TopMenusApi.fetch(slug, 20, activeLanguage).then((data) => {
       const menus = Array.isArray(data?.result?.menus) ? data.result.menus : [];
       if (menus.length === 0) return;
-      const items: QuickExplainItem[] = menus.map((m: any) => ({
+      let items: QuickExplainItem[] = menus.map((m: any) => ({
         name_jp: m.name_jp || '',
         name_en: m.name_en || '',
         price: m.price || 0,
@@ -549,10 +551,22 @@ export default function CapturePage({
         category: m.category,
         nfg_code: m.nfg_code,
       }));
+      // If nfgParam present, filter to show only that card
+      if (nfgParam) {
+        const matched = items.filter(i => i.nfg_code === nfgParam);
+        if (matched.length > 0) {
+          items = matched;
+          const item = matched[0];
+          const menuName = activeLanguage !== 'ja' && item.name_en ? item.name_en : item.name_jp;
+          document.title = `${menuName} - ${rName} | NGraph`;
+        }
+      } else {
+        document.title = `${rName} | NGraph`;
+      }
       const r: ResponseItem = {
         id: 'auto-nfg',
         input: { text: '', attachment: null, imageUrl: null },
-        output: { title: restaurantData.name_romaji || restaurantData.name, intro: '', body: [] },
+        output: { title: nfgParam ? '' : rName, intro: '', body: [] },
         language: activeLanguage,
         feedback: null,
         messageUid: null,
