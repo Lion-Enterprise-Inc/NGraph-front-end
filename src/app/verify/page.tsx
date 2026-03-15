@@ -11,14 +11,21 @@ interface KitchenQuestionOption {
   label: string
 }
 
+interface KitchenQuestionMenuItem {
+  uid: string
+  name: string
+}
+
 interface KitchenQuestion {
   id: string
   question: string
   type: string
-  options: KitchenQuestionOption[]
+  options: KitchenQuestionOption[] | null
   affected_menu_count: number
   is_branch: boolean
   parent_id: string | null
+  max_select?: number
+  menu_list?: KitchenQuestionMenuItem[]
 }
 
 interface DishQuestionOption {
@@ -324,7 +331,7 @@ function VerifyContent() {
 
     setLoading(true)
     try {
-      const selectedValue = q.type === 'checkbox' ? kitchenSelection : kitchenSelection[0]
+      const selectedValue = (q.type === 'checkbox' || q.type === 'menu_select') ? kitchenSelection : kitchenSelection[0]
       const result = await submitKitchenAnswer(token, sessionToken, {
         question_id: q.id,
         selected_value: selectedValue,
@@ -536,8 +543,35 @@ function VerifyContent() {
 
             <p style={{ fontWeight: 600, fontSize: 16, marginBottom: 16, color: '#1e293b' }}>{q.question}</p>
 
-            {/* 通常選択肢 */}
-            {!showVaries && (
+            {/* menu_select型（看板メニュー選択） */}
+            {q.type === 'menu_select' && q.menu_list && (
+              <div style={{ maxHeight: 300, overflowY: 'auto', marginBottom: 16 }}>
+                {q.menu_list.map(m => {
+                  const selected = kitchenSelection.includes(m.uid)
+                  const maxReached = (q.max_select || 3) <= kitchenSelection.length && !selected
+                  return (
+                    <label key={m.uid} style={{
+                      display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px',
+                      borderBottom: '1px solid #f1f5f9', cursor: maxReached ? 'not-allowed' : 'pointer',
+                      background: selected ? '#eff6ff' : 'transparent',
+                      opacity: maxReached ? 0.5 : 1,
+                    }}>
+                      <input
+                        type="checkbox" checked={selected} disabled={maxReached}
+                        onChange={() => {
+                          setKitchenSelection(prev => selected ? prev.filter(u => u !== m.uid) : [...prev, m.uid])
+                        }}
+                        style={{ accentColor: '#2563eb' }}
+                      />
+                      <span style={{ fontSize: 14, color: '#1e293b' }}>{m.name}</span>
+                    </label>
+                  )
+                })}
+              </div>
+            )}
+
+            {/* 通常選択肢（radio/checkbox） */}
+            {q.type !== 'menu_select' && !showVaries && q.options && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
                 {q.options.map(opt => {
                   const selected = kitchenSelection.includes(opt.value)
