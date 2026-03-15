@@ -620,7 +620,7 @@ function VerifyContent() {
                         style={{ ...inputStyle, width: 'auto', minWidth: 120, fontSize: 14, padding: '8px 12px' }}
                       >
                         <option value="">選択</option>
-                        {q.options.filter(o => o.value !== 'varies' && o.value !== 'unknown').map(o => (
+                        {(q.options || []).filter(o => o.value !== 'varies' && o.value !== 'unknown').map(o => (
                           <option key={o.value} value={o.value}>{o.label}</option>
                         ))}
                       </select>
