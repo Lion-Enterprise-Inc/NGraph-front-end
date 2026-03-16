@@ -17,7 +17,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import remarkBreaks from "remark-breaks";
 import rehypeHighlight from "rehype-highlight";
-import { User, Bot, ChevronDown, Copy, Share2, Sparkles, ThumbsUp, ThumbsDown, Star } from "lucide-react";
+import { User, Bot, ChevronDown, Sparkles, ThumbsUp, ThumbsDown, Star } from "lucide-react";
 import CaptureHeader from "../components/CaptureHeader";
 import CameraPrompt from "../components/CameraPrompt";
 import ChatDock from "../components/ChatDock";
@@ -237,6 +237,16 @@ export default function CapturePage({
   const cleanUrlMatch = typeof window !== 'undefined'
     ? window.location.pathname.match(/^\/([a-z]+)\/([a-z]+)\/([a-z0-9]+)(?:\/nfg\/([a-z]+[0-9]+))?$/)
     : null;
+  // Clean URLアクセス時はキャッシュクリア（常に新鮮な状態で表示）
+  const cleanUrlClearedRef = useRef(false);
+  if (cleanUrlMatch && !cleanUrlClearedRef.current && typeof window !== 'undefined') {
+    cleanUrlClearedRef.current = true;
+    const slug = cleanUrlMatch[3];
+    try {
+      sessionStorage.removeItem(`ngraph_responses_${slug}`);
+      sessionStorage.removeItem(`ngraph_threadUid_${slug}`);
+    } catch {}
+  }
   const restaurantSlug = searchParams?.get("restaurant") || (cleanUrlMatch ? cleanUrlMatch[3] : null);
   const [restaurantData, setRestaurantData] = useState<ApiRestaurant | null>(null);
   const [restaurantLoading, setRestaurantLoading] = useState(false);
@@ -1549,36 +1559,6 @@ export default function CapturePage({
     });
   };
 
-  const [copiedId, setCopiedId] = useState<string | null>(null);
-
-  const handleCopyResponse = (id: string) => {
-    const response = responses.find((item) => item.id === id);
-    if (!response?.output) return;
-    const text = [response.output.title, response.output.intro, ...(response.output.body || [])].filter(Boolean).join('\n');
-    navigator.clipboard.writeText(text).then(() => {
-      setCopiedId(id);
-      setTimeout(() => setCopiedId(null), 2000);
-    });
-    if (restaurantSlug) {
-      EventApi.log({ restaurant_slug: restaurantSlug, event: 'copy', message_uid: response.messageUid, thread_uid: threadUidRef.current, lang: activeLanguage });
-    }
-  };
-
-  const handleShare = () => {
-    const url = cleanUrlBase || window.location.href;
-    if (navigator.share) {
-      navigator.share({ title: restaurantData?.name || 'NGraph', url }).catch(() => {});
-    } else {
-      navigator.clipboard.writeText(url).then(() => {
-        setCopiedId('__share__');
-        setTimeout(() => setCopiedId(null), 2000);
-      });
-    }
-    if (restaurantSlug) {
-      EventApi.log({ restaurant_slug: restaurantSlug, event: 'share', thread_uid: threadUidRef.current, lang: activeLanguage });
-    }
-  };
-
   const handleNewChat = () => {
     setResponses([]);
     setMessage("");
@@ -2031,24 +2011,6 @@ export default function CapturePage({
                         >
                           <ThumbsDown size={16} />
                         </button>
-                        <button
-                          className="feedback-btn action-btn"
-                          type="button"
-                          onClick={() => handleCopyResponse(response.id)}
-                          aria-label="Copy"
-                        >
-                          <Copy size={16} />
-                          <span>{copiedId === response.id ? copy.feedback.copied : copy.feedback.copy}</span>
-                        </button>
-                        <button
-                          className="feedback-btn action-btn"
-                          type="button"
-                          onClick={handleShare}
-                          aria-label="Share"
-                        >
-                          <Share2 size={16} />
-                          <span>{copiedId === '__share__' ? copy.feedback.copied : copy.feedback.share}</span>
-                        </button>
                       </div>
                     </div>
                   </div>
@@ -2218,24 +2180,6 @@ export default function CapturePage({
                         >
                           <ThumbsDown size={16} />
                         </button>
-                        <button
-                          className="feedback-btn action-btn"
-                          type="button"
-                          onClick={() => handleCopyResponse(response.id)}
-                          aria-label="Copy"
-                        >
-                          <Copy size={16} />
-                          <span>{copiedId === response.id ? copy.feedback.copied : copy.feedback.copy}</span>
-                        </button>
-                        <button
-                          className="feedback-btn action-btn"
-                          type="button"
-                          onClick={handleShare}
-                          aria-label="Share"
-                        >
-                          <Share2 size={16} />
-                          <span>{copiedId === '__share__' ? copy.feedback.copied : copy.feedback.share}</span>
-                        </button>
                         {restaurantData?.google_review_url && response.id === responses[responses.length - 1]?.id && responses.length >= 2 && (
                           <a
                             href={restaurantData.google_review_url}
@@ -2342,24 +2286,6 @@ export default function CapturePage({
                                 aria-label="Bad"
                               >
                                 <ThumbsDown size={16} />
-                              </button>
-                              <button
-                                className="feedback-btn action-btn"
-                                type="button"
-                                onClick={() => handleCopyResponse(response.id)}
-                                aria-label="Copy"
-                              >
-                                <Copy size={16} />
-                                <span>{copiedId === response.id ? copy.feedback.copied : copy.feedback.copy}</span>
-                              </button>
-                              <button
-                                className="feedback-btn action-btn"
-                                type="button"
-                                onClick={handleShare}
-                                aria-label="Share"
-                              >
-                                <Share2 size={16} />
-                                <span>{copiedId === '__share__' ? copy.feedback.copied : copy.feedback.share}</span>
                               </button>
                               {restaurantData?.google_review_url && response.id === responses[responses.length - 1]?.id && responses.length >= 2 && (
                                 <a
