@@ -17,7 +17,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import remarkBreaks from "remark-breaks";
 import rehypeHighlight from "rehype-highlight";
-import { User, Bot, ChevronDown, Sparkles, ThumbsUp, ThumbsDown, Star } from "lucide-react";
+import { User, Bot, ChevronDown, Copy, Sparkles, ThumbsUp, ThumbsDown, Star } from "lucide-react";
 import CaptureHeader from "../components/CaptureHeader";
 import CameraPrompt from "../components/CameraPrompt";
 import ChatDock from "../components/ChatDock";
