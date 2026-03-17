@@ -2011,6 +2011,23 @@ export default function CapturePage({
                         >
                           <ThumbsDown size={16} />
                         </button>
+                        {restaurantData?.google_review_url && (
+                          <a
+                            href={restaurantData.google_review_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="feedback-btn action-btn"
+                            aria-label="Google Review"
+                            onClick={() => {
+                              if (restaurantSlug) {
+                                EventApi.log({ restaurant_slug: restaurantSlug, event: 'review', message_uid: response.messageUid, thread_uid: threadUidRef.current, lang: activeLanguage });
+                              }
+                            }}
+                          >
+                            <Star size={16} />
+                            <span>{copy.restaurant.googleReview}</span>
+                          </a>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -2180,7 +2197,7 @@ export default function CapturePage({
                         >
                           <ThumbsDown size={16} />
                         </button>
-                        {restaurantData?.google_review_url && response.id === responses[responses.length - 1]?.id && responses.length >= 2 && (
+                        {restaurantData?.google_review_url && (
                           <a
                             href={restaurantData.google_review_url}
                             target="_blank"
@@ -2287,7 +2304,7 @@ export default function CapturePage({
                               >
                                 <ThumbsDown size={16} />
                               </button>
-                              {restaurantData?.google_review_url && response.id === responses[responses.length - 1]?.id && responses.length >= 2 && (
+                              {restaurantData?.google_review_url && (
                                 <a
                                   href={restaurantData.google_review_url}
                                   target="_blank"
