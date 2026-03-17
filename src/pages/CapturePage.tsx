@@ -47,6 +47,7 @@ function visionToQuickExplain(vi: VisionMenuItem): QuickExplainItem {
     estimated_calories: vi.estimated_calories,
     confidence: vi.confidence,
     category: vi.category,
+    nfg_code: (vi as any).nfg_code,
   };
 }
 
