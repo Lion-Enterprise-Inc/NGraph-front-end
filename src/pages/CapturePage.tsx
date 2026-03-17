@@ -534,7 +534,7 @@ export default function CapturePage({
   // Auto-load top menus when accessed via clean URL or nfg share link
   const autoLoadDone = useRef(false);
   useEffect(() => {
-    if (autoLoadDone.current || !restaurantData || !cleanUrlMatch || responses.length > 0 || isWebMode) return;
+    if (autoLoadDone.current || !restaurantData || !cleanUrlMatch || !nfgParam || responses.length > 0 || isWebMode) return;
     autoLoadDone.current = true;
     const slug = restaurantData.slug;
     const rName = restaurantData.name_romaji || restaurantData.name;
@@ -1708,73 +1708,6 @@ export default function CapturePage({
       {photoAdoptedCount > 0 && (
         <div style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: '#fff', textAlign: 'center', padding: '6px 12px', fontSize: 12, fontWeight: 600 }}>
           📸 {activeLanguage === 'ja' ? `あなたの写真が${photoAdoptedCount}品のNFGに採用されました` : `Your photo was adopted for ${photoAdoptedCount} NFG item${photoAdoptedCount > 1 ? 's' : ''}`}
-        </div>
-      )}
-
-      {likedMenus.size > 0 && (
-        <button
-          type="button"
-          onClick={openLikedDrawer}
-          style={{
-            position: 'fixed', bottom: 80, right: 16, zIndex: 50,
-            width: 44, height: 44, borderRadius: '50%',
-            background: 'rgba(255,80,80,0.9)', border: 'none',
-            color: '#fff', fontSize: 20, cursor: 'pointer',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
-          }}
-        >
-          ♥<span style={{ fontSize: 10, position: 'absolute', top: -4, right: -4, background: 'var(--color-surface)', borderRadius: 8, padding: '1px 5px', fontWeight: 700 }}>{likedMenus.size}</span>
-        </button>
-      )}
-
-      {likedDrawerOpen && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 100, display: 'flex', flexDirection: 'column' }}>
-          <div style={{ flex: 1, background: 'rgba(0,0,0,0.6)' }} onClick={() => setLikedDrawerOpen(false)} />
-          <div style={{ background: 'var(--color-overlay)', borderRadius: '16px 16px 0 0', maxHeight: '70vh', overflow: 'auto', padding: '16px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-              <span style={{ fontSize: 15, fontWeight: 600, color: 'var(--color-text)' }}>♥ {activeLanguage === 'ja' ? 'お気に入り' : 'Favorites'} ({likedMenus.size})</span>
-              <button type="button" onClick={() => setLikedDrawerOpen(false)} style={{ background: 'none', border: 'none', color: 'var(--color-text-half)', fontSize: 18, cursor: 'pointer' }}>✕</button>
-            </div>
-            {likedItems.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: 24, color: 'var(--color-text-dim)', fontSize: 13 }}>
-                {activeLanguage === 'ja' ? '読み込み中...' : 'Loading...'}
-              </div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {likedItems.map(item => (
-                  <button
-                    key={item.menu_uid}
-                    type="button"
-                    onClick={() => { setLikedDrawerOpen(false); router.push(`/capture?restaurant=${item.restaurant_slug}`); }}
-                    style={{
-                      display: 'flex', gap: 10, padding: '10px 12px', background: 'var(--color-surface-chip)',
-                      borderRadius: 10, border: '1px solid var(--color-surface-active)', cursor: 'pointer', textAlign: 'left', width: '100%',
-                    }}
-                  >
-                    {item.image_url ? (
-                      <img src={item.image_url} alt="" style={{ width: 48, height: 48, borderRadius: 8, objectFit: 'cover', flexShrink: 0 }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-                    ) : (
-                      <div style={{ width: 48, height: 48, borderRadius: 8, background: 'var(--color-surface-active)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>🍽</div>
-                    )}
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {item.name_jp}
-                      </div>
-                      <div style={{ fontSize: 11, color: 'var(--color-text-dim)', marginTop: 2 }}>
-                        {item.restaurant_name}{item.price ? ` · ¥${item.price}` : ''}
-                      </div>
-                      {item.narrative?.description && (
-                        <div style={{ fontSize: 11, color: 'var(--color-text-dim)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          {item.narrative.description}
-                        </div>
-                      )}
-                    </div>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
         </div>
       )}
 
