@@ -1472,6 +1472,7 @@ export default function CapturePage({
         taste_values: m.taste_values || undefined,
         serving: m.serving || undefined,
         category: m.category,
+        nfg_code: (m as any).nfg_code,
       }));
 
       const intro = items.length > 0
