@@ -116,8 +116,9 @@ export default function NFGCard({
   const handleShareCard = (e: React.MouseEvent, item: QuickExplainItem) => {
     e.stopPropagation();
     const nfgCode = item.nfg_code;
-    if (!nfgCode || !cleanUrlBase) return;
-    const url = `${cleanUrlBase}/nfg/${nfgCode}`;
+    if (!nfgCode) return;
+    const base = cleanUrlBase || `${window.location.origin}/capture`;
+    const url = cleanUrlBase ? `${base}/nfg/${nfgCode}` : `${window.location.origin}${window.location.pathname}${window.location.search}`;
     const displayName = language !== 'ja' && item.name_en ? item.name_en : item.name_jp;
     const subName = language !== 'ja' ? item.name_jp : item.name_en;
     const text = `${displayName}${subName ? ` - ${subName}` : ''}`;
@@ -204,7 +205,7 @@ export default function NFGCard({
                   {liked ? '\u2665' : '\u2661'}
                 </button>
               )}
-              {item.nfg_code && cleanUrlBase && (
+              {item.nfg_code && (
                 <button
                   type="button"
                   className={`nfgcard-share-btn${copiedNfgCode === item.nfg_code ? ' copied' : ''}`}
