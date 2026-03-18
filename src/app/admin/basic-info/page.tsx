@@ -102,8 +102,17 @@ function BasicInfoContent() {
         const response = await apiClient.get(`/restaurants/${uidParam}`) as { result: any }
         restaurantData = response.result
       } else {
-        const response = await apiClient.get(`/restaurants/detail-by-user/${userUid}`) as { result: any; message: string; status_code: number }
-        restaurantData = response.result
+        // 店舗リストがあればその最初の店舗を使う
+        const userStr = sessionStorage.getItem('user')
+        const userData = userStr ? JSON.parse(userStr) : null
+        const firstUid = userData?.restaurants?.[0]?.uid
+        if (firstUid) {
+          const response = await apiClient.get(`/restaurants/${firstUid}`) as { result: any }
+          restaurantData = response.result
+        } else {
+          const response = await apiClient.get(`/restaurants/detail-by-user/${userUid}`) as { result: any }
+          restaurantData = response.result
+        }
       }
 
       setRestaurant(restaurantData)

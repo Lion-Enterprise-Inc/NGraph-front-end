@@ -78,7 +78,14 @@ export default function PromptsPage() {
       }).catch(console.error)
     } else if (user.uid) {
       const token = TokenService.getAccessToken()
-      fetch(`${API_BASE_URL}/restaurants/detail-by-user/${user.uid}`, {
+      // 店舗リストがあればその最初の店舗を使う
+      const userStr = sessionStorage.getItem('user')
+      const userData = userStr ? JSON.parse(userStr) : null
+      const firstUid = userData?.restaurants?.[0]?.uid
+      const url = firstUid
+        ? `${API_BASE_URL}/restaurants/${firstUid}`
+        : `${API_BASE_URL}/restaurants/detail-by-user/${user.uid}`
+      fetch(url, {
         headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' },
       })
         .then(r => r.json())

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import AdminLayout from '../../components/admin/AdminLayout'
 import { apiClient } from '../../services/api'
@@ -102,43 +102,59 @@ function StoreDashboard() {
   const [eventStats, setEventStats] = useState<any>(null)
   const [messageStats, setMessageStats] = useState<any>(null)
   const [sessionStats, setSessionStats] = useState<any>(null)
+  const [userRestaurants, setUserRestaurants] = useState<{uid: string, name: string, slug: string}[]>([])
+  const [selectedStoreUid, setSelectedStoreUid] = useState<string | null>(null)
 
-  useEffect(() => {
-    const fetchRestaurant = async () => {
-      try {
-        setRestaurantLoading(true)
-        const userStr = sessionStorage.getItem('user')
-        if (!userStr) {
-          setRestaurantError('ユーザーデータが見つかりません')
-          return
-        }
+  const fetchRestaurantData = useCallback(async (storeUid?: string) => {
+    try {
+      setRestaurantLoading(true)
+      const userStr = sessionStorage.getItem('user')
+      if (!userStr) {
+        setRestaurantError('ユーザーデータが見つかりません')
+        return
+      }
 
-        const user = JSON.parse(userStr)
-        if (!user.restaurant_slug) {
-          setRestaurantError('レストラン情報が見つかりません')
-          return
-        }
+      const user = JSON.parse(userStr)
 
-        const response = await apiClient.get(`/restaurants/detail-by-user/${user.uid}`) as { result: any; message: string; status_code: number }
+      // 複数店舗リストがあればセット
+      if (user.restaurants?.length > 0 && userRestaurants.length === 0) {
+        setUserRestaurants(user.restaurants)
+      }
+
+      const targetUid = storeUid || (user.restaurants?.[0]?.uid)
+      if (targetUid) {
+        const response = await apiClient.get(`/restaurants/${targetUid}`) as { result: any }
         setRestaurant(response.result)
+      } else if (user.restaurant_slug) {
+        const response = await apiClient.get(`/restaurants/detail-by-user/${user.uid}`) as { result: any }
+        setRestaurant(response.result)
+      } else {
+        setRestaurantError('レストラン情報が見つかりません')
+        return
+      }
+    } catch (error) {
+      console.error('Failed to fetch restaurant:', error)
+      setRestaurantError('レストラン情報の取得に失敗しました')
+    } finally {
+      setRestaurantLoading(false)
+    }
+  }, [userRestaurants.length])
 
-        // Fetch menu count
-        if (response.result?.uid) {
-          try {
-            const menuResponse = await apiClient.get(`/menus/?restaurant_uid=${response.result.uid}&page=1&size=1`) as any
-            setMenuCount(menuResponse.result?.total ?? 0)
-          } catch {
-            setMenuCount(0)
-          }
-        }
-      } catch (error) {
-        console.error('Failed to fetch restaurant:', error)
-        setRestaurantError('レストラン情報の取得に失敗しました')
-      } finally {
-        setRestaurantLoading(false)
+  // メニューカウント取得
+  useEffect(() => {
+    if (!restaurant?.uid) return
+    const fetchMenuCount = async () => {
+      try {
+        const menuResponse = await apiClient.get(`/menus/?restaurant_uid=${restaurant.uid}&page=1&size=1`) as any
+        setMenuCount(menuResponse.result?.total ?? 0)
+      } catch {
+        setMenuCount(0)
       }
     }
+    fetchMenuCount()
+  }, [restaurant?.uid])
 
+  useEffect(() => {
     const fetchEventStats = async () => {
       try {
         const res = await apiClient.get('/admin/event-stats') as { result: any }
@@ -164,19 +180,30 @@ function StoreDashboard() {
         setSessionStats(null)
       }
     }
-    fetchRestaurant()
+    fetchRestaurantData(selectedStoreUid || undefined)
     fetchEventStats()
     fetchMessageStats()
     fetchSessionStats()
-  }, [])
+  }, [selectedStoreUid])
 
   return (
     <>
       <section className="section">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px', flexWrap: 'wrap', gap: 12 }}>
           <div>
             <h2 className="section-title" style={{ margin: 0, textAlign: 'left' }}>レストランダッシュボード</h2>
           </div>
+          {userRestaurants.length > 1 && (
+            <select
+              value={selectedStoreUid || userRestaurants[0]?.uid || ''}
+              onChange={(e) => { setSelectedStoreUid(e.target.value); setMenuCount(null); }}
+              style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid var(--border-strong)', background: 'var(--bg-input)', color: 'var(--text)', fontSize: 14 }}
+            >
+              {userRestaurants.map((r) => (
+                <option key={r.uid} value={r.uid}>{r.name}</option>
+              ))}
+            </select>
+          )}
         </div>
 
         {restaurantLoading ? (

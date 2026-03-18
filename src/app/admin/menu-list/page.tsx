@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import AdminLayout from '../../../components/admin/AdminLayout'
 import { useToast } from '../../../components/admin/Toast'
-import { MenuApi, Menu, MenuCreate, MenuUpdate, Ingredient, AllergenApi, Allergen, AllergenListResponse, ScrapingApi, apiClient, CookingMethodApi, RestrictionApi, CookingMethod, Restriction, VisionApi, VisionMenuItem, DISH_CATEGORIES } from '../../../services/api'
+import { MenuApi, Menu, MenuCreate, MenuUpdate, Ingredient, AllergenApi, Allergen, AllergenListResponse, ScrapingApi, apiClient, CookingMethodApi, RestrictionApi, CookingMethod, Restriction, VisionApi, VisionMenuItem, DISH_CATEGORIES, UserRestaurant } from '../../../services/api'
 import { useAuth } from '../../../contexts/AuthContext'
 import MenuTable from './MenuTable'
 import MenuFormModal from './MenuFormModal'
@@ -51,6 +51,9 @@ function MenuListContent() {
   const searchParams = useSearchParams()
   const uidParam = searchParams?.get('uid') ?? null
   const isAdminViewing = !!(uidParam && user && (user.role === 'superadmin' || user.role === 'platform_owner'))
+  const userRestaurants = user?.restaurants || []
+  const hasMultipleStores = userRestaurants.length > 1
+  const [selectedStoreUid, setSelectedStoreUid] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [filter, setFilter] = useState('all')
   const [sortKey, setSortKey] = useState('default')
@@ -241,8 +244,15 @@ function MenuListContent() {
         const restaurantResponse = await apiClient.get(`/restaurants/${uidParam}`) as { result: any }
         restaurantData = restaurantResponse.result
       } else {
-        const restaurantResponse = await apiClient.get(`/restaurants/detail-by-user/${user.uid}`) as { result: any }
-        restaurantData = restaurantResponse.result
+        // 店舗セレクタで選択中のUIDがあればそれを使う
+        const storeUid = selectedStoreUid || (userRestaurants.length > 0 ? userRestaurants[0].uid : null)
+        if (storeUid) {
+          const restaurantResponse = await apiClient.get(`/restaurants/${storeUid}`) as { result: any }
+          restaurantData = restaurantResponse.result
+        } else {
+          const restaurantResponse = await apiClient.get(`/restaurants/detail-by-user/${user.uid}`) as { result: any }
+          restaurantData = restaurantResponse.result
+        }
       }
       setRestaurant(restaurantData)
       setScrapingUrl(localStorage.getItem(`menu_scraping_url_${restaurantData.uid}`) || '')
@@ -337,7 +347,7 @@ function MenuListContent() {
     } finally {
       setIsLoading(false)
     }
-  }, [authLoading, user, itemsPerPage, isAdminViewing, uidParam, sortKey, sortDir])
+  }, [authLoading, user, itemsPerPage, isAdminViewing, uidParam, sortKey, sortDir, selectedStoreUid, userRestaurants])
 
   useEffect(() => {
     fetchData(currentPage)
@@ -670,6 +680,21 @@ function MenuListContent() {
 
   return (
     <AdminLayout title="メニュー一覧">
+      {hasMultipleStores && !isAdminViewing && (
+        <div style={{ background: 'var(--bg-surface)', borderRadius: 12, padding: '12px 16px', marginBottom: 16, border: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 12 }}>
+          <span style={{ fontSize: 13, color: 'var(--muted)', whiteSpace: 'nowrap' }}>店舗</span>
+          <select
+            value={selectedStoreUid || userRestaurants[0]?.uid || ''}
+            onChange={(e) => { setSelectedStoreUid(e.target.value); setCurrentPage(1); }}
+            style={{ flex: 1, padding: '8px 12px', borderRadius: 8, border: '1px solid var(--border-strong)', background: 'var(--bg-input)', color: 'var(--text)', fontSize: 14 }}
+          >
+            {userRestaurants.map((r) => (
+              <option key={r.uid} value={r.uid}>{r.name}</option>
+            ))}
+          </select>
+        </div>
+      )}
+
       {(rankCounts.S + rankCounts.A + rankCounts.B + rankCounts.C) > 0 && (() => {
         const total = rankCounts.S + rankCounts.A + rankCounts.B + rankCounts.C
         const pctS = Math.round(rankCounts.S / total * 100)

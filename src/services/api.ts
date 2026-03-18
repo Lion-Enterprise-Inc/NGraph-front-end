@@ -6,12 +6,19 @@ export interface LoginRequest {
   password: string;
 }
 
+export interface UserRestaurant {
+  uid: string;
+  name: string;
+  slug: string;
+}
+
 export interface User {
   email: string;
   role: 'platform_owner' | 'restaurant_owner' | 'consumer' | 'superadmin';
   uid: string;
   restaurant_slug?: string;
   restaurant_short_code?: string;
+  restaurants?: UserRestaurant[];
 }
 
 export interface LoginResponse {
