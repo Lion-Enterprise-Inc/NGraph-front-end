@@ -49,6 +49,23 @@ interface VariesMenuItem {
   menu_name: string
 }
 
+interface NamingMenuInfo {
+  uid: string
+  name: string
+  price: number | null
+  category: string | null
+}
+
+interface NamingQuestion {
+  index: number
+  pair_id: string
+  question: string
+  reason: string
+  menu_a: NamingMenuInfo
+  menu_b: NamingMenuInfo
+  options: { value: string; label: string }[]
+}
+
 interface CompletionSummaryItem {
   label: string
   value: string
@@ -59,6 +76,7 @@ interface PhaseResponse {
   phase: string
   kitchen_questions?: KitchenQuestion[]
   dish_questions?: DishQuestion[]
+  naming_questions?: NamingQuestion[]
   varies_menus?: VariesMenuItem[]
   completion_summary?: CompletionSummaryItem[]
 }
@@ -127,6 +145,25 @@ async function submitDishAnswer(
   return res.json()
 }
 
+async function submitNamingAnswer(
+  token: string, sessionToken: string,
+  body: {
+    pair_id: string
+    answer: string
+    keep_uid?: string
+    respondent_name?: string
+    respondent_role?: string
+  }
+) {
+  const res = await fetch(`${API}/owner-survey/${token}/naming-answer`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-Survey-Token': sessionToken },
+    body: JSON.stringify(body),
+  })
+  if (!res.ok) throw new Error('Failed to submit naming answer')
+  return res.json()
+}
+
 async function fetchVariesMenus(token: string, sessionToken: string, questionId: string): Promise<VariesMenuItem[]> {
   const res = await fetch(`${API}/owner-survey/${token}/varies-menus/${questionId}`, {
     headers: { 'X-Survey-Token': sessionToken },
@@ -167,10 +204,11 @@ function Logo() {
   )
 }
 
-function PhaseIndicator({ phase }: { phase: string }) {
+function PhaseIndicator({ phase, hasNaming }: { phase: string; hasNaming?: boolean }) {
   const phases = [
-    { key: 'kitchen', label: '厨房プロファイル' },
-    { key: 'dishes', label: '料理ヒアリング' },
+    { key: 'kitchen', label: '厨房' },
+    { key: 'dishes', label: '料理' },
+    ...(hasNaming ? [{ key: 'naming', label: 'メニュー名' }] : []),
   ]
   return (
     <div style={{ display: 'flex', justifyContent: 'center', gap: 4, marginBottom: 20 }}>
@@ -245,6 +283,12 @@ function VerifyContent() {
   const [dishTextNote, setDishTextNote] = useState('')
   const [dishSupplement, setDishSupplement] = useState('')
 
+  // Naming (Phase 3)
+  const [namingQuestions, setNamingQuestions] = useState<NamingQuestion[]>([])
+  const [namingIdx, setNamingIdx] = useState(0)
+  const [namingAnswer, setNamingAnswer] = useState('')
+  const [namingKeepUid, setNamingKeepUid] = useState('')
+
   // Done
   const [completionSummary, setCompletionSummary] = useState<CompletionSummaryItem[]>([])
 
@@ -279,6 +323,12 @@ function VerifyContent() {
       setDishSelection([])
       setDishTextNote('')
       setDishSupplement('')
+      setStep('survey')
+    } else if (data.phase === 'naming' && data.naming_questions) {
+      setNamingQuestions(data.naming_questions)
+      setNamingIdx(0)
+      setNamingAnswer('')
+      setNamingKeepUid('')
       setStep('survey')
     } else if (data.phase === 'done') {
       setCompletionSummary(data.completion_summary || [])
@@ -499,7 +549,7 @@ function VerifyContent() {
         {restaurantName}
       </p>
 
-      <PhaseIndicator phase={phase} />
+      <PhaseIndicator phase={phase} hasNaming={namingQuestions.length > 0 || phase === 'naming'} />
 
       {/* Respondent name (first time) */}
       {!nameSubmitted && (
@@ -781,7 +831,7 @@ function VerifyContent() {
                 </button>
               </div>
 
-              {/* 戻るボタン（Phase 2のみ） */}
+              {/* 戻るボタン */}
               {dishIdx > 0 && (
                 <button
                   onClick={() => {
@@ -789,6 +839,176 @@ function VerifyContent() {
                     setDishSelection([])
                     setDishTextNote('')
                     setDishSupplement('')
+                  }}
+                  disabled={loading}
+                  style={{ ...btnStyle('transparent', '#94a3b8', '1px solid #f1f5f9'), marginTop: 8 }}
+                >
+                  前の質問に戻る
+                </button>
+              )}
+            </div>
+          </div>
+        )
+      })()}
+
+      {/* Phase 3: Naming */}
+      {phase === 'naming' && namingQuestions.length > 0 && (() => {
+        const q = namingQuestions[namingIdx]
+        if (!q) return null
+
+        return (
+          <div>
+            <div style={{ marginBottom: 16 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#64748b', marginBottom: 4 }}>
+                <span>{namingIdx + 1} / {namingQuestions.length}</span>
+                <span>メニュー名確認</span>
+              </div>
+              <div style={{ height: 6, background: '#e2e8f0', borderRadius: 3, overflow: 'hidden' }}>
+                <div style={{ height: '100%', background: '#f59e0b', borderRadius: 3, width: `${(namingIdx / namingQuestions.length) * 100}%`, transition: 'width 0.3s' }} />
+              </div>
+            </div>
+
+            <div style={cardStyle}>
+              <div style={{ fontSize: 12, color: '#f59e0b', fontWeight: 600, marginBottom: 8 }}>
+                {q.reason}
+              </div>
+
+              <p style={{ fontWeight: 600, fontSize: 16, marginBottom: 16, color: '#1e293b', lineHeight: 1.5 }}>
+                {q.question}
+              </p>
+
+              {/* 2つのメニューを並べて表示 */}
+              <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+                {[q.menu_a, q.menu_b].map(menu => (
+                  <div key={menu.uid} style={{
+                    flex: 1, padding: 12, borderRadius: 8,
+                    background: '#f8fafc', border: '1px solid #e2e8f0',
+                  }}>
+                    <div style={{ fontWeight: 600, fontSize: 14, color: '#1e293b', marginBottom: 4 }}>
+                      {menu.name}
+                    </div>
+                    <div style={{ fontSize: 12, color: '#64748b' }}>
+                      {menu.price ? `¥${menu.price.toLocaleString()}` : ''} {menu.category || ''}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* 同じ / 別メニュー 選択 */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
+                {q.options.map(opt => {
+                  const selected = namingAnswer === opt.value
+                  return (
+                    <label key={opt.value} style={{
+                      display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px',
+                      borderRadius: 8, cursor: 'pointer',
+                      background: selected ? '#eff6ff' : '#f8fafc',
+                      border: selected ? '2px solid #2563eb' : '1px solid #e2e8f0',
+                    }}>
+                      <input
+                        type="radio" checked={selected}
+                        onChange={() => {
+                          setNamingAnswer(opt.value)
+                          setNamingKeepUid('')
+                        }}
+                        style={{ accentColor: '#2563eb' }}
+                      />
+                      <span style={{ fontSize: 15, color: '#1e293b' }}>{opt.label}</span>
+                    </label>
+                  )
+                })}
+              </div>
+
+              {/* 「同じメニュー」→ どちらの名前を残すか */}
+              {namingAnswer === 'same' && (
+                <div style={{ marginBottom: 16 }}>
+                  <p style={{ fontWeight: 600, fontSize: 14, marginBottom: 8, color: '#1e293b' }}>
+                    どちらの名前を残しますか？
+                  </p>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {[q.menu_a, q.menu_b].map(menu => {
+                      const selected = namingKeepUid === menu.uid
+                      return (
+                        <label key={menu.uid} style={{
+                          display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px',
+                          borderRadius: 8, cursor: 'pointer',
+                          background: selected ? '#f0fdf4' : '#f8fafc',
+                          border: selected ? '2px solid #16a34a' : '1px solid #e2e8f0',
+                        }}>
+                          <input
+                            type="radio" checked={selected}
+                            onChange={() => setNamingKeepUid(menu.uid)}
+                            style={{ accentColor: '#16a34a' }}
+                          />
+                          <span style={{ fontSize: 15, color: '#1e293b' }}>{menu.name}</span>
+                        </label>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
+
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button
+                  onClick={async () => {
+                    if (!namingAnswer) return
+                    if (namingAnswer === 'same' && !namingKeepUid) return
+                    setLoading(true)
+                    try {
+                      const result = await submitNamingAnswer(token, sessionToken, {
+                        pair_id: q.pair_id,
+                        answer: namingAnswer,
+                        keep_uid: namingAnswer === 'same' ? namingKeepUid : undefined,
+                        ...respondentInfo(),
+                      })
+                      markNameSubmitted()
+
+                      if (result.remaining_count === 0) {
+                        await reloadQuestions()
+                      } else if (namingIdx + 1 < namingQuestions.length) {
+                        setNamingIdx(i => i + 1)
+                        setNamingAnswer('')
+                        setNamingKeepUid('')
+                      } else {
+                        await reloadQuestions()
+                      }
+                    } catch {
+                      alert('送信に失敗しました。')
+                    } finally {
+                      setLoading(false)
+                    }
+                  }}
+                  disabled={loading || !namingAnswer || (namingAnswer === 'same' && !namingKeepUid)}
+                  style={{
+                    ...btnStyle('#2563eb'),
+                    opacity: loading || !namingAnswer || (namingAnswer === 'same' && !namingKeepUid) ? 0.5 : 1,
+                  }}
+                >
+                  {loading ? '送信中...' : '次へ'}
+                </button>
+                <button
+                  onClick={() => {
+                    if (namingIdx + 1 < namingQuestions.length) {
+                      setNamingIdx(i => i + 1)
+                      setNamingAnswer('')
+                      setNamingKeepUid('')
+                    } else {
+                      reloadQuestions()
+                    }
+                  }}
+                  disabled={loading}
+                  style={{ ...btnStyle('transparent', '#64748b', '1px solid #e2e8f0'), flex: '0 0 auto', width: 'auto', padding: '14px 20px' }}
+                >
+                  スキップ
+                </button>
+              </div>
+
+              {namingIdx > 0 && (
+                <button
+                  onClick={() => {
+                    setNamingIdx(i => i - 1)
+                    setNamingAnswer('')
+                    setNamingKeepUid('')
                   }}
                   disabled={loading}
                   style={{ ...btnStyle('transparent', '#94a3b8', '1px solid #f1f5f9'), marginTop: 8 }}
