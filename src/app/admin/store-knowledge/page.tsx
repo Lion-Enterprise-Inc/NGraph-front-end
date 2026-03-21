@@ -50,7 +50,7 @@ export default function StoreKnowledgePage() {
     let rs = user.restaurant_slug
     if (!rs && (user.role === 'superadmin' || user.role === 'platform_owner')) {
       const params = new URLSearchParams(window.location.search)
-      rs = params.get('slug') || 'bonta-honten'
+      rs = params.get('slug') || ''
     }
     if (rs) {
       setSlug(rs)
@@ -63,7 +63,13 @@ export default function StoreKnowledgePage() {
   const loadPreview = async (s: string) => {
     try {
       const resp = await apiClient.get(`/owner-survey/admin/preview/${encodeURIComponent(s)}`) as any
-      const data: SurveyPreview = resp?.result || resp
+      const raw = resp?.result || resp
+      const data: SurveyPreview = {
+        restaurant_name: raw.restaurant_name || '',
+        kitchen_questions: raw.kitchen_questions || [],
+        dish_questions: raw.dish_questions || [],
+        existing_answers: raw.existing_answers || {},
+      }
       setPreview(data)
       if (data.existing_answers) {
         const ka: Record<string, string | string[]> = {}
