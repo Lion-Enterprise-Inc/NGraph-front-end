@@ -164,7 +164,7 @@ export default function StoreKnowledgePage() {
     setSavingDish(true)
     let count = 0
     try {
-      const promises = preview.dish_questions.map(q => {
+      const promises = (preview.dish_questions || []).map(q => {
         const selected = dishSelects[q.index]
         const text_note = dishTexts[q.index]
         if (!selected?.length && !text_note) return null
@@ -232,13 +232,13 @@ export default function StoreKnowledgePage() {
   }
 
   // Counts
-  const kitchenTotal = preview?.kitchen_questions.length || 0
-  const kitchenAnswered = preview?.kitchen_questions.filter(q => {
+  const kitchenTotal = preview?.kitchen_questions?.length || 0
+  const kitchenAnswered = preview?.kitchen_questions?.filter(q => {
     const a = kitchenAnswers[q.id]
     return q.type === 'checkbox' ? (Array.isArray(a) && a.length > 0) : (typeof a === 'string' && a !== '')
   }).length || 0
-  const dishTotal = preview?.dish_questions.length || 0
-  const dishAnswered = preview?.dish_questions.filter(q =>
+  const dishTotal = preview?.dish_questions?.length || 0
+  const dishAnswered = preview?.dish_questions?.filter(q =>
     !!(dishTexts[q.index] || dishSelects[q.index]?.length)
   ).length || 0
   const total = kitchenTotal + dishTotal
@@ -299,7 +299,7 @@ export default function StoreKnowledgePage() {
           回答すると即座にメニューのアレルゲンに波及
         </p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          {preview.kitchen_questions.filter(showBranch).map(q => {
+          {(preview.kitchen_questions || []).filter(showBranch).map(q => {
             const currentVal = kitchenAnswers[q.id]
             const isApplying = applyingId === q.id
             return (
@@ -317,7 +317,7 @@ export default function StoreKnowledgePage() {
                   </span>
                 </div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                  {q.options.map(opt => {
+                  {(q.options || []).map(opt => {
                     const isSelected = q.type === 'checkbox'
                       ? (Array.isArray(currentVal) && currentVal.includes(opt.value))
                       : currentVal === opt.value
@@ -379,7 +379,7 @@ export default function StoreKnowledgePage() {
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-          {preview.dish_questions.map(q => (
+          {(preview.dish_questions || []).map(q => (
             <div key={q.index} style={{
               background: 'var(--bg-input, #0F172A)', borderRadius: 10, padding: '14px 18px',
               border: (dishTexts[q.index] || dishSelects[q.index]?.length)
