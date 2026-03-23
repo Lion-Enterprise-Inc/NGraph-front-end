@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { X, ChevronDown, ChevronUp } from 'lucide-react'
 import { MenuSearchApi, type MenuNFGCard } from '../services/api'
 import { useAppContext } from './AppProvider'
@@ -79,9 +79,15 @@ export default function MenuListDrawer({ open, onClose, restaurantSlug }: MenuLi
     }
   }, [restaurantSlug, language])
 
+  // Re-fetch when language changes or drawer opens
+  const lastLangRef = useRef(language)
   useEffect(() => {
-    if (open && menus.length === 0) fetchMenus()
-  }, [open, fetchMenus])
+    if (!open) return
+    if (menus.length === 0 || lastLangRef.current !== language) {
+      lastLangRef.current = language
+      fetchMenus()
+    }
+  }, [open, fetchMenus, language])
 
   // Reset when drawer closes
   useEffect(() => {
