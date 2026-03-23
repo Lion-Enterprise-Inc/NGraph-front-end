@@ -4953,8 +4953,11 @@ textarea.form-input {
 /* ========== Explore Page (GitHub-style) ========== */
 .explore-page {
   height: 100%;
+  min-height: unset;
   overflow-y: auto;
   background: var(--color-bg);
+  align-items: stretch;
+  padding: 0;
 }
 
 .explore-landing {

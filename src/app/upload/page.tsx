@@ -48,15 +48,12 @@ function UploadContent() {
   const searchParams = useSearchParams()
   const token = searchParams?.get('token') || ''
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const cameraInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
-    document.documentElement.style.overflow = 'auto'
-    document.documentElement.style.height = 'auto'
-    document.body.style.overflow = 'auto'
-    document.body.style.height = 'auto'
+    document.documentElement.classList.add('scrollable-page')
     document.body.style.background = '#f8fafc'
-    const root = document.getElementById('root')
-    if (root) { root.style.overflow = 'auto'; root.style.height = 'auto' }
+    return () => { document.documentElement.classList.remove('scrollable-page') }
   }, [])
 
   const [step, setStep] = useState<'passcode' | 'upload' | 'done'>('passcode')
@@ -86,17 +83,20 @@ function UploadContent() {
   }
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
+    const files = e.target.files
+    if (!files || files.length === 0) return
     setUploading(true)
     try {
-      const result = await uploadPhoto(token, sessionToken, file)
-      setPhotoCount(result.photo_count)
+      for (let i = 0; i < files.length; i++) {
+        const result = await uploadPhoto(token, sessionToken, files[i])
+        setPhotoCount(result.photo_count)
+      }
     } catch (err: unknown) {
       alert(err instanceof Error ? err.message : 'アップロードに失敗しました')
     } finally {
       setUploading(false)
       if (fileInputRef.current) fileInputRef.current.value = ''
+      if (cameraInputRef.current) cameraInputRef.current.value = ''
     }
   }
 
@@ -119,14 +119,24 @@ function UploadContent() {
   }
 
   const fileInput = (
-    <input
-      ref={fileInputRef}
-      type="file"
-      accept="image/*"
-      capture="environment"
-      onChange={handleFileSelect}
-      style={{ display: 'none' }}
-    />
+    <>
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        multiple
+        onChange={handleFileSelect}
+        style={{ display: 'none' }}
+      />
+      <input
+        ref={cameraInputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        onChange={handleFileSelect}
+        style={{ display: 'none' }}
+      />
+    </>
   )
 
   if (!token) {
@@ -218,16 +228,26 @@ function UploadContent() {
             </>
           ) : (
             <>
-              <div style={{ fontSize: 48, marginBottom: 16, color: '#94a3b8' }}>&#128247;</div>
+              <div style={{ fontSize: 48, marginBottom: 16, color: '#94a3b8' }}>&#128194;</div>
               <p style={{ color: '#475569', marginBottom: 24, fontSize: 14, lineHeight: 1.6 }}>
-                メニュー表の写真を撮影してください。
-                <br />何枚でもOKです。
+                メニュー表の画像をアップロードしてください。
+                <br />複数枚まとめて選択できます。
               </p>
               <button
                 onClick={() => fileInputRef.current?.click()}
                 style={btnPrimary}
               >
-                写真を撮る / 選ぶ
+                ファイルから選ぶ
+              </button>
+              <button
+                onClick={() => cameraInputRef.current?.click()}
+                style={{
+                  width: '100%', padding: '14px 0', background: 'transparent', color: '#2563eb',
+                  border: '1px solid #2563eb', borderRadius: 8, fontSize: 16, fontWeight: 600,
+                  cursor: 'pointer', marginTop: 10,
+                }}
+              >
+                カメラで撮影
               </button>
             </>
           )}

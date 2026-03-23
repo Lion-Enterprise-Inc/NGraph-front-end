@@ -243,13 +243,9 @@ function VerifyContent() {
   const token = searchParams?.get('token') || ''
 
   useEffect(() => {
-    document.documentElement.style.overflow = 'auto'
-    document.documentElement.style.height = 'auto'
-    document.body.style.overflow = 'auto'
-    document.body.style.height = 'auto'
+    document.documentElement.classList.add('scrollable-page')
     document.body.style.background = '#f8fafc'
-    const root = document.getElementById('root')
-    if (root) { root.style.overflow = 'auto'; root.style.height = 'auto' }
+    return () => { document.documentElement.classList.remove('scrollable-page') }
   }, [])
 
   const [step, setStep] = useState<'passcode' | 'survey' | 'done'>('passcode')

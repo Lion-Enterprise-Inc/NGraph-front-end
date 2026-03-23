@@ -23,3 +23,11 @@ html, body {
   height: 100%;
   overflow: hidden;
 }
+
+/* Pages that need body-level scrolling (not constrained by capture page's overflow:hidden) */
+html.scrollable-page,
+html.scrollable-page body,
+html.scrollable-page #root {
+  height: auto;
+  overflow: auto;
+}
