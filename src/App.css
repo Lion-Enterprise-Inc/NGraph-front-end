@@ -7595,6 +7595,7 @@ textarea.form-input {
   transition: all 0.2s ease;
   border: none;
   font-family: inherit;
+  white-space: nowrap;
 }
 
 .store-home-action-menu {
