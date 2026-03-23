@@ -199,18 +199,23 @@ export default function CameraPrompt({
         {restaurantName ? (STORE_GREETINGS[language] || STORE_GREETINGS.en) : sub}
       </p>
 
-      <button
-        className="camera-scan-btn"
-        onClick={onCamera}
-      >
-        <div className="camera-scan-icon">
-          <Camera size={18} strokeWidth={1.8} color="#10a37f" />
-        </div>
-        <div className="camera-scan-text">
-          <span className="camera-scan-label">{copy.cameraPrompt.openCamera}</span>
-          <span className="camera-scan-hint">{copy.hero.sub}</span>
-        </div>
-      </button>
+      <div className="store-home-actions">
+        <button
+          className="store-home-action-btn store-home-action-menu"
+          onClick={onExploreMenuClick}
+        >
+          <UtensilsCrossed size={18} strokeWidth={1.8} />
+          <span>{webCopy.exploreMenu}</span>
+        </button>
+
+        <button
+          className="store-home-action-btn store-home-action-camera"
+          onClick={onCamera}
+        >
+          <Camera size={18} strokeWidth={1.8} />
+          <span>{copy.cameraPrompt.openCamera}</span>
+        </button>
+      </div>
 
       <div className="store-home-chips">
         {!round1Choice ? (

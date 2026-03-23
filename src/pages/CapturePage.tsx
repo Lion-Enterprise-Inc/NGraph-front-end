@@ -255,6 +255,7 @@ export default function CapturePage({
     language: contextLanguage,
     openLanguageModal: openLanguageModalFromContext,
     openHistoryDrawer,
+    openMenuList,
     pendingAttachment,
     setPendingAttachment,
     setRestaurantSlug: setCtxSlug,
@@ -1807,14 +1808,7 @@ export default function CapturePage({
                 };
                 handleSend(reservationMessages[activeLanguage] || reservationMessages.en);
               }}
-              onExploreMenuClick={() => {
-                const cached = recommendCacheRef.current[currentSuggestions.chips?.[0] || ''];
-                if (cached) {
-                  handleCachedRecommendation(currentSuggestions.chips?.[0] || '', cached);
-                } else {
-                  handleSend(currentSuggestions.chips?.[0] || copy.restaurant.signatureDish);
-                }
-              }}
+              onExploreMenuClick={() => openMenuList()}
             />
           )}
 

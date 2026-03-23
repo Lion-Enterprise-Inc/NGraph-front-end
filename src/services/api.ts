@@ -1325,6 +1325,7 @@ export interface MenuNFGCard extends MenuSearchItem {
   narrative_full: Record<string, any> | null;
   serving: Record<string, any> | null;
   image_url: string | null;
+  nfg_code: string | null;
   score: number;
   restaurant_lat: number | null;
   restaurant_lng: number | null;

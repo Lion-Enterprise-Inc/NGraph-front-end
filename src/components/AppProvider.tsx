@@ -10,6 +10,7 @@ import {
 } from "react";
 import LanguageModal from "./LanguageModal";
 import HistoryDrawer from "./HistoryDrawer";
+import MenuListDrawer from "./MenuListDrawer";
 import { getUiCopy } from "../i18n/uiCopy";
 import { AuthProvider } from "../contexts/AuthContext";
 import { ToastProvider } from "./admin/Toast";
@@ -27,6 +28,8 @@ type AppContextValue = {
   openLanguageModal: () => void;
   openHistoryDrawer: () => void;
   closeHistoryDrawer: () => void;
+  openMenuList: () => void;
+  closeMenuList: () => void;
   pendingAttachment: PendingAttachment | null;
   setPendingAttachment: (attachment: PendingAttachment | null) => void;
   restaurantSlug: string | null;
@@ -66,6 +69,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [language, setLanguageState] = useState("ja");
   const [languageModalOpen, setLanguageModalOpen] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [menuListOpen, setMenuListOpen] = useState(false);
   const [pendingAttachment, setPendingAttachment] =
     useState<PendingAttachment | null>(null);
   const [restaurantSlug, setRestaurantSlug] = useState<string | null>(null);
@@ -144,6 +148,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
           openLanguageModal: () => setLanguageModalOpen(true),
           openHistoryDrawer: () => setDrawerOpen(true),
           closeHistoryDrawer: () => setDrawerOpen(false),
+          openMenuList: () => setMenuListOpen(true),
+          closeMenuList: () => setMenuListOpen(false),
           pendingAttachment,
           setPendingAttachment,
           restaurantSlug,
@@ -174,6 +180,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
           restaurantSlug={restaurantSlug}
           onNewChat={onNewChat ?? undefined}
           onSelectThread={onSelectThread ?? undefined}
+        />
+        <MenuListDrawer
+          open={menuListOpen}
+          onClose={() => setMenuListOpen(false)}
+          restaurantSlug={restaurantSlug}
         />
       </AppContext.Provider>
       </ToastProvider>

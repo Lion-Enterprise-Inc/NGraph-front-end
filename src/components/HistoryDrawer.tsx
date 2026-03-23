@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
-import { X, Plus } from 'lucide-react'
+import { X, Plus, UtensilsCrossed } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useChatHistory } from '../hooks/useChatHistory'
 import { getUiCopy } from '../i18n/uiCopy'
@@ -23,7 +23,7 @@ export default function HistoryDrawer({
   onSelectThread,
 }: HistoryDrawerProps) {
   const router = useRouter()
-  const { language } = useAppContext()
+  const { language, openMenuList } = useAppContext()
   const copy = getUiCopy(language)
   const { threads, refresh } = useChatHistory(restaurantSlug ?? null)
 
@@ -61,6 +61,13 @@ export default function HistoryDrawer({
           <Plus size={16} strokeWidth={2} />
           {(copy.history as any).newChat || "New chat"}
         </button>
+
+        {restaurantSlug && (
+          <button className="sidebar-menu-list" onClick={() => { openMenuList(); onClose?.(); }}>
+            <UtensilsCrossed size={16} strokeWidth={2} />
+            {(copy as any).webLanding?.exploreMenu || "Menu"}
+          </button>
+        )}
 
         <div className="sidebar-threads">
           {threads.length === 0 ? (

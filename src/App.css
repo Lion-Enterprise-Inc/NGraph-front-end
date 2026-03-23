@@ -7571,3 +7571,352 @@ textarea.form-input {
   color: #666;
   margin-top: 4px;
 }
+
+/* ========== Store Home Actions (menu + camera buttons) ========== */
+.store-home-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 32px;
+  width: 100%;
+  max-width: 320px;
+}
+
+.store-home-action-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+  font-family: inherit;
+}
+
+.store-home-action-menu {
+  background: #10a37f;
+  color: #fff;
+}
+
+.store-home-action-menu:hover {
+  background: #0e8c6b;
+}
+
+.store-home-action-camera {
+  background: var(--color-surface-chip);
+  color: var(--color-text-body);
+  border: 1px solid var(--color-border);
+}
+
+.store-home-action-camera:hover {
+  background: var(--color-surface-hover);
+}
+
+/* ========== Sidebar Menu List Button ========== */
+.sidebar-menu-list {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  color: var(--color-accent);
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.sidebar-menu-list:hover {
+  background: rgba(16, 163, 127, 0.08);
+}
+
+/* ========== Menu List Drawer ========== */
+.menu-list-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+  z-index: 50;
+}
+
+.menu-list-overlay.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.menu-list-panel {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  max-height: 85vh;
+  background: var(--color-surface);
+  color: var(--color-text);
+  border-radius: 16px 16px 0 0;
+  transform: translateY(100%);
+  transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.menu-list-panel.open {
+  transform: translateY(0);
+}
+
+.menu-list-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px 12px;
+  flex-shrink: 0;
+}
+
+.menu-list-title {
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.menu-list-close {
+  background: none;
+  border: none;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background 0.15s;
+}
+
+.menu-list-close:hover {
+  background: var(--color-surface-hover);
+}
+
+/* Category tabs */
+.menu-list-tabs {
+  display: flex;
+  gap: 6px;
+  padding: 0 20px 12px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  flex-shrink: 0;
+}
+
+.menu-list-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.menu-list-tab {
+  flex-shrink: 0;
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1px solid var(--color-border);
+  background: transparent;
+  color: var(--color-text-muted);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.menu-list-tab:hover {
+  background: var(--color-surface-hover);
+}
+
+.menu-list-tab.active {
+  background: #10a37f;
+  color: #fff;
+  border-color: #10a37f;
+}
+
+/* Menu list body */
+.menu-list-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 0 env(safe-area-inset-bottom, 16px);
+}
+
+.menu-list-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+}
+
+.menu-list-spinner {
+  width: 24px;
+  height: 24px;
+  border: 2px solid var(--color-border);
+  border-top-color: #10a37f;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+.menu-list-empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--color-text-muted);
+  font-size: 14px;
+}
+
+/* Menu item row */
+.menu-list-item {
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--color-border);
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+
+.menu-list-item:hover {
+  background: var(--color-surface-hover);
+}
+
+.menu-list-item.expanded {
+  background: var(--color-surface-input);
+}
+
+.menu-list-item-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.menu-list-item-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.menu-list-item-name {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text);
+  line-height: 1.4;
+}
+
+.menu-list-item-sub {
+  display: block;
+  font-size: 11px;
+  color: var(--color-text-dim);
+  margin-top: 1px;
+}
+
+.menu-list-item-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.menu-list-item-price {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.menu-list-chevron {
+  color: var(--color-text-dim);
+}
+
+/* Expanded detail */
+.menu-list-detail {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.menu-list-detail-image {
+  border-radius: 8px;
+  overflow: hidden;
+  max-height: 180px;
+}
+
+.menu-list-detail-image img {
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: cover;
+}
+
+.menu-list-detail-desc {
+  font-size: 13px;
+  color: var(--color-text-body);
+  line-height: 1.6;
+  margin: 0;
+}
+
+.menu-list-detail-story {
+  font-size: 12px;
+  color: var(--color-text-dim);
+  line-height: 1.6;
+  margin: 0;
+  font-style: italic;
+}
+
+.menu-list-detail-tags {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.menu-list-detail-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-half);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.menu-list-detail-tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.menu-list-tag {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.menu-list-tag.allergen {
+  background: rgba(255, 107, 74, 0.15);
+  color: #ff6b4a;
+}
+
+.menu-list-tag.ingredient {
+  background: rgba(0, 232, 150, 0.1);
+  color: #00e896;
+}
+
+.menu-list-tag.restriction {
+  background: rgba(160, 160, 255, 0.12);
+  color: #a0a0ff;
+}
+
+.menu-list-detail-field {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 12px;
+  color: var(--color-text-body);
+  line-height: 1.5;
+}
