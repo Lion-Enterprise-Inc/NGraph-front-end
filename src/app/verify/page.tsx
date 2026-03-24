@@ -694,6 +694,24 @@ function VerifyContent() {
                 スキップ
               </button>
             </div>
+
+            {/* 戻るボタン */}
+            {kitchenIdx > 0 && (
+              <button
+                onClick={() => {
+                  setKitchenIdx(i => i - 1)
+                  setKitchenSelection([])
+                  setKitchenSupplement('')
+                  setShowVaries(false)
+                  setVariesMenus([])
+                  setVariesAnswers({})
+                }}
+                disabled={loading}
+                style={{ ...btnStyle('transparent', '#94a3b8', '1px solid #f1f5f9'), marginTop: 8 }}
+              >
+                前の質問に戻る
+              </button>
+            )}
           </div>
         )
       })()}
