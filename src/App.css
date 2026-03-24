@@ -4952,9 +4952,9 @@ textarea.form-input {
 /* ========== HubScreen ========== */
 /* ========== Explore Page (GitHub-style) ========== */
 .explore-page {
-  height: 100%;
+  height: auto;
   min-height: unset;
-  overflow-y: auto;
+  overflow-y: visible;
   background: var(--color-bg);
   align-items: stretch;
   padding: 0;
