@@ -337,6 +337,12 @@ export default function CapturePage({
     return avg;
   }, [tasteCache, likedMenus]);
 
+  // Capture page needs scroll lock for camera UI
+  useEffect(() => {
+    document.documentElement.classList.add('no-scroll');
+    return () => { document.documentElement.classList.remove('no-scroll'); };
+  }, []);
+
   // NFGカード表示時: likedMenusに含まれるtaste_valuesをキャッシュに保存
   useEffect(() => {
     let updated = false;

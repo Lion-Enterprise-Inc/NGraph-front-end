@@ -31,11 +31,6 @@ export default function ExplorePage() {
 
   // Load cities on mount
   useEffect(() => {
-    document.documentElement.classList.add('scrollable-page')
-    return () => { document.documentElement.classList.remove('scrollable-page') }
-  }, [])
-
-  useEffect(() => {
     ExploreApi.cities()
       .then((res) => setCities(res.result || []))
       .catch(() => {})

@@ -14,20 +14,19 @@ html, body {
   margin: 0;
   background: #0D0D0D;
   height: 100%;
-  overflow: hidden;
+  overflow: auto;
   overscroll-behavior: none;
   -webkit-overflow-scrolling: touch;
 }
 
 #root {
   height: 100%;
-  overflow: hidden;
+  overflow: auto;
 }
 
-/* Pages that need body-level scrolling (not constrained by capture page's overflow:hidden) */
-html.scrollable-page,
-html.scrollable-page body,
-html.scrollable-page #root {
-  height: auto;
-  overflow: auto;
+/* Capture page: lock scrolling for camera UI */
+html.no-scroll,
+html.no-scroll body,
+html.no-scroll #root {
+  overflow: hidden;
 }

@@ -243,9 +243,7 @@ function VerifyContent() {
   const token = searchParams?.get('token') || ''
 
   useEffect(() => {
-    document.documentElement.classList.add('scrollable-page')
     document.body.style.background = '#f8fafc'
-    return () => { document.documentElement.classList.remove('scrollable-page') }
   }, [])
 
   const [step, setStep] = useState<'passcode' | 'survey' | 'done'>('passcode')

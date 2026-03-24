@@ -51,9 +51,7 @@ function UploadContent() {
   const cameraInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
-    document.documentElement.classList.add('scrollable-page')
     document.body.style.background = '#f8fafc'
-    return () => { document.documentElement.classList.remove('scrollable-page') }
   }, [])
 
   const [step, setStep] = useState<'passcode' | 'upload' | 'done'>('passcode')
