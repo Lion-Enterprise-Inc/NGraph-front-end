@@ -204,6 +204,8 @@ export const TokenService = {
       sessionStorage.removeItem('admin_logged_in');
       sessionStorage.removeItem('admin_user_type');
       sessionStorage.removeItem('admin_user_email');
+      sessionStorage.removeItem('selectedStoreUid');
+      sessionStorage.removeItem('selectedStoreName');
     }
   },
 

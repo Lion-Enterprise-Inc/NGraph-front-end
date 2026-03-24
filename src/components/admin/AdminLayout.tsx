@@ -16,6 +16,7 @@ export default function AdminLayout({ children, title }: Props) {
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [mounted, setMounted] = useState(false)
+  const [selectedStoreName, setSelectedStoreName] = useState('')
   const pathname = usePathname()
   const router = useRouter()
   const toast = useToast()
@@ -56,6 +57,12 @@ export default function AdminLayout({ children, title }: Props) {
 
   useEffect(() => {
     setMounted(true)
+    // 選択店舗名を読み込み
+    setSelectedStoreName(sessionStorage.getItem('selectedStoreName') || '')
+    // 同一タブ内でsessionStorage変更を検知するカスタムイベント
+    const handler = () => setSelectedStoreName(sessionStorage.getItem('selectedStoreName') || '')
+    window.addEventListener('selectedStoreChanged', handler)
+    return () => window.removeEventListener('selectedStoreChanged', handler)
   }, [])
 
   const handleNavClick = (e: React.MouseEvent, item: NavItem) => {
@@ -234,7 +241,7 @@ export default function AdminLayout({ children, title }: Props) {
           {/* User Type Badge */}
           <div className="user-type-badge">
             {userType === 'store' ? (
-              <>🍽️ {user?.restaurant_slug || 'レストランビュー'}</>
+              <>🍽️ {selectedStoreName || user?.restaurant_slug || 'レストランビュー'}</>
             ) : (
               <>👑 プラットフォームビュー</>
             )}

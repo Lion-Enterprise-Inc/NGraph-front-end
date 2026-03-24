@@ -53,7 +53,12 @@ function MenuListContent() {
   const isAdminViewing = !!(uidParam && user && (user.role === 'superadmin' || user.role === 'platform_owner'))
   const userRestaurants = user?.restaurants || []
   const hasMultipleStores = userRestaurants.length > 1
-  const [selectedStoreUid, setSelectedStoreUid] = useState<string | null>(null)
+  const [selectedStoreUid, setSelectedStoreUid] = useState<string | null>(() => {
+    if (typeof window !== 'undefined') {
+      return sessionStorage.getItem('selectedStoreUid')
+    }
+    return null
+  })
   const [searchQuery, setSearchQuery] = useState('')
   const [filter, setFilter] = useState('all')
   const [sortKey, setSortKey] = useState('default')
@@ -685,7 +690,17 @@ function MenuListContent() {
           <span style={{ fontSize: 13, color: 'var(--muted)', whiteSpace: 'nowrap' }}>店舗</span>
           <select
             value={selectedStoreUid || userRestaurants[0]?.uid || ''}
-            onChange={(e) => { setSelectedStoreUid(e.target.value); setCurrentPage(1); }}
+            onChange={(e) => {
+              const uid = e.target.value
+              setSelectedStoreUid(uid)
+              sessionStorage.setItem('selectedStoreUid', uid)
+              const found = userRestaurants.find(r => r.uid === uid)
+              if (found) {
+                sessionStorage.setItem('selectedStoreName', found.name)
+                window.dispatchEvent(new Event('selectedStoreChanged'))
+              }
+              setCurrentPage(1)
+            }}
             style={{ flex: 1, padding: '8px 12px', borderRadius: 8, border: '1px solid var(--border-strong)', background: 'var(--bg-input)', color: 'var(--text)', fontSize: 14 }}
           >
             {userRestaurants.map((r) => (

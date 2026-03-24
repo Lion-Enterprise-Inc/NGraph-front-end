@@ -103,7 +103,12 @@ function StoreDashboard() {
   const [messageStats, setMessageStats] = useState<any>(null)
   const [sessionStats, setSessionStats] = useState<any>(null)
   const [userRestaurants, setUserRestaurants] = useState<{uid: string, name: string, slug: string}[]>([])
-  const [selectedStoreUid, setSelectedStoreUid] = useState<string | null>(null)
+  const [selectedStoreUid, setSelectedStoreUid] = useState<string | null>(() => {
+    if (typeof window !== 'undefined') {
+      return sessionStorage.getItem('selectedStoreUid')
+    }
+    return null
+  })
 
   const fetchRestaurantData = useCallback(async (storeUid?: string) => {
     try {
@@ -121,10 +126,16 @@ function StoreDashboard() {
         setUserRestaurants(user.restaurants)
       }
 
-      const targetUid = storeUid || (user.restaurants?.[0]?.uid)
+      const savedUid = sessionStorage.getItem('selectedStoreUid')
+      const targetUid = storeUid || savedUid || (user.restaurants?.[0]?.uid)
       if (targetUid) {
+        if (!sessionStorage.getItem('selectedStoreUid')) {
+          sessionStorage.setItem('selectedStoreUid', targetUid)
+        }
         const response = await apiClient.get(`/restaurants/${targetUid}`) as { result: any }
         setRestaurant(response.result)
+        sessionStorage.setItem('selectedStoreName', response.result?.name || '')
+        window.dispatchEvent(new Event('selectedStoreChanged'))
       } else if (user.restaurant_slug) {
         const response = await apiClient.get(`/restaurants/detail-by-user/${user.uid}`) as { result: any }
         setRestaurant(response.result)
@@ -196,7 +207,17 @@ function StoreDashboard() {
           {userRestaurants.length > 1 && (
             <select
               value={selectedStoreUid || userRestaurants[0]?.uid || ''}
-              onChange={(e) => { setSelectedStoreUid(e.target.value); setMenuCount(null); }}
+              onChange={(e) => {
+                const uid = e.target.value
+                setSelectedStoreUid(uid)
+                sessionStorage.setItem('selectedStoreUid', uid)
+                const found = userRestaurants.find(r => r.uid === uid)
+                if (found) {
+                  sessionStorage.setItem('selectedStoreName', found.name)
+                  window.dispatchEvent(new Event('selectedStoreChanged'))
+                }
+                setMenuCount(null)
+              }}
               style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid var(--border-strong)', background: 'var(--bg-input)', color: 'var(--text)', fontSize: 14 }}
             >
               {userRestaurants.map((r) => (
