@@ -3,6 +3,9 @@
 import { useState, useRef } from "react";
 import type { QuickExplainItem } from "../services/api";
 
+// レーダーチャート表示フラグ（機能成熟後にtrueに戻す）
+const SHOW_TASTE_RADAR = false;
+
 type Props = {
   items: QuickExplainItem[];
   language: string;
@@ -169,7 +172,7 @@ export default function QuickExplainCard({ items, language, likedMenus, onLike, 
                   </div>
                 )}
                 {/* 味チャート */}
-                {item.taste_values && Object.keys(item.taste_values).length > 0 && (
+                {SHOW_TASTE_RADAR && item.taste_values && Object.keys(item.taste_values).length > 0 && (
                   <TasteChart values={item.taste_values} labels={tasteLabels} />
                 )}
                 {/* Narrative */}
