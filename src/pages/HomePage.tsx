@@ -717,6 +717,13 @@ function isNfgQuery(q: string): boolean {
   return NFG_TRIGGER_WORDS.some(w => q.includes(w))
 }
 
+function restaurantUrl(r: { slug: string; url_slug?: string | null; prefecture_slug?: string | null; city_slug?: string | null }): string {
+  if (r.url_slug && r.prefecture_slug && r.city_slug) {
+    return `/${r.prefecture_slug}/${r.city_slug}/${r.url_slug}`
+  }
+  return `/capture?restaurant=${encodeURIComponent(r.slug)}`
+}
+
 // Step 1: 食ジャンル — 最大の絞り込み
 const FOOD_TYPES = [
   { key: 'crab', label: '蟹', labelEn: 'Crab', labelKo: '게', labelZh: '螃蟹', labelEs: 'Cangrejo', labelFr: 'Crabe', q: '蟹,カニ,かに,ズワイ,セイコ' },
@@ -1501,7 +1508,7 @@ export default function HomePage() {
                           <button
                             key={r.uid}
                             className="conv-reco-card"
-                            onClick={() => router.push(`/capture?restaurant=${encodeURIComponent(r.slug)}`)}
+                            onClick={() => router.push(restaurantUrl(r))}
                           >
                             <div className="conv-reco-restaurant">
                               {!isJa && r.name_romaji
@@ -1661,7 +1668,7 @@ export default function HomePage() {
                 <button
                   key={r.uid}
                   className="explore-row"
-                  onClick={() => router.push(`/capture?restaurant=${encodeURIComponent(r.slug)}`)}
+                  onClick={() => router.push(restaurantUrl(r))}
                 >
                   <div className="explore-row-main">
                     <div className="explore-row-info">
@@ -1701,7 +1708,7 @@ export default function HomePage() {
               {(() => {
                 const copy = getUiCopy(language);
                 return menuResults.map(m => (
-                  <div key={m.uid} onClick={() => router.push(`/capture?restaurant=${encodeURIComponent(m.restaurant_slug)}`)}>
+                  <div key={m.uid} onClick={() => router.push(restaurantUrl({ slug: m.restaurant_slug, url_slug: m.restaurant_url_slug, prefecture_slug: m.restaurant_prefecture_slug, city_slug: m.restaurant_city_slug }))}>
                     <NFGCard
                       items={[menuNFGToQuickExplain(m)]}
                       language={language}

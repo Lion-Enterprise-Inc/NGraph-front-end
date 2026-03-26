@@ -84,8 +84,12 @@ export default function ExplorePage() {
     }
   }
 
-  const handleSelect = (slug: string) => {
-    router.push(`/capture?restaurant=${slug}`)
+  const handleSelect = (item: { slug: string; url_slug?: string | null; prefecture_slug?: string | null; city_slug?: string | null }) => {
+    if (item.url_slug && item.prefecture_slug && item.city_slug) {
+      router.push(`/${item.prefecture_slug}/${item.city_slug}/${item.url_slug}`)
+    } else {
+      router.push(`/capture?restaurant=${encodeURIComponent(item.slug)}`)
+    }
   }
 
   const totalAll = cities.reduce((sum, c) => sum + c.count, 0)

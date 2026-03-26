@@ -1138,6 +1138,9 @@ export interface NearbyRestaurant {
   uid: string;
   name: string;
   slug: string;
+  url_slug?: string | null;
+  prefecture_slug?: string | null;
+  city_slug?: string | null;
   logo_url: string | null;
   distance_m: number;
   address: string | null;
@@ -1157,6 +1160,9 @@ export interface SearchRestaurant {
   uid: string;
   name: string;
   slug: string;
+  url_slug?: string | null;
+  prefecture_slug?: string | null;
+  city_slug?: string | null;
   logo_url: string | null;
   address: string | null;
   city: string | null;
@@ -1180,6 +1186,9 @@ export interface NfgSearchRestaurant {
   uid: string;
   name: string;
   slug: string;
+  url_slug?: string | null;
+  prefecture_slug?: string | null;
+  city_slug?: string | null;
   address: string | null;
   city: string | null;
   menu_count: number;
@@ -1246,6 +1255,9 @@ export interface SemanticSearchRestaurant {
   name: string;
   name_romaji: string | null;
   slug: string;
+  url_slug?: string | null;
+  prefecture_slug?: string | null;
+  city_slug?: string | null;
   city: string | null;
   menu_count: number;
   score: number;
@@ -1315,6 +1327,9 @@ export interface MenuSearchItem {
   restaurant_name: string;
   restaurant_name_romaji: string | null;
   restaurant_slug: string;
+  restaurant_url_slug?: string | null;
+  restaurant_prefecture_slug?: string | null;
+  restaurant_city_slug?: string | null;
   restaurant_city: string | null;
 }
 

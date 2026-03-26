@@ -4,6 +4,9 @@ type NearbyItem = {
   uid: string;
   name: string;
   slug: string;
+  url_slug?: string | null;
+  prefecture_slug?: string | null;
+  city_slug?: string | null;
   logo_url: string | null;
   distance_m?: number;
   address: string | null;
@@ -13,7 +16,7 @@ type NearbyItem = {
 
 type NearbyListProps = {
   items: NearbyItem[];
-  onSelect: (slug: string) => void;
+  onSelect: (item: NearbyItem) => void;
   showDistance?: boolean;
   isJa?: boolean;
 };
@@ -33,7 +36,7 @@ export default function NearbyList({ items, onSelect, showDistance = true, isJa 
         <button
           key={item.uid}
           type="button"
-          onClick={() => onSelect(item.slug)}
+          onClick={() => onSelect(item)}
           style={{
             display: 'flex',
             alignItems: 'center',
