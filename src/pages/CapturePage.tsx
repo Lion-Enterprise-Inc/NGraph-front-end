@@ -236,7 +236,7 @@ export default function CapturePage({
 
   // Support clean URLs: /{prefecture}/{city}/{url_slug}[/nfg/{nfg_code}]
   const cleanUrlMatch = typeof window !== 'undefined'
-    ? window.location.pathname.match(/^\/([a-z]+)\/([a-z]+)\/([a-z0-9]+)(?:\/nfg\/([a-z]+[0-9]+))?$/)
+    ? window.location.pathname.match(/^\/([a-z-]+)\/([a-z-]+)\/([a-z0-9-]+)(?:\/nfg\/([a-z]+[0-9]+))?$/)
     : null;
   // Clean URLアクセス時はキャッシュクリア（常に新鮮な状態で表示）
   const cleanUrlClearedRef = useRef(false);
