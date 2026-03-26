@@ -20,6 +20,7 @@ function menuNFGToQuickExplain(m: MenuNFGCard): QuickExplainItem {
     source: 'db' as const,
     menu_uid: m.uid,
     image_url: m.image_url || undefined,
+    image_urls: m.image_urls || undefined,
     narrative: m.narrative_full || undefined,
     verification_rank: m.verification_rank || undefined,
     taste_values: m.taste_values || undefined,

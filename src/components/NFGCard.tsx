@@ -248,11 +248,34 @@ export default function NFGCard({
                 {item.restrictions.map((r, i) => <span key={i} className="nfgcard-restriction-tag">{r}</span>)}
               </div>
             )}
-            {item.image_url && (
-              <div className="nfgcard-image">
-                <img src={item.image_url} alt={item.name_jp} loading="lazy" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-              </div>
-            )}
+            {(() => {
+              const allImages = [
+                ...(item.image_url ? [item.image_url] : []),
+                ...(item.image_urls || []),
+              ].filter((v, i, a) => a.indexOf(v) === i) // dedupe
+              if (allImages.length === 0) return null
+              if (allImages.length === 1) return (
+                <div className="nfgcard-image">
+                  <img src={allImages[0]} alt={item.name_jp} loading="lazy" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                </div>
+              )
+              return (
+                <div className="nfgcard-image-carousel">
+                  <div className="nfgcard-image-track">
+                    {allImages.map((url, i) => (
+                      <div key={i} className="nfgcard-image-slide">
+                        <img src={url} alt={`${item.name_jp} ${i + 1}`} loading="lazy" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                      </div>
+                    ))}
+                  </div>
+                  <div className="nfgcard-image-dots">
+                    {allImages.map((_, i) => (
+                      <span key={i} className="nfgcard-image-dot" />
+                    ))}
+                  </div>
+                </div>
+              )
+            })()}
 
             {/* Expandable details */}
             {open && (

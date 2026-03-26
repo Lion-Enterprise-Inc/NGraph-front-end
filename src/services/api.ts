@@ -682,6 +682,7 @@ export interface QuickExplainItem {
   is_new?: boolean;
   menu_uid?: string;
   image_url?: string;
+  image_urls?: string[];
   narrative?: Record<string, any>;
   verification_rank?: string;
   taste_values?: Record<string, number>;
@@ -1342,6 +1343,7 @@ export interface MenuNFGCard extends MenuSearchItem {
   narrative_full: Record<string, any> | null;
   serving: Record<string, any> | null;
   image_url: string | null;
+  image_urls?: string[];
   nfg_code: string | null;
   score: number;
   restaurant_lat: number | null;
