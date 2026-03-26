@@ -1360,14 +1360,14 @@ export default function HomePage() {
                   <span className="new-restaurant-label">NEW</span>
                   <span
                     className="new-restaurant-link"
-                    onClick={() => router.push(`/capture?restaurant=${encodeURIComponent('ジョルノ')}&new=1`)}
+                    onClick={() => router.push('/fukui/fukui/giorno')}
                   >
                     {isJa ? 'ジョルノ 福井駅前店' : 'Giorno Fukui'}
                   </span>
                   <span className="new-restaurant-sep">|</span>
                   <span
                     className="new-restaurant-link"
-                    onClick={() => router.push(`/capture?restaurant=${encodeURIComponent('ジョルノ-片町店')}&new=1`)}
+                    onClick={() => router.push('/fukui/fukui/giornokatamachiten')}
                   >
                     {isJa ? '片町店' : 'Katamachi'}
                   </span>
