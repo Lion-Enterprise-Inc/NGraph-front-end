@@ -1979,12 +1979,15 @@ export default function CapturePage({
                 /* NFGカード表示（チャット応答テキスト + カード） */
                 <div className="chat-row chat-row-assistant">
                   <div className="chat-content">
-                    {/* NFGカードがある時: 番号付きメニューリスト部分を除外し、導入文のみ表示 */}
+                    {/* NFGカードがある時: 番号付きメニューリスト部分を除外し、導入1行のみ表示 */}
                     {(() => {
                       const raw = typingState[response.id]?.intro ?? "";
                       // 番号付きリスト行を除去して導入文だけ残す
                       const stripped = raw.replace(/^\s*\d+\.\s+.+$/gm, "").trim();
                       if (!stripped) return null;
+                      // NFGカードがあるので導入文は1行目だけに制限
+                      const firstLine = stripped.split('\n').filter(l => l.trim())[0]?.trim() || "";
+                      if (!firstLine) return null;
                       return (
                         <div className="chat-message-wrapper" style={{ marginBottom: 8 }}>
                           <div className="chat-bubble chat-bubble-assistant">
@@ -2000,7 +2003,7 @@ export default function CapturePage({
                                   li: ({ children }) => <li className="menu-item">{children}</li>,
                                 }}
                               >
-                                {escapeNumberedLists(stripped)}
+                                {escapeNumberedLists(firstLine)}
                               </ReactMarkdown>
                             </div>
                           </div>

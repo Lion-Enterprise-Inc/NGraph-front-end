@@ -1485,6 +1485,9 @@ body {
 .chat-bubble-assistant ol {
   margin: 0 0 0.875rem 0;
   padding-left: 1.5rem;
+  max-height: 320px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .chat-bubble-assistant ul {
@@ -1505,6 +1508,9 @@ body {
 .menu-list {
   margin: 0 0 0.75rem 0;
   padding-left: 1.5rem;
+  max-height: 320px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .menu-list.numbered {
