@@ -1489,14 +1489,18 @@ export default function CapturePage({
         ? (activeLanguage === 'ja' ? `${items.length}品見つかりました` : `Found ${items.length} dishes`)
         : (activeLanguage === 'ja' ? 'メニューが見つかりませんでした' : 'No dishes found');
 
-      // 次の導線チップを生成（別のカテゴリ + ドリンク + 季節）
+      // 次の導線チップを生成（別のカテゴリ + 季節 + コンテキストに応じた提案）
       const otherGroups = Object.entries(groupLabels).filter(([k]) => k !== menuGroup);
       const nextChips: { label: string; query: string }[] = otherGroups.map(([, label]) => ({
         label,
         query: label,
       }));
       nextChips.push({ label: copy.restaurant.seasonalMenu, query: copy.restaurant.seasonalMenu });
-      nextChips.push({ label: copy.restaurant.drinksMenu, query: copy.restaurant.drinksMenu });
+      const bt = (restaurantData?.business_type || '').toLowerCase();
+      const isBarType = ['バー', 'カクテルバー', 'ワインバー', 'ダイニングバー', 'bar'].some(t => bt.includes(t.toLowerCase()));
+      if (!isBarType) {
+        nextChips.push({ label: copy.restaurant.drinksMenu, query: copy.restaurant.drinksMenu });
+      }
 
       setResponses((prev) =>
         prev.map((r) =>
