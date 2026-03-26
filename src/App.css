@@ -1872,6 +1872,34 @@ body {
   white-space: nowrap;
 }
 
+.google-review-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #FBBF24;
+  background: rgba(251, 191, 36, 0.1);
+  border: 1px solid rgba(251, 191, 36, 0.25);
+  border-radius: 14px;
+  text-decoration: none;
+  transition: all 0.2s;
+  margin-left: 4px;
+}
+.google-review-btn:hover {
+  background: rgba(251, 191, 36, 0.18);
+  border-color: rgba(251, 191, 36, 0.4);
+  color: #FCD34D;
+}
+.google-review-rating {
+  font-weight: 700;
+  font-size: 12px;
+}
+.google-review-btn span {
+  white-space: nowrap;
+}
+
 .chat-loading-spinner {
   display: flex;
   align-items: center;

@@ -62,6 +62,7 @@ type ApiRestaurant = {
   recommend_texts?: string[] | null
   recommend_texts_ja?: string[] | null
   google_review_url?: string | null
+  google_rating?: number | null
   address?: string | null
   city?: string | null
   phone_number?: string | null
@@ -513,6 +514,7 @@ export default function CapturePage({
                 recommend_texts: data.result.recommend_texts,
                 recommend_texts_ja: data.result.recommend_texts_ja,
                 google_review_url: data.result.google_review_url || null,
+                google_rating: data.result.google_rating || null,
                 address: data.result.address || null,
                 url_slug: data.result.url_slug || null,
                 prefecture_slug: data.result.prefecture_slug || null,
@@ -1957,7 +1959,7 @@ export default function CapturePage({
                             href={restaurantData.google_review_url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="feedback-btn action-btn"
+                            className="google-review-btn"
                             aria-label="Google Review"
                             onClick={() => {
                               if (restaurantSlug) {
@@ -1965,7 +1967,8 @@ export default function CapturePage({
                               }
                             }}
                           >
-                            <Star size={16} />
+                            <Star size={14} fill="#FBBF24" stroke="#FBBF24" />
+                            {restaurantData?.google_rating && <span className="google-review-rating">{restaurantData.google_rating}</span>}
                             <span>{copy.restaurant.googleReview}</span>
                           </a>
                         )}
@@ -2143,7 +2146,7 @@ export default function CapturePage({
                             href={restaurantData.google_review_url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="feedback-btn action-btn"
+                            className="google-review-btn"
                             aria-label="Google Review"
                             onClick={() => {
                               if (restaurantSlug) {
@@ -2151,7 +2154,8 @@ export default function CapturePage({
                               }
                             }}
                           >
-                            <Star size={16} />
+                            <Star size={14} fill="#FBBF24" stroke="#FBBF24" />
+                            {restaurantData?.google_rating && <span className="google-review-rating">{restaurantData.google_rating}</span>}
                             <span>{copy.restaurant.googleReview}</span>
                           </a>
                         )}
