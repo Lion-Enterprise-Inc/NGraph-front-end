@@ -202,7 +202,7 @@ export default function ExplorePage() {
                 <button
                   key={item.uid}
                   type="button"
-                  onClick={() => handleSelect(item.slug)}
+                  onClick={() => handleSelect(item)}
                   style={{
                     flexShrink: 0, width: '140px', padding: '12px',
                     background: 'rgba(255,255,255,0.05)', borderRadius: '10px',
