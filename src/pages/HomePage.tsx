@@ -930,34 +930,36 @@ export default function HomePage() {
         ? MenuSearchApi.search({ q, area: c, nfg: true, size: 20, lang: language }).catch(() => null)
         : Promise.resolve(null)
 
-      if (q && isNfgQuery(q)) {
-        const [res, menuRes] = await Promise.all([
-          ExploreApi.nfgSearch(q, c, p, 30),
-          menuPromise,
-        ])
-        const items: DisplayRestaurant[] = res.result.items.map(r => ({ ...r, _nfg: true }))
-        setRestaurants(items)
+      // 常にテキスト検索を先に実行（高速）
+      const [res, menuRes] = await Promise.all([
+        ExploreApi.search(q, c, p, 30),
+        menuPromise,
+      ])
+      if (menuRes?.result?.menus?.length) setMenuResults(menuRes.result.menus as MenuNFGCard[])
+
+      // テキスト検索で結果あり → そのまま使う
+      if (res.result.total > 0) {
+        setRestaurants(res.result.items)
         setTotal(res.result.total)
         setPages(res.result.pages)
-        if (menuRes?.result?.menus?.length) setMenuResults(menuRes.result.menus as MenuNFGCard[])
+      } else if (q.length >= 2 && isNfgQuery(q)) {
+        // テキスト検索で結果0 + NFGクエリ → NFG検索にフォールバック
+        const nfg = await ExploreApi.nfgSearch(q, c, p, 30)
+        const items: DisplayRestaurant[] = nfg.result.items.map(r => ({ ...r, _nfg: true }))
+        setRestaurants(items)
+        setTotal(nfg.result.total)
+        setPages(nfg.result.pages)
+      } else if (res.result.total === 0 && q.length >= 2) {
+        // テキスト検索で結果0 + 非NFGクエリ → NFG検索にフォールバック
+        const nfg = await ExploreApi.nfgSearch(q, c, p, 30)
+        const items: DisplayRestaurant[] = nfg.result.items.map(r => ({ ...r, _nfg: true }))
+        setRestaurants(items)
+        setTotal(nfg.result.total)
+        setPages(nfg.result.pages)
       } else {
-        const [res, menuRes] = await Promise.all([
-          ExploreApi.search(q, c, p, 30),
-          menuPromise,
-        ])
-        if (menuRes?.result?.menus?.length) setMenuResults(menuRes.result.menus as MenuNFGCard[])
-        // fallback to NFG search if text search returns 0 and query is 2+ chars
-        if (res.result.total === 0 && q.length >= 2) {
-          const nfg = await ExploreApi.nfgSearch(q, c, p, 30)
-          const items: DisplayRestaurant[] = nfg.result.items.map(r => ({ ...r, _nfg: true }))
-          setRestaurants(items)
-          setTotal(nfg.result.total)
-          setPages(nfg.result.pages)
-        } else {
-          setRestaurants(res.result.items)
-          setTotal(res.result.total)
-          setPages(res.result.pages)
-        }
+        setRestaurants(res.result.items)
+        setTotal(res.result.total)
+        setPages(res.result.pages)
       }
     } catch (err) {
       console.error('fetchRestaurants error:', err)
