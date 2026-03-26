@@ -254,9 +254,12 @@ export default function NFGCard({
                 ...(item.image_urls || []),
               ].filter((v, i, a) => a.indexOf(v) === i) // dedupe
               if (allImages.length === 0) return null
+              const DRINK_CATS = new Set(["drink","beer","sake","sour","highball","whisky","wine","shochu","fruit_wine","soft_drink"]);
+              const isDrink = DRINK_CATS.has((item.category || "").toLowerCase());
+              const fitClass = isDrink ? "nfgcard-img-contain" : "nfgcard-img-cover";
               if (allImages.length === 1) return (
                 <div className="nfgcard-image">
-                  <img src={allImages[0]} alt={item.name_jp} loading="lazy" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                  <img className={fitClass} src={allImages[0]} alt={item.name_jp} loading="lazy" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                 </div>
               )
               return (
@@ -264,7 +267,7 @@ export default function NFGCard({
                   <div className="nfgcard-image-track">
                     {allImages.map((url, i) => (
                       <div key={i} className="nfgcard-image-slide">
-                        <img src={url} alt={`${item.name_jp} ${i + 1}`} loading="lazy" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                        <img className={fitClass} src={url} alt={`${item.name_jp} ${i + 1}`} loading="lazy" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                       </div>
                     ))}
                   </div>

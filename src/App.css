@@ -7473,8 +7473,13 @@ textarea.form-input {
 .nfgcard-image img {
   width: 100%;
   max-height: 180px;
-  object-fit: contain;
   border-radius: 6px;
+}
+.nfgcard-img-cover {
+  object-fit: cover;
+}
+.nfgcard-img-contain {
+  object-fit: contain;
 }
 
 /* Image carousel */
@@ -7502,7 +7507,6 @@ textarea.form-input {
 .nfgcard-image-slide img {
   width: 100%;
   max-height: 180px;
-  object-fit: contain;
   border-radius: 6px;
 }
 .nfgcard-image-dots {
