@@ -1892,10 +1892,6 @@ body {
   border-color: rgba(251, 191, 36, 0.4);
   color: #FCD34D;
 }
-.google-review-rating {
-  font-weight: 700;
-  font-size: 12px;
-}
 .google-review-btn span {
   white-space: nowrap;
 }

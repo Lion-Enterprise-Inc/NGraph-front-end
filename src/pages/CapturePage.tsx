@@ -1968,7 +1968,6 @@ export default function CapturePage({
                             }}
                           >
                             <Star size={14} fill="#FBBF24" stroke="#FBBF24" />
-                            {restaurantData?.google_rating && <span className="google-review-rating">{restaurantData.google_rating}</span>}
                             <span>{copy.restaurant.googleReview}</span>
                           </a>
                         )}
@@ -2155,7 +2154,6 @@ export default function CapturePage({
                             }}
                           >
                             <Star size={14} fill="#FBBF24" stroke="#FBBF24" />
-                            {restaurantData?.google_rating && <span className="google-review-rating">{restaurantData.google_rating}</span>}
                             <span>{copy.restaurant.googleReview}</span>
                           </a>
                         )}
