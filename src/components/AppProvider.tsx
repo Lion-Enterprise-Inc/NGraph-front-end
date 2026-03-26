@@ -34,6 +34,8 @@ type AppContextValue = {
   setPendingAttachment: (attachment: PendingAttachment | null) => void;
   restaurantSlug: string | null;
   setRestaurantSlug: (slug: string | null) => void;
+  businessType: string | null;
+  setBusinessType: (type: string | null) => void;
   onNewChat: (() => void) | null;
   setOnNewChat: (fn: (() => void) | null) => void;
   onSelectThread: ((threadUid: string) => void) | null;
@@ -73,6 +75,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [pendingAttachment, setPendingAttachment] =
     useState<PendingAttachment | null>(null);
   const [restaurantSlug, setRestaurantSlug] = useState<string | null>(null);
+  const [businessType, setBusinessType] = useState<string | null>(null);
   const [onNewChat, setOnNewChat] = useState<(() => void) | null>(null);
   const [onSelectThread, setOnSelectThread] = useState<((threadUid: string) => void) | null>(null);
   const [geoLocation, setGeoLocation] = useState<{ lat: number; lng: number } | null>(null);
@@ -154,6 +157,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
           setPendingAttachment,
           restaurantSlug,
           setRestaurantSlug,
+          businessType,
+          setBusinessType,
           onNewChat,
           setOnNewChat,
           onSelectThread,
@@ -185,6 +190,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           open={menuListOpen}
           onClose={() => setMenuListOpen(false)}
           restaurantSlug={restaurantSlug}
+          businessType={businessType}
         />
       </AppContext.Provider>
       </ToastProvider>

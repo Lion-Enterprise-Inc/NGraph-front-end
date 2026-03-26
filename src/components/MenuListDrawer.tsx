@@ -36,9 +36,12 @@ type MenuListDrawerProps = {
   open: boolean
   onClose: () => void
   restaurantSlug: string | null
+  businessType?: string | null
 }
 
-export default function MenuListDrawer({ open, onClose, restaurantSlug }: MenuListDrawerProps) {
+const BAR_TYPES = ['バー', 'カクテルバー', 'ワインバー', 'ダイニングバー', 'bar', 'cocktail bar', 'wine bar', 'dining bar']
+
+export default function MenuListDrawer({ open, onClose, restaurantSlug, businessType }: MenuListDrawerProps) {
   const { language } = useAppContext()
   const copy = getUiCopy(language)
   const nfgCopy = (copy as any).nfg || {}
@@ -63,12 +66,16 @@ export default function MenuListDrawer({ open, onClose, restaurantSlug }: MenuLi
       setMenus(items)
 
       // Extract categories that have menus, preserve order
-      const ORDER = [
-        'main', 'appetizer', 'sashimi', 'sushi', 'tempura', 'nabe',
-        'rice', 'ramen', 'soba', 'yakitori', 'steamed', 'vinegared',
-        'chinmi', 'salad', 'soup', 'side', 'dessert', 'course',
-        'bento', 'bread', 'drink', 'other',
-      ]
+      const isBar = BAR_TYPES.some(t => (businessType || '').toLowerCase().includes(t.toLowerCase()))
+      const ORDER = isBar
+        ? ['drink', 'cocktail', 'main', 'appetizer', 'sashimi', 'sushi', 'tempura', 'nabe',
+           'rice', 'ramen', 'soba', 'yakitori', 'steamed', 'vinegared',
+           'chinmi', 'salad', 'soup', 'side', 'dessert', 'course',
+           'bento', 'bread', 'other']
+        : ['main', 'appetizer', 'sashimi', 'sushi', 'tempura', 'nabe',
+           'rice', 'ramen', 'soba', 'yakitori', 'steamed', 'vinegared',
+           'chinmi', 'salad', 'soup', 'side', 'dessert', 'course',
+           'bento', 'bread', 'drink', 'other']
       const catSet = new Set(items.map(m => m.category || 'other'))
       const sorted = ORDER.filter(c => catSet.has(c))
       setCategories(sorted)
@@ -100,12 +107,13 @@ export default function MenuListDrawer({ open, onClose, restaurantSlug }: MenuLi
     ? menus
     : menus.filter(m => (m.category || 'other') === activeCategory)
 
-  // Drink at end for "all" tab
+  // Sort "all" tab: bar→drink first, otherwise drink last
+  const isBar = BAR_TYPES.some(t => (businessType || '').toLowerCase().includes(t.toLowerCase()))
   const sorted = activeCategory === 'all'
     ? [...filtered].sort((a, b) => {
         const aIsDrink = a.category === 'drink' ? 1 : 0
         const bIsDrink = b.category === 'drink' ? 1 : 0
-        return aIsDrink - bIsDrink
+        return isBar ? (bIsDrink - aIsDrink) : (aIsDrink - bIsDrink)
       })
     : filtered
 

@@ -259,6 +259,7 @@ export default function CapturePage({
     pendingAttachment,
     setPendingAttachment,
     setRestaurantSlug: setCtxSlug,
+    setBusinessType: setCtxBusinessType,
     setOnNewChat,
     setOnSelectThread,
     geoLocation,
@@ -516,9 +517,11 @@ export default function CapturePage({
                 url_slug: data.result.url_slug || null,
                 prefecture_slug: data.result.prefecture_slug || null,
                 city_slug: data.result.city_slug || null,
+                business_type: data.result.business_type || null,
                 created_at: '',
                 updated_at: ''
               });
+              setCtxBusinessType(data.result.business_type || null);
               recordVisit(data.result.slug, data.result.name);
               document.title = `${data.result.name_romaji || data.result.name} | NGraph`;
               return;

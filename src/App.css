@@ -7747,7 +7747,9 @@ textarea.form-input {
 /* Menu list body */
 .menu-list-body {
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   padding: 0 0 env(safe-area-inset-bottom, 16px);
 }
 
