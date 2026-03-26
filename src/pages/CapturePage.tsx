@@ -1803,7 +1803,6 @@ export default function CapturePage({
                   handleSend(text);
                 }
               }}
-              onRound2Click={handleRound2Click}
               isWebMode={isWebMode}
               restaurantAddress={selectedRestaurant?.address}
               restaurantAccess={selectedRestaurant?.access_info}
