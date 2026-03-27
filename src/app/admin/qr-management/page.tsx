@@ -56,12 +56,12 @@ export default function QRManagementPage() {
     }
 
     setIsGenerating(true)
-    // Clean URL優先、なければ短縮URL、最終手段でslug
+    // Clean URL優先、なければ短縮URL、最終手段でslug（全てsource=qr付き）
     const url = (prefectureSlug && citySlug && urlSlug)
-      ? `https://app.ngraph.jp/${prefectureSlug}/${citySlug}/${urlSlug}`
+      ? `https://app.ngraph.jp/${prefectureSlug}/${citySlug}/${urlSlug}?source=qr`
       : shortCode
         ? `https://app.ngraph.jp/r/${shortCode}`
-        : `https://app.ngraph.jp/capture?restaurant=${encodeURIComponent(restaurantSlug.trim())}`
+        : `https://app.ngraph.jp/capture?restaurant=${encodeURIComponent(restaurantSlug.trim())}&source=qr`
     setQrCodeUrl(url)
 
     try {
