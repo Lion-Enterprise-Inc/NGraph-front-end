@@ -1,6 +1,6 @@
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
-import { Menu, Info, X, MapPin, Clock, Phone, Instagram, ExternalLink } from 'lucide-react'
+import { Menu, Info, X, MapPin, Clock, Phone, Instagram, ExternalLink, Sun, Moon } from 'lucide-react'
 import { getUiCopy } from '../i18n/uiCopy'
 import { useAppContext } from './AppProvider'
 
@@ -35,7 +35,7 @@ interface CaptureHeaderProps {
 
 export default function CaptureHeader({ onMenu, onLanguage, restaurantName, restaurantData }: CaptureHeaderProps) {
   const router = useRouter()
-  const { language } = useAppContext()
+  const { language, theme, toggleTheme } = useAppContext()
   const copy = getUiCopy(language)
   const badge = LANG_BADGES[language] || language.slice(0, 2).toUpperCase()
   const [showInfo, setShowInfo] = useState(false)
@@ -68,9 +68,14 @@ export default function CaptureHeader({ onMenu, onLanguage, restaurantName, rest
             <span className="capture-header-name">NGraph</span>
           )}
         </div>
-        <button className="header-lang-badge" type="button" onClick={onLanguage}>
-          {badge}
-        </button>
+        <div className="capture-header-actions">
+          <button className="icon-button" type="button" aria-label="Toggle theme" onClick={toggleTheme}>
+            {theme === 'dark' ? <Sun size={18} strokeWidth={1.75} color="currentColor" /> : <Moon size={18} strokeWidth={1.75} color="currentColor" />}
+          </button>
+          <button className="header-lang-badge" type="button" onClick={onLanguage}>
+            {badge}
+          </button>
+        </div>
       </header>
 
       {showInfo && restaurantData && (

@@ -672,6 +672,13 @@ body {
   gap: 8px;
 }
 
+.capture-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
 .capture-header-center {
   flex: 1;
   display: flex;
@@ -7735,7 +7742,7 @@ textarea.form-input {
   bottom: 0;
   left: 0;
   right: 0;
-  max-height: 85vh;
+  height: 85vh;
   background: var(--color-surface);
   color: var(--color-text);
   border-radius: 16px 16px 0 0;
