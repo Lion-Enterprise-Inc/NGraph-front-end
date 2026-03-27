@@ -15,6 +15,9 @@ export default function QRManagementPage() {
   const copy = getUiCopy(language)
   const [restaurantSlug, setRestaurantSlug] = useState('')
   const [shortCode, setShortCode] = useState('')
+  const [urlSlug, setUrlSlug] = useState('')
+  const [prefectureSlug, setPrefectureSlug] = useState('')
+  const [citySlug, setCitySlug] = useState('')
   const [qrCodeUrl, setQrCodeUrl] = useState('')
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState('')
   const [isGenerating, setIsGenerating] = useState(false)
@@ -32,6 +35,9 @@ export default function QRManagementPage() {
       if (user?.restaurant_short_code) {
         setShortCode(user.restaurant_short_code)
       }
+      if (user?.restaurant_url_slug) setUrlSlug(user.restaurant_url_slug)
+      if (user?.restaurant_prefecture_slug) setPrefectureSlug(user.restaurant_prefecture_slug)
+      if (user?.restaurant_city_slug) setCitySlug(user.restaurant_city_slug)
       setSlugInitialized(true)
     }
   }, [authLoading, user?.restaurant_slug, user?.restaurant_short_code, slugInitialized])
@@ -50,10 +56,12 @@ export default function QRManagementPage() {
     }
 
     setIsGenerating(true)
-    // Use short_code URL if available, otherwise fall back to slug
-    const url = shortCode
-      ? `https://app.ngraph.jp/r/${shortCode}`
-      : `https://app.ngraph.jp/capture?restaurant=${encodeURIComponent(restaurantSlug.trim())}`
+    // Clean URL優先、なければ短縮URL、最終手段でslug
+    const url = (prefectureSlug && citySlug && urlSlug)
+      ? `https://app.ngraph.jp/${prefectureSlug}/${citySlug}/${urlSlug}`
+      : shortCode
+        ? `https://app.ngraph.jp/r/${shortCode}`
+        : `https://app.ngraph.jp/capture?restaurant=${encodeURIComponent(restaurantSlug.trim())}`
     setQrCodeUrl(url)
 
     try {
