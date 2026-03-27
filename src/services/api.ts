@@ -18,6 +18,9 @@ export interface User {
   uid: string;
   restaurant_slug?: string;
   restaurant_short_code?: string;
+  restaurant_url_slug?: string;
+  restaurant_prefecture_slug?: string;
+  restaurant_city_slug?: string;
   restaurants?: UserRestaurant[];
 }
 
