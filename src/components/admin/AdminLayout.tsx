@@ -82,6 +82,7 @@ export default function AdminLayout({ children, title }: Props) {
     { key: 'menu-analytics', label: 'メニュー分析', icon: '📊', to: '/admin/menu-analytics' },
     { key: 'store-knowledge', label: '店舗知識', icon: '🧠', to: '/admin/store-knowledge' },
     { key: 'photo-review', label: '写真レビュー', icon: '📸', to: '/admin/photo-review' },
+    { key: 'conversations', label: '会話ログ', icon: '💬', to: '/admin/conversations' },
     { key: 'qr', label: 'QRコード', icon: '📱', to: '/admin/qr-management' },
     { key: 'prompts', label: 'AI設定', icon: '🤖', to: '/admin/prompts' },
   ]
