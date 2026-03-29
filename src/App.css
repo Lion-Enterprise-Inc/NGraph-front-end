@@ -2434,9 +2434,10 @@ body {
 .language-list {
   background: transparent;
   overflow-y: auto;
-  max-height: 90vh;
+  max-height: 60vh;
   padding: 0;
   scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
 }
 
 .language-item {
