@@ -8,6 +8,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { usePathname } from "next/navigation";
 import LanguageModal from "./LanguageModal";
 import HistoryDrawer from "./HistoryDrawer";
 import MenuListDrawer from "./MenuListDrawer";
@@ -68,6 +69,8 @@ const logLanguageSelection = (entry: {
 };
 
 export function AppProvider({ children }: { children: ReactNode }) {
+  const pathname = usePathname();
+  const isAdmin = pathname?.startsWith("/admin");
   const [language, setLanguageState] = useState("ja");
   const [languageModalOpen, setLanguageModalOpen] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -170,28 +173,32 @@ export function AppProvider({ children }: { children: ReactNode }) {
         }}
       >
         {children}
-        <LanguageModal
-          open={languageModalOpen}
-          selected={language}
-          onSelect={(code) => {
-            setLanguage(code, "modal");
-            setLanguageModalOpen(false);
-          }}
-          onClose={() => setLanguageModalOpen(false)}
-        />
-        <HistoryDrawer
-          open={drawerOpen}
-          onClose={() => setDrawerOpen(false)}
-          restaurantSlug={restaurantSlug}
-          onNewChat={onNewChat ?? undefined}
-          onSelectThread={onSelectThread ?? undefined}
-        />
-        <MenuListDrawer
-          open={menuListOpen}
-          onClose={() => setMenuListOpen(false)}
-          restaurantSlug={restaurantSlug}
-          businessType={businessType}
-        />
+        {!isAdmin && (
+          <>
+            <LanguageModal
+              open={languageModalOpen}
+              selected={language}
+              onSelect={(code) => {
+                setLanguage(code, "modal");
+                setLanguageModalOpen(false);
+              }}
+              onClose={() => setLanguageModalOpen(false)}
+            />
+            <HistoryDrawer
+              open={drawerOpen}
+              onClose={() => setDrawerOpen(false)}
+              restaurantSlug={restaurantSlug}
+              onNewChat={onNewChat ?? undefined}
+              onSelectThread={onSelectThread ?? undefined}
+            />
+            <MenuListDrawer
+              open={menuListOpen}
+              onClose={() => setMenuListOpen(false)}
+              restaurantSlug={restaurantSlug}
+              businessType={businessType}
+            />
+          </>
+        )}
       </AppContext.Provider>
       </ToastProvider>
     </AuthProvider>
