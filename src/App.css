@@ -1215,7 +1215,7 @@ body {
 
 .scroll-to-bottom-btn {
   position: fixed;
-  bottom: 120px;
+  bottom: 80px;
   left: 50%;
   transform: translateX(-50%);
   width: 36px;
@@ -1339,7 +1339,7 @@ body {
   }
 
   .scroll-to-bottom-btn {
-    bottom: 100px;
+    bottom: 70px;
     left: 50%;
     transform: translateX(-50%);
     width: 36px;
