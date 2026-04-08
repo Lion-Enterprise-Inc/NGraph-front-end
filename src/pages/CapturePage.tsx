@@ -789,22 +789,17 @@ export default function CapturePage({
         typingTimersRef.current.push(timer);
       });
 
-    const scrollToBottom = (smooth = true, force = false) => {
+    const scrollToBottom = (smooth = true) => {
       const container = captureBodyRef.current;
       if (!container) return;
 
-      // During typing, always auto-scroll regardless of user position
-      // After typing, only scroll if forced or user hasn't scrolled up
-      if (!isTypingActive && userScrolledUp && !force) return;
+      // Don't force-scroll if user has scrolled up
+      const distanceFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
+      if (distanceFromBottom > 300) return;
 
-      const scrollOptions: ScrollToOptions = {
+      container.scrollTo({
         top: container.scrollHeight,
         behavior: smooth ? "smooth" : "auto",
-      };
-
-      // Use requestAnimationFrame for better reliability
-      requestAnimationFrame(() => {
-        container.scrollTo(scrollOptions);
       });
     };
 
@@ -904,23 +899,14 @@ export default function CapturePage({
       
       // Mark typing as inactive - now respect user scroll position
       setIsTypingActive(false);
-      
-      // Ensure final scroll to bottom after all content including feedback buttons are rendered
-      // Force scroll even if user scrolled up - typing completion should always show the end
+
+      // Scroll to the start of this AI response so user can read from the beginning
       await wait(100);
-      
-      // Use multiple animation frames to ensure DOM is fully updated
       requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          requestAnimationFrame(() => {
-            scrollToBottom(true, true); // Force scroll
-            
-            // Double-check scroll after a bit more time for lengthy content
-            setTimeout(() => {
-              scrollToBottom(true, true); // Force scroll
-            }, 300);
-          });
-        });
+        const msgEl = document.getElementById(`msg-${response.id}`);
+        if (msgEl) {
+          msgEl.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
       });
     };
 
@@ -947,23 +933,28 @@ export default function CapturePage({
     }
   }, [typingState, isTypingActive]);
 
-  // Continuous auto-scroll during typing or loading using requestAnimationFrame
+  // Gentle auto-scroll during loading only (not during typing animation)
+  // During typing, scrollToBottom is called per-chunk inside typeText instead
   useEffect(() => {
     let rafId: number | null = null;
     let lastTime = 0;
 
     const scrollStep = (time: number) => {
-      if (time - lastTime >= 200) {
+      if (time - lastTime >= 300) {
         lastTime = time;
         const container = captureBodyRef.current;
         if (container) {
-          container.scrollTop = container.scrollHeight;
+          const distanceFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
+          // Only auto-scroll if user is near the bottom (hasn't scrolled up)
+          if (distanceFromBottom < 300) {
+            container.scrollTo({ top: container.scrollHeight, behavior: "smooth" });
+          }
         }
       }
       rafId = requestAnimationFrame(scrollStep);
     };
 
-    if (isTypingActive || loading) {
+    if (loading) {
       rafId = requestAnimationFrame(scrollStep);
     }
 
@@ -972,7 +963,7 @@ export default function CapturePage({
         cancelAnimationFrame(rafId);
       }
     };
-  }, [isTypingActive, loading]);
+  }, [loading]);
 
   const handleScrollToBottom = () => {
     const container = captureBodyRef.current;
