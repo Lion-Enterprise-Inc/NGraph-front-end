@@ -93,26 +93,45 @@ function LandingPage() {
         </div>
       </section>
 
-      {/* Case Study */}
+      {/* Customer Experience */}
       <section style={s.section}>
-        <h2 style={s.sectionTitle}>導入事例</h2>
-        <p style={{ textAlign: 'center' as const, color: '#7A6B5A', marginBottom: '32px', marginTop: '-24px', fontSize: '14px' }}>
-          蟹と海鮮ぼんた — 福井の人気海鮮店。英語・中国語でメニューを提供中。
+        <h2 style={s.sectionTitle}>お客様の体験</h2>
+        <p style={{ textAlign: 'center' as const, color: '#7A6B5A', marginBottom: '40px', marginTop: '-24px', fontSize: '14px' }}>
+          QRをスキャンしたお客様は、こんな体験ができます。
         </p>
-        <div style={s.caseStudy}>
-          <div style={s.caseCard}>
-            <img src="/case-bonta-en.png" alt="English menu" style={s.caseImage} />
-            <p style={s.caseLabel}>英語メニュー</p>
+
+        {/* Flow: Landing → Menu/Camera → Result */}
+        <div style={s.customerFlow}>
+          <div style={s.flowItem}>
+            <img src="/case-customer-landing.png" alt="QR landing" style={s.flowImage} />
+            <div style={s.flowInfo}>
+              <div style={s.flowStep}>QRスキャン後</div>
+              <h3 style={s.flowTitle}>選べる入り口</h3>
+              <p style={s.flowDesc}>「メニューを見る」で一覧表示。「カメラを開く」で写真から料理を解析。「おすすめは？」でAIに相談。</p>
+            </div>
           </div>
-          <div style={s.caseCard}>
-            <img src="/case-bonta-zh.png" alt="Chinese menu" style={s.caseImage} />
-            <p style={s.caseLabel}>中国語メニュー</p>
+          <div style={s.flowItem}>
+            <img src="/case-nfg-card-ja.png" alt="Menu detail" style={s.flowImage} />
+            <div style={s.flowInfo}>
+              <div style={s.flowStep}>メニュー詳細</div>
+              <h3 style={s.flowTitle}>料理の全てが伝わる</h3>
+              <p style={s.flowDesc}>料理名・調理法・材料・アレルゲン・味の特徴・カロリーまで。写真付きで14言語に自動翻訳。</p>
+            </div>
           </div>
-          <div style={s.caseCard}>
-            <img src="/case-bonta-chat.png" alt="AI chat" style={s.caseImage} />
-            <p style={s.caseLabel}>AIチャット案内</p>
+          <div style={s.flowItem}>
+            <img src="/case-bonta-chat.png" alt="AI chat" style={s.flowImage} />
+            <div style={s.flowInfo}>
+              <div style={s.flowStep}>AIチャット</div>
+              <h3 style={s.flowTitle}>何でも聞ける</h3>
+              <p style={s.flowDesc}>「ベジタリアン向けは？」「子供が食べられるのは？」AIが14言語でメニューを案内。</p>
+            </div>
           </div>
         </div>
+
+        {/* Store name */}
+        <p style={{ textAlign: 'center' as const, color: '#A09888', fontSize: '12px', marginTop: '32px' }}>
+          導入店舗: 蟹と海鮮ぼんた（福井県）
+        </p>
       </section>
 
       {/* CTA */}
@@ -201,19 +220,27 @@ const s: Record<string, React.CSSProperties> = {
   featureIcon: { color: '#D4622B', marginBottom: '12px' },
   featureTitle: { fontSize: '16px', fontWeight: 700, marginBottom: '6px', color: '#1A1410' },
   featureDesc: { fontSize: '13px', color: '#7A6B5A', lineHeight: '1.6' },
-  caseStudy: {
-    display: 'flex', gap: '24px', justifyContent: 'center', flexWrap: 'wrap' as const,
+  customerFlow: {
+    display: 'flex', flexDirection: 'column' as const, gap: '32px',
+    maxWidth: '700px', margin: '0 auto',
   },
-  caseCard: {
-    flex: '0 1 240px', textAlign: 'center' as const,
+  flowItem: {
+    display: 'flex', gap: '24px', alignItems: 'center',
+    backgroundColor: '#F0EAE0', borderRadius: '12px', padding: '20px',
+    border: '1px solid #E5DDD0',
   },
-  caseImage: {
-    width: '100%', maxWidth: '240px', borderRadius: '12px',
-    boxShadow: '0 4px 20px rgba(0,0,0,0.1)', border: '1px solid #E5DDD0',
+  flowImage: {
+    width: '160px', height: '280px', objectFit: 'cover' as const, objectPosition: 'top',
+    borderRadius: '10px', flexShrink: 0,
+    boxShadow: '0 4px 16px rgba(0,0,0,0.1)',
   },
-  caseLabel: {
-    marginTop: '8px', fontSize: '13px', color: '#7A6B5A', fontWeight: 500,
+  flowInfo: { flex: 1 },
+  flowStep: {
+    fontSize: '12px', color: '#D4622B', fontWeight: 600, marginBottom: '4px',
+    textTransform: 'uppercase' as const, letterSpacing: '1px',
   },
+  flowTitle: { fontSize: '18px', fontWeight: 700, color: '#1A1410', marginBottom: '8px' },
+  flowDesc: { fontSize: '14px', color: '#7A6B5A', lineHeight: '1.6' },
   ctaSection: { textAlign: 'center' as const, padding: '60px 24px' },
   ctaSectionTitle: { fontSize: '28px', fontWeight: 700, marginBottom: '12px', color: '#1A1410' },
   ctaSectionSub: { fontSize: '15px', color: '#7A6B5A', marginBottom: '24px' },
