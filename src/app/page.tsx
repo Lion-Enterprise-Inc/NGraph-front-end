@@ -23,7 +23,7 @@ function HomePageContent() {
 
 function LandingPage() {
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#0B1121', color: '#E2E8F0' }}>
+    <div style={{ minHeight: '100vh', backgroundColor: '#FAF6F0', color: '#2D2318' }}>
       {/* Header */}
       <header style={s.header}>
         <div style={s.logo}>NGraph</div>
@@ -69,7 +69,7 @@ function LandingPage() {
       </section>
 
       {/* Features */}
-      <section style={{ ...s.section, backgroundColor: '#0F172A' }}>
+      <section style={{ ...s.section, backgroundColor: '#F5EFE5', padding: '60px 24px', maxWidth: 'none' }}>
         <h2 style={s.sectionTitle}>選ばれる理由</h2>
         <div style={s.features}>
           {[
@@ -112,11 +112,11 @@ const s: Record<string, React.CSSProperties> = {
     display: 'flex', justifyContent: 'space-between', alignItems: 'center',
     padding: '16px 24px', maxWidth: '1100px', margin: '0 auto', width: '100%',
   },
-  logo: { fontSize: '20px', fontWeight: 800, color: '#3B82F6' },
+  logo: { fontSize: '20px', fontWeight: 800, color: '#8B6914' },
   headerButtons: { display: 'flex', alignItems: 'center', gap: '16px' },
-  loginLink: { color: '#94A3B8', fontSize: '14px', textDecoration: 'none' },
+  loginLink: { color: '#7A6B5A', fontSize: '14px', textDecoration: 'none' },
   ctaSmall: {
-    padding: '8px 20px', backgroundColor: '#3B82F6', color: '#fff',
+    padding: '8px 20px', backgroundColor: '#8B6914', color: '#fff',
     borderRadius: '6px', fontSize: '14px', fontWeight: 600, textDecoration: 'none',
   },
   hero: {
@@ -124,45 +124,46 @@ const s: Record<string, React.CSSProperties> = {
     padding: '80px 24px 60px',
   },
   heroLabel: {
-    fontSize: '13px', letterSpacing: '3px', color: '#3B82F6', fontWeight: 500, marginBottom: '16px',
+    fontSize: '13px', letterSpacing: '3px', color: '#B8943E', fontWeight: 500, marginBottom: '16px',
   },
-  heroTitle: { fontSize: '36px', fontWeight: 800, lineHeight: '1.3', marginBottom: '20px' },
+  heroTitle: { fontSize: '36px', fontWeight: 800, lineHeight: '1.3', marginBottom: '20px', color: '#1A1410' },
   heroGradient: {
-    background: 'linear-gradient(135deg, #3B82F6, #8B5CF6)',
+    background: 'linear-gradient(135deg, #8B6914, #B8943E)',
     WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
   },
-  heroSub: { fontSize: '16px', color: '#94A3B8', lineHeight: '1.7', marginBottom: '32px' },
+  heroSub: { fontSize: '16px', color: '#7A6B5A', lineHeight: '1.7', marginBottom: '32px' },
   ctaLarge: {
     display: 'inline-flex', alignItems: 'center', gap: '8px',
-    padding: '14px 32px', backgroundColor: '#3B82F6', color: '#fff',
+    padding: '14px 32px', backgroundColor: '#8B6914', color: '#fff',
     borderRadius: '8px', fontSize: '16px', fontWeight: 600, textDecoration: 'none',
   },
   section: { padding: '60px 24px', maxWidth: '1000px', margin: '0 auto' },
-  sectionTitle: { fontSize: '24px', fontWeight: 700, textAlign: 'center' as const, marginBottom: '40px' },
+  sectionTitle: { fontSize: '24px', fontWeight: 700, textAlign: 'center' as const, marginBottom: '40px', color: '#1A1410' },
   steps: { display: 'flex', gap: '24px', justifyContent: 'center', flexWrap: 'wrap' as const },
   stepCard: {
     flex: '1 1 280px', maxWidth: '300px', padding: '32px 24px',
-    backgroundColor: '#1E293B', borderRadius: '12px', textAlign: 'center' as const,
+    backgroundColor: '#F0EAE0', borderRadius: '12px', textAlign: 'center' as const,
+    border: '1px solid #E5DDD0',
   },
-  stepIcon: { color: '#3B82F6', marginBottom: '12px' },
-  stepNum: { fontSize: '12px', color: '#64748B', fontWeight: 600, marginBottom: '8px' },
-  stepTitle: { fontSize: '18px', fontWeight: 700, marginBottom: '8px' },
-  stepDesc: { fontSize: '14px', color: '#94A3B8', lineHeight: '1.6' },
+  stepIcon: { color: '#8B6914', marginBottom: '12px' },
+  stepNum: { fontSize: '12px', color: '#A09888', fontWeight: 600, marginBottom: '8px' },
+  stepTitle: { fontSize: '18px', fontWeight: 700, marginBottom: '8px', color: '#1A1410' },
+  stepDesc: { fontSize: '14px', color: '#7A6B5A', lineHeight: '1.6' },
   features: {
     display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
     gap: '20px', maxWidth: '900px', margin: '0 auto',
   },
-  featureCard: { padding: '24px', backgroundColor: '#1E293B', borderRadius: '10px' },
-  featureIcon: { color: '#3B82F6', marginBottom: '12px' },
-  featureTitle: { fontSize: '16px', fontWeight: 700, marginBottom: '6px' },
-  featureDesc: { fontSize: '13px', color: '#94A3B8', lineHeight: '1.6' },
+  featureCard: { padding: '24px', backgroundColor: '#F0EAE0', borderRadius: '10px', border: '1px solid #E5DDD0' },
+  featureIcon: { color: '#8B6914', marginBottom: '12px' },
+  featureTitle: { fontSize: '16px', fontWeight: 700, marginBottom: '6px', color: '#1A1410' },
+  featureDesc: { fontSize: '13px', color: '#7A6B5A', lineHeight: '1.6' },
   ctaSection: { textAlign: 'center' as const, padding: '60px 24px' },
-  ctaSectionTitle: { fontSize: '28px', fontWeight: 700, marginBottom: '12px' },
-  ctaSectionSub: { fontSize: '15px', color: '#94A3B8', marginBottom: '24px' },
-  footer: { borderTop: '1px solid #1E293B', padding: '24px' },
+  ctaSectionTitle: { fontSize: '28px', fontWeight: 700, marginBottom: '12px', color: '#1A1410' },
+  ctaSectionSub: { fontSize: '15px', color: '#7A6B5A', marginBottom: '24px' },
+  footer: { borderTop: '1px solid #E5DDD0', padding: '24px' },
   footerInner: { maxWidth: '1000px', margin: '0 auto', textAlign: 'center' as const },
-  footerLogo: { fontSize: '16px', fontWeight: 700, color: '#3B82F6', marginBottom: '4px' },
-  footerText: { fontSize: '12px', color: '#64748B' },
+  footerLogo: { fontSize: '16px', fontWeight: 700, color: '#8B6914', marginBottom: '4px' },
+  footerText: { fontSize: '12px', color: '#A09888' },
 }
 
 export default function Page() {
@@ -170,12 +171,12 @@ export default function Page() {
     <Suspense fallback={
       <div style={{
         display: 'flex', justifyContent: 'center', alignItems: 'center',
-        height: '100vh', background: '#0B1121',
+        height: '100vh', background: '#FAF6F0',
       }}>
         <div style={{
           width: '32px', height: '32px',
-          border: '2px solid rgba(255,255,255,0.15)',
-          borderTopColor: 'rgba(255,255,255,0.6)',
+          border: '2px solid rgba(139,105,20,0.2)',
+          borderTopColor: '#8B6914',
           borderRadius: '50%', animation: 'spin 1s linear infinite',
         }} />
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
