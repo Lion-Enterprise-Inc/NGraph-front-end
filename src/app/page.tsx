@@ -3,7 +3,7 @@
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Suspense, useEffect } from 'react'
 import Link from 'next/link'
-import { Camera, Globe, QrCode, ArrowRight, Zap, Shield, Languages } from 'lucide-react'
+import { Camera, Globe, QrCode, ArrowRight, Zap, Shield, Languages, Star, Bot } from 'lucide-react'
 
 function HomePageContent() {
   const router = useRouter()
@@ -81,6 +81,8 @@ function LandingPage() {
             { icon: <Shield size={24} />, title: 'アレルゲン自動検出', desc: 'AIが料理名から材料・アレルゲンを推定。食の安全を守る。' },
             { icon: <Globe size={24} />, title: '営業不要', desc: 'セルフサーブで完結。登録もメニュー設定もQR発行も全て自分で。' },
             { icon: <Zap size={24} />, title: '30秒で公開', desc: '写真を撮って確認するだけ。複雑な設定は一切なし。' },
+            { icon: <Star size={24} />, title: 'Google口コミ増加', desc: '外国人客がメニューを理解して満足→口コミが増える。星評価の向上に直結。' },
+            { icon: <Bot size={24} />, title: 'AIエージェント対応', desc: '構造化データでAIが料理を正しく理解。将来のAI予約・推薦サービスに対応。' },
           ].map((f, i) => (
             <div key={i} style={s.featureCard}>
               <div style={s.featureIcon}>{f.icon}</div>
