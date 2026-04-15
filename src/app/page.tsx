@@ -100,7 +100,12 @@ function LandingPage() {
       <footer style={s.footer}>
         <div style={s.footerInner}>
           <div style={s.footerLogo}>NGraph</div>
-          <p style={s.footerText}>株式会社Lion Entertainment</p>
+          <div style={s.footerLinks}>
+            <a href="https://ngraph.jp/company.html" style={s.footerLink}>会社概要</a>
+            <a href="https://ngraph.jp/privacy.html" style={s.footerLink}>プライバシーポリシー</a>
+            <a href="https://ngraph.jp/legal.html" style={s.footerLink}>特定商取引法に基づく表記</a>
+          </div>
+          <p style={s.footerText}>株式会社NGraph</p>
         </div>
       </footer>
     </div>
@@ -162,7 +167,9 @@ const s: Record<string, React.CSSProperties> = {
   ctaSectionSub: { fontSize: '15px', color: '#7A6B5A', marginBottom: '24px' },
   footer: { borderTop: '1px solid #E5DDD0', padding: '24px' },
   footerInner: { maxWidth: '1000px', margin: '0 auto', textAlign: 'center' as const },
-  footerLogo: { fontSize: '16px', fontWeight: 700, color: '#8B6914', marginBottom: '4px' },
+  footerLogo: { fontSize: '16px', fontWeight: 700, color: '#8B6914', marginBottom: '12px' },
+  footerLinks: { display: 'flex', gap: '20px', justifyContent: 'center', flexWrap: 'wrap' as const, marginBottom: '12px' },
+  footerLink: { fontSize: '13px', color: '#7A6B5A', textDecoration: 'none' },
   footerText: { fontSize: '12px', color: '#A09888' },
 }
 
