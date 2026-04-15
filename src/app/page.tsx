@@ -23,7 +23,7 @@ function HomePageContent() {
 
 function LandingPage() {
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#FAF6F0', color: '#2D2318', backgroundImage: `url("data:image/svg+xml,%3Csvg width='100' height='100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E")` }}>
+    <div style={s.page}>
       {/* Header */}
       <header style={s.header}>
         <div style={s.logo}>NGraph</div>
@@ -42,7 +42,7 @@ function LandingPage() {
           <span style={s.heroGradient}>外国人客が、迷わず注文できる。</span>
         </h1>
         <p style={s.heroSub}>
-          メニュー写真を撮るだけで、14言語に自動翻訳。アレルゲンも自動検出。QRコードをテーブルに置くだけで、世界中のお客様がスマホでメニューを読める。
+          メニュー写真を撮るだけで、14言語に自動翻訳。アレルゲンも自動検出。QRコードをテーブルに置くだけで、外国人のお客様がスマホで「読めるメニュー」を手に入れる。注文はいつも通り、スタッフへ。
         </p>
         <Link href="/admin/login" style={s.ctaLarge}>
           無料で始める <ArrowRight size={18} />
@@ -59,7 +59,6 @@ function LandingPage() {
           {[
             { icon: <QrCode size={28} />, title: 'QRを貼る', desc: 'QRコードをダウンロードしてお店に貼るだけ。お客様がスマホで読める。', img: '/img-qr-scan.jpeg' },
             { icon: <Camera size={28} />, title: 'メニューを撮る', desc: '写真を撮るかファイルをアップロード。AIが自動で全メニューを読み取る。', img: '/img-menu-scan.jpeg' },
-            { icon: <Zap size={28} />, title: '生成完了', desc: '料理名・価格・カテゴリ・アレルゲンを自動抽出。14言語に翻訳して即公開。', img: '/case-nfg-card-ja.png' },
           ].map((step, i) => (
             <div key={i} style={s.stepCard}>
               {step.img && <img src={step.img} alt={step.title} style={s.stepImage} />}
@@ -69,6 +68,26 @@ function LandingPage() {
               <p style={s.stepDesc}>{step.desc}</p>
             </div>
           ))}
+        </div>
+
+        {/* Step 3: 生成完了 — フルワイドで強調 */}
+        <div style={s.step3Wrap}>
+          <div style={s.step3Content}>
+            <div>
+              <div style={s.stepIcon}><Zap size={28} /></div>
+              <div style={s.stepNum}>Step 3</div>
+              <h3 style={{ fontSize: '22px', fontWeight: 700, color: '#1A1410', marginBottom: '12px' }}>生成完了</h3>
+              <p style={s.stepDesc}>AIが料理名・価格・カテゴリ・材料・アレルゲンを自動抽出。14言語に翻訳して即公開。</p>
+              <ul style={s.step3List}>
+                <li>料理の背景・ストーリー</li>
+                <li>材料・調理法・アレルゲン</li>
+                <li>味の特徴・カロリー</li>
+                <li>食べ方・ペアリング提案</li>
+                <li>14言語の自動翻訳</li>
+              </ul>
+            </div>
+            <img src="/case-nfg-card-ja.png" alt="NFG Card" style={s.step3Image} />
+          </div>
         </div>
       </section>
 
@@ -160,6 +179,10 @@ function LandingPage() {
 }
 
 const s: Record<string, React.CSSProperties> = {
+  page: {
+    minHeight: '100vh', backgroundColor: '#FAF6F0', color: '#2D2318',
+    backgroundImage: 'url(/washi-texture.svg)',
+  },
   header: {
     display: 'flex', justifyContent: 'space-between', alignItems: 'center',
     padding: '16px 24px', maxWidth: '1100px', margin: '0 auto', width: '100%',
@@ -207,6 +230,22 @@ const s: Record<string, React.CSSProperties> = {
   stepImage: {
     width: '100%', height: '140px', objectFit: 'cover' as const,
     borderRadius: '8px', marginBottom: '12px',
+  },
+  step3Wrap: {
+    marginTop: '32px', backgroundColor: '#F0EAE0', borderRadius: '16px',
+    padding: '32px', border: '1px solid #E5DDD0',
+  },
+  step3Content: {
+    display: 'flex', gap: '32px', alignItems: 'center',
+    justifyContent: 'center', flexWrap: 'wrap' as const,
+  },
+  step3Image: {
+    width: '260px', borderRadius: '12px',
+    boxShadow: '0 8px 30px rgba(0,0,0,0.12)',
+  },
+  step3List: {
+    marginTop: '16px', paddingLeft: '20px', fontSize: '14px',
+    color: '#7A6B5A', lineHeight: '2',
   },
   stepIcon: { color: '#D4622B', marginBottom: '12px' },
   stepNum: { fontSize: '12px', color: '#A09888', fontWeight: 600, marginBottom: '8px' },
