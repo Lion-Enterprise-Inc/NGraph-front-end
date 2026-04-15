@@ -59,7 +59,7 @@ function LandingPage() {
           {[
             { icon: <QrCode size={28} />, title: 'QRを貼る', desc: 'QRコードをダウンロードしてお店に貼るだけ。お客様がスマホで読める。', img: '/img-qr-scan.jpeg' },
             { icon: <Camera size={28} />, title: 'メニューを撮る', desc: '写真を撮るかファイルをアップロード。AIが自動で全メニューを読み取る。', img: '/img-menu-scan.jpeg' },
-            { icon: <Zap size={28} />, title: '生成完了', desc: '料理名・価格・カテゴリ・アレルゲンを自動抽出。14言語に翻訳して即公開。', img: null },
+            { icon: <Zap size={28} />, title: '生成完了', desc: '料理名・価格・カテゴリ・アレルゲンを自動抽出。14言語に翻訳して即公開。', img: '/case-nfg-card-ja.png' },
           ].map((step, i) => (
             <div key={i} style={s.stepCard}>
               {step.img && <img src={step.img} alt={step.title} style={s.stepImage} />}
