@@ -23,7 +23,7 @@ function HomePageContent() {
 
 function LandingPage() {
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#FAF6F0', color: '#2D2318' }}>
+    <div style={{ minHeight: '100vh', backgroundColor: '#FAF6F0', color: '#2D2318', backgroundImage: `url("data:image/svg+xml,%3Csvg width='100' height='100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E")` }}>
       {/* Header */}
       <header style={s.header}>
         <div style={s.logo}>NGraph</div>
@@ -37,12 +37,12 @@ function LandingPage() {
       <section style={s.hero}>
         <p style={s.heroLabel}>NGraph</p>
         <h1 style={s.heroTitle}>
-          メニューを撮るだけ。
+          QRを置くだけ。
           <br />
-          <span style={s.heroGradient}>AIが多言語メニューを作る。</span>
+          <span style={s.heroGradient}>外国人客が、迷わず注文できる。</span>
         </h1>
         <p style={s.heroSub}>
-          写真1枚で、メニューを自動構造化。14言語に翻訳。QRコードをお店に貼るだけで、世界中のお客様がメニューを読める。
+          メニュー写真を撮るだけで、14言語に自動翻訳。アレルゲンも自動検出。QRコードをテーブルに置くだけで、世界中のお客様がスマホでメニューを読める。
         </p>
         <Link href="/admin/login" style={s.ctaLarge}>
           無料で始める <ArrowRight size={18} />
@@ -145,11 +145,11 @@ const s: Record<string, React.CSSProperties> = {
     display: 'flex', justifyContent: 'space-between', alignItems: 'center',
     padding: '16px 24px', maxWidth: '1100px', margin: '0 auto', width: '100%',
   },
-  logo: { fontSize: '20px', fontWeight: 800, color: '#8B6914' },
+  logo: { fontSize: '20px', fontWeight: 800, color: '#D4622B' },
   headerButtons: { display: 'flex', alignItems: 'center', gap: '16px' },
   loginLink: { color: '#7A6B5A', fontSize: '14px', textDecoration: 'none' },
   ctaSmall: {
-    padding: '8px 20px', backgroundColor: '#8B6914', color: '#fff',
+    padding: '8px 20px', backgroundColor: '#D4622B', color: '#fff',
     borderRadius: '6px', fontSize: '14px', fontWeight: 600, textDecoration: 'none',
   },
   hero: {
@@ -157,17 +157,17 @@ const s: Record<string, React.CSSProperties> = {
     padding: '80px 24px 60px',
   },
   heroLabel: {
-    fontSize: '13px', letterSpacing: '3px', color: '#B8943E', fontWeight: 500, marginBottom: '16px',
+    fontSize: '13px', letterSpacing: '3px', color: '#E8642C', fontWeight: 500, marginBottom: '16px',
   },
   heroTitle: { fontSize: '36px', fontWeight: 800, lineHeight: '1.3', marginBottom: '20px', color: '#1A1410' },
   heroGradient: {
-    background: 'linear-gradient(135deg, #8B6914, #B8943E)',
+    background: 'linear-gradient(135deg, #D4622B, #E8642C)',
     WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
   },
   heroSub: { fontSize: '16px', color: '#7A6B5A', lineHeight: '1.7', marginBottom: '32px' },
   ctaLarge: {
     display: 'inline-flex', alignItems: 'center', gap: '8px',
-    padding: '14px 32px', backgroundColor: '#8B6914', color: '#fff',
+    padding: '14px 32px', backgroundColor: '#D4622B', color: '#fff',
     borderRadius: '8px', fontSize: '16px', fontWeight: 600, textDecoration: 'none',
   },
   heroImageWrap: {
@@ -189,7 +189,7 @@ const s: Record<string, React.CSSProperties> = {
     width: '100%', height: '140px', objectFit: 'cover' as const,
     borderRadius: '8px', marginBottom: '12px',
   },
-  stepIcon: { color: '#8B6914', marginBottom: '12px' },
+  stepIcon: { color: '#D4622B', marginBottom: '12px' },
   stepNum: { fontSize: '12px', color: '#A09888', fontWeight: 600, marginBottom: '8px' },
   stepTitle: { fontSize: '18px', fontWeight: 700, marginBottom: '8px', color: '#1A1410' },
   stepDesc: { fontSize: '14px', color: '#7A6B5A', lineHeight: '1.6' },
@@ -198,7 +198,7 @@ const s: Record<string, React.CSSProperties> = {
     gap: '20px', maxWidth: '900px', margin: '0 auto',
   },
   featureCard: { padding: '24px', backgroundColor: '#F0EAE0', borderRadius: '10px', border: '1px solid #E5DDD0' },
-  featureIcon: { color: '#8B6914', marginBottom: '12px' },
+  featureIcon: { color: '#D4622B', marginBottom: '12px' },
   featureTitle: { fontSize: '16px', fontWeight: 700, marginBottom: '6px', color: '#1A1410' },
   featureDesc: { fontSize: '13px', color: '#7A6B5A', lineHeight: '1.6' },
   caseStudy: {
@@ -219,7 +219,7 @@ const s: Record<string, React.CSSProperties> = {
   ctaSectionSub: { fontSize: '15px', color: '#7A6B5A', marginBottom: '24px' },
   footer: { borderTop: '1px solid #E5DDD0', padding: '24px' },
   footerInner: { maxWidth: '1000px', margin: '0 auto', textAlign: 'center' as const },
-  footerLogo: { fontSize: '16px', fontWeight: 700, color: '#8B6914', marginBottom: '12px' },
+  footerLogo: { fontSize: '16px', fontWeight: 700, color: '#D4622B', marginBottom: '12px' },
   footerLinks: { display: 'flex', gap: '20px', justifyContent: 'center', flexWrap: 'wrap' as const, marginBottom: '12px' },
   footerLink: { fontSize: '13px', color: '#7A6B5A', textDecoration: 'none' },
   footerText: { fontSize: '12px', color: '#A09888' },
@@ -235,7 +235,7 @@ export default function Page() {
         <div style={{
           width: '32px', height: '32px',
           border: '2px solid rgba(139,105,20,0.2)',
-          borderTopColor: '#8B6914',
+          borderTopColor: '#D4622B',
           borderRadius: '50%', animation: 'spin 1s linear infinite',
         }} />
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
