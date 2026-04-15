@@ -106,6 +106,10 @@ function LandingPage() {
             <img src="/case-bonta-zh.png" alt="Chinese menu" style={s.caseImage} />
             <p style={s.caseLabel}>中国語メニュー</p>
           </div>
+          <div style={s.caseCard}>
+            <img src="/case-bonta-chat.png" alt="AI chat" style={s.caseImage} />
+            <p style={s.caseLabel}>AIチャット案内</p>
+          </div>
         </div>
       </section>
 
