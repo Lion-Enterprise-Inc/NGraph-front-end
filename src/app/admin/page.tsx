@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import AdminLayout from '../../components/admin/AdminLayout'
 import { apiClient, MenuApi } from '../../services/api'
@@ -96,6 +96,7 @@ function TopicPieChart({ data }: { data: Record<string, number> | null }) {
 }
 
 function StoreDashboard() {
+  const restaurantsSetRef = useRef(false)
   const [restaurant, setRestaurant] = useState<any>(null)
   const [restaurantLoading, setRestaurantLoading] = useState(true)
   const [restaurantError, setRestaurantError] = useState('')
@@ -122,8 +123,9 @@ function StoreDashboard() {
 
       const user = JSON.parse(userStr)
 
-      // 複数店舗リストがあればセット
-      if (user.restaurants?.length > 0 && userRestaurants.length === 0) {
+      // 複数店舗リストがあればセット（初回のみ）
+      if (user.restaurants?.length > 0 && !restaurantsSetRef.current) {
+        restaurantsSetRef.current = true
         setUserRestaurants(user.restaurants)
       }
 
@@ -150,7 +152,8 @@ function StoreDashboard() {
     } finally {
       setRestaurantLoading(false)
     }
-  }, [userRestaurants.length])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // メニューカウント取得
   useEffect(() => {

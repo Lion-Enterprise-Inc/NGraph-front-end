@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef, Suspense } from 'react'
+import { useState, useEffect, useCallback, useRef, useMemo, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import AdminLayout from '../../../components/admin/AdminLayout'
 import { useToast } from '../../../components/admin/Toast'
@@ -51,7 +51,7 @@ function MenuListContent() {
   const searchParams = useSearchParams()
   const uidParam = searchParams?.get('uid') ?? null
   const isAdminViewing = !!(uidParam && user && (user.role === 'superadmin' || user.role === 'platform_owner'))
-  const userRestaurants = user?.restaurants || []
+  const userRestaurants = useMemo(() => user?.restaurants || [], [user?.restaurants])
   const hasMultipleStores = userRestaurants.length > 1
   const [selectedStoreUid, setSelectedStoreUid] = useState<string | null>(() => {
     if (typeof window !== 'undefined') {
