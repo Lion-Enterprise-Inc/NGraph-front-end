@@ -3,7 +3,8 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import AdminLayout from '../../components/admin/AdminLayout'
-import { apiClient } from '../../services/api'
+import { apiClient, MenuApi } from '../../services/api'
+import { useAuth } from '../../contexts/AuthContext'
 
 const LANG_COLORS: Record<string, string> = {
   ja: '#3B82F6',
@@ -712,6 +713,7 @@ function AdminDashboard() {
 
 export default function AdminDashboardPage() {
   const router = useRouter()
+  const { user, isRestaurantOwner } = useAuth()
   const [userType, setUserType] = useState<'store' | 'admin'>('admin')
   const [isLoading, setIsLoading] = useState(true)
 
@@ -727,6 +729,18 @@ export default function AdminDashboardPage() {
     }
     setIsLoading(false)
   }, [router])
+
+  // 初回ユーザー検出: restaurant_ownerでメニュー0件ならセットアップへ
+  useEffect(() => {
+    if (!isRestaurantOwner || !user) return
+    const restaurantUid = user.restaurants?.[0]?.uid
+    if (!restaurantUid) return
+    MenuApi.getAll(restaurantUid, 1, 1).then(res => {
+      if (res.result.total === 0) {
+        router.push('/admin/setup')
+      }
+    }).catch(() => {})
+  }, [isRestaurantOwner, user, router])
 
   if (isLoading) {
     return (

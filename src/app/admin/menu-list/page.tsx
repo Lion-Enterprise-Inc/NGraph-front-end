@@ -650,6 +650,15 @@ function MenuListContent() {
     }
   }
 
+  const handleToggleStatus = async (uid: string, newStatus: boolean) => {
+    try {
+      await MenuApi.update(uid, { status: newStatus })
+      await refreshMenus()
+    } catch {
+      toast('error', 'ステータス変更に失敗しました')
+    }
+  }
+
   const handleBulkApprove = async () => {
     const unverified = menuItems.filter(i => !i.status)
     if (unverified.length === 0) {
@@ -766,6 +775,7 @@ function MenuListContent() {
           onBulkApprove={handleBulkApprove}
           onAddNew={() => setShowAddModal(true)}
           onFetchFromSource={handleFetchFromSource}
+          onToggleStatus={handleToggleStatus}
         />
       </div>
 

@@ -27,6 +27,7 @@ import { recordVisit, saveThread, getThreads } from "../utils/storage";
 import ImageViewer from "../components/ImageViewer";
 import QuickExplainCard from "../components/QuickExplainCard";
 import NFGCard from "../components/NFGCard";
+import QRMenuView from "../components/QRMenuView";
 
 function visionToQuickExplain(vi: VisionMenuItem): QuickExplainItem {
   return {
@@ -475,6 +476,7 @@ export default function CapturePage({
   const fromHome = searchParams?.get("from") === "home" || defaultFromHome;
   const fromRestaurant = searchParams?.get("from") === "restaurant";
   const isInStore = searchParams?.get("source") === "qr";
+  const [qrMenuMode, setQrMenuMode] = useState(isInStore);
   const scanLoggedRef = useRef(false);
   const isNfgMode = searchParams?.get("nfg") === "true";
   const isQuickMode = searchParams?.get("mode") === "quick";
@@ -1693,6 +1695,17 @@ export default function CapturePage({
       setPhotoUploading(null);
     }
   };
+
+  // QRスキャン時: メニュー一覧を優先表示
+  if (qrMenuMode && restaurantSlug) {
+    return (
+      <QRMenuView
+        restaurantSlug={restaurantSlug}
+        language={activeLanguage}
+        onChatMode={() => setQrMenuMode(false)}
+      />
+    );
+  }
 
   return (
     <div className="page capture-page" onClick={handleBackgroundClick}>

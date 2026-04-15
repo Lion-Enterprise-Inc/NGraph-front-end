@@ -207,6 +207,13 @@ export default function AdminLoginPage() {
         role: 'restaurant_owner',
         restaurant_name: restaurantName,
       })
+      // 登録成功 → 自動ログイン → セットアップウィザードへ
+      const loginResult = await login(registerEmail, registerPassword)
+      if (loginResult.success) {
+        router.push('/admin/setup')
+        return
+      }
+      // 自動ログイン失敗時はフォールバック
       setRegisterSuccess('登録が完了しました。ログインしてください。')
       setActiveTab('login')
       setEmail(registerEmail)

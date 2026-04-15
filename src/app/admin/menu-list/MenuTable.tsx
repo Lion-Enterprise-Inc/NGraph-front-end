@@ -46,6 +46,7 @@ interface MenuTableProps {
   onBulkApprove: () => void
   onAddNew: () => void
   onFetchFromSource: () => void
+  onToggleStatus?: (uid: string, newStatus: boolean) => void
 }
 
 function HintBadges({ item, onEditWithTab }: { item: MenuItem; onEditWithTab: (item: MenuItem, tab: string) => void }) {
@@ -79,7 +80,8 @@ export default function MenuTable({
   isLoading, error,
   sortKey, sortDir, onSortChange,
   onSearchChange, onFilterChange, onItemsPerPageChange, onPageChange,
-  onPreview, onEdit, onEditWithTab, onDelete, onApprove, onBulkApprove, onAddNew, onFetchFromSource
+  onPreview, onEdit, onEditWithTab, onDelete, onApprove, onBulkApprove, onAddNew, onFetchFromSource,
+  onToggleStatus
 }: MenuTableProps) {
   return (
     <>
@@ -259,7 +261,19 @@ export default function MenuTable({
                       )}
                     </td>
                     <td style={{ textAlign: 'center' }}>
-                      {item.status ? (
+                      {onToggleStatus ? (
+                        <label className="toggle-switch" onClick={(e) => e.stopPropagation()}>
+                          <input
+                            type="checkbox"
+                            checked={!!item.status}
+                            onChange={() => onToggleStatus(item.uid, !item.status)}
+                          />
+                          <span className="toggle-slider" />
+                          <span style={{ fontSize: '11px', color: item.status ? '#22C55E' : '#94A3B8', marginLeft: '4px' }}>
+                            {item.status ? '公開' : '非公開'}
+                          </span>
+                        </label>
+                      ) : item.status ? (
                         <span className="status-badge verified">承認済み</span>
                       ) : (
                         <button className="btn-action btn-approve" onClick={() => onApprove(item)}>✓ 承認</button>
@@ -511,6 +525,41 @@ export default function MenuTable({
         .status-badge.warning {
           background: #fef3c7;
           color: #d97706;
+        }
+
+        .toggle-switch {
+          display: inline-flex;
+          align-items: center;
+          cursor: pointer;
+          user-select: none;
+        }
+        .toggle-switch input {
+          display: none;
+        }
+        .toggle-slider {
+          width: 36px;
+          height: 20px;
+          background: #334155;
+          border-radius: 10px;
+          position: relative;
+          transition: background 0.2s;
+        }
+        .toggle-slider::after {
+          content: '';
+          position: absolute;
+          top: 2px;
+          left: 2px;
+          width: 16px;
+          height: 16px;
+          background: #fff;
+          border-radius: 50%;
+          transition: transform 0.2s;
+        }
+        .toggle-switch input:checked + .toggle-slider {
+          background: #22C55E;
+        }
+        .toggle-switch input:checked + .toggle-slider::after {
+          transform: translateX(16px);
         }
 
         .desktop-table {

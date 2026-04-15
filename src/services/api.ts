@@ -308,6 +308,13 @@ class ApiClient {
       method: 'DELETE',
     });
   }
+
+  async patch<T>(endpoint: string, data?: unknown): Promise<T> {
+    return this.request<T>(endpoint, {
+      method: 'PATCH',
+      body: data ? JSON.stringify(data) : undefined,
+    });
+  }
 }
 
 export const apiClient = new ApiClient(API_BASE_URL);
@@ -381,7 +388,11 @@ export const RestaurantApi = {
 
   delete: async (uid: string): Promise<{ message: string; status_code: number }> => {
     return apiClient.delete(`/restaurants/${uid}`);
-  }
+  },
+
+  getFullMenu: async (slug: string, lang: string = 'ja'): Promise<FullMenuResponse> => {
+    return apiClient.get<FullMenuResponse>(`/restaurants/public/${encodeURIComponent(slug)}/full-menu?lang=${lang}`);
+  },
 };
 
 // Ingredient type (returned from API)
@@ -571,6 +582,47 @@ export interface MenuUpdate {
   featured_tags?: string[] | null;
 }
 
+export interface AutoCreateMenuItem {
+  uid: string;
+  name_jp: string;
+  name_en: string | null;
+  price: number;
+  category: string;
+}
+
+export interface AutoCreateResponse {
+  result: {
+    items_count: number;
+    items_saved: number;
+    items_skipped: number;
+    menus: AutoCreateMenuItem[];
+  };
+  message: string;
+  status_code: number;
+}
+
+export interface FullMenuCategory {
+  category: string;
+  label: string;
+  menus: Record<string, any>[];
+}
+
+export interface FullMenuResponse {
+  result: {
+    restaurant: {
+      name: string;
+      name_romaji: string | null;
+      logo_url: string | null;
+      slug: string;
+      url_slug: string | null;
+    };
+    categories: FullMenuCategory[];
+    total_count: number;
+  };
+  message: string;
+  status_code: number;
+}
+
 export interface MenuListResponse {
   result: PaginatedResult<Menu>;
   message: string;
@@ -635,7 +687,38 @@ export const MenuApi = {
     }
 
     return response.json();
-  }
+  },
+
+  autoCreateFromImage: async (image: File, restaurantUid?: string): Promise<AutoCreateResponse> => {
+    const formData = new FormData();
+    formData.append('image', image);
+    if (restaurantUid) formData.append('restaurant_uid', restaurantUid);
+
+    const token = TokenService.getAccessToken();
+    const response = await fetch(`${API_BASE_URL}/menus/auto-create-from-image`, {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+      },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      let errorMessage = 'Failed to auto-create menus';
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.detail || errorMessage;
+      } catch {}
+      throw new Error(errorMessage);
+    }
+
+    return response.json();
+  },
+
+  batchUpdateStatus: async (menuUids: string[], status: boolean): Promise<{ result: { updated_count: number } }> => {
+    return apiClient.patch('/menus/batch-status', { menu_uids: menuUids, status });
+  },
 };
 
 // Allergen API
