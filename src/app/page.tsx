@@ -47,6 +47,9 @@ function LandingPage() {
         <Link href="/admin/login" style={s.ctaLarge}>
           無料で始める <ArrowRight size={18} />
         </Link>
+        <div style={s.heroImageWrap}>
+          <img src="/img-qr-scan.jpeg" alt="QRコードをスキャンする様子" style={s.heroImage} />
+        </div>
       </section>
 
       {/* Steps */}
@@ -54,11 +57,12 @@ function LandingPage() {
         <h2 style={s.sectionTitle}>3ステップで完了</h2>
         <div style={s.steps}>
           {[
-            { icon: <Camera size={28} />, title: 'メニューを撮る', desc: '写真を撮るかファイルをアップロード。AIが自動で全メニューを読み取る。' },
-            { icon: <Zap size={28} />, title: 'AIが構造化', desc: '料理名・価格・カテゴリ・アレルゲンを自動抽出。14言語に翻訳。' },
-            { icon: <QrCode size={28} />, title: 'QRを貼る', desc: 'QRコードをダウンロードして店に貼るだけ。お客様がスマホで読める。' },
+            { icon: <Camera size={28} />, title: 'メニューを撮る', desc: '写真を撮るかファイルをアップロード。AIが自動で全メニューを読み取る。', img: '/img-menu-scan.jpeg' },
+            { icon: <Zap size={28} />, title: 'AIが構造化', desc: '料理名・価格・カテゴリ・アレルゲンを自動抽出。14言語に翻訳。', img: null },
+            { icon: <QrCode size={28} />, title: 'QRを貼る', desc: 'QRコードをダウンロードして店に貼るだけ。お客様がスマホで読める。', img: '/img-qr-scan.jpeg' },
           ].map((step, i) => (
             <div key={i} style={s.stepCard}>
+              {step.img && <img src={step.img} alt={step.title} style={s.stepImage} />}
               <div style={s.stepIcon}>{step.icon}</div>
               <div style={s.stepNum}>Step {i + 1}</div>
               <h3 style={s.stepTitle}>{step.title}</h3>
@@ -142,6 +146,13 @@ const s: Record<string, React.CSSProperties> = {
     padding: '14px 32px', backgroundColor: '#8B6914', color: '#fff',
     borderRadius: '8px', fontSize: '16px', fontWeight: 600, textDecoration: 'none',
   },
+  heroImageWrap: {
+    marginTop: '40px', maxWidth: '480px', margin: '40px auto 0',
+    borderRadius: '12px', overflow: 'hidden', boxShadow: '0 8px 30px rgba(0,0,0,0.12)',
+  },
+  heroImage: {
+    width: '100%', height: 'auto', display: 'block',
+  },
   section: { padding: '60px 24px', maxWidth: '1000px', margin: '0 auto' },
   sectionTitle: { fontSize: '24px', fontWeight: 700, textAlign: 'center' as const, marginBottom: '40px', color: '#1A1410' },
   steps: { display: 'flex', gap: '24px', justifyContent: 'center', flexWrap: 'wrap' as const },
@@ -149,6 +160,10 @@ const s: Record<string, React.CSSProperties> = {
     flex: '1 1 280px', maxWidth: '300px', padding: '32px 24px',
     backgroundColor: '#F0EAE0', borderRadius: '12px', textAlign: 'center' as const,
     border: '1px solid #E5DDD0',
+  },
+  stepImage: {
+    width: '100%', height: '140px', objectFit: 'cover' as const,
+    borderRadius: '8px', marginBottom: '12px',
   },
   stepIcon: { color: '#8B6914', marginBottom: '12px' },
   stepNum: { fontSize: '12px', color: '#A09888', fontWeight: 600, marginBottom: '8px' },
