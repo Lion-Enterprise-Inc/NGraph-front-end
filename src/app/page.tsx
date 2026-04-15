@@ -91,6 +91,24 @@ function LandingPage() {
         </div>
       </section>
 
+      {/* Case Study */}
+      <section style={s.section}>
+        <h2 style={s.sectionTitle}>導入事例</h2>
+        <p style={{ textAlign: 'center' as const, color: '#7A6B5A', marginBottom: '32px', marginTop: '-24px', fontSize: '14px' }}>
+          蟹と海鮮ぼんた — 福井の人気海鮮店。英語・中国語でメニューを提供中。
+        </p>
+        <div style={s.caseStudy}>
+          <div style={s.caseCard}>
+            <img src="/case-bonta-en.png" alt="English menu" style={s.caseImage} />
+            <p style={s.caseLabel}>英語メニュー</p>
+          </div>
+          <div style={s.caseCard}>
+            <img src="/case-bonta-zh.png" alt="Chinese menu" style={s.caseImage} />
+            <p style={s.caseLabel}>中国語メニュー</p>
+          </div>
+        </div>
+      </section>
+
       {/* CTA */}
       <section style={s.ctaSection}>
         <h2 style={s.ctaSectionTitle}>今すぐ始めよう</h2>
@@ -177,6 +195,19 @@ const s: Record<string, React.CSSProperties> = {
   featureIcon: { color: '#8B6914', marginBottom: '12px' },
   featureTitle: { fontSize: '16px', fontWeight: 700, marginBottom: '6px', color: '#1A1410' },
   featureDesc: { fontSize: '13px', color: '#7A6B5A', lineHeight: '1.6' },
+  caseStudy: {
+    display: 'flex', gap: '24px', justifyContent: 'center', flexWrap: 'wrap' as const,
+  },
+  caseCard: {
+    flex: '0 1 240px', textAlign: 'center' as const,
+  },
+  caseImage: {
+    width: '100%', maxWidth: '240px', borderRadius: '12px',
+    boxShadow: '0 4px 20px rgba(0,0,0,0.1)', border: '1px solid #E5DDD0',
+  },
+  caseLabel: {
+    marginTop: '8px', fontSize: '13px', color: '#7A6B5A', fontWeight: 500,
+  },
   ctaSection: { textAlign: 'center' as const, padding: '60px 24px' },
   ctaSectionTitle: { fontSize: '28px', fontWeight: 700, marginBottom: '12px', color: '#1A1410' },
   ctaSectionSub: { fontSize: '15px', color: '#7A6B5A', marginBottom: '24px' },
