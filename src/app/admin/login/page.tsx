@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '../../../contexts/AuthContext'
 import { AuthApi } from '../../../services/api'
@@ -35,7 +35,6 @@ interface FieldErrors {
 interface RegisterFieldErrors {
   email?: string
   password?: string
-  passwordConfirm?: string
   restaurantName?: string
   terms?: string
 }
@@ -55,7 +54,7 @@ export default function AdminLoginPage() {
   // Register state
   const [registerEmail, setRegisterEmail] = useState('')
   const [registerPassword, setRegisterPassword] = useState('')
-  const [registerPasswordConfirm, setRegisterPasswordConfirm] = useState('')
+  const [showRegisterPassword, setShowRegisterPassword] = useState(false)
   const [restaurantName, setRestaurantName] = useState('')
   const [termsAgreed, setTermsAgreed] = useState(false)
   const [registerError, setRegisterError] = useState('')
@@ -183,9 +182,6 @@ export default function AdminLoginPage() {
     if (emailErr) errors.email = emailErr
     const passErr = validatePassword(registerPassword)
     if (passErr) errors.password = passErr
-    if (registerPassword !== registerPasswordConfirm) {
-      errors.passwordConfirm = 'パスワードが一致しません'
-    }
     if (!restaurantName.trim()) {
       errors.restaurantName = 'レストラン名を入力してください'
     }
@@ -219,7 +215,6 @@ export default function AdminLoginPage() {
       setEmail(registerEmail)
       setRegisterEmail('')
       setRegisterPassword('')
-      setRegisterPasswordConfirm('')
       setRestaurantName('')
       setTermsAgreed(false)
     } catch (err) {
@@ -324,26 +319,19 @@ export default function AdminLoginPage() {
 
               <div className="form-group">
                 <label className="form-label">パスワード</label>
-                <input
-                  type="password"
-                  className={`form-input ${registerFieldErrors.password ? 'input-error' : ''}`}
-                  placeholder="8文字以上"
-                  value={registerPassword}
-                  onChange={(e) => { setRegisterPassword(e.target.value); setRegisterError('') }}
-                />
+                <div className="password-wrap">
+                  <input
+                    type={showRegisterPassword ? 'text' : 'password'}
+                    className={`form-input ${registerFieldErrors.password ? 'input-error' : ''}`}
+                    placeholder="8文字以上"
+                    value={registerPassword}
+                    onChange={(e) => { setRegisterPassword(e.target.value); setRegisterError('') }}
+                  />
+                  <button type="button" className="eye-toggle" onClick={() => setShowRegisterPassword(!showRegisterPassword)}>
+                    {showRegisterPassword ? '🙈' : '👁'}
+                  </button>
+                </div>
                 {registerFieldErrors.password && <span className="field-error">{registerFieldErrors.password}</span>}
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">パスワード（確認）</label>
-                <input
-                  type="password"
-                  className={`form-input ${registerFieldErrors.passwordConfirm ? 'input-error' : ''}`}
-                  placeholder="もう一度入力"
-                  value={registerPasswordConfirm}
-                  onChange={(e) => { setRegisterPasswordConfirm(e.target.value); setRegisterError('') }}
-                />
-                {registerFieldErrors.passwordConfirm && <span className="field-error">{registerFieldErrors.passwordConfirm}</span>}
               </div>
 
               <div className="form-group">
@@ -364,14 +352,14 @@ export default function AdminLoginPage() {
                   checked={termsAgreed}
                   onChange={(e) => setTermsAgreed(e.target.checked)}
                 />
-                <span>利用規約に同意します（<span className="link">内容を確認</span>）</span>
+                <span><a href="https://ngraph.jp/legal.html" target="_blank" rel="noopener" className="link">利用規約</a>に同意</span>
               </label>
               {registerFieldErrors.terms && <span className="field-error">{registerFieldErrors.terms}</span>}
 
               {registerError && <div className="error-message">{registerError}</div>}
 
               <button type="submit" className="submit-btn" disabled={registerLoading}>
-                {registerLoading ? '登録中...' : '無料で始める'}
+                {registerLoading ? '登録中...' : '登録してメニューを作る'}
               </button>
 
               <div className="form-footer">
@@ -579,6 +567,27 @@ export default function AdminLoginPage() {
 
         .link:hover {
           text-decoration: underline;
+        }
+
+        .password-wrap {
+          position: relative;
+        }
+
+        .password-wrap .form-input {
+          padding-right: 44px;
+        }
+
+        .eye-toggle {
+          position: absolute;
+          right: 12px;
+          top: 50%;
+          transform: translateY(-50%);
+          background: none;
+          border: none;
+          cursor: pointer;
+          font-size: 16px;
+          padding: 4px;
+          line-height: 1;
         }
 
         .checkbox-label {
