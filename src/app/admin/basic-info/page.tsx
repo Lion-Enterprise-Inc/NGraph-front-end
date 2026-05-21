@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef, Suspense } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import AdminLayout from '../../../components/admin/AdminLayout'
 import { apiClient, BUSINESS_TYPES } from '../../../services/api'
@@ -49,48 +49,14 @@ function BasicInfoContent() {
     accessInfo: '',
     reservationUrl: '',
     googleRating: '',
-    tabelogRating: '',
-    logoUrl: ''
+    tabelogRating: ''
   })
 
   const [isSaving, setIsSaving] = useState(false)
   const [isScraping, setIsScraping] = useState(false)
   const [isSearching, setIsSearching] = useState(false)
-  const [logoFile, setLogoFile] = useState<File | null>(null)
-  const [logoPreview, setLogoPreview] = useState<string>('')
-  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const toast = useToast()
-  const ALLOWED_LOGO_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml', 'application/pdf']
-
-  const handleLogoFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) {
-      if (!ALLOWED_LOGO_TYPES.includes(file.type)) {
-        toast('warning', '対応形式: JPG, PNG, GIF, WebP, SVG, PDF')
-        return
-      }
-      if (file.size > 5 * 1024 * 1024) {
-        toast('warning', 'ファイルサイズは5MB以下にしてください')
-        return
-      }
-      setLogoFile(file)
-      if (file.type.startsWith('image/')) {
-        setLogoPreview(URL.createObjectURL(file))
-      } else {
-        setLogoPreview('')
-      }
-    }
-  }
-
-  const handleRemoveLogo = () => {
-    setLogoFile(null)
-    setLogoPreview('')
-    setFormData({ ...formData, logoUrl: '' })
-    if (fileInputRef.current) {
-      fileInputRef.current.value = ''
-    }
-  }
 
   const fetchRestaurantData = async (userUid: string) => {
     try {
@@ -139,8 +105,7 @@ function BasicInfoContent() {
         accessInfo: restaurantData.access_info || '',
         reservationUrl: restaurantData.reservation_url || '',
         googleRating: restaurantData.google_rating ? String(restaurantData.google_rating) : '',
-        tabelogRating: restaurantData.tabelog_rating ? String(restaurantData.tabelog_rating) : '',
-        logoUrl: restaurantData.logo_url || ''
+        tabelogRating: restaurantData.tabelog_rating ? String(restaurantData.tabelog_rating) : ''
       })
     } catch (error) {
       console.error('Failed to fetch restaurant:', error)
@@ -202,11 +167,6 @@ function BasicInfoContent() {
       addIfPresent('tabelog_url', formData.tabelogUrl)
       addIfPresent('gurunavi_url', formData.gurunaviUrl)
 
-      // Add logo file if selected
-      if (logoFile) {
-        formDataToSend.append('logo', logoFile)
-      }
-
       const token = sessionStorage.getItem('access_token')
       const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://15.207.22.103:8000'
 
@@ -220,19 +180,6 @@ function BasicInfoContent() {
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`)
-      }
-
-      const result = await response.json()
-      // Clear logo file state after successful upload
-      setLogoFile(null)
-      setLogoPreview('')
-      if (fileInputRef.current) {
-        fileInputRef.current.value = ''
-      }
-
-      // Update formData with new logo_url from response
-      if (result.result?.logo_url) {
-        setFormData(prev => ({ ...prev, logoUrl: result.result.logo_url }))
       }
 
       // Re-fetch restaurant data to ensure we have the latest
@@ -451,78 +398,6 @@ function BasicInfoContent() {
                   </FormSelect>
                 </FormField>
 
-                {/* Logo Upload */}
-                <FormField label="ロゴ">
-                  <div className="logo-upload-section">
-                    {(logoPreview || (formData.logoUrl && !logoFile)) ? (
-                      <div className="logo-preview-container">
-                        {logoPreview ? (
-                          <img src={logoPreview} alt="Restaurant logo" className="logo-preview" />
-                        ) : formData.logoUrl?.toLowerCase().endsWith('.pdf') ? (
-                          <div className="logo-placeholder" style={{ border: '2px solid #e5e7eb', background: '#fef2f2' }}>
-                            <span style={{ fontSize: '32px' }}>PDF</span>
-                            <span style={{ fontSize: '11px' }}>PDF</span>
-                          </div>
-                        ) : (
-                          <img src={formData.logoUrl} alt="Restaurant logo" className="logo-preview" />
-                        )}
-                        <button
-                          type="button"
-                          className="logo-remove-btn"
-                          onClick={handleRemoveLogo}
-                        >
-                          x
-                        </button>
-                      </div>
-                    ) : logoFile && !logoPreview ? (
-                      <div className="logo-preview-container">
-                        <div className="logo-placeholder" style={{ border: '2px solid #e5e7eb', background: '#fef2f2' }}>
-                          <span style={{ fontSize: '32px' }}>PDF</span>
-                          <span style={{ fontSize: '11px' }}>PDF</span>
-                        </div>
-                        <button
-                          type="button"
-                          className="logo-remove-btn"
-                          onClick={handleRemoveLogo}
-                        >
-                          x
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="logo-placeholder">
-                        <span>Logo</span>
-                        <span>ロゴなし</span>
-                      </div>
-                    )}
-                    <div className="logo-input-group">
-                      <input
-                        ref={fileInputRef}
-                        type="file"
-                        accept="image/*,.pdf"
-                        onChange={handleLogoFileChange}
-                        style={{ display: 'none' }}
-                        id="logo-file-input"
-                      />
-                      <button
-                        type="button"
-                        className="btn btn-secondary"
-                        onClick={() => {
-                          if (fileInputRef.current) {
-                            fileInputRef.current.value = ''
-                            fileInputRef.current.click()
-                          }
-                        }}
-                        style={{ marginBottom: '8px' }}
-                      >
-                        {(logoPreview || formData.logoUrl || logoFile) ? 'ロゴを変更' : 'ロゴを選択'}
-                      </button>
-                      {logoFile && (
-                        <p className="logo-file-name">選択中: {logoFile.name}</p>
-                      )}
-                      <p className="logo-hint">※ 画像またはPDFをアップロード（最大5MB）</p>
-                    </div>
-                  </div>
-                </FormField>
               </div>
 
               {/* Section 2: AI情報取得 */}
@@ -732,78 +607,6 @@ function BasicInfoContent() {
         }
         .btn-secondary:hover {
           background: var(--border-strong);
-        }
-        .logo-upload-section {
-          display: flex;
-          gap: 20px;
-          align-items: flex-start;
-          flex-wrap: wrap;
-        }
-        .logo-preview-container {
-          position: relative;
-          width: 120px;
-          height: 120px;
-          flex-shrink: 0;
-        }
-        .logo-preview {
-          width: 120px;
-          height: 120px;
-          object-fit: contain;
-          border-radius: 12px;
-          border: 2px solid #e5e7eb;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-        .logo-remove-btn {
-          position: absolute;
-          top: -8px;
-          right: -8px;
-          width: 24px;
-          height: 24px;
-          border-radius: 50%;
-          background: #ef4444;
-          color: white;
-          border: none;
-          cursor: pointer;
-          font-size: 12px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-        }
-        .logo-remove-btn:hover {
-          background: #dc2626;
-        }
-        .logo-placeholder {
-          width: 120px;
-          height: 120px;
-          border: 2px dashed #d1d5db;
-          border-radius: 12px;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          gap: 8px;
-          color: #9ca3af;
-          font-size: 14px;
-          flex-shrink: 0;
-        }
-        .logo-placeholder span:first-child {
-          font-size: 32px;
-        }
-        .logo-input-group {
-          flex: 1;
-          min-width: 250px;
-        }
-        .logo-hint {
-          margin-top: 8px;
-          font-size: 12px;
-          color: #6b7280;
-        }
-        .logo-file-name {
-          font-size: 13px;
-          color: #10a37f;
-          margin: 4px 0;
-          font-weight: 500;
         }
       `}</style>
     </AdminLayout>
