@@ -8,8 +8,6 @@ import { useAuth } from '../../../contexts/AuthContext'
 import { useToast } from '../../../components/admin/Toast'
 import { FormField, FormInput, FormSelect, FormTextarea, FormGrid } from '../../../components/admin/ui'
 
-type TabType = 'basic'
-
 export default function BasicInfoPage() {
   return (
     <Suspense fallback={<AdminLayout title="基本情報"><div style={{ textAlign: 'center', padding: '40px' }}>読み込み中...</div></AdminLayout>}>
@@ -23,7 +21,6 @@ function BasicInfoContent() {
   const searchParams = useSearchParams()
   const uidParam = searchParams?.get('uid') ?? null
   const isAdminViewing = !!(uidParam && user && (user.role === 'superadmin' || user.role === 'platform_owner'))
-  const [activeTab, setActiveTab] = useState<TabType>('basic')
   const [restaurant, setRestaurant] = useState<any>(null)
   const [restaurantLoading, setRestaurantLoading] = useState(true)
   const [restaurantError, setRestaurantError] = useState('')
@@ -333,48 +330,30 @@ function BasicInfoContent() {
     }
   }
 
-  const tabs = [
-    { key: 'basic', label: '基本情報' },
-  ]
-
   return (
     <AdminLayout title="基本情報">
-      <div className="card">
-        <div className="tab-nav">
-          {tabs.map((tab) => (
+      <div className="page-content">
+        {restaurantLoading ? (
+          <div style={{ textAlign: 'center', padding: '40px' }}>
+            <div style={{ fontSize: '18px', marginBottom: '16px' }}>レストラン情報を読み込み中...</div>
+            <div style={{ color: '#94A3B8' }}>情報を取得しています</div>
+          </div>
+        ) : restaurantError ? (
+          <div style={{ textAlign: 'center', padding: '40px' }}>
+            <div style={{ fontSize: '18px', marginBottom: '16px', color: '#dc2626' }}>エラー</div>
+            <div style={{ color: '#94A3B8', marginBottom: '20px' }}>{restaurantError}</div>
             <button
-              key={tab.key}
-              className={`tab-btn ${activeTab === tab.key ? 'active' : ''}`}
-              onClick={() => setActiveTab(tab.key as TabType)}
+              className="btn btn-primary"
+              onClick={() => window.location.reload()}
             >
-              {tab.label}
+              再読み込み
             </button>
-          ))}
-        </div>
-
-        <div className="tab-content">
-          {restaurantLoading ? (
-            <div className="inner-card" style={{ textAlign: 'center', padding: '40px' }}>
-              <div style={{ fontSize: '18px', marginBottom: '16px' }}>レストラン情報を読み込み中...</div>
-              <div style={{ color: '#94A3B8' }}>情報を取得しています</div>
-            </div>
-          ) : restaurantError ? (
-            <div className="inner-card" style={{ textAlign: 'center', padding: '40px' }}>
-              <div style={{ fontSize: '18px', marginBottom: '16px', color: '#dc2626' }}>エラー</div>
-              <div style={{ color: '#94A3B8', marginBottom: '20px' }}>{restaurantError}</div>
-              <button
-                className="btn btn-primary"
-                onClick={() => window.location.reload()}
-              >
-                再読み込み
-              </button>
-            </div>
-          ) : activeTab === 'basic' && (
-            <div className="inner-card">
+          </div>
+        ) : (
+          <>
 
               {/* Section 1: 基本情報 */}
               <div className="section-card">
-                <div className="card-title">基本情報</div>
 
                 <FormField label="レストラン名" required>
                   <FormInput type="text" name="storeName" value={formData.storeName} onChange={handleChange} />
@@ -511,10 +490,8 @@ function BasicInfoContent() {
                 </FormGrid>
               </div>
 
-            </div>
-          )}
-
-        </div>
+          </>
+        )}
 
         {/* Global Save Button */}
         <div style={{ display: 'flex', justifyContent: 'center', marginTop: '20px', paddingTop: '20px', borderTop: '1px solid var(--border)' }}>
@@ -525,57 +502,17 @@ function BasicInfoContent() {
       </div>
 
       <style jsx>{`
-        .card {
-          background: var(--bg-surface);
-          border-radius: 12px;
-          padding: 20px;
-          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-          border: 1px solid var(--border);
-        }
-        .tab-nav {
-          display: flex;
-          gap: 8px;
-          margin-bottom: 20px;
-          border-bottom: 1px solid var(--border);
-          padding-bottom: 12px;
-          flex-wrap: wrap;
-        }
-        .tab-btn {
-          padding: 10px 16px;
-          border: none;
-          background: transparent;
-          font-size: 14px;
-          font-weight: 500;
-          color: var(--muted);
-          cursor: pointer;
-          border-radius: 8px;
-          transition: all 0.2s;
-        }
-        .tab-btn:hover {
-          background: var(--bg-hover);
-          color: var(--text);
-        }
-        .tab-btn.active {
-          background: linear-gradient(135deg, #667eea, #764ba2);
-          color: white;
-        }
-        .tab-content {
-          min-height: 400px;
-        }
-        .inner-card {
-          padding: 20px;
-          border: 1px solid var(--border);
-          border-radius: 12px;
+        .page-content {
+          padding: 0;
         }
         .section-card {
-          padding: 20px;
-          margin-bottom: 20px;
-          background: var(--bg-surface);
-          border: 1px solid var(--border);
-          border-radius: 10px;
+          padding: 20px 0;
+          margin-bottom: 24px;
+          border-bottom: 1px solid var(--border);
         }
         .section-card:last-child {
           margin-bottom: 0;
+          border-bottom: none;
         }
         .card-title {
           font-size: 16px;
