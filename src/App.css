@@ -751,14 +751,22 @@ body {
   padding-bottom: 60px;
 }
 
-/* Hero landing: タイポ + 入力欄を画面中央付近に近接配置 (Claude スタイル) */
-.capture-page.is-hero-landing .capture-main.hero-stack {
-  justify-content: flex-end;
-  padding-bottom: 44vh;
+/* Hero landing: タイポ + 入力欄を画面中央付近に近接配置 (ChatGPT スタイル) */
+.capture-page.is-hero-landing .store-home {
+  position: fixed;
+  left: 50%;
+  bottom: 56vh;
+  transform: translateX(-50%);
+  z-index: 5;
+  width: 100%;
+  max-width: 760px;
+  padding: 0 20px;
+  margin: 0;
+  box-sizing: border-box;
 }
 
 .capture-page.is-hero-landing .chat-dock.chat-dock-floating {
-  bottom: 34vh;
+  bottom: 40vh;
   max-width: 760px;
   padding: 0 20px;
   background: transparent;
