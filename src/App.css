@@ -767,9 +767,16 @@ body {
 
 .capture-page.is-hero-landing .chat-dock.chat-dock-floating {
   bottom: 34vh;
+  left: 50%;
+  right: auto;
+  transform: translateX(-50%);
   max-width: 760px;
   padding: 0 20px;
   background: transparent;
+}
+
+.capture-page.is-hero-landing .chat-dock.chat-dock-floating::before {
+  display: none;
 }
 
 /* Claude 風 2段 card: 上段 textarea / 下段 アクション */
@@ -1196,20 +1203,41 @@ body {
 
 .chat-dock.chat-dock-floating {
   position: fixed;
-  left: 50%;
+  left: 0;
+  right: 0;
   bottom: 0px;
-  transform: translateX(-50%);
+  transform: none;
   width: 100%;
-  max-width: var(--page-max-width);
+  max-width: 100%;
   z-index: 10;
   border: none !important;
   border-top: none !important;
   border-radius: 0 !important;
-  padding: 4px 10px;
+  padding: 12px 10px 4px;
   padding-bottom: max(4px, env(safe-area-inset-bottom, 0px));
   background: var(--color-bg);
   transition: bottom 0.18s ease, transform 0.18s ease;
   box-sizing: border-box;
+}
+
+.chat-dock.chat-dock-floating::before {
+  content: '';
+  position: absolute;
+  top: -32px;
+  left: 0;
+  right: 0;
+  height: 32px;
+  background: linear-gradient(to bottom, transparent, var(--color-bg));
+  pointer-events: none;
+}
+
+.chat-dock.chat-dock-floating > .chat-dock-row,
+.chat-dock.chat-dock-floating > .chat-dock-hero,
+.chat-dock.chat-dock-floating > .chat-dock-safety,
+.chat-dock.chat-dock-floating > .attachment-pill {
+  max-width: 760px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .chat-dock.chat-dock-floating .chat-dock-row {
