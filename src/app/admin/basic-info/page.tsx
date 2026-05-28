@@ -41,7 +41,6 @@ function BasicInfoContent() {
     budget: '',
     parking: '',
     payment: '',
-    features: '',
     accessInfo: '',
     reservationUrl: ''
   })
@@ -93,7 +92,6 @@ function BasicInfoContent() {
         budget: restaurantData.budget || '',
         parking: restaurantData.parking_slot || '',
         payment: restaurantData.payment_methods || '',
-        features: restaurantData.attention_in_detail || '',
         accessInfo: restaurantData.access_info || '',
         reservationUrl: restaurantData.reservation_url || ''
       })
@@ -143,7 +141,7 @@ function BasicInfoContent() {
       addIfPresent('opening_hours', formData.businessHours)
       addIfPresent('budget', formData.budget)
       addIfPresent('parking_slot', formData.parking)
-      addIfPresent('attention_in_detail', formData.features)
+      addIfPresent('attention_in_detail', formData.description)
       addIfPresent('business_type', formData.storeType)
       formDataToSend.append('is_active', String(restaurant.is_active))
       addIfPresent('holidays', formData.holidays)
@@ -229,7 +227,6 @@ function BasicInfoContent() {
           budget: toStr(info.budget) || prev.budget,
           parking: toStr(info.parking) || prev.parking,
           payment: toStr(info.payment) || prev.payment,
-          features: toStr(info.features) || prev.features,
           accessInfo: toStr(info.access) || prev.accessInfo,
           reservationUrl: toStr(info.reservation_url) || prev.reservationUrl,
           instagramUrl: toStr(info.instagram_url) || prev.instagramUrl,
@@ -361,10 +358,6 @@ function BasicInfoContent() {
                     <FormInput type="url" name="reservationUrl" placeholder="https://..." value={formData.reservationUrl} onChange={handleChange} />
                   </FormField>
                 </FormGrid>
-
-                <FormField label="特徴・こだわり">
-                  <FormTextarea name="features" placeholder="例: 地元食材使用、個室あり" value={formData.features} onChange={handleChange} rows={3} />
-                </FormField>
               </div>
 
               {/* Section 4: 外部リンク */}
