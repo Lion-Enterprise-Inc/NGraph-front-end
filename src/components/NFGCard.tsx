@@ -186,6 +186,16 @@ export default function NFGCard({
               </div>
               <div className="nfgcard-header-right">
                 <div className="nfgcard-badges">
+                  {item.menu_uid && onLike && (
+                    <button
+                      type="button"
+                      className={`nfgcard-like-btn${liked ? ' liked' : ''}`}
+                      onClick={(e) => { e.stopPropagation(); onLike(item.menu_uid!); }}
+                      aria-label={liked ? 'Unlike' : 'Like'}
+                    >
+                      {liked ? '♥' : '♡'}
+                    </button>
+                  )}
                   {item.category && item.category !== 'bento' && (
                     <span className="nfgcard-badge nfgcard-badge-category">{item.category}</span>
                   )}
@@ -210,18 +220,8 @@ export default function NFGCard({
                 )}
               </div>
             </div>
-            {/* Action row: like + share */}
-            <div className="nfgcard-action-row">
-              {item.menu_uid && onLike && (
-                <button
-                  type="button"
-                  className={`nfgcard-like-btn${liked ? ' liked' : ''}`}
-                  onClick={(e) => { e.stopPropagation(); onLike(item.menu_uid!); }}
-                >
-                  {liked ? '\u2665' : '\u2661'}
-                </button>
-              )}
-              {item.nfg_code && (
+            {item.nfg_code && (
+              <div className="nfgcard-action-row">
                 <button
                   type="button"
                   className={`nfgcard-share-btn${copiedNfgCode === item.nfg_code ? ' copied' : ''}`}
@@ -229,8 +229,8 @@ export default function NFGCard({
                 >
                   {copiedNfgCode === item.nfg_code ? '\u2705 Copied' : 'Share'}
                 </button>
-              )}
-            </div>
+              </div>
+            )}
 
             {/* Restaurant info (for search results) */}
             {showRestaurantInfo && restaurantName && (
