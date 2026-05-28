@@ -184,18 +184,20 @@ export default function NFGCard({
                 </div>
                 {subName && <div className="nfgcard-subname">{subName}</div>}
               </div>
-              <div className="nfgcard-badges">
-                {item.category && item.category !== 'bento' && (
-                  <span className="nfgcard-badge nfgcard-badge-category">{item.category}</span>
-                )}
-                {isDb ? (
-                  <span className="nfgcard-badge nfgcard-badge-verified">{copy.verified}</span>
-                ) : (
-                  <span className="nfgcard-badge nfgcard-badge-ai">{copy.aiEstimate}</span>
-                )}
-                {item.is_new && (
-                  <span className="nfgcard-badge nfgcard-badge-new">{copy.newItem}</span>
-                )}
+              <div className="nfgcard-header-right">
+                <div className="nfgcard-badges">
+                  {item.category && item.category !== 'bento' && (
+                    <span className="nfgcard-badge nfgcard-badge-category">{item.category}</span>
+                  )}
+                  {isDb ? (
+                    <span className="nfgcard-badge nfgcard-badge-verified">{copy.verified}</span>
+                  ) : (
+                    <span className="nfgcard-badge nfgcard-badge-ai">{copy.aiEstimate}</span>
+                  )}
+                  {item.is_new && (
+                    <span className="nfgcard-badge nfgcard-badge-new">{copy.newItem}</span>
+                  )}
+                </div>
                 {item.image_url && (
                   <button
                     type="button"

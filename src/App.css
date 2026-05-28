@@ -7354,6 +7354,13 @@ textarea.form-input {
   align-items: flex-start;
   gap: 8px;
 }
+.nfgcard-header-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  flex-shrink: 0;
+}
 .nfgcard-thumb-mini {
   flex-shrink: 0;
   width: 36px;
