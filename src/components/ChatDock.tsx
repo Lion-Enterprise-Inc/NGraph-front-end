@@ -34,7 +34,7 @@ type ChatDockProps = {
 };
 
 const SAFETY_NOTICE: Record<string, string> = {
-  ja: 'アレルギー・宗教上の制約など重要なご質問は、必ずスタッフにご確認ください。',
+  ja: 'アレルギー・宗教上の制約など重要なご質問はスタッフにご確認ください',
   en: 'For allergies and religious or dietary restrictions, please always confirm with our staff.',
   ko: '알레르기·종교적 제약 등 중요한 사항은 반드시 직원에게 확인해 주세요.',
   'zh-Hans': '关于过敏、宗教或饮食限制等重要事项，请务必向工作人员确认。',

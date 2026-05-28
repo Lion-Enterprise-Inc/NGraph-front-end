@@ -680,6 +680,10 @@ body {
   justify-self: end;
 }
 
+.capture-header > .icon-button:first-child {
+  justify-self: start;
+}
+
 .capture-header-center {
   display: flex;
   align-items: center;
@@ -894,7 +898,8 @@ body {
   box-sizing: border-box;
   text-wrap: pretty;
   word-break: keep-all;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
+  line-break: strict;
 }
 
 .chat-dock-powered-by {
