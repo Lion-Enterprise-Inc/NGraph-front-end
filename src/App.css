@@ -751,6 +751,44 @@ body {
   padding-bottom: 60px;
 }
 
+/* Hero landing: タイポ + 入力欄を画面中央付近に近接配置 (Claude/Gemini/ChatGPT 文法) */
+.capture-page.is-hero-landing .capture-main.hero-stack {
+  justify-content: flex-end;
+  padding-bottom: 48vh;
+}
+
+.capture-page.is-hero-landing .chat-dock.chat-dock-floating {
+  bottom: 38vh;
+  max-width: 760px;
+  padding: 0 20px;
+}
+
+/* hero landing 時、Gemini/ChatGPT 風の「どっしり」 1段 pill 入力欄 */
+.capture-page.is-hero-landing .chat-dock.chat-dock-floating .chat-dock-row {
+  padding: 14px 14px;
+  border-radius: 32px;
+  box-shadow: 0 4px 28px rgba(0, 0, 0, 0.32);
+  min-height: 64px;
+  gap: 10px;
+}
+
+.capture-page.is-hero-landing .chat-dock-input {
+  font-size: 17px;
+  padding: 8px 14px;
+}
+
+.capture-page.is-hero-landing .chat-dock-send {
+  width: 44px;
+  height: 44px;
+  border-radius: 22px;
+}
+
+.capture-page.is-hero-landing .chat-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 20px;
+}
+
 .explore-title,
 .capture-title {
   margin: 0;

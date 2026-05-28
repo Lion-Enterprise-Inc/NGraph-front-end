@@ -1707,8 +1707,14 @@ export default function CapturePage({
     );
   }
 
+  const isHeroLanding =
+    message.trim().length === 0 && responses.length === 0 && !loading;
+
   return (
-    <div className="page capture-page" onClick={handleBackgroundClick}>
+    <div
+      className={`page capture-page${isHeroLanding ? " is-hero-landing" : ""}`}
+      onClick={handleBackgroundClick}
+    >
       <CaptureHeader
         onMenu={
           onOpenMenu ??
