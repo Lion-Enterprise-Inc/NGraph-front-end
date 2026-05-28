@@ -872,9 +872,17 @@ body {
     font-size: 16px;
     min-height: 24px;
   }
+  /* 履歴 mode: dock の内部を narrow に (ChatGPT モバイル風) */
+  .capture-page:not(.is-hero-landing) .chat-dock.chat-dock-floating {
+    padding: 8px 14px;
+  }
+  .capture-page:not(.is-hero-landing) .chat-dock.chat-dock-floating .chat-dock-row {
+    border-radius: 22px;
+    padding: 4px 8px;
+  }
 }
 
-/* AI 安全注意 (アレルギー/宗教制約) — Claude/Gemini/ChatGPT 並みの位置・サイズ */
+/* AI 安全注意 (アレルギー/宗教制約) — hero state のみ表示 (ChatGPT 風シンプル) */
 .chat-dock-safety {
   width: 100%;
   margin: 6px 0 0;
@@ -896,9 +904,15 @@ body {
   font-family: Inter, -apple-system, BlinkMacSystemFont, sans-serif;
   font-size: 9.5px;
   letter-spacing: 0.08em;
-  color: rgba(255, 255, 255, 0.28);
+  color: var(--color-text-muted, rgba(255, 255, 255, 0.28));
   text-align: center;
   box-sizing: border-box;
+}
+
+/* 履歴 mode (hero state ではない時) は safety notice / Powered by を非表示 */
+.capture-page:not(.is-hero-landing) .chat-dock-safety,
+.capture-page:not(.is-hero-landing) .chat-dock-powered-by {
+  display: none;
 }
 
 .explore-title,
