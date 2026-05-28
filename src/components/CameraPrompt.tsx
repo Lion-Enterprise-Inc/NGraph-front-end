@@ -84,13 +84,6 @@ export default function CameraPrompt({
   const brandName = nameParts[0] || heading;
   const branchName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : null;
 
-  const handleRound1Click = (text: string, index: number) => {
-    // 全チップで即送信（2巡目の方向性チップは廃止）
-    onRecommendationClick?.(text)
-  }
-
-
-
   if (isWebMode && restaurantName) {
     return (
       <div className="store-home">
@@ -176,36 +169,6 @@ export default function CameraPrompt({
       <p className="store-home-sub" style={{ whiteSpace: 'pre-line' }}>
         {restaurantName ? (STORE_GREETINGS[language] || STORE_GREETINGS.en) : sub}
       </p>
-
-      <div className="store-home-actions">
-        <button
-          className="store-home-action-btn store-home-action-menu"
-          onClick={onExploreMenuClick}
-        >
-          <UtensilsCrossed size={18} strokeWidth={1.8} />
-          <span>{webCopy.exploreMenu}</span>
-        </button>
-
-        <button
-          className="store-home-action-btn store-home-action-camera"
-          onClick={onCamera}
-        >
-          <Camera size={18} strokeWidth={1.8} />
-          <span>{copy.cameraPrompt.openCamera}</span>
-        </button>
-      </div>
-
-      <div className="store-home-chips">
-        {recommendations?.map((text, i) => (
-          <button
-            key={i}
-            className="store-home-chip"
-            onClick={() => handleRound1Click(text, i)}
-          >
-            {text}
-          </button>
-        ))}
-      </div>
     </div>
   )
 }
