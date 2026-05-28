@@ -886,6 +886,49 @@ body {
   }
 }
 
+/* Hero state quick-tap chips (ChatGPT 風: input 下に控えめ) */
+.chat-dock-hero-chips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  margin: 10px 0 0;
+  padding: 0 8px;
+  box-sizing: border-box;
+}
+
+.chat-dock-hero-chip {
+  background: transparent;
+  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.12));
+  border-radius: 18px;
+  padding: 7px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-body, rgba(255, 255, 255, 0.78));
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.chat-dock-hero-chip:hover {
+  background: var(--color-surface-chip, rgba(255, 255, 255, 0.04));
+  border-color: var(--color-border-strong, rgba(255, 255, 255, 0.2));
+}
+
+.chat-dock.chat-dock-floating > .chat-dock-hero-chips {
+  max-width: 760px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+@media (max-width: 768px) {
+  .chat-dock-hero-chip {
+    font-size: 12px;
+    padding: 6px 12px;
+  }
+}
+
 /* AI 安全注意 (アレルギー/宗教制約) — hero state のみ表示 (ChatGPT 風シンプル) */
 .chat-dock-safety {
   width: 100%;

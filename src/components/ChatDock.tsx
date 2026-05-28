@@ -23,7 +23,7 @@ type ChatDockProps = {
   textareaRef: RefObject<HTMLTextAreaElement>;
   onFocus?: () => void;
   onChange: (event: ChangeEvent<HTMLTextAreaElement>) => void;
-  onSend: () => void;
+  onSend: (overrideText?: string) => void;
   isStreaming?: boolean;
   isHero?: boolean;
   onStop?: () => void;
@@ -32,6 +32,37 @@ type ChatDockProps = {
   onOpenCamera?: () => void;
   onRemoveAttachment?: () => void;
 };
+
+type HeroChip = { label: string; query: string };
+const HERO_CHIPS: Record<string, HeroChip[]> = {
+  ja: [
+    { label: 'おすすめは？', query: 'おすすめは？' },
+    { label: '名物は？', query: '名物は？' },
+    { label: '食事制限ある', query: 'アレルギーや宗教上で食べられない食材があります。何が食べられますか？' },
+  ],
+  en: [
+    { label: "What's recommended?", query: "What do you recommend?" },
+    { label: 'Specialty?', query: "What's your specialty?" },
+    { label: 'Dietary needs', query: 'I have allergies or dietary restrictions. What can I eat?' },
+  ],
+  ko: [
+    { label: '추천 메뉴는?', query: '추천 메뉴는 무엇인가요?' },
+    { label: '대표 메뉴는?', query: '대표 메뉴가 무엇인가요?' },
+    { label: '식이 제한', query: '알레르기나 종교적 제한으로 못 먹는 음식이 있어요. 무엇을 먹을 수 있나요?' },
+  ],
+  'zh-Hans': [
+    { label: '推荐什么？', query: '有什么推荐的菜？' },
+    { label: '招牌菜？', query: '你们的招牌菜是什么？' },
+    { label: '饮食限制', query: '我有过敏或宗教饮食限制。我能吃什么？' },
+  ],
+  'zh-Hant': [
+    { label: '推薦什麼？', query: '有什麼推薦的菜？' },
+    { label: '招牌菜？', query: '你們的招牌菜是什麼？' },
+    { label: '飲食限制', query: '我有過敏或宗教飲食限制。我能吃什麼？' },
+  ],
+};
+
+const getHeroChips = (lang: string): HeroChip[] => HERO_CHIPS[lang] || HERO_CHIPS.en;
 
 const SAFETY_NOTICE: Record<string, string> = {
   ja: 'アレルギー・宗教上の制約など重要なご質問はスタッフにご確認ください',
@@ -344,6 +375,24 @@ export default function ChatDock({
               </button>
             )}
           </div>
+        </div>
+      )}
+
+      {isHero && !attachment && !isStreaming && (
+        <div className="chat-dock-hero-chips">
+          {getHeroChips(language).map((chip) => (
+            <button
+              key={chip.query}
+              type="button"
+              className="chat-dock-hero-chip"
+              onClick={(e) => {
+                e.stopPropagation();
+                onSend(chip.query);
+              }}
+            >
+              {chip.label}
+            </button>
+          ))}
         </div>
       )}
 
