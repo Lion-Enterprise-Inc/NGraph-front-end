@@ -1707,8 +1707,7 @@ export default function CapturePage({
     );
   }
 
-  const isHeroLanding =
-    message.trim().length === 0 && responses.length === 0 && !loading;
+  const isHeroLanding = responses.length === 0 && !loading;
 
   return (
     <div
@@ -1746,9 +1745,7 @@ export default function CapturePage({
       >
         <main
           className={`capture-main hero-stack${
-            message.trim().length > 0 || responses.length > 0 || loading
-              ? " is-hidden"
-              : ""
+            responses.length > 0 || loading ? " is-hidden" : ""
           }`}
         >
           {!restaurantLoading && !restaurantData && restaurantSlug ? (
