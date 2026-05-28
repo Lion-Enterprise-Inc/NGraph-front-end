@@ -25,6 +25,7 @@ type ChatDockProps = {
   onChange: (event: ChangeEvent<HTMLTextAreaElement>) => void;
   onSend: () => void;
   isStreaming?: boolean;
+  isHero?: boolean;
   onStop?: () => void;
   onAttachment?: (file: File) => void;
   onAttachmentCamera?: (file: File) => void;
@@ -41,6 +42,7 @@ export default function ChatDock({
   onChange,
   onSend,
   isStreaming,
+  isHero,
   onStop,
   onAttachment,
   onAttachmentCamera,
@@ -162,43 +164,15 @@ export default function ChatDock({
         </div>
       )}
 
-      <div className="chat-dock-row">
-        <div className="chat-dock-icons" aria-hidden="true">
-          <button
-            className="chat-icon"
-            type="button"
-            aria-label={copy.chat.camera}
-            onClick={(e) => {
-              e.stopPropagation();
-              if (onOpenCamera) {
-                onOpenCamera();
-              } else {
-                cameraInputRef.current?.click();
-              }
-            }}
-          >
-            <Camera size={20} strokeWidth={1.6} color="#10a37f" />
-          </button>
-          <button
-            className="chat-icon"
-            type="button"
-            aria-label="画像を選択"
-            onClick={(e) => {
-              e.stopPropagation();
-              fileInputRef.current?.click();
-            }}
-          >
-            <ImagePlus size={20} strokeWidth={1.6} color="#10a37f" />
-          </button>
-        </div>
-        <div className={`chat-dock-area${multiline ? " multiline" : ""}`}>
+      {isHero ? (
+        <div className="chat-dock-hero">
           <textarea
             ref={textareaRef}
-            className="chat-dock-input multiline"
+            className="chat-dock-hero-input"
             placeholder={suggestion}
             aria-label={copy.chat.messageInput}
             value={message}
-            rows={1}
+            rows={2}
             enterKeyHint="send"
             autoComplete="off"
             onFocus={onFocus}
@@ -214,28 +188,133 @@ export default function ChatDock({
               }
             }}
           />
-          {isStreaming ? (
-            <button
-              className="chat-dock-send active"
-              type="button"
-              aria-label="Stop"
-              onClick={() => onStop?.()}
-            >
-              <Square size={14} strokeWidth={0} fill="#fff" />
-            </button>
-          ) : (
-            <button
-              className={`chat-dock-send${sendEnabled ? " active" : ""}`}
-              type="button"
-              aria-label={copy.chat.sendMessage}
-              disabled={!sendEnabled}
-              onClick={() => onSend()}
-            >
-              <ArrowUp size={18} strokeWidth={2.5} color={sendEnabled ? "#fff" : "rgba(255,255,255,0.4)"} />
-            </button>
-          )}
+          <div className="chat-dock-hero-actions">
+            <div className="chat-dock-hero-tools">
+              <button
+                className="chat-icon chat-icon-hero"
+                type="button"
+                aria-label={copy.chat.camera}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (onOpenCamera) {
+                    onOpenCamera();
+                  } else {
+                    cameraInputRef.current?.click();
+                  }
+                }}
+              >
+                <Camera size={20} strokeWidth={1.6} color="currentColor" />
+              </button>
+              <button
+                className="chat-icon chat-icon-hero"
+                type="button"
+                aria-label="画像を選択"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  fileInputRef.current?.click();
+                }}
+              >
+                <ImagePlus size={20} strokeWidth={1.6} color="currentColor" />
+              </button>
+            </div>
+            {isStreaming ? (
+              <button
+                className="chat-dock-send active chat-dock-send-hero"
+                type="button"
+                aria-label="Stop"
+                onClick={() => onStop?.()}
+              >
+                <Square size={14} strokeWidth={0} fill="#fff" />
+              </button>
+            ) : (
+              <button
+                className={`chat-dock-send chat-dock-send-hero${sendEnabled ? " active" : ""}`}
+                type="button"
+                aria-label={copy.chat.sendMessage}
+                disabled={!sendEnabled}
+                onClick={() => onSend()}
+              >
+                <ArrowUp size={20} strokeWidth={2.5} color={sendEnabled ? "#fff" : "rgba(255,255,255,0.4)"} />
+              </button>
+            )}
+          </div>
         </div>
-      </div>
+      ) : (
+        <div className="chat-dock-row">
+          <div className="chat-dock-icons" aria-hidden="true">
+            <button
+              className="chat-icon"
+              type="button"
+              aria-label={copy.chat.camera}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (onOpenCamera) {
+                  onOpenCamera();
+                } else {
+                  cameraInputRef.current?.click();
+                }
+              }}
+            >
+              <Camera size={20} strokeWidth={1.6} color="#10a37f" />
+            </button>
+            <button
+              className="chat-icon"
+              type="button"
+              aria-label="画像を選択"
+              onClick={(e) => {
+                e.stopPropagation();
+                fileInputRef.current?.click();
+              }}
+            >
+              <ImagePlus size={20} strokeWidth={1.6} color="#10a37f" />
+            </button>
+          </div>
+          <div className={`chat-dock-area${multiline ? " multiline" : ""}`}>
+            <textarea
+              ref={textareaRef}
+              className="chat-dock-input multiline"
+              placeholder={suggestion}
+              aria-label={copy.chat.messageInput}
+              value={message}
+              rows={1}
+              enterKeyHint="send"
+              autoComplete="off"
+              onFocus={onFocus}
+              onClick={onFocus}
+              onChange={onChange}
+              onInput={(event) =>
+                onChange(event as ChangeEvent<HTMLTextAreaElement>)
+              }
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  if (!isStreaming) onSend();
+                }
+              }}
+            />
+            {isStreaming ? (
+              <button
+                className="chat-dock-send active"
+                type="button"
+                aria-label="Stop"
+                onClick={() => onStop?.()}
+              >
+                <Square size={14} strokeWidth={0} fill="#fff" />
+              </button>
+            ) : (
+              <button
+                className={`chat-dock-send${sendEnabled ? " active" : ""}`}
+                type="button"
+                aria-label={copy.chat.sendMessage}
+                disabled={!sendEnabled}
+                onClick={() => onSend()}
+              >
+                <ArrowUp size={18} strokeWidth={2.5} color={sendEnabled ? "#fff" : "rgba(255,255,255,0.4)"} />
+              </button>
+            )}
+          </div>
+        </div>
+      )}
 
       <div
         ref={measureRef}

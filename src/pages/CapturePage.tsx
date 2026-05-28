@@ -2357,6 +2357,7 @@ export default function CapturePage({
         }
         onSend={handleSend}
         isStreaming={loading || isTypingActive}
+        isHero={isHeroLanding}
         onStop={() => abortControllerRef.current?.abort()}
         onAttachment={(file) => handleAttachment(file ?? null, "library")}
         onAttachmentCamera={(file) => handleAttachment(file ?? null, "camera")}
