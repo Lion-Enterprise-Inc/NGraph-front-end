@@ -287,8 +287,8 @@ export default function PreviewModal({ isOpen, onClose, item, onEdit, onApprove 
           </Section>
         )}
 
-        {/* Taste Profile Radar */}
-        {item.tasteProfiles && item.tasteProfiles.length > 0 && (
+        {/* Taste Profile Radar — 非表示 (2026-05-28) */}
+        {false && item.tasteProfiles && item.tasteProfiles.length > 0 && (
           <Section title="味覚プロファイル">
             <TasteRadar profiles={item.tasteProfiles} />
           </Section>
