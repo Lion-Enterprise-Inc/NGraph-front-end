@@ -114,6 +114,7 @@ export default function NFGCard({
 }: Props) {
   const [expandedIdx, setExpandedIdx] = useState<Set<number>>(new Set());
   const [copiedNfgCode, setCopiedNfgCode] = useState<string | null>(null);
+  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
   const photoRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
   const handleShareCard = (e: React.MouseEvent, item: QuickExplainItem) => {
@@ -176,6 +177,16 @@ export default function NFGCard({
           <div key={idx} className={`nfgcard${open ? ' nfgcard-open' : ''}`} data-nfg-code={item.nfg_code || undefined} onClick={() => toggle(idx)}>
             {/* Header */}
             <div className="nfgcard-header">
+              {item.image_url && (
+                <button
+                  type="button"
+                  className="nfgcard-thumb"
+                  onClick={(e) => { e.stopPropagation(); setLightboxUrl(item.image_url!); }}
+                  aria-label="画像を拡大"
+                >
+                  <img src={item.image_url} alt={item.name_jp} loading="lazy" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                </button>
+              )}
               <div className="nfgcard-header-left">
                 <div className="nfgcard-name">
                   <span className="nfgcard-number">{idx + 1}.</span>
@@ -257,11 +268,9 @@ export default function NFGCard({
               const DRINK_CATS = new Set(["drink","beer","sake","sour","highball","whisky","wine","shochu","fruit_wine","soft_drink"]);
               const isDrink = DRINK_CATS.has((item.category || "").toLowerCase());
               const fitClass = isDrink ? "nfgcard-img-contain" : "nfgcard-img-cover";
-              if (allImages.length === 1) return (
-                <div className="nfgcard-image">
-                  <img className={fitClass} src={allImages[0]} alt={item.name_jp} loading="lazy" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-                </div>
-              )
+              // 単一画像は header の thumbnail で表示済みなのでスキップ
+              if (allImages.length === 1) return null
+              // 複数画像 carousel (food等で multi photo 設定時)
               return (
                 <div className="nfgcard-image-carousel">
                   <div className="nfgcard-image-track">
@@ -392,6 +401,24 @@ export default function NFGCard({
           </div>
         );
       })}
+
+      {/* Lightbox overlay for image enlargement */}
+      {lightboxUrl && (
+        <div
+          className="nfgcard-lightbox"
+          onClick={() => setLightboxUrl(null)}
+          role="dialog"
+          aria-modal="true"
+        >
+          <button
+            type="button"
+            className="nfgcard-lightbox-close"
+            onClick={(e) => { e.stopPropagation(); setLightboxUrl(null); }}
+            aria-label="閉じる"
+          >×</button>
+          <img src={lightboxUrl} alt="" onClick={(e) => e.stopPropagation()} />
+        </div>
+      )}
     </div>
   );
 }
