@@ -856,8 +856,12 @@ body {
 }
 
 @media (max-width: 768px) {
+  .capture-page.is-hero-landing .store-home {
+    bottom: 62vh;
+  }
   .capture-page.is-hero-landing .chat-dock.chat-dock-floating {
     padding: 0 12px;
+    bottom: 34vh;
   }
   .chat-dock-hero {
     border-radius: 22px;
@@ -879,6 +883,9 @@ body {
   color: var(--color-text-muted, rgba(255, 255, 255, 0.45));
   text-align: center;
   box-sizing: border-box;
+  text-wrap: pretty;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
 }
 
 .chat-dock-powered-by {
