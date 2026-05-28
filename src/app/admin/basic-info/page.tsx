@@ -44,9 +44,7 @@ function BasicInfoContent() {
     payment: '',
     features: '',
     accessInfo: '',
-    reservationUrl: '',
-    googleRating: '',
-    tabelogRating: ''
+    reservationUrl: ''
   })
 
   const [isSaving, setIsSaving] = useState(false)
@@ -100,9 +98,7 @@ function BasicInfoContent() {
         payment: restaurantData.payment_methods || '',
         features: restaurantData.attention_in_detail || '',
         accessInfo: restaurantData.access_info || '',
-        reservationUrl: restaurantData.reservation_url || '',
-        googleRating: restaurantData.google_rating ? String(restaurantData.google_rating) : '',
-        tabelogRating: restaurantData.tabelog_rating ? String(restaurantData.tabelog_rating) : ''
+        reservationUrl: restaurantData.reservation_url || ''
       })
     } catch (error) {
       console.error('Failed to fetch restaurant:', error)
@@ -158,8 +154,6 @@ function BasicInfoContent() {
       addIfPresent('payment_methods', formData.payment)
       addIfPresent('access_info', formData.accessInfo)
       addIfPresent('reservation_url', formData.reservationUrl)
-      addIfPresent('google_rating', formData.googleRating)
-      addIfPresent('tabelog_rating', formData.tabelogRating)
       addIfPresent('instagram_url', formData.instagramUrl)
       addIfPresent('tabelog_url', formData.tabelogUrl)
       addIfPresent('gurunavi_url', formData.gurunaviUrl)
@@ -244,8 +238,6 @@ function BasicInfoContent() {
           features: toStr(info.features) || prev.features,
           accessInfo: toStr(info.access) || prev.accessInfo,
           reservationUrl: toStr(info.reservation_url) || prev.reservationUrl,
-          googleRating: info.google_rating ? String(info.google_rating) : prev.googleRating,
-          tabelogRating: info.tabelog_rating ? String(info.tabelog_rating) : prev.tabelogRating,
           instagramUrl: toStr(info.instagram_url) || prev.instagramUrl,
           tabelogUrl: toStr(info.tabelog_url) || prev.tabelogUrl,
           gurunaviUrl: toStr(info.gurunavi_url) || prev.gurunaviUrl,
@@ -311,8 +303,6 @@ function BasicInfoContent() {
           features: toStr(info.features) || prev.features,
           accessInfo: toStr(info.access) || prev.accessInfo,
           reservationUrl: toStr(info.reservation_url) || prev.reservationUrl,
-          googleRating: info.google_rating ? String(info.google_rating) : prev.googleRating,
-          tabelogRating: info.tabelog_rating ? String(info.tabelog_rating) : prev.tabelogRating,
           instagramUrl: toStr(info.instagram_url) || prev.instagramUrl,
           tabelogUrl: toStr(info.tabelog_url) || prev.tabelogUrl,
           gurunaviUrl: toStr(info.gurunavi_url) || prev.gurunaviUrl,
@@ -355,9 +345,14 @@ function BasicInfoContent() {
               {/* Section 1: 基本情報 */}
               <div className="section-card">
 
-                <FormField label="レストラン名" required>
-                  <FormInput type="text" name="storeName" value={formData.storeName} onChange={handleChange} />
-                </FormField>
+                <FormGrid cols={2}>
+                  <FormField label="レストラン名" required>
+                    <FormInput type="text" name="storeName" value={formData.storeName} onChange={handleChange} />
+                  </FormField>
+                  <FormField label="公式HP">
+                    <FormInput type="url" name="officialWebsite" placeholder="https://..." value={formData.officialWebsite} onChange={handleChange} />
+                  </FormField>
+                </FormGrid>
 
                 <FormGrid cols={2}>
                   <FormField label="電話番号">
@@ -460,14 +455,11 @@ function BasicInfoContent() {
                 </FormField>
               </div>
 
-              {/* Section 4: 外部リンク・評価 */}
+              {/* Section 4: 外部リンク */}
               <div className="section-card">
-                <div className="card-title">外部リンク・評価</div>
+                <div className="card-title">外部リンク</div>
 
                 <FormGrid cols={2}>
-                  <FormField label="公式HP">
-                    <FormInput type="url" name="officialWebsite" placeholder="https://..." value={formData.officialWebsite} onChange={handleChange} />
-                  </FormField>
                   <FormField label="Googleマップ">
                     <FormInput type="url" name="googleBusinessProfile" placeholder="https://maps.google.com/..." value={formData.googleBusinessProfile} onChange={handleChange} />
                   </FormField>
@@ -479,13 +471,6 @@ function BasicInfoContent() {
                   </FormField>
                   <FormField label="Instagram">
                     <FormInput type="url" name="instagramUrl" placeholder="https://instagram.com/..." value={formData.instagramUrl} onChange={handleChange} />
-                  </FormField>
-                  <div />
-                  <FormField label="Google評価">
-                    <FormInput type="number" name="googleRating" placeholder="例: 3.8" step="0.1" min="0" max="5" value={formData.googleRating} onChange={handleChange} />
-                  </FormField>
-                  <FormField label="食べログ評価">
-                    <FormInput type="number" name="tabelogRating" placeholder="例: 3.45" step="0.01" min="0" max="5" value={formData.tabelogRating} onChange={handleChange} />
                   </FormField>
                 </FormGrid>
               </div>
