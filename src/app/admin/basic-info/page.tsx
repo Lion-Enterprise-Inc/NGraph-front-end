@@ -43,7 +43,9 @@ function BasicInfoContent() {
     payment: '',
     features: '',
     accessInfo: '',
-    reservationUrl: ''
+    reservationUrl: '',
+    companyName: '',
+    representativeName: ''
   })
 
   const [isSaving, setIsSaving] = useState(false)
@@ -95,7 +97,9 @@ function BasicInfoContent() {
         payment: restaurantData.payment_methods || '',
         features: restaurantData.attention_in_detail || '',
         accessInfo: restaurantData.access_info || '',
-        reservationUrl: restaurantData.reservation_url || ''
+        reservationUrl: restaurantData.reservation_url || '',
+        companyName: restaurantData.company_name || '',
+        representativeName: restaurantData.representative_name || ''
       })
     } catch (error) {
       console.error('Failed to fetch restaurant:', error)
@@ -154,6 +158,8 @@ function BasicInfoContent() {
       addIfPresent('instagram_url', formData.instagramUrl)
       addIfPresent('tabelog_url', formData.tabelogUrl)
       addIfPresent('gurunavi_url', formData.gurunaviUrl)
+      addIfPresent('company_name', formData.companyName)
+      addIfPresent('representative_name', formData.representativeName)
 
       const token = sessionStorage.getItem('access_token')
       const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://dev-backend.ngraph.jp/api'
@@ -300,6 +306,15 @@ function BasicInfoContent() {
                     ))}
                   </FormSelect>
                 </FormField>
+
+                <FormGrid cols={2}>
+                  <FormField label="運営事業者(会社名)">
+                    <FormInput type="text" name="companyName" placeholder="例: アイダプランニング株式会社" value={formData.companyName} onChange={handleChange} />
+                  </FormField>
+                  <FormField label="代表者名">
+                    <FormInput type="text" name="representativeName" placeholder="例: 林真史" value={formData.representativeName} onChange={handleChange} />
+                  </FormField>
+                </FormGrid>
 
               </div>
 
