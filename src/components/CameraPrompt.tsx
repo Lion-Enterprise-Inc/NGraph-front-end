@@ -2,35 +2,38 @@ import { Camera, UtensilsCrossed, CalendarCheck, MapPin, Clock } from 'lucide-re
 import { getUiCopy } from '../i18n/uiCopy'
 import { useAppContext } from './AppProvider'
 
-const STORE_GREETINGS: Record<string, string> = {
-  ja: 'いらっしゃいませ。\nメニューのことなら何でもAIがお答えします。',
-  en: 'Welcome.\nAsk our AI anything about the menu.',
-  ko: '어서 오세요.\n메뉴에 대해 AI가 무엇이든 답해드립니다.',
-  'zh-Hans': '欢迎光临。\n关于菜单的任何问题，AI都会为您解答。',
-  'zh-Hant': '歡迎光臨。\n關於菜單的任何問題，AI都會為您解答。',
-  es: 'Bienvenido.\nPregunta a nuestro AI sobre el menú.',
-  fr: 'Bienvenue.\nNotre IA répond à toutes vos questions sur le menu.',
-  de: 'Willkommen.\nFragen Sie unsere KI alles über die Speisekarte.',
-  it: 'Benvenuto.\nChiedi alla nostra IA qualsiasi cosa sul menu.',
-  pt: 'Bem-vindo.\nPergunte à nossa IA sobre o cardápio.',
-  ru: 'Добро пожаловать.\nСпрашивайте нашего ИИ о меню.',
-  th: 'ยินดีต้อนรับ\nสอบถาม AI เกี่ยวกับเมนูได้เลย',
-  vi: 'Xin chào.\nHãy hỏi AI bất cứ điều gì về thực đơn.',
-  id: 'Selamat datang.\nTanyakan apa saja tentang menu kepada AI kami.',
-  ms: 'Selamat datang.\nTanya AI kami apa sahaja tentang menu.',
-  ar: 'أهلاً وسهلاً\nاسأل الذكاء الاصطناعي عن أي شيء في القائمة',
-  hi: 'स्वागत है।\nमेनू के बारे में AI से कुछ भी पूछें।',
-  tr: 'Hoş geldiniz.\nMenü hakkında AI\'mıza her şeyi sorabilirsiniz.',
-  bn: 'স্বাগতম।\nমেনু সম্পর্কে AI-কে যেকোনো কিছু জিজ্ঞাসা করুন।',
-  my: 'ကြိုဆိုပါသည်။\nမီနူးအကြောင်း AI ကို မေးနိုင်ပါသည်။',
-  tl: 'Maligayang pagdating.\nItanong sa aming AI ang anumang bagay tungkol sa menu.',
-  lo: 'ຍິນດີຕ້ອນຮັບ\nຖາມ AI ກ່ຽວກັບເມນູໄດ້ເລີຍ',
-  km: 'សូមស្វាគមន៍។\nសួរ AI អំពីម៉ឺនុយបាន។',
-  ne: 'स्वागत छ।\nमेनूको बारेमा AI लाई जे पनि सोध्नुहोस्।',
-  mn: 'Тавтай морил.\nЦэсний тухай AI-аас юу ч асуугаарай.',
-  fa: 'خوش آمدید.\nهر سوالی درباره منو دارید از هوش مصنوعی بپرسید.',
-  uk: 'Ласкаво просимо.\nЗапитайте нашого ШІ про меню.',
-  pl: 'Witamy.\nZapytaj naszą AI o cokolwiek z menu.',
+const buildStoreGreeting = (lang: string, store: string): string => {
+  const templates: Record<string, string> = {
+    ja: `いらっしゃいませ。\n${store} AI が何でもお答えします。`,
+    en: `Welcome.\nAsk ${store} AI anything.`,
+    ko: `어서 오세요.\n${store} AI가 무엇이든 답해드립니다.`,
+    'zh-Hans': `欢迎光临。\n请向 ${store} AI 询问任何问题。`,
+    'zh-Hant': `歡迎光臨。\n請向 ${store} AI 詢問任何問題。`,
+    es: `Bienvenido.\nPregunta a ${store} AI lo que quieras.`,
+    fr: `Bienvenue.\nPosez à ${store} AI toutes vos questions.`,
+    de: `Willkommen.\nFragen Sie ${store} AI alles.`,
+    it: `Benvenuto.\nChiedi a ${store} AI qualsiasi cosa.`,
+    pt: `Bem-vindo.\nPergunte a ${store} AI qualquer coisa.`,
+    ru: `Добро пожаловать.\nЗадавайте любые вопросы ${store} AI.`,
+    th: `ยินดีต้อนรับ\nสอบถาม ${store} AI ได้ทุกเรื่อง`,
+    vi: `Xin chào.\nHỏi ${store} AI bất cứ điều gì.`,
+    id: `Selamat datang.\nTanyakan apa saja kepada ${store} AI.`,
+    ms: `Selamat datang.\nTanya ${store} AI apa sahaja.`,
+    ar: `أهلاً وسهلاً\nاسأل ${store} AI عن أي شيء`,
+    hi: `स्वागत है।\n${store} AI से कुछ भी पूछें।`,
+    tr: `Hoş geldiniz.\n${store} AI'ya her şeyi sorabilirsiniz.`,
+    bn: `স্বাগতম।\n${store} AI-কে যেকোনো কিছু জিজ্ঞাসা করুন।`,
+    my: `ကြိုဆိုပါသည်။\n${store} AI ကို မေးနိုင်ပါသည်။`,
+    tl: `Maligayang pagdating.\nMagtanong sa ${store} AI ng kahit ano.`,
+    lo: `ຍິນດີຕ້ອນຮັບ\nຖາມ ${store} AI ໄດ້ທຸກເລື່ອງ`,
+    km: `សូមស្វាគមន៍។\nសួរ ${store} AI អំពីអ្វីក៏បាន។`,
+    ne: `स्वागत छ।\n${store} AI लाई जे पनि सोध्नुहोस्।`,
+    mn: `Тавтай морил.\n${store} AI-аас юу ч асуугаарай.`,
+    fa: `خوش آمدید.\nاز ${store} AI هر سوالی بپرسید.`,
+    uk: `Ласкаво просимо.\nЗапитайте ${store} AI про що завгодно.`,
+    pl: `Witamy.\nZapytaj ${store} AI o cokolwiek.`,
+  }
+  return templates[lang] || templates.en
 }
 
 type CameraPromptProps = {
@@ -97,7 +100,7 @@ export default function CameraPrompt({
           <p className="store-home-romaji">{restaurantNameRomaji}</p>
         )}
         <p className="store-home-sub" style={{ whiteSpace: 'pre-line' }}>
-          {STORE_GREETINGS[language] || STORE_GREETINGS.en}
+          {buildStoreGreeting(language, brandName)}
         </p>
 
         {(restaurantAddress || restaurantAccess || restaurantHours) && (
@@ -167,7 +170,7 @@ export default function CameraPrompt({
         <p className="store-home-romaji">{restaurantNameRomaji}</p>
       )}
       <p className="store-home-sub" style={{ whiteSpace: 'pre-line' }}>
-        {restaurantName ? (STORE_GREETINGS[language] || STORE_GREETINGS.en) : sub}
+        {restaurantName ? (buildStoreGreeting(language, brandName)) : sub}
       </p>
     </div>
   )
