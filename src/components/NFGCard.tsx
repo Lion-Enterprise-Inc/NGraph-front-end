@@ -177,33 +177,6 @@ export default function NFGCard({
           <div key={idx} className={`nfgcard${open ? ' nfgcard-open' : ''}`} data-nfg-code={item.nfg_code || undefined} onClick={() => toggle(idx)}>
             {/* Header */}
             <div className="nfgcard-header">
-              {(() => {
-                const CATEGORY_ICONS: Record<string, string> = {
-                  drink: '🍶', sake: '🍶', beer: '🍺', wine: '🍷', whisky: '🥃',
-                  highball: '🥃', sour: '🍸', shochu: '🍶', fruit_wine: '🍷', soft_drink: '🥤',
-                  rice: '🍚', bento: '🍱', course: '🍽️', main: '🍽️',
-                  dessert: '🍰', appetizer: '🥗', other: '🍴',
-                };
-                const cat = (item.category || '').toLowerCase();
-                const icon = CATEGORY_ICONS[cat] || '🍴';
-                if (item.image_url) {
-                  return (
-                    <button
-                      type="button"
-                      className="nfgcard-thumb"
-                      onClick={(e) => { e.stopPropagation(); setLightboxUrl(item.image_url!); }}
-                      aria-label="画像を拡大"
-                    >
-                      <img src={item.image_url} alt={item.name_jp} loading="lazy" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-                    </button>
-                  );
-                }
-                return (
-                  <div className="nfgcard-thumb nfgcard-thumb-placeholder" aria-hidden="true">
-                    <span className="nfgcard-thumb-icon">{icon}</span>
-                  </div>
-                );
-              })()}
               <div className="nfgcard-header-left">
                 <div className="nfgcard-name">
                   <span className="nfgcard-number">{idx + 1}.</span>
@@ -222,6 +195,16 @@ export default function NFGCard({
                 )}
                 {item.is_new && (
                   <span className="nfgcard-badge nfgcard-badge-new">{copy.newItem}</span>
+                )}
+                {item.image_url && (
+                  <button
+                    type="button"
+                    className="nfgcard-thumb-mini"
+                    onClick={(e) => { e.stopPropagation(); setLightboxUrl(item.image_url!); }}
+                    aria-label="画像を拡大"
+                  >
+                    <img src={item.image_url} alt="" loading="lazy" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                  </button>
                 )}
               </div>
             </div>
