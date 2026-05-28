@@ -34,7 +34,6 @@ function BasicInfoContent() {
     instagramUrl: '',
     tabelogUrl: '',
     gurunaviUrl: '',
-    menuScrapingUrl: '',
     description: '',
     businessHours: '',
     holidays: '',
@@ -48,7 +47,6 @@ function BasicInfoContent() {
   })
 
   const [isSaving, setIsSaving] = useState(false)
-  const [isScraping, setIsScraping] = useState(false)
   const [isSearching, setIsSearching] = useState(false)
 
   const toast = useToast()
@@ -88,7 +86,6 @@ function BasicInfoContent() {
         instagramUrl: restaurantData.instagram_url || restaurantData.other_sources || '',
         tabelogUrl: restaurantData.tabelog_url || '',
         gurunaviUrl: restaurantData.gurunavi_url || '',
-        menuScrapingUrl: '',
         description: restaurantData.store_introduction || '',
         businessHours: restaurantData.opening_hours || '',
         holidays: restaurantData.holidays || '',
@@ -184,74 +181,6 @@ function BasicInfoContent() {
       toast('error', `保存に失敗しました: ${error instanceof Error ? error.message : 'Unknown error'}`)
     } finally {
       setIsSaving(false)
-    }
-  }
-
-  const handleScrapeInfo = async (withMenus: boolean = false) => {
-    if (!restaurant) return
-
-    const urls = [formData.menuScrapingUrl, formData.officialWebsite, formData.tabelogUrl, formData.gurunaviUrl, formData.instagramUrl].filter(u => u.trim())
-    if (urls.length === 0) {
-      toast('warning', 'URLを1つ以上入力してください')
-      return
-    }
-
-    setIsScraping(true)
-    try {
-      const token = sessionStorage.getItem('access_token')
-      const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://dev-backend.ngraph.jp/api'
-
-      const res = await fetch(`${apiBaseUrl}/restaurants/${restaurant.uid}/scrape-info`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ urls, scrape_menus: withMenus })
-      })
-
-      if (!res.ok) throw new Error(`HTTP ${res.status}`)
-
-      const data = await res.json()
-      const info = data.result?.store_info
-
-      if (info) {
-        const toStr = (v: any): string => {
-          if (v == null) return ''
-          if (typeof v === 'string') return v
-          if (Array.isArray(v)) return v.join('、')
-          if (typeof v === 'object') return Object.entries(v).map(([k, val]) => Array.isArray(val) ? `${k}: ${val.join(', ')}` : `${k}: ${val}`).join(' / ')
-          return String(v)
-        }
-        setFormData(prev => ({
-          ...prev,
-          storeName: toStr(info.name) || prev.storeName,
-          phone: toStr(info.phone) || prev.phone,
-          address: toStr(info.address) || prev.address,
-          description: toStr(info.description) || prev.description,
-          businessHours: toStr(info.business_hours) || prev.businessHours,
-          holidays: toStr(info.holidays) || prev.holidays,
-          seats: toStr(info.seats) || prev.seats,
-          budget: toStr(info.budget) || prev.budget,
-          parking: toStr(info.parking) || prev.parking,
-          payment: toStr(info.payment) || prev.payment,
-          features: toStr(info.features) || prev.features,
-          accessInfo: toStr(info.access) || prev.accessInfo,
-          reservationUrl: toStr(info.reservation_url) || prev.reservationUrl,
-          instagramUrl: toStr(info.instagram_url) || prev.instagramUrl,
-          tabelogUrl: toStr(info.tabelog_url) || prev.tabelogUrl,
-          gurunaviUrl: toStr(info.gurunavi_url) || prev.gurunaviUrl,
-          officialWebsite: toStr(info.official_website) || prev.officialWebsite,
-          googleBusinessProfile: toStr(info.google_business_profile) || prev.googleBusinessProfile,
-        }))
-
-        toast('success', `情報を取得しました。内容を確認して保存してください。${withMenus && data.result?.menu_scrape ? ` メニュー: ${data.result.menu_scrape.items_saved || 0}件登録` : ''}`)
-      }
-    } catch (error) {
-      console.error('Scrape failed:', error)
-      toast('error', `情報の取得に失敗しました: ${error instanceof Error ? error.message : 'Unknown error'}`)
-    } finally {
-      setIsScraping(false)
     }
   }
 
@@ -380,39 +309,22 @@ function BasicInfoContent() {
                 <p style={{ color: '#94A3B8', marginBottom: '16px', fontSize: '13px' }}>
                   店名で検索すると、食べログ・Googleマップ・公式HPなどから情報を自動取得します
                 </p>
-                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '20px' }}>
+                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
                   <button
                     className="btn btn-primary"
                     onClick={() => handleSearchInfo(false)}
-                    disabled={isSearching || isScraping}
+                    disabled={isSearching}
                   >
                     {isSearching ? '検索中...' : '店名で情報を検索'}
                   </button>
                   <button
                     className="btn btn-secondary"
                     onClick={() => handleSearchInfo(true)}
-                    disabled={isSearching || isScraping}
+                    disabled={isSearching}
                   >
                     {isSearching ? '検索中...' : 'メニューも一緒に検索'}
                   </button>
                 </div>
-
-                <details style={{ marginBottom: '16px' }}>
-                  <summary style={{ cursor: 'pointer', color: '#94A3B8', fontSize: '13px' }}>URL指定で取得（従来方式）</summary>
-                  <div style={{ padding: '12px 0' }}>
-                    <FormField label="情報取得用URL">
-                      <FormInput type="url" name="menuScrapingUrl" placeholder="https://tabelog.com/..." value={formData.menuScrapingUrl} onChange={handleChange} />
-                    </FormField>
-                    <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-                      <button className="btn btn-secondary" onClick={() => handleScrapeInfo(false)} disabled={isScraping || isSearching}>
-                        {isScraping ? '取得中...' : 'URLから店舗情報を取得'}
-                      </button>
-                      <button className="btn btn-secondary" onClick={() => handleScrapeInfo(true)} disabled={isScraping || isSearching}>
-                        {isScraping ? '取得中...' : 'URLからメニューも取得'}
-                      </button>
-                    </div>
-                  </div>
-                </details>
               </div>
 
               {/* Section 3: 詳細情報 */}
