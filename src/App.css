@@ -7686,6 +7686,15 @@ textarea.form-input {
   font-weight: 600;
   color: var(--color-text);
   line-height: 1.3;
+  word-break: keep-all;
+  line-break: strict;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 480px) {
+  .nfgcard-name {
+    font-size: 14px;
+  }
 }
 .nfgcard-number {
   color: #888;
