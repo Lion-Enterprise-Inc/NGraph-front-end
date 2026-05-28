@@ -172,7 +172,7 @@ export default function ChatDock({
             placeholder={suggestion}
             aria-label={copy.chat.messageInput}
             value={message}
-            rows={2}
+            rows={1}
             enterKeyHint="send"
             autoComplete="off"
             onFocus={onFocus}
