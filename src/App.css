@@ -755,12 +755,12 @@ body {
 .capture-page.is-hero-landing .store-home {
   position: fixed;
   left: 50%;
-  bottom: 56vh;
+  bottom: 58vh;
   transform: translateX(-50%);
   z-index: 5;
   width: 100%;
   max-width: 760px;
-  padding: 0 20px;
+  padding: 0 20px 16px;
   margin: 0;
   box-sizing: border-box;
 }
