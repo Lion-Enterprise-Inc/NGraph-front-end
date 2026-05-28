@@ -862,6 +862,18 @@ body {
   }
 }
 
+/* AI 安全注意 (アレルギー/宗教制約) — Claude/Gemini/ChatGPT 並みの位置・サイズ */
+.chat-dock-safety {
+  width: 100%;
+  margin: 6px 0 0;
+  padding: 0 8px;
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--color-text-muted, rgba(255, 255, 255, 0.45));
+  text-align: center;
+  box-sizing: border-box;
+}
+
 .explore-title,
 .capture-title {
   margin: 0;

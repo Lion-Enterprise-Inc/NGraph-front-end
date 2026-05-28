@@ -33,6 +33,37 @@ type ChatDockProps = {
   onRemoveAttachment?: () => void;
 };
 
+const SAFETY_NOTICE: Record<string, string> = {
+  ja: 'アレルギー・宗教上の制約など重要なご質問は、必ずスタッフにご確認ください。',
+  en: 'For allergies and religious or dietary restrictions, please always confirm with our staff.',
+  ko: '알레르기·종교적 제약 등 중요한 사항은 반드시 직원에게 확인해 주세요.',
+  'zh-Hans': '关于过敏、宗教或饮食限制等重要事项，请务必向工作人员确认。',
+  'zh-Hant': '關於過敏、宗教或飲食限制等重要事項，請務必向工作人員確認。',
+  es: 'Para alergias y restricciones religiosas o dietéticas, confirme siempre con nuestro personal.',
+  fr: 'Pour les allergies et les restrictions religieuses ou alimentaires, veuillez toujours confirmer auprès de notre personnel.',
+  de: 'Bei Allergien sowie religiösen oder diätetischen Einschränkungen bitte immer das Personal fragen.',
+  it: 'Per allergie e restrizioni religiose o alimentari, confermare sempre con il nostro personale.',
+  pt: 'Para alergias e restrições religiosas ou dietéticas, confirme sempre com nossa equipe.',
+  ru: 'По вопросам аллергии и религиозных или диетических ограничений всегда уточняйте у персонала.',
+  th: 'กรุณายืนยันกับพนักงานเสมอเกี่ยวกับอาการแพ้และข้อจำกัดทางศาสนาหรืออาหาร',
+  vi: 'Đối với dị ứng và hạn chế tôn giáo hoặc ăn uống, vui lòng luôn xác nhận với nhân viên.',
+  id: 'Untuk alergi dan pembatasan agama atau makanan, harap selalu konfirmasi dengan staf kami.',
+  ms: 'Untuk alahan dan sekatan agama atau pemakanan, sila sentiasa sahkan dengan kakitangan kami.',
+  ar: 'للحساسية والقيود الدينية أو الغذائية، يرجى دائمًا التأكيد مع موظفينا.',
+  hi: 'एलर्जी और धार्मिक या आहार संबंधी प्रतिबंधों के लिए कृपया हमेशा हमारे स्टाफ से पुष्टि करें।',
+  tr: 'Alerji ve dini veya beslenme kısıtlamaları için lütfen her zaman personelimize teyit ettirin.',
+  bn: 'অ্যালার্জি এবং ধর্মীয় বা খাদ্য সংক্রান্ত বিধিনিষেধের জন্য, অনুগ্রহ করে আমাদের কর্মীদের সাথে নিশ্চিত করুন।',
+  my: 'ဓာတ်မတည့်မှုနှင့် ဘာသာရေး သို့မဟုတ် အစားအသောက်ဆိုင်ရာ ကန့်သတ်ချက်များအတွက် ဝန်ထမ်းနှင့် မေးမြန်းပါ။',
+  tl: 'Para sa mga allergy at relihiyoso o dietary na paghihigpit, mangyaring laging kumpirmahin sa aming staff.',
+  lo: 'ສຳລັບການແພ້ ແລະ ຂໍ້ຈຳກັດທາງສາສະໜາ ຫຼື ອາຫານ ກະລຸນາຢືນຢັນກັບພະນັກງານສະເໝີ.',
+  km: 'សម្រាប់ការមិនទទួលរ៉ាបាន និងការដាក់កម្រិតផ្នែកសាសនា ឬអាហារ សូមបញ្ជាក់ជានិច្ចជាមួយបុគ្គលិករបស់យើង។',
+  ne: 'एलर्जी र धार्मिक वा आहार सम्बन्धी प्रतिबन्धहरूको लागि कृपया हाम्रो स्टाफसँग सधैं पुष्टि गर्नुहोस्।',
+  mn: 'Харшил, шашин эсвэл хооллолтын хязгаарлалтын талаар ажилтнаас үргэлж лавлана уу.',
+  fa: 'برای آلرژی و محدودیت‌های مذهبی یا غذایی، لطفاً همیشه با کارکنان ما تأیید کنید.',
+  uk: 'Щодо алергії та релігійних чи дієтичних обмежень завжди уточнюйте у нашого персоналу.',
+  pl: 'W przypadku alergii oraz ograniczeń religijnych lub dietetycznych zawsze potwierdzaj z naszym personelem.',
+};
+
 export default function ChatDock({
   message,
   suggestion,
@@ -315,6 +346,10 @@ export default function ChatDock({
           </div>
         </div>
       )}
+
+      <p className="chat-dock-safety">
+        {SAFETY_NOTICE[language] || SAFETY_NOTICE.en}
+      </p>
 
       <div
         ref={measureRef}
