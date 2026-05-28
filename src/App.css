@@ -7376,6 +7376,21 @@ textarea.form-input {
   object-fit: contain;
   display: block;
 }
+.nfgcard-thumb-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: default;
+  opacity: 0.5;
+}
+.nfgcard-thumb-placeholder:hover {
+  transform: none;
+  box-shadow: none;
+}
+.nfgcard-thumb-icon {
+  font-size: 28px;
+  line-height: 1;
+}
 .nfgcard-lightbox {
   position: fixed;
   inset: 0;
