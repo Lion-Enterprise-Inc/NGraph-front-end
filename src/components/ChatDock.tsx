@@ -350,6 +350,7 @@ export default function ChatDock({
       <p className="chat-dock-safety">
         {SAFETY_NOTICE[language] || SAFETY_NOTICE.en}
       </p>
+      <p className="chat-dock-powered-by">Powered by OMISEAI</p>
 
       <div
         ref={measureRef}

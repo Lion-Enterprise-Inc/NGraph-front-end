@@ -881,6 +881,18 @@ body {
   box-sizing: border-box;
 }
 
+.chat-dock-powered-by {
+  width: 100%;
+  margin: 2px 0 0;
+  padding: 0 8px;
+  font-family: Inter, -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 9.5px;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.28);
+  text-align: center;
+  box-sizing: border-box;
+}
+
 .explore-title,
 .capture-title {
   margin: 0;
@@ -1234,6 +1246,7 @@ body {
 .chat-dock.chat-dock-floating > .chat-dock-row,
 .chat-dock.chat-dock-floating > .chat-dock-hero,
 .chat-dock.chat-dock-floating > .chat-dock-safety,
+.chat-dock.chat-dock-floating > .chat-dock-powered-by,
 .chat-dock.chat-dock-floating > .attachment-pill {
   max-width: 760px;
   margin-left: auto;
@@ -6161,6 +6174,16 @@ textarea.form-input {
 .sidebar-text-logo {
   height: 36px;
   width: auto;
+}
+
+.sidebar-omiseai-logo {
+  font-family: Inter, -apple-system, BlinkMacSystemFont, sans-serif;
+  font-weight: 700;
+  font-size: 18px;
+  letter-spacing: 0.08em;
+  color: var(--color-text);
+  line-height: 1;
+  user-select: none;
 }
 
 .sidebar-explore-btn {
