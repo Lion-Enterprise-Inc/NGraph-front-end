@@ -165,7 +165,7 @@ function BasicInfoContent() {
       addIfPresent('gurunavi_url', formData.gurunaviUrl)
 
       const token = sessionStorage.getItem('access_token')
-      const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://15.207.22.103:8000'
+      const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://dev-backend.ngraph.jp/api'
 
       const response = await fetch(`${apiBaseUrl}/restaurants/${restaurant.uid}`, {
         method: 'PUT',
@@ -205,7 +205,7 @@ function BasicInfoContent() {
     setIsScraping(true)
     try {
       const token = sessionStorage.getItem('access_token')
-      const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://15.207.22.103:8000'
+      const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://dev-backend.ngraph.jp/api'
 
       const res = await fetch(`${apiBaseUrl}/restaurants/${restaurant.uid}/scrape-info`, {
         method: 'POST',
@@ -269,7 +269,7 @@ function BasicInfoContent() {
     setIsSearching(true)
     try {
       const token = sessionStorage.getItem('access_token')
-      const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://15.207.22.103:8000'
+      const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://dev-backend.ngraph.jp/api'
 
       const res = await fetch(`${apiBaseUrl}/restaurants/${restaurant.uid}/search-info`, {
         method: 'POST',

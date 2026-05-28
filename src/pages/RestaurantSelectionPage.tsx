@@ -33,7 +33,7 @@ export default function RestaurantSelectionPage({
   useEffect(() => {
     const fetchRestaurants = async () => {
       try {
-        const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://15.207.22.103:8000'
+        const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://dev-backend.ngraph.jp'
         const response = await fetch(`${apiBaseUrl}/api/restaurants/?page=1&size=10`)
         if (!response.ok) {
           throw new Error('Failed to fetch restaurants')
