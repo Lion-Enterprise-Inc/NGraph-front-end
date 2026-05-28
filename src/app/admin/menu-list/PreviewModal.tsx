@@ -9,6 +9,7 @@ interface PreviewModalProps {
   onClose: () => void
   item: MenuItem | null
   onEdit: (item: MenuItem) => void
+  onApprove?: (item: MenuItem) => Promise<void> | void
 }
 
 const NARRATIVE_LABELS: Record<string, string> = {
@@ -108,14 +109,14 @@ function TasteRadar({ profiles }: { profiles: Array<{ uid: string; name_jp: stri
   )
 }
 
-export default function PreviewModal({ isOpen, onClose, item, onEdit }: PreviewModalProps) {
+export default function PreviewModal({ isOpen, onClose, item, onEdit, onApprove }: PreviewModalProps) {
   if (!isOpen || !item) return null
 
   const confidence = item.confidenceScore
   const confidenceColor = confidence >= 75 ? '#10B981' : confidence >= 50 ? '#F59E0B' : '#EF4444'
   const rank = item.verificationRank
-  const rankColor = rank === 'S' ? '#EF4444' : rank === 'A' ? '#F59E0B' : rank === 'B' ? '#3B82F6' : rank === 'C' ? '#10B981' : '#64748B'
-  const rankLabel = rank === 'S' ? '要確認' : rank === 'A' ? '要確認' : rank === 'B' ? '確認推奨' : rank === 'C' ? '確認不要' : '未判定'
+  const rankColor = rank === 'S' ? '#10B981' : rank === 'A' ? '#10B981' : rank === 'B' ? '#3B82F6' : rank === 'C' ? '#F59E0B' : '#64748B'
+  const rankLabel = rank === 'S' ? '店主確認済' : rank === 'A' ? '一次ソース' : rank === 'B' ? '確認推奨' : rank === 'C' ? 'AI推定' : '未判定'
 
   const narrative = item.narrative || {}
   const serving = item.serving || {}
@@ -163,22 +164,30 @@ export default function PreviewModal({ isOpen, onClose, item, onEdit }: PreviewM
           )}
           <div style={{ flex: 1 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-              <span style={{ fontSize: 13, color: '#94A3B8' }}>データ完成度</span>
+              <span style={{ fontSize: 13, color: '#94A3B8' }} title="フィールド数の埋まり具合。信頼度(S/A/B/C)とは別軸。">データ完成度</span>
               <span style={{ fontSize: 15, fontWeight: 700, color: confidenceColor }}>{confidence}%</span>
             </div>
             <div style={{ height: 6, background: '#1E293B', borderRadius: 3, overflow: 'hidden' }}>
               <div style={{ height: '100%', width: `${confidence}%`, background: confidenceColor, borderRadius: 3 }} />
             </div>
+            {item.verifiedAt && (
+              <div style={{ fontSize: 11, color: '#94A3B8', marginTop: 6 }}>
+                {new Date(item.verifiedAt).toLocaleDateString('ja-JP')} 承認
+                {item.verifiedBy && <span style={{ marginLeft: 6 }}>by {item.verifiedBy.slice(0, 8)}…</span>}
+              </div>
+            )}
           </div>
           <div style={{ fontSize: 11, color: '#94A3B8', textAlign: 'right' }}>
             {item.dataSource === 'owner_verified' ? (
               <span style={{ color: '#10B981' }}>店主確認済み</span>
+            ) : item.dataSource === 'official_published' ? (
+              <span style={{ color: '#10B981' }}>公式一次ソース</span>
             ) : item.dataSource === 'ai_inferred' ? (
               <span style={{ color: '#F59E0B' }}>AI推定</span>
             ) : (
               <span>{item.dataSource || '未分類'}</span>
             )}
-            {item.status && <div style={{ color: '#10B981', marginTop: 2 }}>承認済み</div>}
+            {item.status && <div style={{ color: '#10B981', marginTop: 2 }}>公開中</div>}
           </div>
         </div>
 
@@ -294,10 +303,24 @@ export default function PreviewModal({ isOpen, onClose, item, onEdit }: PreviewM
         )}
 
         {/* Actions */}
-        <div style={{ display: 'flex', gap: 8, paddingTop: 16, borderTop: '1px solid var(--border)' }}>
+        <div style={{ display: 'flex', gap: 8, paddingTop: 16, borderTop: '1px solid var(--border)', flexWrap: 'wrap' }}>
           <button className="btn btn-primary" onClick={() => { onClose(); onEdit(item); }}>
-            編集する
+            ✏️ 編集する
           </button>
+          {onApprove && rank !== 'S' && (
+            <button
+              className="btn btn-approve"
+              onClick={async () => {
+                if (confirm(`「${item.name}」を店主確認済みとして承認しますか？`)) {
+                  await onApprove(item);
+                  onClose();
+                }
+              }}
+              title="このデータを店主が確認したものとして verification_rank=S に昇格"
+            >
+              ✅ 店主確認済みにする
+            </button>
+          )}
           <button className="btn btn-secondary" onClick={onClose}>
             閉じる
           </button>
@@ -376,6 +399,15 @@ export default function PreviewModal({ isOpen, onClose, item, onEdit }: PreviewM
 
         .btn-secondary:hover {
           background: #475569;
+        }
+
+        .btn-approve {
+          background: #10B981;
+          color: white;
+        }
+
+        .btn-approve:hover {
+          background: #059669;
         }
 
         @media (max-width: 640px) {

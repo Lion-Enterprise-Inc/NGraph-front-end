@@ -29,12 +29,15 @@ export interface MenuItem {
   dataSource: string | null
   narrative: Record<string, any> | null
   serving: Record<string, any> | null
+  drinkMeta: Record<string, any> | null
   priceDetail: Record<string, any> | null
   tasteProfiles: Array<{ uid: string; name_jp: string }> | null
   imageUrl: string | null
   productUrl: string | null
   featuredTags: string[] | null
   createdAt: string | null
+  verifiedAt: string | null
+  verifiedBy: string | null
 }
 
 export default function MenuListPage() {
@@ -289,12 +292,15 @@ function MenuListContent() {
             dataSource: menu.data_source || null,
             narrative: menu.narrative || null,
             serving: menu.serving || null,
+            drinkMeta: (menu as any).drink_meta || null,
             priceDetail: menu.price_detail || null,
             tasteProfiles: menu.taste_profiles || null,
             imageUrl: menu.image_url || null,
             productUrl: menu.product_url || null,
             featuredTags: menu.featured_tags || null,
-            createdAt: menu.created_at || null
+            createdAt: menu.created_at || null,
+            verifiedAt: (menu as any).verified_at || null,
+            verifiedBy: (menu as any).verified_by || null
           }))
           setMenuItems(menus)
 
@@ -650,6 +656,21 @@ function MenuListContent() {
     }
   }
 
+  const handleOwnerVerify = async (item: MenuItem) => {
+    // 店主が「データを確認した」承認: verification_rank=S + data_source=owner_verified に昇格
+    try {
+      await MenuApi.update(item.uid, {
+        verification_rank: 'S',
+        data_source: 'owner_verified',
+      } as any)
+      await refreshMenus()
+      toast('success', `「${item.name}」を店主確認済みにしました`)
+    } catch (err) {
+      console.error('Failed to verify menu:', err)
+      toast('error', '店主確認の登録に失敗しました')
+    }
+  }
+
   const handleToggleStatus = async (uid: string, newStatus: boolean) => {
     try {
       await MenuApi.update(uid, { status: newStatus })
@@ -848,6 +869,7 @@ function MenuListContent() {
         onClose={() => setShowPreviewModal(false)}
         item={previewItem}
         onEdit={handleEdit}
+        onApprove={handleOwnerVerify}
       />
 
       <UploadSection
