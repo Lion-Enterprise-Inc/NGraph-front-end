@@ -1707,7 +1707,7 @@ export default function CapturePage({
     );
   }
 
-  const isHeroLanding = responses.length === 0 && !loading;
+  const isHeroLanding = responses.length === 0 && !loading && !attachment;
 
   return (
     <div
