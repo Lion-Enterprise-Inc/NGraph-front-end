@@ -175,7 +175,7 @@ export default function NFGCard({
 
         return (
           <div key={idx} className={`nfgcard${open ? ' nfgcard-open' : ''}`} data-nfg-code={item.nfg_code || undefined} onClick={() => toggle(idx)}>
-            {/* Header */}
+            {/* Header: title takes max width, thumb only on right */}
             <div className="nfgcard-header">
               <div className="nfgcard-header-left">
                 <div className="nfgcard-name">
@@ -184,41 +184,40 @@ export default function NFGCard({
                 </div>
                 {subName && <div className="nfgcard-subname">{subName}</div>}
               </div>
-              <div className="nfgcard-header-right">
-                <div className="nfgcard-badges">
-                  {item.menu_uid && onLike && (
-                    <button
-                      type="button"
-                      className={`nfgcard-like-btn${liked ? ' liked' : ''}`}
-                      onClick={(e) => { e.stopPropagation(); onLike(item.menu_uid!); }}
-                      aria-label={liked ? 'Unlike' : 'Like'}
-                    >
-                      {liked ? '♥' : '♡'}
-                    </button>
-                  )}
-                  {item.category && item.category !== 'bento' && (
-                    <span className="nfgcard-badge nfgcard-badge-category">{item.category}</span>
-                  )}
-                  {isDb ? (
-                    <span className="nfgcard-badge nfgcard-badge-verified">{copy.verified}</span>
-                  ) : (
-                    <span className="nfgcard-badge nfgcard-badge-ai">{copy.aiEstimate}</span>
-                  )}
-                  {item.is_new && (
-                    <span className="nfgcard-badge nfgcard-badge-new">{copy.newItem}</span>
-                  )}
-                </div>
-                {item.image_url && (
-                  <button
-                    type="button"
-                    className="nfgcard-thumb-mini"
-                    onClick={(e) => { e.stopPropagation(); setLightboxUrl(item.image_url!); }}
-                    aria-label="画像を拡大"
-                  >
-                    <img src={item.image_url} alt="" loading="lazy" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-                  </button>
-                )}
-              </div>
+              {item.image_url && (
+                <button
+                  type="button"
+                  className="nfgcard-thumb-mini"
+                  onClick={(e) => { e.stopPropagation(); setLightboxUrl(item.image_url!); }}
+                  aria-label="画像を拡大"
+                >
+                  <img src={item.image_url} alt="" loading="lazy" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                </button>
+              )}
+            </div>
+            {/* Badges row below title (full width) */}
+            <div className="nfgcard-badges">
+              {item.menu_uid && onLike && (
+                <button
+                  type="button"
+                  className={`nfgcard-like-btn${liked ? ' liked' : ''}`}
+                  onClick={(e) => { e.stopPropagation(); onLike(item.menu_uid!); }}
+                  aria-label={liked ? 'Unlike' : 'Like'}
+                >
+                  {liked ? '♥' : '♡'}
+                </button>
+              )}
+              {item.category && item.category !== 'bento' && (
+                <span className="nfgcard-badge nfgcard-badge-category">{item.category}</span>
+              )}
+              {isDb ? (
+                <span className="nfgcard-badge nfgcard-badge-verified">{copy.verified}</span>
+              ) : (
+                <span className="nfgcard-badge nfgcard-badge-ai">{copy.aiEstimate}</span>
+              )}
+              {item.is_new && (
+                <span className="nfgcard-badge nfgcard-badge-new">{copy.newItem}</span>
+              )}
             </div>
             {item.nfg_code && (
               <div className="nfgcard-action-row">

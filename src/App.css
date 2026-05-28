@@ -7672,8 +7672,9 @@ textarea.form-input {
 .nfgcard-badges {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: 4px;
-  flex-shrink: 0;
+  margin-top: 8px;
 }
 .nfgcard-action-row {
   display: flex;
@@ -7689,12 +7690,6 @@ textarea.form-input {
   word-break: keep-all;
   line-break: strict;
   overflow-wrap: anywhere;
-}
-
-@media (max-width: 480px) {
-  .nfgcard-name {
-    font-size: 14px;
-  }
 }
 .nfgcard-number {
   color: #888;
