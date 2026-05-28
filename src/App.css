@@ -662,9 +662,9 @@ body {
 .capture-header {
   background: var(--color-bg, #0d0d0d);
   width: 100%;
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  justify-content: space-between;
   flex-shrink: 0;
   position: relative;
   z-index: 10;
@@ -677,15 +677,16 @@ body {
   align-items: center;
   gap: 4px;
   flex-shrink: 0;
+  justify-self: end;
 }
 
 .capture-header-center {
-  flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
   min-width: 0;
   gap: 0;
+  justify-self: center;
 }
 
 .capture-header-home {
@@ -7520,15 +7521,15 @@ textarea.form-input {
 }
 .nfgcard {
   background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.08));
   border-radius: 12px;
   padding: 12px 14px;
   cursor: pointer;
   transition: background 0.15s, border-color 0.15s;
-  color: #eee;
+  color: var(--color-text-body);
 }
 .nfgcard:hover {
-  border-color: rgba(255, 255, 255, 0.18);
+  border-color: var(--color-border-strong, rgba(255, 255, 255, 0.18));
 }
 .nfgcard-header {
   display: flex;
@@ -7621,7 +7622,7 @@ textarea.form-input {
 .nfgcard-name {
   font-size: 15px;
   font-weight: 600;
-  color: #fff;
+  color: var(--color-text);
   line-height: 1.3;
 }
 .nfgcard-number {
@@ -7632,7 +7633,7 @@ textarea.form-input {
 }
 .nfgcard-subname {
   font-size: 13px;
-  color: #ccc;
+  color: var(--color-text-secondary);
   margin-top: 2px;
 }
 .nfgcard-restaurant {
@@ -7702,13 +7703,13 @@ textarea.form-input {
 /* Description */
 .nfgcard-description {
   font-size: 14px;
-  color: #eee;
+  color: var(--color-text-body);
   margin-top: 6px;
   line-height: 1.6;
 }
 .nfgcard-description-local {
   font-size: 12px;
-  color: #ccc;
+  color: var(--color-text-secondary);
   margin-top: 3px;
   line-height: 1.5;
 }
@@ -7737,8 +7738,8 @@ textarea.form-input {
   font-size: 11px;
   padding: 3px 8px;
   border-radius: 10px;
-  background: rgba(255,255,255,0.1);
-  color: #ddd;
+  background: var(--color-surface-chip, rgba(255,255,255,0.1));
+  color: var(--color-text-body);
 }
 .nfgcard-restrictions {
   display: flex;
