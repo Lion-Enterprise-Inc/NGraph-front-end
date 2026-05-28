@@ -286,30 +286,32 @@ export default function NFGCard({
                 {SHOW_TASTE_RADAR && item.taste_values && Object.keys(item.taste_values).length > 0 && (
                   <TasteChart values={item.taste_values} labels={tasteLabels} />
                 )}
-                {item.narrative && (
+                {item.narrative && (() => {
+                  const isDrink = item.category === 'drink';
+                  return (
                   <div className="nfgcard-narrative">
                     {item.narrative.story && (
                       <div className="nfgcard-narrative-story">{item.narrative.story}</div>
                     )}
                     {item.narrative.texture && (
                       <div className="nfgcard-field">
-                        <span className="nfgcard-field-label">{copy.texture}</span>
+                        <span className="nfgcard-field-label">{isDrink ? (copy.textureDrink ?? copy.texture) : copy.texture}</span>
                         <span className="nfgcard-field-value">{item.narrative.texture}</span>
                       </div>
                     )}
                     {item.narrative.how_to_eat && (
                       <div className="nfgcard-field">
-                        <span className="nfgcard-field-label">{copy.howToEat}</span>
+                        <span className="nfgcard-field-label">{isDrink ? (copy.howToEatDrink ?? copy.howToEat) : copy.howToEat}</span>
                         <span className="nfgcard-field-value">{item.narrative.how_to_eat}</span>
                       </div>
                     )}
                     {item.narrative.pairing && (
                       <div className="nfgcard-field">
-                        <span className="nfgcard-field-label">{copy.pairing}</span>
+                        <span className="nfgcard-field-label">{isDrink ? (copy.pairingDrink ?? copy.pairing) : copy.pairing}</span>
                         <span className="nfgcard-field-value">{item.narrative.pairing}</span>
                       </div>
                     )}
-                    {item.narrative.kid_friendly != null && (
+                    {!isDrink && item.narrative.kid_friendly != null && (
                       <div className="nfgcard-field">
                         <span className="nfgcard-field-label">
                           {item.narrative.kid_friendly ? copy.kidFriendly : copy.notKidFriendly}
@@ -317,7 +319,8 @@ export default function NFGCard({
                       </div>
                     )}
                   </div>
-                )}
+                  );
+                })()}
                 {item.serving && (item.serving.style || item.serving.portion || item.serving.temperature) && (
                   <div className="nfgcard-field">
                     <span className="nfgcard-field-label">{copy.servingStyle}</span>
@@ -326,7 +329,7 @@ export default function NFGCard({
                     </span>
                   </div>
                 )}
-                {item.estimated_calories && (
+                {item.estimated_calories && item.category !== 'drink' && (
                   <div className="nfgcard-field">
                     <span className="nfgcard-field-label">{copy.calories}</span>
                     <span className="nfgcard-field-value">{item.estimated_calories}</span>
