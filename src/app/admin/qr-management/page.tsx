@@ -58,8 +58,9 @@ export default function QRManagementPage() {
 
     setIsGenerating(true)
     // 共有しやすさ・店名が見える透明性を優先して /capture?restaurant={slug} 形に統一
-    // (旧: clean URL / 短縮 /r/xxx は「意味不明で怖い」フィードバックを受けて廃止)
-    const url = `https://app.ngraph.jp/capture?restaurant=${encodeURIComponent(restaurantSlug.trim())}&source=qr`
+    // ?source=qr は CapturePage 側で「店内QR=メニュー直表示モード」のトリガーになるため
+    // 共有用URLでは付けない (チャットUIで起動させる)
+    const url = `https://app.ngraph.jp/capture?restaurant=${encodeURIComponent(restaurantSlug.trim())}`
     setQrCodeUrl(url)
 
     try {
