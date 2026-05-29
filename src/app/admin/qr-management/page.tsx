@@ -48,10 +48,11 @@ export default function QRManagementPage() {
       return
     }
 
-    // Validate slug format (letters, numbers, hyphens, and Unicode characters)
-    const slugPattern = /^[\w\u3000-\u303f\u3040-\u309f\u30a0-\u30ff\uff00-\uff9f\u4e00-\u9faf\u3400-\u4dbf-]+$/
+    // Validate slug format (Unicode letters/numbers, hyphens, underscores)
+    // \p{L} covers Latin Extended (\u00e9 \u00e2 \u00f1 \u00fc) + CJK + Hangul + others
+    const slugPattern = /^[\p{L}\p{N}_-]+$/u
     if (!slugPattern.test(restaurantSlug.trim())) {
-      toast('warning', 'Restaurant slug can only contain letters, numbers, hyphens, and Unicode characters')
+      toast('warning', 'Restaurant slug can only contain letters, numbers, hyphens, and underscores')
       return
     }
 
