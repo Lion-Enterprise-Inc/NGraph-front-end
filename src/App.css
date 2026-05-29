@@ -757,21 +757,10 @@ body {
 }
 
 /* Hero landing: タイポ + 入力欄を画面中央付近に近接配置 (ChatGPT スタイル) */
-/* テキスト→入力欄の距離は vh ではなく固定 px で取る (画面サイズ非依存) */
-.capture-page.is-hero-landing .chat-dock.chat-dock-floating {
-  bottom: 42vh;
-  left: 50%;
-  right: auto;
-  transform: translateX(-50%);
-  max-width: 760px;
-  padding: 0 20px;
-  background: transparent;
-}
-
 .capture-page.is-hero-landing .store-home {
   position: fixed;
   left: 50%;
-  bottom: calc(42vh + 140px); /* chat-dock の bottom + 入力欄高さ + 余白 */
+  bottom: 58vh;
   transform: translateX(-50%);
   z-index: 5;
   width: 100%;
@@ -779,6 +768,16 @@ body {
   padding: 0 20px 16px;
   margin: 0;
   box-sizing: border-box;
+}
+
+.capture-page.is-hero-landing .chat-dock.chat-dock-floating {
+  bottom: 38vh;
+  left: 50%;
+  right: auto;
+  transform: translateX(-50%);
+  max-width: 760px;
+  padding: 0 20px;
+  background: transparent;
 }
 
 .capture-page.is-hero-landing .chat-dock.chat-dock-floating::before {
@@ -862,12 +861,12 @@ body {
 }
 
 @media (max-width: 768px) {
+  .capture-page.is-hero-landing .store-home {
+    bottom: 62vh;
+  }
   .capture-page.is-hero-landing .chat-dock.chat-dock-floating {
     padding: 0 12px;
-    bottom: 40vh;
-  }
-  .capture-page.is-hero-landing .store-home {
-    bottom: calc(40vh + 120px); /* SP は余白タイトめ */
+    bottom: 34vh;
   }
   .chat-dock-hero {
     border-radius: 22px;
