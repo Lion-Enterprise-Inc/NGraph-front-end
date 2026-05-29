@@ -397,7 +397,7 @@ export default function NFGCard({
               </div>
             )}
             {!open && hasDetails && (
-              <div className="nfgcard-expand-hint">\u25BC</div>
+              <div className="nfgcard-expand-hint">▼</div>
             )}
           </div>
         );
