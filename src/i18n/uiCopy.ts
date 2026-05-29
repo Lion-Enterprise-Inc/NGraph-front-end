@@ -189,7 +189,8 @@ const uiCopy = {
     },
     quickExplain: {
       scanning: "Analyzing...",
-      verified: "Verified",
+      verified: "Owner-verified",
+      pending: "On file",
       aiEstimate: "AI Estimate",
       newItem: "New",
       title: "Quick Explain ({n} items)",
@@ -403,6 +404,7 @@ const uiCopy = {
     quickExplain: {
       scanning: "解析中...",
       verified: "店主確認済み",
+      pending: "登録済み",
       aiEstimate: "AI推定",
       newItem: "新メニュー",
       title: "Quick Explain ({n}品)",

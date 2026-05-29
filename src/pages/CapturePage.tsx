@@ -1906,7 +1906,8 @@ export default function CapturePage({
                         photoUploading={photoUploading}
                         cleanUrlBase={cleanUrlBase || undefined}
                         copy={{
-                          verified: (copy as any).quickExplain?.verified || "Verified",
+                          verified: (copy as any).quickExplain?.verified || "Owner-verified",
+                          pending: (copy as any).quickExplain?.pending || "On file",
                           aiEstimate: (copy as any).quickExplain?.aiEstimate || "AI Estimate",
                           newItem: (copy as any).quickExplain?.newItem || "New",
                           ingredients: copy.nfg.ingredients,
@@ -2057,7 +2058,8 @@ export default function CapturePage({
                         photoUploading={photoUploading}
                         cleanUrlBase={cleanUrlBase || undefined}
                         copy={{
-                          verified: (copy as any).quickExplain?.verified || "Verified",
+                          verified: (copy as any).quickExplain?.verified || "Owner-verified",
+                          pending: (copy as any).quickExplain?.pending || "On file",
                           aiEstimate: (copy as any).quickExplain?.aiEstimate || "AI Estimate",
                           newItem: (copy as any).quickExplain?.newItem || "New",
                           ingredients: copy.nfg.ingredients,

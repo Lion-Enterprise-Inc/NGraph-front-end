@@ -7724,6 +7724,10 @@ textarea.form-input {
   background: rgba(72, 187, 120, 0.2);
   color: #48bb78;
 }
+.nfgcard-badge-pending {
+  background: rgba(120, 140, 180, 0.15);
+  color: #8aa3c4;
+}
 .nfgcard-badge-ai {
   background: rgba(160, 160, 180, 0.15);
   color: #999;

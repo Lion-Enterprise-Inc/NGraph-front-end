@@ -21,6 +21,7 @@ type Props = {
   cleanUrlBase?: string;
   copy: {
     verified: string;
+    pending: string;
     aiEstimate: string;
     newItem: string;
     ingredients: string;
@@ -167,6 +168,7 @@ export default function NFGCard({
       {items.map((item, idx) => {
         const open = expandedIdx.has(idx);
         const isDb = item.source === "db";
+        const isVerified = isDb && item.verified === true;
         const displayName = language !== "ja" && item.name_en ? item.name_en : item.name_jp;
         const subName = language !== "ja" ? item.name_jp : item.name_en;
         const hasNfg = isDb && (item.narrative || item.taste_values || item.serving || item.estimated_calories);
@@ -210,8 +212,10 @@ export default function NFGCard({
               {item.category && item.category !== 'bento' && (
                 <span className="nfgcard-badge nfgcard-badge-category">{item.category}</span>
               )}
-              {isDb ? (
+              {isVerified ? (
                 <span className="nfgcard-badge nfgcard-badge-verified">{copy.verified}</span>
+              ) : isDb ? (
+                <span className="nfgcard-badge nfgcard-badge-pending">{copy.pending}</span>
               ) : (
                 <span className="nfgcard-badge nfgcard-badge-ai">{copy.aiEstimate}</span>
               )}

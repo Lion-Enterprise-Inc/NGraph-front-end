@@ -1718,6 +1718,7 @@ export default function HomePage() {
                       restaurantCity={m.restaurant_city || undefined}
                       copy={{
                         verified: copy.nfg.vadBadge,
+                        pending: (copy.nfg as any).pendingBadge || 'On file',
                         aiEstimate: copy.nfg.aiBadge,
                         newItem: 'New',
                         ingredients: copy.nfg.ingredients,

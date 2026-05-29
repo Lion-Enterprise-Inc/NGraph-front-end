@@ -765,6 +765,7 @@ export interface QuickExplainItem {
   allergens?: string[];
   ingredients?: string[];
   source: "db" | "ai";
+  verified?: boolean;
   is_new?: boolean;
   menu_uid?: string;
   image_url?: string;
