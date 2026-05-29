@@ -34,30 +34,31 @@ type ChatDockProps = {
 };
 
 type HeroChip = { label: string; query: string };
+// chip query を強化: 「この店の」を明示して AI が generic 郷土料理を提案するのを防止
 const HERO_CHIPS: Record<string, HeroChip[]> = {
   ja: [
-    { label: 'おすすめは？', query: 'おすすめは？' },
-    { label: '名物は？', query: '名物は？' },
+    { label: 'おすすめは？', query: 'この店のおすすめメニューを教えてください (登録されているメニューから)' },
+    { label: '名物は？', query: 'この店の名物・看板メニューを教えてください (登録されているメニューから)' },
     { label: '食事制限ある', query: 'アレルギーや宗教上で食べられない食材があります。何が食べられますか？' },
   ],
   en: [
-    { label: "What's recommended?", query: "What do you recommend?" },
-    { label: 'Specialty?', query: "What's your specialty?" },
+    { label: "What's recommended?", query: "What do you recommend from this restaurant's menu? (from the registered items)" },
+    { label: 'Specialty?', query: "What is this restaurant's signature dish? (from the registered menu)" },
     { label: 'Dietary needs', query: 'I have allergies or dietary restrictions. What can I eat?' },
   ],
   ko: [
-    { label: '추천 메뉴는?', query: '추천 메뉴는 무엇인가요?' },
-    { label: '대표 메뉴는?', query: '대표 메뉴가 무엇인가요?' },
+    { label: '추천 메뉴는?', query: '이 가게의 추천 메뉴를 알려주세요 (등록된 메뉴 중에서)' },
+    { label: '대표 메뉴는?', query: '이 가게의 대표 메뉴는 무엇인가요? (등록된 메뉴 중에서)' },
     { label: '식이 제한', query: '알레르기나 종교적 제한으로 못 먹는 음식이 있어요. 무엇을 먹을 수 있나요?' },
   ],
   'zh-Hans': [
-    { label: '推荐什么？', query: '有什么推荐的菜？' },
-    { label: '招牌菜？', query: '你们的招牌菜是什么？' },
+    { label: '推荐什么？', query: '请告诉我这家店的推荐菜（从已登记的菜单中）' },
+    { label: '招牌菜？', query: '这家店的招牌菜是什么？（从已登记的菜单中）' },
     { label: '饮食限制', query: '我有过敏或宗教饮食限制。我能吃什么？' },
   ],
   'zh-Hant': [
-    { label: '推薦什麼？', query: '有什麼推薦的菜？' },
-    { label: '招牌菜？', query: '你們的招牌菜是什麼？' },
+    { label: '推薦什麼？', query: '請告訴我這家店的推薦菜（從已登記的菜單中）' },
+    { label: '招牌菜？', query: '這家店的招牌菜是什麼？（從已登記的菜單中）' },
     { label: '飲食限制', query: '我有過敏或宗教飲食限制。我能吃什麼？' },
   ],
 };

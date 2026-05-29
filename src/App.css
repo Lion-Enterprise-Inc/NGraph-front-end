@@ -903,9 +903,9 @@ body {
 .chat-dock-hero-chip {
   background: transparent;
   border: 1px solid var(--color-border, rgba(255, 255, 255, 0.12));
-  border-radius: 18px;
-  padding: 7px 14px;
-  font-size: 13px;
+  border-radius: 20px;
+  padding: 10px 18px;
+  font-size: 14px;
   font-weight: 500;
   color: var(--color-text-body, rgba(255, 255, 255, 0.78));
   cursor: pointer;
@@ -926,8 +926,8 @@ body {
 
 @media (max-width: 768px) {
   .chat-dock-hero-chip {
-    font-size: 12px;
-    padding: 6px 12px;
+    font-size: 14px;
+    padding: 9px 16px;
   }
 }
 
@@ -7918,7 +7918,7 @@ textarea.form-input {
 }
 .nfgcard-narrative-story {
   font-size: 13px;
-  color: #ddd;
+  color: var(--color-text-body);
   line-height: 1.6;
   margin-bottom: 8px;
 }
@@ -7930,12 +7930,12 @@ textarea.form-input {
   line-height: 1.5;
 }
 .nfgcard-field-label {
-  color: #aaa;
+  color: var(--color-text-secondary);
   white-space: nowrap;
   flex-shrink: 0;
 }
 .nfgcard-field-value {
-  color: #eee;
+  color: var(--color-text-body);
 }
 
 /* Actions */
@@ -7945,16 +7945,16 @@ textarea.form-input {
   gap: 8px;
   margin-top: 8px;
   padding-top: 6px;
-  border-top: 1px solid rgba(255,255,255,0.06);
+  border-top: 1px solid var(--color-border, rgba(255,255,255,0.06));
 }
 .nfgcard-action-btn {
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.08);
+  background: var(--color-surface-chip, rgba(255,255,255,0.06));
+  border: 1px solid var(--color-border, rgba(255,255,255,0.08));
   border-radius: 4px;
   padding: 3px 8px;
   font-size: 11px;
   cursor: pointer;
-  color: #999;
+  color: var(--color-text-secondary);
 }
 .nfgcard-action-edit {
   margin-left: auto;
@@ -7977,7 +7977,7 @@ textarea.form-input {
 .nfgcard-expand-hint {
   text-align: center;
   font-size: 10px;
-  color: #666;
+  color: var(--color-text-muted);
   margin-top: 4px;
 }
 
