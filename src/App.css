@@ -756,11 +756,13 @@ body {
   padding-bottom: 60px;
 }
 
-/* Hero landing: タイポ + 入力欄を画面中央付近に近接配置 (ChatGPT スタイル) */
+/* Hero landing: タイポ + 入力欄を画面中央付近に近接配置 (ChatGPT スタイル)
+   store-home の bottom は dock の bottom + 動的 dock 高さ + 余白 で計算
+   → dock の実高さ (chips 含む) に追従して常に overlap しない */
 .capture-page.is-hero-landing .store-home {
   position: fixed;
   left: 50%;
-  bottom: 58vh;
+  bottom: calc(38vh + var(--chat-dock-height, 100px) + 32px);
   transform: translateX(-50%);
   z-index: 5;
   width: 100%;
@@ -862,7 +864,7 @@ body {
 
 @media (max-width: 768px) {
   .capture-page.is-hero-landing .store-home {
-    bottom: 62vh;
+    bottom: calc(34vh + var(--chat-dock-height, 100px) + 24px);
   }
   .capture-page.is-hero-landing .chat-dock.chat-dock-floating {
     padding: 0 12px;
