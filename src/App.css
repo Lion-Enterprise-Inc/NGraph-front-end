@@ -762,7 +762,7 @@ body {
 .capture-page.is-hero-landing .store-home {
   position: fixed;
   left: 50%;
-  bottom: calc(38vh + var(--chat-dock-height, 100px) + 32px);
+  bottom: calc(46vh + var(--chat-dock-height, 100px) + 32px);
   transform: translateX(-50%);
   z-index: 5;
   width: 100%;
@@ -773,7 +773,7 @@ body {
 }
 
 .capture-page.is-hero-landing .chat-dock.chat-dock-floating {
-  bottom: 38vh;
+  bottom: 46vh;
   left: 50%;
   right: auto;
   transform: translateX(-50%);
@@ -864,11 +864,11 @@ body {
 
 @media (max-width: 768px) {
   .capture-page.is-hero-landing .store-home {
-    bottom: calc(34vh + var(--chat-dock-height, 100px) + 24px);
+    bottom: calc(42vh + var(--chat-dock-height, 100px) + 24px);
   }
   .capture-page.is-hero-landing .chat-dock.chat-dock-floating {
     padding: 0 12px;
-    bottom: 34vh;
+    bottom: 42vh;
   }
   .chat-dock-hero {
     border-radius: 22px;
