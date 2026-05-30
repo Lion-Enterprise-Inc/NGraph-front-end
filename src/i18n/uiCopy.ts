@@ -60,6 +60,7 @@ const uiCopy = {
     captureHeader: {
       menu: "Menu",
       scan: "Scan",
+      map: "Map",
     },
     cameraPrompt: {
       openCamera: "Open camera",
@@ -276,6 +277,7 @@ const uiCopy = {
     captureHeader: {
       menu: "メニュー",
       scan: "翻訳",
+      map: "地図",
     },
     cameraPrompt: {
       openCamera: "カメラを開く",
@@ -492,6 +494,7 @@ const uiCopy = {
     captureHeader: {
       menu: "메뉴",
       scan: "번역",
+      map: "지도",
     },
     cameraPrompt: {
       openCamera: "카메라 열기",
@@ -694,6 +697,7 @@ const uiCopy = {
     captureHeader: {
       menu: "菜单",
       scan: "扫描",
+      map: "地图",
     },
     cameraPrompt: {
       openCamera: "打开相机",
@@ -883,6 +887,7 @@ const uiCopy = {
     captureHeader: {
       menu: "選單",
       scan: "掃描",
+      map: "地圖",
     },
     cameraPrompt: {
       openCamera: "開啟相機",

@@ -1,5 +1,6 @@
 import { useRouter } from 'next/navigation'
 import { useState, useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { Menu, X, MapPin, Clock, Phone, Instagram, ExternalLink, Sun, Moon, SquarePen, Globe, Share2 } from 'lucide-react'
 import { getUiCopy } from '../i18n/uiCopy'
 import { useAppContext } from './AppProvider'
@@ -34,6 +35,10 @@ interface CaptureHeaderProps {
   restaurantData?: RestaurantInfo | null
 }
 
+// 住所から Google Maps URL を構築する utility (空白のみ等の境界ケースも safe)
+const getGoogleMapsUrl = (address: string): string =>
+  `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address.trim())}`
+
 export default function CaptureHeader({ onMenu, onLanguage, onNewChat, restaurantName, restaurantData }: CaptureHeaderProps) {
   const router = useRouter()
   const { language, theme, toggleTheme } = useAppContext()
@@ -41,14 +46,32 @@ export default function CaptureHeader({ onMenu, onLanguage, onNewChat, restauran
   const badge = LANG_BADGES[language] || language.slice(0, 2).toUpperCase()
   const [showInfo, setShowInfo] = useState(false)
   const [shareToast, setShareToast] = useState<string | null>(null)
+  const [mounted, setMounted] = useState(false)
   const isJa = language === 'ja'
   const toastTimerRef = useRef<number | null>(null)
   // drag-to-close 防止: backdrop で pointerdown 起点した時のみ close する
   const backdropPointerDownRef = useRef(false)
+  // restaurantData の最新値を listener から参照する用 (race condition 防止)
+  const restaurantDataRef = useRef(restaurantData)
+  // focus restoration: 開く前の active element を覚えておく
+  const triggerRef = useRef<HTMLElement | null>(null)
+  // panel への ref (open 時に内部 focus 移動するため)
+  const panelRef = useRef<HTMLDivElement | null>(null)
+
+  // SSR ガード: createPortal は document.body が必要
+  useEffect(() => { setMounted(true) }, [])
+
+  // restaurantData の最新値を ref に同期 (listener の stale closure 回避)
+  useEffect(() => { restaurantDataRef.current = restaurantData }, [restaurantData])
 
   // HistoryDrawer の「店舗情報」ボタンから dispatch されるカスタムイベントで開く
+  // race condition fix: restaurantData が null の間は open しない
   useEffect(() => {
-    const handler = () => setShowInfo(true)
+    const handler = () => {
+      if (restaurantDataRef.current) {
+        setShowInfo(true)
+      }
+    }
     window.addEventListener('omiseai:open-store-info', handler)
     return () => window.removeEventListener('omiseai:open-store-info', handler)
   }, [])
@@ -62,6 +85,35 @@ export default function CaptureHeader({ onMenu, onLanguage, onNewChat, restauran
       }
     }
   }, [])
+
+  // モーダル open 中の副作用: ESC で閉じる / body scroll lock / focus 管理
+  useEffect(() => {
+    if (!showInfo) return
+    // 1. ESC キーで閉じる
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setShowInfo(false)
+    }
+    window.addEventListener('keydown', onKey)
+    // 2. body scroll lock (背景の scroll chaining 防止)
+    const prevOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    // 3. focus: 開く前の active element を保存して、 panel 内 close ボタンに移動
+    triggerRef.current = (document.activeElement as HTMLElement | null) ?? null
+    const rafId = window.requestAnimationFrame(() => {
+      panelRef.current?.querySelector<HTMLElement>('.store-info-close')?.focus()
+    })
+    return () => {
+      window.removeEventListener('keydown', onKey)
+      document.body.style.overflow = prevOverflow
+      window.cancelAnimationFrame(rafId)
+      // close 時に元の trigger に focus を返す
+      const trigger = triggerRef.current
+      triggerRef.current = null
+      if (trigger && typeof trigger.focus === 'function') {
+        trigger.focus()
+      }
+    }
+  }, [showInfo])
 
   const showToast = (message: string, ms = 1800) => {
     if (toastTimerRef.current !== null) {
@@ -99,6 +151,126 @@ export default function CaptureHeader({ onMenu, onLanguage, onNewChat, restauran
       // ユーザーが share シートをキャンセルしたケースは無視
     }
   }
+
+  // モーダル本体 (createPortal で document.body 直下に出す)
+  const modal = showInfo && restaurantData ? (
+    <>
+      <div
+        className="store-info-backdrop"
+        aria-hidden="true"
+        onPointerDown={() => { backdropPointerDownRef.current = true }}
+        onPointerUp={() => {
+          if (backdropPointerDownRef.current) {
+            setShowInfo(false)
+          }
+          backdropPointerDownRef.current = false
+        }}
+        onPointerCancel={() => { backdropPointerDownRef.current = false }}
+      />
+      <div
+        ref={panelRef}
+        className="store-info-panel"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="store-info-title"
+      >
+        <div className="store-info-header">
+          <span id="store-info-title" className="store-info-title">{restaurantData.name}</span>
+          <button className="store-info-close" type="button" onClick={() => setShowInfo(false)} aria-label={isJa ? '閉じる' : 'Close'}>
+            <X size={16} />
+          </button>
+        </div>
+        {restaurantData.business_type && (
+          <span className="store-info-type">{restaurantData.business_type}</span>
+        )}
+        <div className="store-info-rows">
+          {restaurantData.address && (
+            <div className="store-info-row">
+              <MapPin size={14} />
+              <span>{restaurantData.address}</span>
+              <a
+                href={getGoogleMapsUrl(restaurantData.address)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="store-info-map-link"
+              >
+                <ExternalLink size={12} />
+                {copy.captureHeader.map}
+              </a>
+            </div>
+          )}
+          {restaurantData.access_info && (
+            <div className="store-info-row store-info-sub">
+              <span>{restaurantData.access_info}</span>
+            </div>
+          )}
+          {restaurantData.opening_hours && (
+            <div className="store-info-row">
+              <Clock size={14} />
+              <span>{restaurantData.opening_hours}</span>
+            </div>
+          )}
+          {restaurantData.holidays && (
+            <div className="store-info-row store-info-sub">
+              <span>{isJa ? '定休日: ' : 'Closed: '}{restaurantData.holidays}</span>
+            </div>
+          )}
+          {restaurantData.phone_number && (
+            <div className="store-info-row">
+              <Phone size={14} />
+              <a href={`tel:${restaurantData.phone_number}`} className="store-info-link">{restaurantData.phone_number}</a>
+            </div>
+          )}
+          {restaurantData.instagram_url && (
+            <div className="store-info-row">
+              <Instagram size={14} />
+              <a href={restaurantData.instagram_url} target="_blank" rel="noopener noreferrer" className="store-info-link">Instagram</a>
+            </div>
+          )}
+          {restaurantData.budget && (
+            <div className="store-info-row">
+              <span className="store-info-budget">{isJa ? '予算' : 'Budget'}: ~{restaurantData.budget}{isJa ? '円' : '??'}</span>
+            </div>
+          )}
+        </div>
+
+        {/* ── Quick actions: Map / 電話 / 共有 ── */}
+        <div className="store-info-actions">
+          {restaurantData.address && (
+            <a
+              className="store-info-action"
+              href={getGoogleMapsUrl(restaurantData.address)}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <MapPin size={16} strokeWidth={1.75} />
+              <span>{copy.captureHeader.map}</span>
+            </a>
+          )}
+          {restaurantData.phone_number && (
+            <a
+              className="store-info-action"
+              href={`tel:${restaurantData.phone_number}`}
+            >
+              <Phone size={16} strokeWidth={1.75} />
+              <span>{isJa ? '電話' : 'Call'}</span>
+            </a>
+          )}
+          <button
+            type="button"
+            className="store-info-action"
+            onClick={handleShare}
+          >
+            <Share2 size={16} strokeWidth={1.75} />
+            <span>{isJa ? '共有' : 'Share'}</span>
+          </button>
+        </div>
+      </div>
+      {shareToast && (
+        <div className="store-info-toast" role="status">{shareToast}</div>
+      )}
+    </>
+  ) : null
 
   return (
     <>
@@ -142,118 +314,7 @@ export default function CaptureHeader({ onMenu, onLanguage, onNewChat, restauran
           </button>
         </div>
       </header>
-
-      {showInfo && restaurantData && (
-        <>
-          <div
-            className="store-info-backdrop"
-            onPointerDown={() => { backdropPointerDownRef.current = true }}
-            onPointerUp={() => {
-              if (backdropPointerDownRef.current) {
-                setShowInfo(false)
-              }
-              backdropPointerDownRef.current = false
-            }}
-            onPointerCancel={() => { backdropPointerDownRef.current = false }}
-          />
-        <div className="store-info-panel">
-          <div className="store-info-header">
-            <span className="store-info-title">{restaurantData.name}</span>
-            <button className="store-info-close" type="button" onClick={() => setShowInfo(false)}>
-              <X size={16} />
-            </button>
-          </div>
-          {restaurantData.business_type && (
-            <span className="store-info-type">{restaurantData.business_type}</span>
-          )}
-          <div className="store-info-rows">
-            {restaurantData.address && (
-              <div className="store-info-row">
-                <MapPin size={14} />
-                <span>{restaurantData.address}</span>
-                <a
-                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(restaurantData.address)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="store-info-map-link"
-                >
-                  <ExternalLink size={12} />
-                  Map
-                </a>
-              </div>
-            )}
-            {restaurantData.access_info && (
-              <div className="store-info-row store-info-sub">
-                <span>{restaurantData.access_info}</span>
-              </div>
-            )}
-            {restaurantData.opening_hours && (
-              <div className="store-info-row">
-                <Clock size={14} />
-                <span>{restaurantData.opening_hours}</span>
-              </div>
-            )}
-            {restaurantData.holidays && (
-              <div className="store-info-row store-info-sub">
-                <span>{isJa ? '定休日: ' : 'Closed: '}{restaurantData.holidays}</span>
-              </div>
-            )}
-            {restaurantData.phone_number && (
-              <div className="store-info-row">
-                <Phone size={14} />
-                <a href={`tel:${restaurantData.phone_number}`} className="store-info-link">{restaurantData.phone_number}</a>
-              </div>
-            )}
-            {restaurantData.instagram_url && (
-              <div className="store-info-row">
-                <Instagram size={14} />
-                <a href={restaurantData.instagram_url} target="_blank" rel="noopener noreferrer" className="store-info-link">Instagram</a>
-              </div>
-            )}
-            {restaurantData.budget && (
-              <div className="store-info-row">
-                <span className="store-info-budget">{isJa ? '予算' : 'Budget'}: ~{restaurantData.budget}{isJa ? '円' : '??'}</span>
-              </div>
-            )}
-          </div>
-
-          {/* ── Quick actions: Map / 電話 / 共有 ── */}
-          <div className="store-info-actions">
-            {restaurantData.address && (
-              <a
-                className="store-info-action"
-                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(restaurantData.address)}`}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <MapPin size={16} strokeWidth={1.75} />
-                <span>Map</span>
-              </a>
-            )}
-            {restaurantData.phone_number && (
-              <a
-                className="store-info-action"
-                href={`tel:${restaurantData.phone_number}`}
-              >
-                <Phone size={16} strokeWidth={1.75} />
-                <span>{isJa ? '電話' : 'Call'}</span>
-              </a>
-            )}
-            <button
-              type="button"
-              className="store-info-action"
-              onClick={handleShare}
-            >
-              <Share2 size={16} strokeWidth={1.75} />
-              <span>{isJa ? '共有' : 'Share'}</span>
-            </button>
-          </div>
-        </div>
-        {shareToast && (
-          <div className="store-info-toast" role="status">{shareToast}</div>
-        )}
-        </>
-      )}
+      {mounted && modal && createPortal(modal, document.body)}
     </>
   )
 }
