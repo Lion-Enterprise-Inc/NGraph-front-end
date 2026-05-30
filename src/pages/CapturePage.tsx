@@ -709,6 +709,18 @@ export default function CapturePage({
               setCtxBusinessType(data.result.business_type || null);
               recordVisit(data.result.slug, data.result.name);
               document.title = `${data.result.name_romaji || data.result.name} | NGraph`;
+
+              // URL を綺麗な url_slug 形に置換 (日本語 slug や %エンコード塊を回避)
+              // 例: ?restaurant=蟹と海鮮ぼんた → ?restaurant=kanitokaisenbonta
+              // 履歴汚さないよう router.replace、search params 他は保持
+              const cleanSlug: string | null = data.result.url_slug || null;
+              if (cleanSlug && cleanSlug !== restaurantSlug) {
+                try {
+                  const params = new URLSearchParams(window.location.search);
+                  params.set('restaurant', cleanSlug);
+                  router.replace(`${window.location.pathname}?${params.toString()}`);
+                } catch {}
+              }
               return;
             }
           }

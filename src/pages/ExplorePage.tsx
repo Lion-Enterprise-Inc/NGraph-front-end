@@ -88,7 +88,9 @@ export default function ExplorePage() {
     if (item.url_slug && item.prefecture_slug && item.city_slug) {
       router.push(`/${item.prefecture_slug}/${item.city_slug}/${item.url_slug}`)
     } else {
-      router.push(`/capture?restaurant=${encodeURIComponent(item.slug)}`)
+      // url_slug 単独でも英数字優先 (日本語 slug の %エンコード塊を回避)
+      const target = item.url_slug || item.slug
+      router.push(`/capture?restaurant=${encodeURIComponent(target)}`)
     }
   }
 

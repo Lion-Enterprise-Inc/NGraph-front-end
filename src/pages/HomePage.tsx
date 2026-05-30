@@ -722,7 +722,9 @@ function restaurantUrl(r: { slug: string; url_slug?: string | null; prefecture_s
   if (r.url_slug && r.prefecture_slug && r.city_slug) {
     return `/${r.prefecture_slug}/${r.city_slug}/${r.url_slug}`
   }
-  return `/capture?restaurant=${encodeURIComponent(r.slug)}`
+  // url_slug 単独でも英数字でクリーンなので優先 (日本語 slug の %エンコード塊を回避)
+  const target = r.url_slug || r.slug
+  return `/capture?restaurant=${encodeURIComponent(target)}`
 }
 
 // Step 1: 食ジャンル — 最大の絞り込み
