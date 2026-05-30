@@ -959,10 +959,22 @@ body {
   box-sizing: border-box;
 }
 
-/* 履歴 mode (hero state ではない時) は safety notice / Powered by を非表示 */
-.capture-page:not(.is-hero-landing) .chat-dock-safety,
+/* 履歴 mode: safety notice は他社チャット (ChatGPT/Claude/Gemini) に倣って表示し続け、
+   Powered by はブランドスタンプ的なので hero state のみに留める。
+   notice の上に少し空気を入れて入力欄から離す。 */
 .capture-page:not(.is-hero-landing) .chat-dock-powered-by {
   display: none;
+}
+.capture-page:not(.is-hero-landing) .chat-dock-safety {
+  margin-top: 8px;
+  font-size: 10.5px;
+  opacity: 0.65;
+}
+@media (max-width: 768px) {
+  .capture-page:not(.is-hero-landing) .chat-dock-safety {
+    margin-top: 6px;
+    font-size: 10px;
+  }
 }
 
 .explore-title,
@@ -1297,11 +1309,19 @@ body {
   border: none !important;
   border-top: none !important;
   border-radius: 0 !important;
-  padding: 12px 10px 4px;
-  padding-bottom: max(4px, env(safe-area-inset-bottom, 0px));
+  /* PC: 入力欄の下に十分な空間を確保 (ChatGPT/Claude/Gemini に倣う)
+     SP: env(safe-area-inset-bottom) で iPhone のホームインジケータを回避 */
+  padding: 12px 10px 16px;
+  padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
   background: var(--color-bg);
   transition: bottom 0.18s ease, transform 0.18s ease;
   box-sizing: border-box;
+}
+@media (max-width: 768px) {
+  .chat-dock.chat-dock-floating {
+    padding: 10px 10px 10px;
+    padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+  }
 }
 
 .chat-dock.chat-dock-floating::before {
