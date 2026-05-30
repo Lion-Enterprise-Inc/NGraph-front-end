@@ -859,10 +859,25 @@ export default function CapturePage({
     restaurantData.recommend_texts.forEach(async (text, i) => {
       const jaText = jaTexts?.[i] || text;
       try {
+        // profile を recommend prefetch にも渡す (ベジ/ハラール客に合った内容を初手から)
+        let _prefetchProfile: { restrictions: string[] } | undefined;
+        try {
+          const raw = localStorage.getItem('omiseai_allergies');
+          const arr = raw ? (JSON.parse(raw) as unknown) : null;
+          if (Array.isArray(arr) && arr.length > 0) {
+            _prefetchProfile = { restrictions: arr.filter((v): v is string => typeof v === 'string') };
+          }
+        } catch {}
         const resp = await fetch(`${apiBaseUrl}/public-chat/${encodeURIComponent(slug)}/stream`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message: activeLanguage === 'ja' ? jaText : text, in_store: isInStore, language: activeLanguage, ...(isWebMode ? { mode: 'web' } : {}) }),
+          body: JSON.stringify({
+            message: activeLanguage === 'ja' ? jaText : text,
+            in_store: isInStore,
+            language: activeLanguage,
+            ...(isWebMode ? { mode: 'web' } : {}),
+            ...(_prefetchProfile ? { profile: _prefetchProfile } : {}),
+          }),
           signal: controller.signal,
         });
         if (resp.ok && resp.body) {
@@ -1427,6 +1442,17 @@ export default function CapturePage({
           const restaurantSlugForApi = selectedRestaurant?.slug || 'default';
           const abortController = new AbortController();
           abortControllerRef.current = abortController;
+          // ハンバーガー「個人設定」で保存した profile を chat に持ち越す。
+          // localStorage `omiseai_allergies` はアレルゲン + 食事スタイル混在 1 配列。
+          let _profile: { restrictions: string[] } | undefined;
+          try {
+            const raw = localStorage.getItem('omiseai_allergies');
+            const arr = raw ? (JSON.parse(raw) as unknown) : null;
+            if (Array.isArray(arr) && arr.length > 0) {
+              _profile = { restrictions: arr.filter((v): v is string => typeof v === 'string') };
+            }
+          } catch {}
+
           const streamResponse = await fetch(`${apiBaseUrl}/public-chat/${encodeURIComponent(restaurantSlugForApi)}/stream`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -1436,6 +1462,7 @@ export default function CapturePage({
               thread_uid: threadUidRef.current,
               language: activeLanguage,
               ...(isWebMode ? { mode: 'web' } : {}),
+              ...(_profile ? { profile: _profile } : {}),
             }),
             signal: abortController.signal,
           });
