@@ -1882,14 +1882,19 @@ export default function CapturePage({
   }, [restaurantSlug, likedMenus]);
 
   // MenuListDrawer のチップ → chat に質問投入する callback を登録
+  // ref で最新の handleSend を常に参照（closure stale 回避）
+  const handleSendRef = useRef(handleSend);
+  useEffect(() => {
+    handleSendRef.current = handleSend;
+  });
   useEffect(() => {
     const askHandler = (query: string) => {
-      handleSend(query);
+      handleSendRef.current?.(query);
     };
     setOnAskAbout(() => askHandler);
     return () => { setOnAskAbout(null); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [restaurantSlug]);
+  }, []);
 
   const handlePhotoUpload = async (menuUid: string, file: File) => {
     setPhotoUploading(menuUid);

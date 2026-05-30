@@ -130,7 +130,7 @@ export default function HistoryDrawer({
         <div className="sidebar-section sidebar-section-bottom">
           <button
             className="sidebar-row sidebar-row-muted"
-            onClick={() => { router.push('/'); onClose?.(); }}
+            onClick={() => { router.push('/explore'); onClose?.(); }}
           >
             <span>{t('exploreOther', '他の店舗を見る')}</span>
           </button>

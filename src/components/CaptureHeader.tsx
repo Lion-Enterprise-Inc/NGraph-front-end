@@ -1,5 +1,5 @@
 import { useRouter } from 'next/navigation'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Menu, Info, X, MapPin, Clock, Phone, Instagram, ExternalLink, Sun, Moon, SquarePen, Globe } from 'lucide-react'
 import { getUiCopy } from '../i18n/uiCopy'
 import { useAppContext } from './AppProvider'
@@ -43,6 +43,13 @@ export default function CaptureHeader({ onMenu, onLanguage, onNewChat, restauran
   const isJa = language === 'ja'
 
   const hasInfo = restaurantData && (restaurantData.address || restaurantData.opening_hours || restaurantData.phone_number)
+
+  // HistoryDrawer の「店舗情報」ボタンから dispatch されるカスタムイベントで開く
+  useEffect(() => {
+    const handler = () => setShowInfo(true)
+    window.addEventListener('omiseai:open-store-info', handler)
+    return () => window.removeEventListener('omiseai:open-store-info', handler)
+  }, [])
 
   return (
     <>
