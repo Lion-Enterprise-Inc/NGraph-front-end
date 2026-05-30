@@ -332,6 +332,78 @@ export default function CapturePage({
   const photoInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
   /**
+   * 応答にコピー価値のあるブロックがあるか判定 + 抽出。
+   * - Safety Net テンプレ (「📋 スタッフに見せる質問」含み)
+   * - インスタ投稿風 (ハッシュタグ複数)
+   * - 住所/電話/予約 URL 等の店舗情報
+   *
+   * コピー価値がある場合は extracted (コピー対象文字列) を返す。
+   * メニューレコメンドのみの応答にはコピーボタン出さない (UI ノイズ)。
+   */
+  const _extractCopyable = (responseText: string | undefined): string | null => {
+    if (!responseText) return null;
+    const text = responseText;
+    // Safety Net テンプレ
+    const safetyMatch = text.match(/📋[\s\S]+/);
+    if (safetyMatch) return safetyMatch[0].trim();
+    // インスタ投稿 (ハッシュタグ 3 個以上)
+    if ((text.match(/#[^\s#]+/g) || []).length >= 3) return text.trim();
+    // 住所 + 電話セット (連絡先テンプレ)
+    if (/住所[:：]/.test(text) && (/電話/.test(text) || /TEL/i.test(text))) {
+      return text.trim();
+    }
+    return null;
+  };
+
+  /** 応答の全文 (intro + body) を 1 つの文字列に。コピー用。 */
+  const _getResponseFullText = (response: { output: { intro?: string; body?: string[] } | null }): string => {
+    if (!response.output) return '';
+    return [response.output.intro, ...(response.output.body || [])]
+      .filter(Boolean)
+      .join('\n');
+  };
+
+  // メッセージごとのコピー成功フィードバック (✓ Copied)
+  const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
+
+  // Bad 押下時のコメントボックス: 表示中の response.id を持つ
+  const [badCommentResponseId, setBadCommentResponseId] = useState<string | null>(null);
+  const [badCommentReason, setBadCommentReason] = useState<string | null>(null);
+  const [badCommentText, setBadCommentText] = useState('');
+  const submitBadComment = async (responseId: string) => {
+    const response = responses.find((r) => r.id === responseId);
+    if (!response?.messageUid) {
+      setBadCommentResponseId(null);
+      return;
+    }
+    try {
+      await FeedbackApi.submit(response.messageUid, 'bad', {
+        reason: badCommentReason || undefined,
+        comment: badCommentText.trim() || undefined,
+      });
+    } catch {}
+    setBadCommentResponseId(null);
+    setBadCommentReason(null);
+    setBadCommentText('');
+  };
+  const handleCopyResponse = async (msgId: string, text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedMessageId(msgId);
+      setTimeout(() => setCopiedMessageId(null), 2000);
+      if (restaurantSlug) {
+        EventApi.log({
+          restaurant_slug: restaurantSlug,
+          event: 'copy',
+          message_uid: msgId,
+          thread_uid: threadUidRef.current,
+          lang: activeLanguage,
+        });
+      }
+    } catch {}
+  };
+
+  /**
    * クチコミボタン表示判定。
    * - 会話 5 ターン超 → 会話の深さで「もう食べた可能性が高い」と推測
    * - 直近メッセージに「美味しかった/ごちそうさま/ありがとう/delicious/thanks」等の終結語
@@ -2144,6 +2216,52 @@ export default function CapturePage({
                         ))}
                       </div>
                     )}
+                    {badCommentResponseId === response.id && response.feedback === 'bad' && (
+                      <div className="bad-comment-box">
+                        <div className="bad-comment-prompt">どうすれば良くなりますか？（任意）</div>
+                        <div className="bad-comment-reasons">
+                          {[
+                            { key: 'incorrect_info', label: '情報が違う' },
+                            { key: 'too_long', label: '冗長すぎる' },
+                            { key: 'off_topic', label: '質問とズレてる' },
+                            { key: 'other', label: 'その他' },
+                          ].map((r) => (
+                            <button
+                              key={r.key}
+                              type="button"
+                              className={`bad-comment-reason${badCommentReason === r.key ? ' active' : ''}`}
+                              onClick={() => setBadCommentReason(r.key)}
+                            >
+                              {r.label}
+                            </button>
+                          ))}
+                        </div>
+                        <textarea
+                          className="bad-comment-text"
+                          placeholder="自由記入（任意）"
+                          value={badCommentText}
+                          onChange={(e) => setBadCommentText(e.target.value)}
+                          maxLength={500}
+                          rows={2}
+                        />
+                        <div className="bad-comment-actions">
+                          <button
+                            type="button"
+                            className="bad-comment-cancel"
+                            onClick={() => { setBadCommentResponseId(null); setBadCommentReason(null); setBadCommentText(''); }}
+                          >
+                            キャンセル
+                          </button>
+                          <button
+                            type="button"
+                            className="bad-comment-submit"
+                            onClick={() => submitBadComment(response.id)}
+                          >
+                            送信
+                          </button>
+                        </div>
+                      </div>
+                    )}
                     <div className="feedback-row">
                       <div className="feedback-actions">
                         <button
@@ -2157,11 +2275,27 @@ export default function CapturePage({
                         <button
                           className={`feedback-btn${response.feedback === 'bad' ? ' active bad' : ''}`}
                           type="button"
-                          onClick={() => handleFeedback(response.id, 'bad')}
+                          onClick={() => { handleFeedback(response.id, 'bad'); setBadCommentResponseId(response.id); }}
                           aria-label="Bad"
                         >
                           <ThumbsDown size={16} />
                         </button>
+                        {(() => {
+                          const _ft = _getResponseFullText(response);
+                          const _cp = _extractCopyable(_ft);
+                          if (!_cp) return null;
+                          return (
+                            <button
+                              className={`feedback-btn action-btn${copiedMessageId === response.id ? " copied" : ""}`}
+                              type="button"
+                              onClick={(e) => { e.stopPropagation(); handleCopyResponse(response.id, _cp); }}
+                              aria-label="Copy"
+                            >
+                              <Copy size={14} />
+                              <span>{copiedMessageId === response.id ? "✓" : "コピー"}</span>
+                            </button>
+                          );
+                        })()}
                         {shouldShowReviewPrompt(responseIdx, response.input.text) && (
                           <a
                             href={restaurantData?.google_review_url ?? undefined}
@@ -2314,6 +2448,52 @@ export default function CapturePage({
                       );
                     })()}
                     {/* Feedback for NFG cards */}
+                    {badCommentResponseId === response.id && response.feedback === 'bad' && (
+                      <div className="bad-comment-box">
+                        <div className="bad-comment-prompt">どうすれば良くなりますか？（任意）</div>
+                        <div className="bad-comment-reasons">
+                          {[
+                            { key: 'incorrect_info', label: '情報が違う' },
+                            { key: 'too_long', label: '冗長すぎる' },
+                            { key: 'off_topic', label: '質問とズレてる' },
+                            { key: 'other', label: 'その他' },
+                          ].map((r) => (
+                            <button
+                              key={r.key}
+                              type="button"
+                              className={`bad-comment-reason${badCommentReason === r.key ? ' active' : ''}`}
+                              onClick={() => setBadCommentReason(r.key)}
+                            >
+                              {r.label}
+                            </button>
+                          ))}
+                        </div>
+                        <textarea
+                          className="bad-comment-text"
+                          placeholder="自由記入（任意）"
+                          value={badCommentText}
+                          onChange={(e) => setBadCommentText(e.target.value)}
+                          maxLength={500}
+                          rows={2}
+                        />
+                        <div className="bad-comment-actions">
+                          <button
+                            type="button"
+                            className="bad-comment-cancel"
+                            onClick={() => { setBadCommentResponseId(null); setBadCommentReason(null); setBadCommentText(''); }}
+                          >
+                            キャンセル
+                          </button>
+                          <button
+                            type="button"
+                            className="bad-comment-submit"
+                            onClick={() => submitBadComment(response.id)}
+                          >
+                            送信
+                          </button>
+                        </div>
+                      </div>
+                    )}
                     <div className="feedback-row">
                       <div className="feedback-actions">
                         <button
@@ -2327,11 +2507,27 @@ export default function CapturePage({
                         <button
                           className={`feedback-btn${response.feedback === 'bad' ? ' active bad' : ''}`}
                           type="button"
-                          onClick={() => handleFeedback(response.id, 'bad')}
+                          onClick={() => { handleFeedback(response.id, 'bad'); setBadCommentResponseId(response.id); }}
                           aria-label="Bad"
                         >
                           <ThumbsDown size={16} />
                         </button>
+                        {(() => {
+                          const _ft = _getResponseFullText(response);
+                          const _cp = _extractCopyable(_ft);
+                          if (!_cp) return null;
+                          return (
+                            <button
+                              className={`feedback-btn action-btn${copiedMessageId === response.id ? " copied" : ""}`}
+                              type="button"
+                              onClick={(e) => { e.stopPropagation(); handleCopyResponse(response.id, _cp); }}
+                              aria-label="Copy"
+                            >
+                              <Copy size={14} />
+                              <span>{copiedMessageId === response.id ? "✓" : "コピー"}</span>
+                            </button>
+                          );
+                        })()}
                         {shouldShowReviewPrompt(responseIdx, response.input.text) && (
                           <a
                             href={restaurantData?.google_review_url ?? undefined}
@@ -2421,6 +2617,53 @@ export default function CapturePage({
                           </div>
                         ))}
                         {typingComplete.has(response.id) && (
+                          <>
+                          {badCommentResponseId === response.id && response.feedback === 'bad' && (
+                            <div className="bad-comment-box">
+                              <div className="bad-comment-prompt">どうすれば良くなりますか？（任意）</div>
+                              <div className="bad-comment-reasons">
+                                {[
+                                  { key: 'incorrect_info', label: '情報が違う' },
+                                  { key: 'too_long', label: '冗長すぎる' },
+                                  { key: 'off_topic', label: '質問とズレてる' },
+                                  { key: 'other', label: 'その他' },
+                                ].map((r) => (
+                                  <button
+                                    key={r.key}
+                                    type="button"
+                                    className={`bad-comment-reason${badCommentReason === r.key ? ' active' : ''}`}
+                                    onClick={() => setBadCommentReason(r.key)}
+                                  >
+                                    {r.label}
+                                  </button>
+                                ))}
+                              </div>
+                              <textarea
+                                className="bad-comment-text"
+                                placeholder="自由記入（任意）"
+                                value={badCommentText}
+                                onChange={(e) => setBadCommentText(e.target.value)}
+                                maxLength={500}
+                                rows={2}
+                              />
+                              <div className="bad-comment-actions">
+                                <button
+                                  type="button"
+                                  className="bad-comment-cancel"
+                                  onClick={() => { setBadCommentResponseId(null); setBadCommentReason(null); setBadCommentText(''); }}
+                                >
+                                  キャンセル
+                                </button>
+                                <button
+                                  type="button"
+                                  className="bad-comment-submit"
+                                  onClick={() => submitBadComment(response.id)}
+                                >
+                                  送信
+                                </button>
+                              </div>
+                            </div>
+                          )}
                           <div className="feedback-row">
                             <div className="feedback-actions">
                               <button
@@ -2434,11 +2677,27 @@ export default function CapturePage({
                               <button
                                 className={`feedback-btn${response.feedback === 'bad' ? ' active bad' : ''}`}
                                 type="button"
-                                onClick={() => handleFeedback(response.id, 'bad')}
+                                onClick={() => { handleFeedback(response.id, 'bad'); setBadCommentResponseId(response.id); }}
                                 aria-label="Bad"
                               >
                                 <ThumbsDown size={16} />
                               </button>
+                              {(() => {
+                                const _ft = _getResponseFullText(response);
+                                const _cp = _extractCopyable(_ft);
+                                if (!_cp) return null;
+                                return (
+                                  <button
+                                    className={`feedback-btn action-btn${copiedMessageId === response.id ? " copied" : ""}`}
+                                    type="button"
+                                    onClick={(e) => { e.stopPropagation(); handleCopyResponse(response.id, _cp); }}
+                                    aria-label="Copy"
+                                  >
+                                    <Copy size={14} />
+                                    <span>{copiedMessageId === response.id ? "✓" : "コピー"}</span>
+                                  </button>
+                                );
+                              })()}
                               {shouldShowReviewPrompt(responseIdx, response.input.text) && (
                                 <a
                                   href={restaurantData?.google_review_url ?? undefined}
@@ -2458,6 +2717,7 @@ export default function CapturePage({
                               )}
                             </div>
                           </div>
+                          </>
                         )}
                       </div>
                     </div>

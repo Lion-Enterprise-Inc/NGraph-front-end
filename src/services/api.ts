@@ -813,6 +813,7 @@ export interface QuickExplainItem {
   category?: string;
   nfg_code?: string;
   like_count?: number;
+  share_count?: number;
 }
 
 export interface QuickExplainResult {
@@ -1160,8 +1161,17 @@ export const SearchLogsApi = {
 
 // Feedback API (public, no auth)
 export const FeedbackApi = {
-  submit: async (messageUid: string, rating: 'good' | 'bad'): Promise<{ message: string; status_code: number }> => {
-    return apiClient.post('/public-chat/feedback', { message_uid: messageUid, rating });
+  submit: async (
+    messageUid: string,
+    rating: 'good' | 'bad',
+    options: { reason?: string; comment?: string } = {}
+  ): Promise<{ message: string; status_code: number }> => {
+    return apiClient.post('/public-chat/feedback', {
+      message_uid: messageUid,
+      rating,
+      reason: options.reason,
+      comment: options.comment,
+    });
   },
 };
 

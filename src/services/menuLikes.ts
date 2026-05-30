@@ -131,6 +131,38 @@ export interface PopularMenuItem {
   rank: number;
 }
 
+export interface ShareLogResponse {
+  logged: boolean;
+  share_count: number;
+}
+
+/**
+ * NFG カードがシェアされた事実をサーバに記録。
+ * via: 'native' / 'twitter' / 'line' / 'copy' / 'x' / 'email' / 'qr' 等
+ */
+export async function logMenuShare(
+  menuUid: string,
+  via: string,
+  options: { threadUid?: string | null } = {}
+): Promise<ShareLogResponse | null> {
+  try {
+    const fingerprint = getFingerprint();
+    const res = await fetch(`${API_BASE}/menus/${menuUid}/share-log`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        via,
+        fingerprint,
+        thread_uid: options.threadUid ?? null,
+      }),
+    });
+    if (!res.ok) return null;
+    return res.json();
+  } catch {
+    return null;
+  }
+}
+
 /** 店舗内 ♡ Top N。ハンバーガー「人気ランキング」タブで使う。 */
 export async function getPopularMenus(
   restaurantSlug: string,

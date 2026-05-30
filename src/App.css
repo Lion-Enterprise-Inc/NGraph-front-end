@@ -6263,6 +6263,96 @@ textarea.form-input {
   background: var(--color-surface-active);
 }
 
+/* ── Bad フィードバック コメントボックス ── */
+.bad-comment-box {
+  margin: 8px 0 4px;
+  padding: 12px 14px;
+  background: rgba(255, 100, 100, 0.06);
+  border: 1px solid rgba(255, 100, 100, 0.18);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  animation: bad-comment-fade-in 0.18s ease-out;
+}
+.bad-comment-prompt {
+  font-size: 13px;
+  color: var(--color-text);
+  font-weight: 600;
+}
+.bad-comment-reasons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.bad-comment-reason {
+  padding: 6px 10px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  color: var(--color-text-muted);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+.bad-comment-reason:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+.bad-comment-reason.active {
+  background: rgba(255, 100, 100, 0.16);
+  border-color: rgba(255, 100, 100, 0.5);
+  color: #ff8080;
+}
+.bad-comment-text {
+  width: 100%;
+  padding: 8px 10px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  color: var(--color-text);
+  font-size: 13px;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 44px;
+}
+.bad-comment-text::placeholder {
+  color: rgba(255, 255, 255, 0.35);
+}
+.bad-comment-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.bad-comment-cancel,
+.bad-comment-submit {
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+.bad-comment-cancel {
+  background: transparent;
+  border: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+}
+.bad-comment-cancel:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+.bad-comment-submit {
+  background: #10a37f;
+  border: 1px solid #10a37f;
+  color: #fff;
+}
+.bad-comment-submit:hover {
+  background: #1ec891;
+}
+@keyframes bad-comment-fade-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
 /* ── オンボーディング 3 ステップモーダル ── */
 .onboarding-overlay {
   position: fixed;

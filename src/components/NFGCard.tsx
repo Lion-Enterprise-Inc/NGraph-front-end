@@ -254,7 +254,7 @@ export default function NFGCard({
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
   const photoRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
-  const handleShareCard = (e: React.MouseEvent, item: QuickExplainItem) => {
+  const handleShareCard = async (e: React.MouseEvent, item: QuickExplainItem) => {
     e.stopPropagation();
     const nfgCode = item.nfg_code;
     if (!nfgCode) return;
@@ -263,13 +263,22 @@ export default function NFGCard({
     const displayName = language !== 'ja' && item.name_en ? item.name_en : item.name_jp;
     const subName = language !== 'ja' ? item.name_jp : item.name_en;
     const text = `${displayName}${subName ? ` - ${subName}` : ''}`;
+    let via: string = 'copy';
     if (navigator.share) {
+      via = 'native';
       navigator.share({ title: item.name_jp, text, url }).catch(() => {});
     } else {
       navigator.clipboard.writeText(`${text}\n${url}`).then(() => {
         setCopiedNfgCode(nfgCode);
         setTimeout(() => setCopiedNfgCode(null), 2000);
       });
+    }
+    // サーバ拡散カウンタを更新 (失敗してもユーザー体験を妨げない)
+    if (item.menu_uid) {
+      try {
+        const { logMenuShare } = await import('../services/menuLikes');
+        logMenuShare(item.menu_uid, via);
+      } catch {}
     }
   };
 
