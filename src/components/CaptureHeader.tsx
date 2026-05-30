@@ -1,5 +1,5 @@
 import { useRouter } from 'next/navigation'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Menu, X, MapPin, Clock, Phone, Instagram, ExternalLink, Sun, Moon, SquarePen, Globe, Share2 } from 'lucide-react'
 import { getUiCopy } from '../i18n/uiCopy'
 import { useAppContext } from './AppProvider'
@@ -42,6 +42,7 @@ export default function CaptureHeader({ onMenu, onLanguage, onNewChat, restauran
   const [showInfo, setShowInfo] = useState(false)
   const [shareToast, setShareToast] = useState<string | null>(null)
   const isJa = language === 'ja'
+  const toastTimerRef = useRef<number | null>(null)
 
   // HistoryDrawer の「店舗情報」ボタンから dispatch されるカスタムイベントで開く
   useEffect(() => {
@@ -49,6 +50,27 @@ export default function CaptureHeader({ onMenu, onLanguage, onNewChat, restauran
     window.addEventListener('omiseai:open-store-info', handler)
     return () => window.removeEventListener('omiseai:open-store-info', handler)
   }, [])
+
+  // unmount 時に shareToast の setTimeout を必ずクリア (React state-on-unmounted 警告防止)
+  useEffect(() => {
+    return () => {
+      if (toastTimerRef.current !== null) {
+        window.clearTimeout(toastTimerRef.current)
+        toastTimerRef.current = null
+      }
+    }
+  }, [])
+
+  const showToast = (message: string, ms = 1800) => {
+    if (toastTimerRef.current !== null) {
+      window.clearTimeout(toastTimerRef.current)
+    }
+    setShareToast(message)
+    toastTimerRef.current = window.setTimeout(() => {
+      setShareToast(null)
+      toastTimerRef.current = null
+    }, ms)
+  }
 
   const handleShare = async () => {
     if (!restaurantData) return
@@ -64,8 +86,12 @@ export default function CaptureHeader({ onMenu, onLanguage, onNewChat, restauran
       }
       if (typeof navigator !== 'undefined' && navigator.clipboard) {
         await navigator.clipboard.writeText(url)
-        setShareToast(isJa ? 'リンクをコピーしました' : 'Link copied')
-        window.setTimeout(() => setShareToast(null), 1800)
+        showToast(isJa ? 'リンクをコピーしました' : 'Link copied')
+        return
+      }
+      // share も clipboard も無い古いブラウザ (in-app webview 等): fallback prompt
+      if (typeof window !== 'undefined') {
+        window.prompt(isJa ? 'URL を手動でコピーしてください' : 'Copy this URL manually', url)
       }
     } catch {
       // ユーザーが share シートをキャンセルしたケースは無視

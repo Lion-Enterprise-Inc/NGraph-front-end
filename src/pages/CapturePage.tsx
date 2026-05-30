@@ -407,11 +407,11 @@ export default function CapturePage({
   // クチコミボタン: google_review_url が設定済の店舗で常時表示 (GoodBad と同じデザイン哲学)
   const shouldShowReviewPrompt = () => Boolean(restaurantData?.google_review_url);
 
-  // クチコミ誘導テキスト: 3 ターン目以降 (responseIdx >= 2) で AI 応答末尾に表示
-  // 「次に来る人の参考になる」と利他動機を刺激
+  // クチコミ誘導テキスト: スレッドあたり最大 2 回まで (3 ターン目 + 6 ターン目)
+  // 毎ターン出るとノイズ過剰 (code review HIGH-FE-4)
   const shouldShowReviewTextPrompt = (responseIdx: number) => {
     if (!restaurantData?.google_review_url) return false;
-    return responseIdx >= 2;
+    return responseIdx === 2 || responseIdx === 5;
   };
 
   /** ♡ トグル共通処理。Optimistic UI + サーバ集計 like_count 更新。 */

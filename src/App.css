@@ -8078,6 +8078,18 @@ textarea.form-input {
   color: var(--color-text-half);
 }
 
+/* ── クチコミ誘導テキスト (responseIdx 2/5 で控えめに表示) ── */
+.review-prompt-text {
+  margin-top: 10px;
+  padding: 8px 12px;
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--color-text-dim);
+  background: var(--color-surface-input);
+  border-left: 2px solid #facc15;
+  border-radius: 6px;
+}
+
 /* ── Quick actions row (Map / Call / Share) ── */
 .store-info-actions {
   display: grid;
