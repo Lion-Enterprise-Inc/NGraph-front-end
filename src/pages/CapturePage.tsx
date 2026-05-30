@@ -827,47 +827,53 @@ export default function CapturePage({
 
   const copy = useMemo(() => getUiCopy(activeLanguage), [activeLanguage]);
 
-  // ローテーション placeholder: 3 秒ごとに候補を切替えて入力欄の発見性 UP
-  // ChatGPT/Claude のように発見性の高い質問例を見せる
+  // ローテーション placeholder: 店内 QR 経由 = 既に着席している前提なので、
+  // 「店内で実際に聞く質問」だけに絞る。予約/駐車/営業時間 等の来店前情報は除外。
   const placeholderCandidates = useMemo<string[]>(() => {
     const lang = activeLanguage;
     if (lang === 'ja') {
       return [
         '何でも聞いてください',
         'おすすめは？',
-        'アレルギーはある？',
-        '営業時間を教えて',
-        '予約したい',
+        '名物は？',
+        'アレルギーは？',
         '季節限定メニューは？',
-        '駐車場はある？',
+        'ドリンク何がある？',
+        '〆は何がある？',
+        '合う飲み物は？',
+        '子供向けのメニューは？',
       ];
     }
     if (lang === 'en') {
       return [
         'Ask me anything',
         'What do you recommend?',
+        'Any signature dishes?',
         'Any allergens?',
-        'What are the opening hours?',
-        'I want to make a reservation',
-        'Any seasonal menu?',
+        'Seasonal menu?',
+        'What drinks do you have?',
+        'What pairs well with this?',
+        'Anything kid-friendly?',
       ];
     }
     if (lang === 'ko') {
       return [
         '무엇이든 물어보세요',
         '추천 메뉴는?',
+        '대표 메뉴는?',
         '알레르기 정보',
-        '영업 시간은?',
-        '예약하고 싶어요',
+        '계절 메뉴는?',
+        '음료는 뭐가 있어요?',
       ];
     }
     if (lang === 'zh-Hans' || lang === 'zh-Hant' || lang === 'zh') {
       return [
         '请随意提问',
         '有什么推荐？',
+        '招牌菜是？',
         '过敏信息',
-        '营业时间是？',
-        '我想预订',
+        '季节限定菜单',
+        '有什么饮料？',
       ];
     }
     return ['Ask me anything', 'What do you recommend?'];
@@ -883,8 +889,11 @@ export default function CapturePage({
     return () => window.clearInterval(id);
   }, [placeholderCandidates]);
 
-  const rotatingPlaceholder = placeholderCandidates[placeholderIdx]
-    ?? copy.restaurant.chatPlaceholder;
+  // 会話が始まったら placeholder を出さない (hero state = 最初の発話前のみ rotate)
+  const isFirstMessage = responses.length === 0;
+  const rotatingPlaceholder = isFirstMessage
+    ? (placeholderCandidates[placeholderIdx] ?? copy.restaurant.chatPlaceholder)
+    : '';
 
   const currentSuggestions = useMemo(() => {
     if (selectedRestaurant) {
