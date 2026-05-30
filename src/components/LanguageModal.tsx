@@ -5,6 +5,7 @@ const LANG_BADGES: Record<string, string> = {
   ja: 'JP', en: 'US', 'zh-Hans': 'CN', 'zh-Hant': 'TW',
   ko: 'KR', es: 'ES', fr: 'FR', de: 'DE', it: 'IT',
   pt: 'PT', ru: 'RU', th: 'TH', vi: 'VN', id: 'ID',
+  tl: 'PH',
 }
 
 type LanguageModalProps = {

@@ -684,9 +684,14 @@ body {
 .capture-header-left {
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: 14px;
   flex-shrink: 0;
   justify-self: start;
+}
+@media (max-width: 420px) {
+  .capture-header-left {
+    gap: 10px;
+  }
 }
 
 .capture-header > .icon-button:first-child,

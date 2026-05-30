@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
-import { X, SquarePen, UtensilsCrossed, Heart, Flame, MessageSquare, Store } from 'lucide-react'
+import { X, SquarePen, UtensilsCrossed, Heart, Flame, MessageSquare, Store, AlertCircle } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useChatHistory } from '../hooks/useChatHistory'
 import { getUiCopy } from '../i18n/uiCopy'
@@ -23,7 +23,7 @@ export default function HistoryDrawer({
   onSelectThread,
 }: HistoryDrawerProps) {
   const router = useRouter()
-  const { language, openMenuList, onOpenLiked, onOpenPopular } = useAppContext()
+  const { language, openMenuList, onOpenLiked, onOpenPopular, openPreferences } = useAppContext()
   const copy = getUiCopy(language)
   const { threads, refresh } = useChatHistory(restaurantSlug ?? null)
 
@@ -126,7 +126,19 @@ export default function HistoryDrawer({
           </div>
         )}
 
-        {/* ── セクション 4: 他 ── */}
+        {/* ── セクション 4: 個人設定 ── */}
+        <div className="sidebar-section">
+          <div className="sidebar-section-label">{t('sectionPreferences', '個人設定')}</div>
+          <button
+            className="sidebar-row"
+            onClick={() => { openPreferences(); onClose?.(); }}
+          >
+            <AlertCircle size={16} strokeWidth={1.75} />
+            <span>{t('preferencesAllergy', 'アレルギー・食事スタイル')}</span>
+          </button>
+        </div>
+
+        {/* ── セクション 5: 他 ── */}
         <div className="sidebar-section sidebar-section-bottom">
           <button
             className="sidebar-row sidebar-row-muted"

@@ -12,6 +12,7 @@ import { usePathname } from "next/navigation";
 import LanguageModal from "./LanguageModal";
 import LanguageSuggestionBanner from "./LanguageSuggestionBanner";
 import OnboardingModal from "./OnboardingModal";
+import PreferencesModal from "./PreferencesModal";
 import HistoryDrawer from "./HistoryDrawer";
 import MenuListDrawer from "./MenuListDrawer";
 import { getUiCopy } from "../i18n/uiCopy";
@@ -33,6 +34,8 @@ type AppContextValue = {
   closeHistoryDrawer: () => void;
   openMenuList: () => void;
   closeMenuList: () => void;
+  openPreferences: () => void;
+  closePreferences: () => void;
   pendingAttachment: PendingAttachment | null;
   setPendingAttachment: (attachment: PendingAttachment | null) => void;
   restaurantSlug: string | null;
@@ -85,6 +88,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [languageModalOpen, setLanguageModalOpen] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [menuListOpen, setMenuListOpen] = useState(false);
+  const [preferencesOpen, setPreferencesOpen] = useState(false);
   const [pendingAttachment, setPendingAttachment] =
     useState<PendingAttachment | null>(null);
   const [restaurantSlug, setRestaurantSlug] = useState<string | null>(null);
@@ -194,6 +198,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
           closeHistoryDrawer: () => setDrawerOpen(false),
           openMenuList: () => setMenuListOpen(true),
           closeMenuList: () => setMenuListOpen(false),
+          openPreferences: () => setPreferencesOpen(true),
+          closePreferences: () => setPreferencesOpen(false),
           pendingAttachment,
           setPendingAttachment,
           restaurantSlug,
@@ -249,6 +255,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
               restaurantSlug={restaurantSlug}
               businessType={businessType}
               onAskAbout={onAskAbout ?? undefined}
+            />
+            <PreferencesModal
+              open={preferencesOpen}
+              onClose={() => setPreferencesOpen(false)}
             />
           </>
         )}

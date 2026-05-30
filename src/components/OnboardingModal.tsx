@@ -24,7 +24,7 @@ import { ChevronRight, Globe, AlertCircle, Sparkles, X } from 'lucide-react'
 const ONBOARDED_KEY = 'omiseai_onboarded'
 const ALLERGIES_KEY = 'omiseai_allergies'
 
-// 主要 12 言語（おすすめ順、簡易セレクタ用）
+// 主要 15 言語（おすすめ順、簡易セレクタ用）— 蟹くるふ実需要 11言語 + 周辺
 const QUICK_LANGS: { code: string; label: string; native: string }[] = [
   { code: 'ja',     label: 'Japanese',   native: '日本語' },
   { code: 'en',     label: 'English',    native: 'English' },
@@ -36,8 +36,11 @@ const QUICK_LANGS: { code: string; label: string; native: string }[] = [
   { code: 'de',     label: 'German',     native: 'Deutsch' },
   { code: 'it',     label: 'Italian',    native: 'Italiano' },
   { code: 'pt',     label: 'Portuguese', native: 'Português' },
+  { code: 'ru',     label: 'Russian',    native: 'Русский' },
   { code: 'th',     label: 'Thai',       native: 'ไทย' },
   { code: 'vi',     label: 'Vietnamese', native: 'Tiếng Việt' },
+  { code: 'id',     label: 'Indonesian', native: 'Bahasa Indonesia' },
+  { code: 'tl',     label: 'Filipino',   native: 'Filipino' },
 ]
 
 // 8 大アレルゲン

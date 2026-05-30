@@ -18,6 +18,7 @@ export const languageOptions: LanguageOption[] = [
   { code: "th", label: "ไทย" },
   { code: "vi", label: "Tiếng Việt" },
   { code: "id", label: "Bahasa Indonesia" },
+  { code: "tl", label: "Filipino" },
 ];
 
 const languageLabelMap = new Map(
