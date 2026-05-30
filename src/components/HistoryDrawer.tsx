@@ -56,7 +56,7 @@ export default function HistoryDrawer({
         </div>
 
         {/* ── セクション 1: 会話 ── */}
-        <div className="sidebar-section">
+        <div className="sidebar-section sidebar-section-grow">
           <div className="sidebar-section-label">{t('sectionConversation', '会話')}</div>
           <button className="sidebar-row" onClick={() => { onNewChat?.(); onClose?.(); }}>
             <SquarePen size={16} strokeWidth={1.75} />

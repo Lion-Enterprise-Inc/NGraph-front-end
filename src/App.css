@@ -6815,6 +6815,10 @@ textarea.form-input {
   padding: 8px 0;
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
+.sidebar-section-grow {
+  flex: 1;
+  min-height: 0;
+}
 .sidebar-section:last-child,
 .sidebar-section-bottom {
   border-bottom: none;
