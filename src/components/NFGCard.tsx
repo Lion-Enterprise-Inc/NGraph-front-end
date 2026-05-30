@@ -42,6 +42,106 @@ function textOverlapRatio(a: string | undefined | null, b: string | undefined | 
 //      梅酒のパウンドケーキ (story が再利用の文脈追加) = 0.106 → 表示
 const STORY_DUPLICATE_THRESHOLD = 0.15;
 
+type DrinkMeta = NonNullable<QuickExplainItem['drink_meta']>;
+type SpecRow = { label: string; value: string };
+
+/**
+ * drink_meta の kind 別にラベル付き spec rows を生成する。
+ * 散文(description / story)で読みにくくなるスペック情報を
+ * 構造化テーブルとして抜き出す。値が未登録のキーは出さない。
+ */
+function buildDrinkSpecRows(meta: DrinkMeta | undefined): SpecRow[] {
+  if (!meta) return [];
+  const rows: SpecRow[] = [];
+  const kind = (meta.kind || '').toString().toLowerCase();
+  const push = (label: string, value: string | number | undefined | null, suffix = '') => {
+    if (value === undefined || value === null || value === '') return;
+    rows.push({ label, value: `${value}${suffix}` });
+  };
+  const joinList = (arr: unknown): string | undefined => {
+    if (!Array.isArray(arr) || arr.length === 0) return undefined;
+    return arr.map(String).join(' / ');
+  };
+
+  if (kind === 'sake') {
+    push('種類', meta.sake_type);
+    if (meta.brewery) {
+      const loc = meta.brewery_location ? `（${meta.brewery_location}）` : '';
+      push('蔵元', `${meta.brewery}${loc}`);
+    }
+    if (meta.rice_variety) {
+      const origin = meta.rice_origin ? `（${meta.rice_origin}）` : '';
+      push('酒米', `${meta.rice_variety}${origin}`);
+    }
+    push('精米歩合', meta.polishing_ratio_pct, '%');
+    push('日本酒度', meta.sake_meter_value);
+    push('度数', meta.abv_pct, '%');
+    const bottles = joinList(meta.bottle_sizes_ml);
+    if (bottles) push('容量', `${bottles}ml`);
+    push('推奨温度', meta.recommended_temp);
+    push('季節', meta.season);
+  } else if (kind === 'wine') {
+    push('品種', meta.grape_variety);
+    if (meta.region) {
+      const sub = meta.sub_region ? ` / ${meta.sub_region}` : '';
+      push('産地', `${meta.region}${sub}`);
+    }
+    push('ヴィンテージ', meta.vintage);
+    push('度数', meta.abv_pct, '%');
+    const bottles = joinList(meta.bottle_sizes_ml);
+    if (bottles) push('容量', `${bottles}ml`);
+  } else if (kind === 'beer') {
+    push('スタイル', meta.beer_style);
+    push('醸造所', meta.brewery);
+    push('度数', meta.abv_pct, '%');
+    push('IBU', meta.ibu);
+    const hops = joinList(meta.hops);
+    if (hops) push('ホップ', hops);
+    const bottles = joinList(meta.bottle_sizes_ml);
+    if (bottles) push('容量', `${bottles}ml`);
+  } else if (kind === 'cocktail') {
+    push('ベース', meta.base_spirit);
+    push('度数', meta.abv_pct, '%');
+    push('グラス', meta.glass_type);
+  } else if (kind === 'whisky' || kind === 'spirit') {
+    push('種類', meta.kind);
+    push('蒸留所', meta.brewery);
+    if (meta.region) push('産地', meta.region);
+    push('熟成', meta.age_years, '年');
+    push('カスク', meta.cask_type);
+    push('度数', meta.abv_pct, '%');
+    const bottles = joinList(meta.bottle_sizes_ml);
+    if (bottles) push('容量', `${bottles}ml`);
+  } else if (kind === 'soft_drink') {
+    push('カフェイン', meta.caffeine_mg, ' mg');
+    const bottles = joinList(meta.bottle_sizes_ml);
+    if (bottles) push('容量', `${bottles}ml`);
+  } else {
+    // Unknown kind — generic display
+    push('種類', meta.kind);
+    push('度数', meta.abv_pct, '%');
+    const bottles = joinList(meta.bottle_sizes_ml);
+    if (bottles) push('容量', `${bottles}ml`);
+  }
+
+  return rows;
+}
+
+function DrinkSpecTable({ meta }: { meta: DrinkMeta | undefined }) {
+  const rows = buildDrinkSpecRows(meta);
+  if (rows.length === 0) return null;
+  return (
+    <div className="nfgcard-drink-spec">
+      {rows.map((row) => (
+        <div key={row.label} className="nfgcard-drink-spec-row">
+          <span className="nfgcard-drink-spec-label">{row.label}</span>
+          <span className="nfgcard-drink-spec-value">{row.value}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 type Props = {
   items: QuickExplainItem[];
   language: string;
@@ -276,6 +376,11 @@ export default function NFGCard({
               <div className="nfgcard-restaurant">
                 {restaurantName}{restaurantCity ? ` \u00b7 ${restaurantCity}` : ''}
               </div>
+            )}
+
+            {/* Drink spec table (sake/wine/beer/cocktail/spirit 等) */}
+            {item.category === 'drink' && (
+              <DrinkSpecTable meta={item.drink_meta} />
             )}
 
             {/* Description */}

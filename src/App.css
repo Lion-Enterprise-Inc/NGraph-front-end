@@ -7728,6 +7728,37 @@ textarea.form-input {
   background: rgba(120, 140, 180, 0.15);
   color: #8aa3c4;
 }
+/* ドリンクスペック表（drink_meta） */
+.nfgcard-drink-spec {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: 12px;
+  row-gap: 4px;
+  margin: 8px 0 10px;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+.nfgcard-drink-spec-row {
+  display: contents;
+}
+.nfgcard-drink-spec-label {
+  color: rgba(255, 255, 255, 0.55);
+  font-weight: 500;
+  white-space: nowrap;
+}
+.nfgcard-drink-spec-value {
+  color: rgba(255, 255, 255, 0.9);
+}
+@media (max-width: 480px) {
+  .nfgcard-drink-spec {
+    font-size: 0.8rem;
+    column-gap: 8px;
+  }
+}
 .nfgcard-badge-ai {
   background: rgba(160, 160, 180, 0.15);
   color: #999;
