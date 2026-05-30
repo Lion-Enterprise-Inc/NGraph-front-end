@@ -112,6 +112,7 @@ const uiCopy = {
       sidebarTitle: "History",
       newChat: "New chat",
       empty: "No conversations yet",
+      writeReview: "Write a review",
     },
     hero: {
       heading: "Snap & Translate",
@@ -151,6 +152,7 @@ const uiCopy = {
       seasonalMenu: "Seasonal?",
       drinksMenu: "Drinks?",
       googleReview: "Review",
+      reviewPromptText: "If you enjoyed it, a quick review helps the next visitors 🌟",
     },
     nfg: {
       ingredients: "Ingredients",
@@ -326,6 +328,7 @@ const uiCopy = {
       sidebarTitle: "履歴",
       newChat: "新しい会話",
       empty: "まだ会話がありません",
+      writeReview: "クチコミを書く",
     },
     hero: {
       heading: "撮って翻訳",
@@ -365,6 +368,7 @@ const uiCopy = {
       seasonalMenu: "季節メニューは？",
       drinksMenu: "ドリンクは？",
       googleReview: "クチコミ",
+      reviewPromptText: "次に来る人の参考になるので、よかったらクチコミも残してください 🌟",
     },
     nfg: {
       ingredients: "主な材料",
@@ -540,6 +544,7 @@ const uiCopy = {
       sidebarTitle: "기록",
       newChat: "새 대화",
       empty: "아직 대화가 없습니다",
+      writeReview: "리뷰 작성하기",
     },
     hero: {
       heading: "찍고 번역",
@@ -579,6 +584,7 @@ const uiCopy = {
       seasonalMenu: "계절 메뉴는?",
       drinksMenu: "음료는?",
       googleReview: "리뷰",
+      reviewPromptText: "다음 방문객에게 도움이 되니, 괜찮으시면 리뷰도 남겨주세요 🌟",
     },
     nfg: {
       ingredients: "재료",
@@ -740,6 +746,7 @@ const uiCopy = {
       sidebarTitle: "历史记录",
       newChat: "新对话",
       empty: "还没有对话",
+      writeReview: "写评价",
     },
     hero: {
       heading: "拍照翻译",
@@ -779,6 +786,7 @@ const uiCopy = {
       seasonalMenu: "季节菜单？",
       drinksMenu: "饮品？",
       googleReview: "评价",
+      reviewPromptText: "您的评价能帮助下一位访客 🌟",
     },
     nfg: {
       ingredients: "食材",
@@ -927,6 +935,7 @@ const uiCopy = {
       sidebarTitle: "歷史紀錄",
       newChat: "新對話",
       empty: "還沒有對話",
+      writeReview: "寫評價",
     },
     hero: {
       heading: "拍照翻譯",
@@ -966,6 +975,7 @@ const uiCopy = {
       seasonalMenu: "季節菜單？",
       drinksMenu: "飲品？",
       googleReview: "評價",
+      reviewPromptText: "您的評價能幫助下一位訪客 🌟",
     },
     nfg: {
       ingredients: "食材",

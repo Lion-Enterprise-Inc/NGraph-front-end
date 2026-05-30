@@ -42,6 +42,8 @@ type AppContextValue = {
   setRestaurantSlug: (slug: string | null) => void;
   businessType: string | null;
   setBusinessType: (type: string | null) => void;
+  googleReviewUrl: string | null;
+  setGoogleReviewUrl: (url: string | null) => void;
   onNewChat: (() => void) | null;
   setOnNewChat: (fn: (() => void) | null) => void;
   onSelectThread: ((threadUid: string) => void) | null;
@@ -93,6 +95,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     useState<PendingAttachment | null>(null);
   const [restaurantSlug, setRestaurantSlug] = useState<string | null>(null);
   const [businessType, setBusinessType] = useState<string | null>(null);
+  const [googleReviewUrl, setGoogleReviewUrl] = useState<string | null>(null);
   const [onNewChat, setOnNewChat] = useState<(() => void) | null>(null);
   const [onSelectThread, setOnSelectThread] = useState<((threadUid: string) => void) | null>(null);
   const [onOpenLiked, setOnOpenLiked] = useState<(() => void) | null>(null);
@@ -206,6 +209,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
           setRestaurantSlug,
           businessType,
           setBusinessType,
+          googleReviewUrl,
+          setGoogleReviewUrl,
           onNewChat,
           setOnNewChat,
           onSelectThread,

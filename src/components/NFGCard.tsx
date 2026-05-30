@@ -166,8 +166,11 @@ type Props = {
     calories: string;
     confidence: string;
     texture: string;
+    textureDrink?: string;
     pairing: string;
+    pairingDrink?: string;
     howToEat: string;
+    howToEatDrink?: string;
     servingStyle: string;
     kidFriendly: string;
     notKidFriendly: string;

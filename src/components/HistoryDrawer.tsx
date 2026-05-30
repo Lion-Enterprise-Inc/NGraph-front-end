@@ -1,11 +1,12 @@
 'use client'
 
 import { useEffect } from 'react'
-import { X, SquarePen, UtensilsCrossed, Heart, Flame, MessageSquare, Store, AlertCircle } from 'lucide-react'
+import { X, SquarePen, UtensilsCrossed, Heart, Flame, MessageSquare, Store, AlertCircle, Star } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useChatHistory } from '../hooks/useChatHistory'
 import { getUiCopy } from '../i18n/uiCopy'
 import { useAppContext } from './AppProvider'
+import { EventApi } from '../services/api'
 
 type HistoryDrawerProps = {
   open: boolean
@@ -23,7 +24,7 @@ export default function HistoryDrawer({
   onSelectThread,
 }: HistoryDrawerProps) {
   const router = useRouter()
-  const { language, openMenuList, onOpenLiked, onOpenPopular, openPreferences } = useAppContext()
+  const { language, openMenuList, onOpenLiked, onOpenPopular, openPreferences, googleReviewUrl } = useAppContext()
   const copy = getUiCopy(language)
   const { threads, refresh } = useChatHistory(restaurantSlug ?? null)
 
@@ -123,6 +124,23 @@ export default function HistoryDrawer({
               <Store size={16} strokeWidth={1.75} />
               <span>{t('storeInfo', '店舗情報')}</span>
             </button>
+            {googleReviewUrl && (
+              <a
+                href={googleReviewUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="sidebar-row"
+                onClick={() => {
+                  if (restaurantSlug) {
+                    EventApi.log({ restaurant_slug: restaurantSlug, event: 'review', message_uid: null, thread_uid: null, lang: language, source: 'hamburger' } as any)
+                  }
+                  onClose?.()
+                }}
+              >
+                <Star size={16} strokeWidth={1.75} />
+                <span>{t('writeReview', 'クチコミを書く')}</span>
+              </a>
+            )}
           </div>
         )}
 

@@ -1,6 +1,6 @@
 import { useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
-import { Menu, X, MapPin, Clock, Phone, Instagram, ExternalLink, Sun, Moon, SquarePen, Globe } from 'lucide-react'
+import { Menu, X, MapPin, Clock, Phone, Instagram, ExternalLink, Sun, Moon, SquarePen, Globe, Share2 } from 'lucide-react'
 import { getUiCopy } from '../i18n/uiCopy'
 import { useAppContext } from './AppProvider'
 
@@ -40,6 +40,7 @@ export default function CaptureHeader({ onMenu, onLanguage, onNewChat, restauran
   const copy = getUiCopy(language)
   const badge = LANG_BADGES[language] || language.slice(0, 2).toUpperCase()
   const [showInfo, setShowInfo] = useState(false)
+  const [shareToast, setShareToast] = useState<string | null>(null)
   const isJa = language === 'ja'
 
   // HistoryDrawer の「店舗情報」ボタンから dispatch されるカスタムイベントで開く
@@ -48,6 +49,28 @@ export default function CaptureHeader({ onMenu, onLanguage, onNewChat, restauran
     window.addEventListener('omiseai:open-store-info', handler)
     return () => window.removeEventListener('omiseai:open-store-info', handler)
   }, [])
+
+  const handleShare = async () => {
+    if (!restaurantData) return
+    const url = typeof window !== 'undefined' ? window.location.href : ''
+    const title = restaurantData.name || 'OMISEAI'
+    const text = isJa
+      ? `${title} — AI で何でも聞ける店舗ガイド`
+      : `${title} — Ask the AI guide anything`
+    try {
+      if (typeof navigator !== 'undefined' && typeof (navigator as Navigator).share === 'function') {
+        await (navigator as Navigator).share({ title, text, url })
+        return
+      }
+      if (typeof navigator !== 'undefined' && navigator.clipboard) {
+        await navigator.clipboard.writeText(url)
+        setShareToast(isJa ? 'リンクをコピーしました' : 'Link copied')
+        window.setTimeout(() => setShareToast(null), 1800)
+      }
+    } catch {
+      // ユーザーが share シートをキャンセルしたケースは無視
+    }
+  }
 
   return (
     <>
@@ -153,6 +176,41 @@ export default function CaptureHeader({ onMenu, onLanguage, onNewChat, restauran
               </div>
             )}
           </div>
+
+          {/* ── Quick actions: Map / 電話 / 共有 ── */}
+          <div className="store-info-actions">
+            {restaurantData.address && (
+              <a
+                className="store-info-action"
+                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(restaurantData.address)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <MapPin size={16} strokeWidth={1.75} />
+                <span>{isJa ? 'Map で開く' : 'Open Map'}</span>
+              </a>
+            )}
+            {restaurantData.phone_number && (
+              <a
+                className="store-info-action"
+                href={`tel:${restaurantData.phone_number}`}
+              >
+                <Phone size={16} strokeWidth={1.75} />
+                <span>{isJa ? '電話' : 'Call'}</span>
+              </a>
+            )}
+            <button
+              type="button"
+              className="store-info-action"
+              onClick={handleShare}
+            >
+              <Share2 size={16} strokeWidth={1.75} />
+              <span>{isJa ? '共有' : 'Share'}</span>
+            </button>
+          </div>
+          {shareToast && (
+            <div className="store-info-toast" role="status">{shareToast}</div>
+          )}
         </div>
       )}
     </>

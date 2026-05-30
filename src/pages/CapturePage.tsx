@@ -263,6 +263,7 @@ export default function CapturePage({
     setPendingAttachment,
     setRestaurantSlug: setCtxSlug,
     setBusinessType: setCtxBusinessType,
+    setGoogleReviewUrl: setCtxGoogleReviewUrl,
     setOnNewChat,
     setOnSelectThread,
     setOnOpenLiked,
@@ -403,37 +404,14 @@ export default function CapturePage({
     } catch {}
   };
 
-  /**
-   * クチコミボタン表示判定。
-   * - 会話 5 ターン超 → 会話の深さで「もう食べた可能性が高い」と推測
-   * - 直近メッセージに「美味しかった/ごちそうさま/ありがとう/delicious/thanks」等の終結語
-   * - 「クチコミ/レビュー/review」を明示
-   * 上記いずれか + google_review_url が設定済 → 表示
-   *
-   * これで全 AI 応答に常時露出するノイズを抑える。
-   */
-  const _REVIEW_END_OF_MEAL_KEYWORDS = [
-    '美味しかった', 'おいしかった', '美味しい', 'おいしい',
-    'ごちそうさま', 'ご馳走さま', 'ごちそう様',
-    'ありがとう', 'ありがと',
-    '満足', '良かった', 'よかった',
-    'delicious', 'tasty', 'thank', 'thanks', 'great food',
-    'enjoyed', 'satisfied',
-  ];
-  const _REVIEW_INTENT_KEYWORDS = [
-    'クチコミ', '口コミ', 'レビュー', '評判', '星', '★',
-    'review', 'rating', 'comment',
-  ];
+  // クチコミボタン: google_review_url が設定済の店舗で常時表示 (GoodBad と同じデザイン哲学)
+  const shouldShowReviewPrompt = () => Boolean(restaurantData?.google_review_url);
 
-  const shouldShowReviewPrompt = (responseIdx: number, userMsg?: string) => {
+  // クチコミ誘導テキスト: 3 ターン目以降 (responseIdx >= 2) で AI 応答末尾に表示
+  // 「次に来る人の参考になる」と利他動機を刺激
+  const shouldShowReviewTextPrompt = (responseIdx: number) => {
     if (!restaurantData?.google_review_url) return false;
-    // 5 ターン超 (深い会話 = 食事後の可能性高い)
-    if (responseIdx >= 4) return true;
-    // メッセージに「終結 / 満足 / レビュー」関連語
-    const msg = (userMsg || '').toLowerCase();
-    if (_REVIEW_END_OF_MEAL_KEYWORDS.some((kw) => msg.includes(kw.toLowerCase()))) return true;
-    if (_REVIEW_INTENT_KEYWORDS.some((kw) => msg.includes(kw.toLowerCase()))) return true;
-    return false;
+    return responseIdx >= 2;
   };
 
   /** ♡ トグル共通処理。Optimistic UI + サーバ集計 like_count 更新。 */
@@ -699,6 +677,13 @@ export default function CapturePage({
                 google_review_url: data.result.google_review_url || null,
                 google_rating: data.result.google_rating || null,
                 address: data.result.address || null,
+                city: data.result.city || null,
+                phone_number: data.result.phone_number || null,
+                opening_hours: data.result.opening_hours || null,
+                holidays: data.result.holidays || null,
+                access_info: data.result.access_info || null,
+                budget: data.result.budget || null,
+                instagram_url: data.result.instagram_url || null,
                 url_slug: data.result.url_slug || null,
                 prefecture_slug: data.result.prefecture_slug || null,
                 city_slug: data.result.city_slug || null,
@@ -707,6 +692,7 @@ export default function CapturePage({
                 updated_at: ''
               });
               setCtxBusinessType(data.result.business_type || null);
+              setCtxGoogleReviewUrl(data.result.google_review_url || null);
               recordVisit(data.result.slug, data.result.name);
               document.title = `${data.result.name_romaji || data.result.name} | NGraph`;
 
@@ -2308,7 +2294,7 @@ export default function CapturePage({
                             </button>
                           );
                         })()}
-                        {shouldShowReviewPrompt(responseIdx, response.input.text) && (
+                        {shouldShowReviewPrompt() && (
                           <a
                             href={restaurantData?.google_review_url ?? undefined}
                             target="_blank"
@@ -2326,6 +2312,9 @@ export default function CapturePage({
                           </a>
                         )}
                       </div>
+                      {shouldShowReviewTextPrompt(responseIdx) && (
+                        <div className="review-prompt-text">{(copy.restaurant as any).reviewPromptText}</div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -2540,7 +2529,7 @@ export default function CapturePage({
                             </button>
                           );
                         })()}
-                        {shouldShowReviewPrompt(responseIdx, response.input.text) && (
+                        {shouldShowReviewPrompt() && (
                           <a
                             href={restaurantData?.google_review_url ?? undefined}
                             target="_blank"
@@ -2558,6 +2547,9 @@ export default function CapturePage({
                           </a>
                         )}
                       </div>
+                      {shouldShowReviewTextPrompt(responseIdx) && (
+                        <div className="review-prompt-text">{(copy.restaurant as any).reviewPromptText}</div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -2710,7 +2702,7 @@ export default function CapturePage({
                                   </button>
                                 );
                               })()}
-                              {shouldShowReviewPrompt(responseIdx, response.input.text) && (
+                              {shouldShowReviewPrompt() && (
                                 <a
                                   href={restaurantData?.google_review_url ?? undefined}
                                   target="_blank"
@@ -2728,6 +2720,9 @@ export default function CapturePage({
                                 </a>
                               )}
                             </div>
+                            {shouldShowReviewTextPrompt(responseIdx) && (
+                              <div className="review-prompt-text">{(copy.restaurant as any).reviewPromptText}</div>
+                            )}
                           </div>
                           </>
                         )}
