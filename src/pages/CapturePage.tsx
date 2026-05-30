@@ -247,8 +247,8 @@ export default function CapturePage({
     cleanUrlClearedRef.current = true;
     const slug = cleanUrlMatch[3];
     try {
-      sessionStorage.removeItem(`ngraph_responses_${slug}`);
-      sessionStorage.removeItem(`ngraph_threadUid_${slug}`);
+      localStorage.removeItem(`ngraph_responses_${slug}`);
+      localStorage.removeItem(`ngraph_threadUid_${slug}`);
     } catch {}
   }
   const restaurantSlug = searchParams?.get("restaurant") || (cleanUrlMatch ? cleanUrlMatch[3] : null);
@@ -279,11 +279,11 @@ export default function CapturePage({
   const appliedAttachmentRef = useRef(false);
   const threadUidRef = useRef<string | null>(null);
   const [responses, setResponses] = useState<ResponseItem[]>(() => {
-    // sessionStorageから復元（ページ遷移しても残る）
+    // localStorageから復元（ページ遷移しても残る）
     if (typeof window === 'undefined') return [];
     try {
       const key = `ngraph_responses_${restaurantSlug || 'default'}`;
-      const saved = sessionStorage.getItem(key);
+      const saved = localStorage.getItem(key);
       if (saved) {
         const parsed = JSON.parse(saved);
         // blob URLは復元できないのでnullに
@@ -524,12 +524,12 @@ export default function CapturePage({
     }
   }, [responses, likedMenus]);
 
-  // responsesをsessionStorageに自動保存
+  // responsesをlocalStorageに自動保存
   useEffect(() => {
     if (responses.length === 0) return;
     try {
       const key = `ngraph_responses_${restaurantSlug || 'default'}`;
-      sessionStorage.setItem(key, JSON.stringify(responses));
+      localStorage.setItem(key, JSON.stringify(responses));
     } catch {}
   }, [responses, restaurantSlug]);
 
@@ -537,7 +537,7 @@ export default function CapturePage({
   useEffect(() => {
     if (!restaurantSlug) return;
     const key = `ngraph_threadUid_${restaurantSlug || 'default'}`;
-    const tid = sessionStorage.getItem(key);
+    const tid = localStorage.getItem(key);
     if (!tid) return;
     const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://dev-backend.ngraph.jp/api';
     fetch(`${apiBaseUrl}/public-chat/${restaurantSlug}/photo-adopted?thread_uid=${tid}`)
@@ -551,8 +551,8 @@ export default function CapturePage({
   useEffect(() => {
     if (typeof window === 'undefined' || !isNewVisit) return;
     try {
-      sessionStorage.removeItem(`ngraph_responses_${restaurantSlug || 'default'}`);
-      sessionStorage.removeItem(`ngraph_threadUid_${restaurantSlug || 'default'}`);
+      localStorage.removeItem(`ngraph_responses_${restaurantSlug || 'default'}`);
+      localStorage.removeItem(`ngraph_threadUid_${restaurantSlug || 'default'}`);
     } catch {}
     threadUidRef.current = null;
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -563,7 +563,7 @@ export default function CapturePage({
     if (typeof window === 'undefined' || isNewVisit) return;
     try {
       const key = `ngraph_threadUid_${restaurantSlug || 'default'}`;
-      const saved = sessionStorage.getItem(key);
+      const saved = localStorage.getItem(key);
       if (saved) threadUidRef.current = saved;
     } catch {}
     // 復元されたレスポンスのタイピングを完了状態にする
@@ -1493,7 +1493,7 @@ export default function CapturePage({
                     threadUidRef.current = data.thread_uid;
                     try {
                       const tKey = `ngraph_threadUid_${restaurantSlug || 'default'}`;
-                      sessionStorage.setItem(tKey, data.thread_uid);
+                      localStorage.setItem(tKey, data.thread_uid);
                     } catch {}
                   }
                   if (data.type === 'content') {
@@ -1862,8 +1862,8 @@ export default function CapturePage({
     try {
       const key = `ngraph_responses_${restaurantSlug || 'default'}`;
       const tKey = `ngraph_threadUid_${restaurantSlug || 'default'}`;
-      sessionStorage.removeItem(key);
-      sessionStorage.removeItem(tKey);
+      localStorage.removeItem(key);
+      localStorage.removeItem(tKey);
     } catch {}
   };
 
@@ -1882,8 +1882,8 @@ export default function CapturePage({
     try {
       const key = `ngraph_responses_${restaurantSlug || 'default'}`;
       const tKey = `ngraph_threadUid_${restaurantSlug || 'default'}`;
-      sessionStorage.removeItem(key);
-      sessionStorage.setItem(tKey, threadUid);
+      localStorage.removeItem(key);
+      localStorage.setItem(tKey, threadUid);
     } catch {}
 
     // Fetch thread messages from BE

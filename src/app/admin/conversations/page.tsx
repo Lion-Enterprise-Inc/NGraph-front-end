@@ -191,7 +191,7 @@ export default function ConversationsPage() {
               <span>{detail.summary || '(なし)'}</span>
             </div>
             <div>
-              <span style={{ color: 'var(--muted)' }}>メッセージ数: </span>
+              <span style={{ color: 'var(--muted)' }}>ラリー数: </span>
               <span>{detail.messages.length}</span>
             </div>
             <div>
