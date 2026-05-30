@@ -1,6 +1,6 @@
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
-import { Menu, Info, X, MapPin, Clock, Phone, Instagram, ExternalLink, Sun, Moon, SquarePen } from 'lucide-react'
+import { Menu, Info, X, MapPin, Clock, Phone, Instagram, ExternalLink, Sun, Moon, SquarePen, Globe } from 'lucide-react'
 import { getUiCopy } from '../i18n/uiCopy'
 import { useAppContext } from './AppProvider'
 
@@ -86,8 +86,15 @@ export default function CaptureHeader({ onMenu, onLanguage, onNewChat, restauran
           <button className="icon-button" type="button" aria-label="Toggle theme" onClick={toggleTheme}>
             {theme === 'dark' ? <Sun size={18} strokeWidth={1.75} color="currentColor" /> : <Moon size={18} strokeWidth={1.75} color="currentColor" />}
           </button>
-          <button className="header-lang-badge" type="button" onClick={onLanguage}>
-            {badge}
+          <button
+            className="header-lang-badge"
+            type="button"
+            onClick={onLanguage}
+            aria-label="Change language"
+            title="Change language"
+          >
+            <Globe size={14} strokeWidth={1.75} />
+            <span>{badge}</span>
           </button>
         </div>
       </header>

@@ -10,6 +10,8 @@ import {
 } from "react";
 import { usePathname } from "next/navigation";
 import LanguageModal from "./LanguageModal";
+import LanguageSuggestionBanner from "./LanguageSuggestionBanner";
+import OnboardingModal from "./OnboardingModal";
 import HistoryDrawer from "./HistoryDrawer";
 import MenuListDrawer from "./MenuListDrawer";
 import { getUiCopy } from "../i18n/uiCopy";
@@ -92,6 +94,42 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [onOpenLiked, setOnOpenLiked] = useState<(() => void) | null>(null);
   const [onOpenPopular, setOnOpenPopular] = useState<(() => void) | null>(null);
   const [onAskAbout, setOnAskAbout] = useState<((query: string) => void) | null>(null);
+
+  // オンボーディング: 初回訪問 (店舗 context あり) で表示
+  const [onboardingOpen, setOnboardingOpen] = useState(false);
+  const [onboardingDefaultLang, setOnboardingDefaultLang] = useState("ja");
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (!restaurantSlug) return;  // 店舗未確定なら出さない
+    if (localStorage.getItem("omiseai_onboarded") === "true") return;
+    // 既に何度か言語選択した実績がある場合は出さない
+    if (localStorage.getItem("appLanguage")) {
+      try { localStorage.setItem("omiseai_onboarded", "true"); } catch {}
+      return;
+    }
+    // ブラウザ言語を検出して default
+    const browser = (navigator.language || "ja").toLowerCase();
+    let detected = browser.split("-")[0];
+    if (browser.startsWith("zh")) {
+      detected = browser.includes("hant") || browser.includes("tw") || browser.includes("hk")
+        ? "zh-Hant" : "zh-Hans";
+    }
+    setOnboardingDefaultLang(detected);
+    setOnboardingOpen(true);
+  }, [restaurantSlug]);
+
+  const handleOnboardingComplete = (lang: string, allergies: string[], firstQuery: string | null) => {
+    setLanguage(lang, "onboarding");
+    try {
+      localStorage.setItem("omiseai_onboarded", "true");
+      localStorage.setItem("omiseai_allergies", JSON.stringify(allergies));
+    } catch {}
+    setOnboardingOpen(false);
+    if (firstQuery && onAskAbout) {
+      // chat に最初のクエリ投入
+      setTimeout(() => onAskAbout(firstQuery), 200);
+    }
+  };
   const [geoLocation, setGeoLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [theme, setThemeState] = useState<Theme>("dark");
 
@@ -118,21 +156,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setLanguage(stored, "storage");
       return;
     }
-    // First visit: detect browser language and show language picker
-    const browserLanguage = navigator.language;
-    const normalized = browserLanguage.toLowerCase();
-    let detected = normalized.split("-")[0];
-    if (normalized.startsWith("zh")) {
-      detected =
-        normalized.includes("hant") ||
-        normalized.includes("tw") ||
-        normalized.includes("hk")
-          ? "zh-Hant"
-          : "zh-Hans";
-    }
-    setLanguageState(detected);
-    // Auto-open language sheet on first visit so user confirms their language
-    setLanguageModalOpen(true);
+    // 初回訪問: 干渉的なモーダル自動 open は廃止。
+    // 代わりに LanguageSuggestionBanner が穏やかに切替誘導する。
+    // デフォルトは "ja" のまま（OMISEAI = 日本の店内 QR 起点が多数派）。
+    // ブラウザ言語が ja 以外なら banner が「Switch to {lang}?」を提示。
   }, []);
 
   useEffect(() => {
@@ -190,6 +217,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
         }}
       >
         {children}
+        {!isAdmin && (
+          <OnboardingModal
+            open={onboardingOpen}
+            defaultLang={onboardingDefaultLang}
+            onComplete={handleOnboardingComplete}
+          />
+        )}
+        {!isAdmin && !onboardingOpen && <LanguageSuggestionBanner />}
         {!isAdmin && (
           <>
             <LanguageModal
