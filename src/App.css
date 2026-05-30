@@ -688,9 +688,10 @@ body {
   flex-shrink: 0;
   justify-self: start;
 }
-@media (max-width: 420px) {
+/* SP は thumb 操作で誤タップしやすいので広めに */
+@media (max-width: 768px) {
   .capture-header-left {
-    gap: 10px;
+    gap: 18px;
   }
 }
 
