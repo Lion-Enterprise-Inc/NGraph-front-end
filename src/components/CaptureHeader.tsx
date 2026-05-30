@@ -1,6 +1,6 @@
 import { useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
-import { Menu, Info, X, MapPin, Clock, Phone, Instagram, ExternalLink, Sun, Moon, SquarePen, Globe } from 'lucide-react'
+import { Menu, X, MapPin, Clock, Phone, Instagram, ExternalLink, Sun, Moon, SquarePen, Globe } from 'lucide-react'
 import { getUiCopy } from '../i18n/uiCopy'
 import { useAppContext } from './AppProvider'
 
@@ -42,8 +42,6 @@ export default function CaptureHeader({ onMenu, onLanguage, onNewChat, restauran
   const [showInfo, setShowInfo] = useState(false)
   const isJa = language === 'ja'
 
-  const hasInfo = restaurantData && (restaurantData.address || restaurantData.opening_hours || restaurantData.phone_number)
-
   // HistoryDrawer の「店舗情報」ボタンから dispatch されるカスタムイベントで開く
   useEffect(() => {
     const handler = () => setShowInfo(true)
@@ -72,19 +70,7 @@ export default function CaptureHeader({ onMenu, onLanguage, onNewChat, restauran
         </div>
         <div className="capture-header-center">
           {restaurantName ? (
-            <>
-              <span className="capture-header-name">{restaurantName}</span>
-              {hasInfo && (
-                <button
-                  className="store-info-btn"
-                  type="button"
-                  onClick={() => setShowInfo(!showInfo)}
-                  aria-label="Store info"
-                >
-                  <Info size={14} strokeWidth={2} />
-                </button>
-              )}
-            </>
+            <span className="capture-header-name">{restaurantName}</span>
           ) : (
             <span className="capture-header-name">NGraph</span>
           )}
