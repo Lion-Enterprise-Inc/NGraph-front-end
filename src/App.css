@@ -6457,6 +6457,23 @@ textarea.form-input {
 .onboarding-lang-native {
   display: block;
 }
+/* 「もっと見る (+13)」 toggle button — 控えめな点線、 hover で色変化 */
+.onboarding-lang-toggle {
+  width: 100%;
+  margin: 8px 0 16px;
+  padding: 8px 12px;
+  background: transparent;
+  border: 1px dashed var(--color-border);
+  border-radius: 8px;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.14s ease;
+}
+.onboarding-lang-toggle:hover {
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(255, 255, 255, 0.85);
+}
 
 /* Step 2: アレルギー */
 .onboarding-allergens-section {

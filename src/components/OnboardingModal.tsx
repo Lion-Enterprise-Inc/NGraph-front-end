@@ -22,8 +22,10 @@ import { useEffect, useState } from 'react'
 import { ChevronRight, Globe, AlertCircle, Sparkles, Check } from 'lucide-react'
 import { ALLERGEN_CATEGORIES, ALL_ALLERGENS } from '../data/allergens'
 
-// 主要 15 言語（おすすめ順、簡易セレクタ用）— 蟹くるふ実需要 11言語 + 周辺
-const QUICK_LANGS: { code: string; label: string; native: string }[] = [
+type LangChoice = { code: string; label: string; native: string }
+
+// 主要 15 言語（おすすめ順、初期表示）— 蟹くるふ実需要 11言語 + 周辺
+const QUICK_LANGS: LangChoice[] = [
   { code: 'ja',     label: 'Japanese',   native: '日本語' },
   { code: 'en',     label: 'English',    native: 'English' },
   { code: 'zh-Hans',label: 'Chinese',    native: '简体中文' },
@@ -39,6 +41,23 @@ const QUICK_LANGS: { code: string; label: string; native: string }[] = [
   { code: 'vi',     label: 'Vietnamese', native: 'Tiếng Việt' },
   { code: 'id',     label: 'Indonesian', native: 'Bahasa Indonesia' },
   { code: 'tl',     label: 'Filipino',   native: 'Filipino' },
+]
+
+// 追加 13 言語 (「もっと見る」で展開) — uiCopy.ts は全 28 言語完訳済
+const EXTRA_LANGS: LangChoice[] = [
+  { code: 'ms', label: 'Malay',      native: 'Bahasa Melayu' },
+  { code: 'ar', label: 'Arabic',     native: 'العربية' },
+  { code: 'hi', label: 'Hindi',      native: 'हिन्दी' },
+  { code: 'tr', label: 'Turkish',    native: 'Türkçe' },
+  { code: 'bn', label: 'Bengali',    native: 'বাংলা' },
+  { code: 'my', label: 'Myanmar',    native: 'မြန်မာ' },
+  { code: 'lo', label: 'Lao',        native: 'ລາວ' },
+  { code: 'km', label: 'Khmer',      native: 'ខ្មែរ' },
+  { code: 'ne', label: 'Nepali',     native: 'नेपाली' },
+  { code: 'mn', label: 'Mongolian',  native: 'Монгол' },
+  { code: 'fa', label: 'Persian',    native: 'فارسی' },
+  { code: 'uk', label: 'Ukrainian',  native: 'Українська' },
+  { code: 'pl', label: 'Polish',     native: 'Polski' },
 ]
 
 type OnboardingProps = {
@@ -65,6 +84,8 @@ const t = (lang: string, key: string): string => {
       next: '次へ',
       back: '戻る',
       none: 'アレルギーなし',
+      showMore: 'もっと見る',
+      showLess: '閉じる',
     },
     en: {
       welcome: 'Welcome',
@@ -81,6 +102,8 @@ const t = (lang: string, key: string): string => {
       next: 'Next',
       back: 'Back',
       none: 'No allergies',
+      showMore: 'Show more',
+      showLess: 'Show less',
     },
   }
   return dict[lang]?.[key] || dict.en[key] || key
@@ -93,12 +116,15 @@ export default function OnboardingModal({ open, defaultLang, onComplete }: Onboa
   const [step, setStep] = useState(1)
   const [lang, setLang] = useState(defaultLang)
   const [selected, setSelected] = useState<Set<string>>(new Set())
+  // 言語 step: 「もっと見る」で EXTRA_LANGS 13 を展開
+  const [showAllLangs, setShowAllLangs] = useState(false)
 
   useEffect(() => {
     if (open) {
       setStep(1)
       setLang(defaultLang)
       setSelected(new Set())
+      setShowAllLangs(false)
     }
   }, [open, defaultLang])
 
@@ -143,7 +169,7 @@ export default function OnboardingModal({ open, defaultLang, onComplete }: Onboa
               <p className="onboarding-hint">{t(lang, 'step1Hint')}</p>
             </div>
             <div className="onboarding-lang-grid">
-              {QUICK_LANGS.map((l) => (
+              {(showAllLangs ? [...QUICK_LANGS, ...EXTRA_LANGS] : QUICK_LANGS).map((l) => (
                 <button
                   key={l.code}
                   type="button"
@@ -154,6 +180,16 @@ export default function OnboardingModal({ open, defaultLang, onComplete }: Onboa
                 </button>
               ))}
             </div>
+            <button
+              type="button"
+              className="onboarding-lang-toggle"
+              onClick={() => setShowAllLangs((v) => !v)}
+              aria-expanded={showAllLangs}
+            >
+              {showAllLangs
+                ? `▲ ${t(lang, 'showLess')}`
+                : `▼ ${t(lang, 'showMore')} (+${EXTRA_LANGS.length})`}
+            </button>
             <div className="onboarding-actions">
               <button type="button" className="onboarding-next" onClick={() => setStep(2)}>
                 {t(lang, 'next')} <ChevronRight size={16} />
