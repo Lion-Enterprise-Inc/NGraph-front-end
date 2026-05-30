@@ -41,6 +41,11 @@ type AppContextValue = {
   setOnNewChat: (fn: (() => void) | null) => void;
   onSelectThread: ((threadUid: string) => void) | null;
   setOnSelectThread: (fn: ((threadUid: string) => void) | null) => void;
+  // ハンバーガー内の「お気に入り」「人気ランキング」呼び出し用 (CapturePage が登録)
+  onOpenLiked: (() => void) | null;
+  setOnOpenLiked: (fn: (() => void) | null) => void;
+  onOpenPopular: (() => void) | null;
+  setOnOpenPopular: (fn: (() => void) | null) => void;
   geoLocation: { lat: number; lng: number } | null;
   setGeoLocation: (loc: { lat: number; lng: number } | null) => void;
   theme: Theme;
@@ -81,6 +86,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [businessType, setBusinessType] = useState<string | null>(null);
   const [onNewChat, setOnNewChat] = useState<(() => void) | null>(null);
   const [onSelectThread, setOnSelectThread] = useState<((threadUid: string) => void) | null>(null);
+  const [onOpenLiked, setOnOpenLiked] = useState<(() => void) | null>(null);
+  const [onOpenPopular, setOnOpenPopular] = useState<(() => void) | null>(null);
   const [geoLocation, setGeoLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [theme, setThemeState] = useState<Theme>("dark");
 
@@ -166,6 +173,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
           setOnNewChat,
           onSelectThread,
           setOnSelectThread,
+          onOpenLiked,
+          setOnOpenLiked,
+          onOpenPopular,
+          setOnOpenPopular,
           geoLocation,
           setGeoLocation,
           theme,

@@ -12,6 +12,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { mockRestaurants, mockScanResponse, type Restaurant } from "../api/mockApi";
 import Tesseract from "tesseract.js";
 import { FeedbackApi, EventApi, type VisionMenuItem, PhotoContributionApi, NfgFeedbackApi, LikedMenusApi, type LikedMenuItem, QuickExplainApi, type QuickExplainItem, MenuSearchApi, type MenuNFGCard, TopMenusApi } from "../services/api";
+import { toggleMenuLike } from "../services/menuLikes";
 import SuggestionModal from "../components/SuggestionModal";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -264,6 +265,8 @@ export default function CapturePage({
     setBusinessType: setCtxBusinessType,
     setOnNewChat,
     setOnSelectThread,
+    setOnOpenLiked,
+    setOnOpenPopular,
     geoLocation,
   } = useAppContext();
   const activeLanguage = contextLanguage ?? language ?? "ja";
@@ -326,6 +329,78 @@ export default function CapturePage({
   const [photoUploading, setPhotoUploading] = useState<string | null>(null); // menu_uid being uploaded
   const [photoResult, setPhotoResult] = useState<Record<string, { status: string; match_result: string }>>({});
   const photoInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+
+  /** ♡ トグル共通処理。Optimistic UI + サーバ集計 like_count 更新。 */
+  const handleLikeToggle = (
+    menuUid: string,
+    quickExplainItems?: QuickExplainItem[] | null,
+  ) => {
+    // 1. Optimistic UI (即時 fill 切替 + localStorage)
+    const next = new Set(likedMenus);
+    const isAdding = !next.has(menuUid);
+    if (isAdding) next.add(menuUid);
+    else next.delete(menuUid);
+    setLikedMenus(next);
+    try {
+      localStorage.setItem('ngraph_liked_menus', JSON.stringify([...next]));
+    } catch {}
+
+    // 2. taste cache の維持 (マイグラフ用)
+    const qItem = quickExplainItems?.find((i) => i.menu_uid === menuUid);
+    if (isAdding && qItem?.taste_values) {
+      const tc = { ...tasteCache, [menuUid]: qItem.taste_values };
+      setTasteCache(tc);
+      try {
+        localStorage.setItem('ngraph_taste_cache', JSON.stringify(tc));
+      } catch {}
+    } else if (!isAdding) {
+      const tc = { ...tasteCache };
+      delete tc[menuUid];
+      setTasteCache(tc);
+      try {
+        localStorage.setItem('ngraph_taste_cache', JSON.stringify(tc));
+      } catch {}
+    }
+
+    // 3. EventApi (既存のテレメトリ)
+    if (isAdding && restaurantSlug) {
+      EventApi.log({
+        restaurant_slug: restaurantSlug,
+        event: 'dish_like',
+        meta: { menu_uid: menuUid },
+      });
+    }
+
+    // 4. サーバ like_count 更新 (公開ハート数)。失敗時は UI revert。
+    toggleMenuLike(menuUid, { threadUid: threadUidRef.current })
+      .then((res) => {
+        // responses 内の該当 quickExplainItems の like_count を server 値で書き換え
+        setResponses((prev) =>
+          prev.map((r) => {
+            if (!r.quickExplainItems) return r;
+            let touched = false;
+            const updated = r.quickExplainItems.map((it) => {
+              if (it.menu_uid === menuUid) {
+                touched = true;
+                return { ...it, like_count: res.like_count };
+              }
+              return it;
+            });
+            return touched ? { ...r, quickExplainItems: updated } : r;
+          })
+        );
+      })
+      .catch(() => {
+        // revert: localStorage と Set 両方
+        const revert = new Set(likedMenus);
+        if (isAdding) revert.delete(menuUid);
+        else revert.add(menuUid);
+        setLikedMenus(revert);
+        try {
+          localStorage.setItem('ngraph_liked_menus', JSON.stringify([...revert]));
+        } catch {}
+      });
+  };
 
   // マイグラフ: likedMenusの味覚平均を計算
   const myTasteAvg = useMemo(() => {
@@ -1677,6 +1752,33 @@ export default function CapturePage({
     } catch {}
   };
 
+  // 人気ランキング (♡ 数 Top N) モーダル
+  const [popularOpen, setPopularOpen] = useState(false);
+  const [popularItems, setPopularItems] = useState<import("../services/menuLikes").PopularMenuItem[]>([]);
+  const [popularLoading, setPopularLoading] = useState(false);
+  const openPopularDrawer = async () => {
+    if (!restaurantSlug) return;
+    setPopularOpen(true);
+    setPopularLoading(true);
+    try {
+      const { getPopularMenus } = await import("../services/menuLikes");
+      const items = await getPopularMenus(restaurantSlug, 10);
+      setPopularItems(items);
+    } catch {
+      setPopularItems([]);
+    } finally {
+      setPopularLoading(false);
+    }
+  };
+
+  // ハンバーガー内の「お気に入り」「人気ランキング」を AppContext 経由で公開
+  useEffect(() => {
+    setOnOpenLiked(() => openLikedDrawer);
+    setOnOpenPopular(() => openPopularDrawer);
+    return () => { setOnOpenLiked(null); setOnOpenPopular(null); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [restaurantSlug, likedMenus]);
+
   const handlePhotoUpload = async (menuUid: string, file: File) => {
     setPhotoUploading(menuUid);
     try {
@@ -1875,27 +1977,7 @@ export default function CapturePage({
                         items={response.quickExplainItems}
                         language={activeLanguage}
                         likedMenus={likedMenus}
-                        onLike={(menuUid) => {
-                          const next = new Set(likedMenus);
-                          const isAdding = !next.has(menuUid);
-                          if (isAdding) next.add(menuUid); else next.delete(menuUid);
-                          setLikedMenus(next);
-                          localStorage.setItem('ngraph_liked_menus', JSON.stringify([...next]));
-                          const qItem = response.quickExplainItems?.find(i => i.menu_uid === menuUid);
-                          if (isAdding && qItem?.taste_values) {
-                            const tc = { ...tasteCache, [menuUid]: qItem.taste_values };
-                            setTasteCache(tc);
-                            try { localStorage.setItem('ngraph_taste_cache', JSON.stringify(tc)); } catch {}
-                          } else if (!isAdding) {
-                            const tc = { ...tasteCache };
-                            delete tc[menuUid];
-                            setTasteCache(tc);
-                            try { localStorage.setItem('ngraph_taste_cache', JSON.stringify(tc)); } catch {}
-                          }
-                          if (isAdding && restaurantSlug) {
-                            EventApi.log({ restaurant_slug: restaurantSlug, event: 'dish_like', meta: { menu_uid: menuUid } });
-                          }
-                        }}
+                        onLike={(menuUid) => handleLikeToggle(menuUid, response.quickExplainItems)}
                         onSuggestEdit={(info) => {
                           setSuggestionTarget({
                             name_jp: info.name_jp,
@@ -2027,27 +2109,7 @@ export default function CapturePage({
                         items={response.visionItems.map(visionToQuickExplain)}
                         language={activeLanguage}
                         likedMenus={likedMenus}
-                        onLike={(menuUid) => {
-                          const next = new Set(likedMenus);
-                          const isAdding = !next.has(menuUid);
-                          if (isAdding) next.add(menuUid); else next.delete(menuUid);
-                          setLikedMenus(next);
-                          localStorage.setItem('ngraph_liked_menus', JSON.stringify([...next]));
-                          const vi = response.visionItems?.find(i => (i as any).menu_uid === menuUid);
-                          if (isAdding && vi?.taste_values) {
-                            const tc = { ...tasteCache, [menuUid]: vi.taste_values };
-                            setTasteCache(tc);
-                            try { localStorage.setItem('ngraph_taste_cache', JSON.stringify(tc)); } catch {}
-                          } else if (!isAdding) {
-                            const tc = { ...tasteCache };
-                            delete tc[menuUid];
-                            setTasteCache(tc);
-                            try { localStorage.setItem('ngraph_taste_cache', JSON.stringify(tc)); } catch {}
-                          }
-                          if (isAdding && restaurantSlug) {
-                            EventApi.log({ restaurant_slug: restaurantSlug, event: 'dish_like', meta: { menu_uid: menuUid } });
-                          }
-                        }}
+                        onLike={(menuUid) => handleLikeToggle(menuUid, response.visionItems as unknown as QuickExplainItem[] | undefined)}
                         onSuggestEdit={(info) => {
                           setSuggestionTarget({
                             name_jp: info.name_jp,
@@ -2381,6 +2443,73 @@ export default function CapturePage({
         menuItem={suggestionTarget || { name_jp: '' }}
         onSubmit={() => setSuggestionTarget(null)}
       />
+
+      {/* ♡ お気に入りモーダル */}
+      {likedDrawerOpen && (
+        <div className="menu-modal-overlay" onClick={() => setLikedDrawerOpen(false)}>
+          <div className="menu-modal-panel" onClick={(e) => e.stopPropagation()}>
+            <div className="menu-modal-header">
+              <h3 className="menu-modal-title">お気に入り {likedItems.length > 0 && `(${likedItems.length})`}</h3>
+              <button className="icon-button" onClick={() => setLikedDrawerOpen(false)} aria-label="Close">✕</button>
+            </div>
+            <div className="menu-modal-body">
+              {likedItems.length === 0 ? (
+                <p className="menu-modal-empty">まだお気に入りはありません。NFG カードの ♡ をタップして追加できます。</p>
+              ) : (
+                <ul className="menu-modal-list">
+                  {likedItems.map((it) => (
+                    <li key={it.menu_uid} className="menu-modal-item" onClick={() => {
+                      handleSend(it.name_jp + 'について教えて');
+                      setLikedDrawerOpen(false);
+                    }}>
+                      <div className="menu-modal-item-main">
+                        <div className="menu-modal-item-name">{it.name_jp}</div>
+                        {it.name_en && <div className="menu-modal-item-sub">{it.name_en}</div>}
+                      </div>
+                      <span className="menu-modal-item-price">¥{it.price?.toLocaleString?.() ?? it.price}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 🔥 人気ランキングモーダル */}
+      {popularOpen && (
+        <div className="menu-modal-overlay" onClick={() => setPopularOpen(false)}>
+          <div className="menu-modal-panel" onClick={(e) => e.stopPropagation()}>
+            <div className="menu-modal-header">
+              <h3 className="menu-modal-title">人気ランキング</h3>
+              <button className="icon-button" onClick={() => setPopularOpen(false)} aria-label="Close">✕</button>
+            </div>
+            <div className="menu-modal-body">
+              {popularLoading ? (
+                <p className="menu-modal-empty">読み込み中…</p>
+              ) : popularItems.length === 0 ? (
+                <p className="menu-modal-empty">まだランキングデータがありません。気に入った料理に ♡ をつけて始まります。</p>
+              ) : (
+                <ol className="menu-modal-list menu-modal-list-numbered">
+                  {popularItems.map((it) => (
+                    <li key={it.menu_uid} className="menu-modal-item" onClick={() => {
+                      handleSend(it.name_jp + 'について教えて');
+                      setPopularOpen(false);
+                    }}>
+                      <span className="menu-modal-rank">{it.rank}</span>
+                      <div className="menu-modal-item-main">
+                        <div className="menu-modal-item-name">{it.name_jp}</div>
+                        {it.name_en && <div className="menu-modal-item-sub">{it.name_en}</div>}
+                      </div>
+                      <span className="menu-modal-item-likes">♡ {it.like_count}</span>
+                    </li>
+                  ))}
+                </ol>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );

@@ -6203,6 +6203,194 @@ textarea.form-input {
   background: var(--color-surface-active);
 }
 
+/* ── ♡ お気に入り / 🔥 人気ランキング モーダル ── */
+.menu-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: menu-modal-fade-in 0.15s ease-out;
+}
+.menu-modal-panel {
+  width: 100%;
+  max-width: 540px;
+  max-height: 80vh;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.menu-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--color-border);
+}
+.menu-modal-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+.menu-modal-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 0;
+}
+.menu-modal-empty {
+  color: var(--color-text-muted);
+  font-size: 13px;
+  text-align: center;
+  padding: 24px 18px;
+  margin: 0;
+  line-height: 1.6;
+}
+.menu-modal-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.menu-modal-list-numbered {
+  counter-reset: menu-modal-rank;
+}
+.menu-modal-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 18px;
+  cursor: pointer;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  transition: background 0.12s ease;
+}
+.menu-modal-item:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+.menu-modal-item:last-child {
+  border-bottom: none;
+}
+.menu-modal-rank {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.75);
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 50%;
+  font-variant-numeric: tabular-nums;
+}
+.menu-modal-item:nth-child(1) .menu-modal-rank { color: #ffd166; background: rgba(255, 209, 102, 0.15); }
+.menu-modal-item:nth-child(2) .menu-modal-rank { color: #d8d8d8; background: rgba(216, 216, 216, 0.15); }
+.menu-modal-item:nth-child(3) .menu-modal-rank { color: #ffa46b; background: rgba(255, 164, 107, 0.15); }
+.menu-modal-item-main {
+  flex: 1;
+  min-width: 0;
+}
+.menu-modal-item-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.menu-modal-item-sub {
+  font-size: 11px;
+  color: var(--color-text-muted);
+  margin-top: 2px;
+}
+.menu-modal-item-price,
+.menu-modal-item-likes {
+  flex-shrink: 0;
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-muted);
+}
+.menu-modal-item-likes {
+  color: #ff5050;
+}
+@keyframes menu-modal-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@media (max-width: 768px) {
+  .menu-modal-overlay {
+    padding: 0;
+    align-items: flex-end;
+  }
+  .menu-modal-panel {
+    max-height: 85vh;
+    border-radius: 16px 16px 0 0;
+  }
+}
+
+/* ── HistoryDrawer 4 セクション デザイン ── */
+.sidebar-section {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+.sidebar-section:last-child,
+.sidebar-section-bottom {
+  border-bottom: none;
+}
+.sidebar-section-bottom {
+  margin-top: auto;
+  padding-bottom: 12px;
+}
+.sidebar-section-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: rgba(255, 255, 255, 0.4);
+  padding: 6px 12px 4px;
+}
+.sidebar-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 12px;
+  background: transparent;
+  border: none;
+  color: var(--color-text);
+  font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: background 0.12s ease;
+}
+.sidebar-row:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+.sidebar-row-muted {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 13px;
+}
+.sidebar-thread-icon {
+  flex-shrink: 0;
+  color: rgba(255, 255, 255, 0.45);
+}
+.sidebar-thread-text {
+  flex: 1;
+  min-width: 0;
+}
+
 .sidebar-threads {
   flex: 1;
   overflow-y: auto;
@@ -7819,12 +8007,15 @@ textarea.form-input {
 .nfgcard-like-btn {
   background: transparent;
   border: none;
-  padding: 0 4px;
+  padding: 0 6px;
   font-size: 16px;
   line-height: 1;
   cursor: pointer;
-  color: rgba(255, 255, 255, 0.45);
+  color: rgba(255, 255, 255, 0.55);
   display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: transform 0.15s ease;
   align-items: center;
   transition: color 0.15s;
 }
@@ -7833,6 +8024,28 @@ textarea.form-input {
 }
 .nfgcard-like-btn.liked {
   color: #ff5050;
+}
+.nfgcard-like-btn.liked .nfgcard-like-icon {
+  animation: nfgcard-like-pop 0.36s cubic-bezier(0.5, 1.6, 0.5, 1) 1;
+}
+.nfgcard-like-icon {
+  display: inline-block;
+  font-size: 16px;
+  line-height: 1;
+}
+.nfgcard-like-count {
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+  color: inherit;
+  opacity: 0.85;
+}
+@keyframes nfgcard-like-pop {
+  0%   { transform: scale(1); }
+  35%  { transform: scale(1.45); }
+  60%  { transform: scale(0.92); }
+  100% { transform: scale(1); }
 }
 
 /* Description */

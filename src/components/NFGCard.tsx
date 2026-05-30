@@ -342,7 +342,10 @@ export default function NFGCard({
                   onClick={(e) => { e.stopPropagation(); onLike(item.menu_uid!); }}
                   aria-label={liked ? 'Unlike' : 'Like'}
                 >
-                  {liked ? '♥' : '♡'}
+                  <span className="nfgcard-like-icon">{liked ? '♥' : '♡'}</span>
+                  {(item.like_count ?? 0) > 0 && (
+                    <span className="nfgcard-like-count">{item.like_count}</span>
+                  )}
                 </button>
               )}
               {item.category && item.category !== 'bento' && (

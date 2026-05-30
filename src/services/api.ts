@@ -812,6 +812,7 @@ export interface QuickExplainItem {
   confidence?: number;
   category?: string;
   nfg_code?: string;
+  like_count?: number;
 }
 
 export interface QuickExplainResult {

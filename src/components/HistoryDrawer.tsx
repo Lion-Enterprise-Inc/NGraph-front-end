@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
-import { X, Plus, UtensilsCrossed } from 'lucide-react'
+import { X, SquarePen, UtensilsCrossed, Heart, Flame, MessageSquare, Store } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useChatHistory } from '../hooks/useChatHistory'
 import { getUiCopy } from '../i18n/uiCopy'
@@ -23,7 +23,7 @@ export default function HistoryDrawer({
   onSelectThread,
 }: HistoryDrawerProps) {
   const router = useRouter()
-  const { language, openMenuList } = useAppContext()
+  const { language, openMenuList, onOpenLiked, onOpenPopular } = useAppContext()
   const copy = getUiCopy(language)
   const { threads, refresh } = useChatHistory(restaurantSlug ?? null)
 
@@ -31,8 +31,10 @@ export default function HistoryDrawer({
     if (open) refresh()
   }, [open])
 
-  const tagline = (copy.history as any).brandTagline
-    || "Data infrastructure for authentic food knowledge."
+  const t = (key: string, fallback: string): string =>
+    ((copy.history as any)?.[key] as string) || fallback
+
+  const inRestaurantContext = Boolean(restaurantSlug)
 
   return (
     <div className={`drawer-overlay${open ? ' open' : ''}`} onClick={onClose}>
@@ -53,47 +55,84 @@ export default function HistoryDrawer({
           </button>
         </div>
 
-        <div className="sidebar-top">
-          <span className="sidebar-title">{(copy.history as any).sidebarTitle || "History"}</span>
+        {/* ── セクション 1: 会話 ── */}
+        <div className="sidebar-section">
+          <div className="sidebar-section-label">{t('sectionConversation', '会話')}</div>
+          <button className="sidebar-row" onClick={() => { onNewChat?.(); onClose?.(); }}>
+            <SquarePen size={16} strokeWidth={1.75} />
+            <span>{t('newChat', 'New chat')}</span>
+          </button>
+
+          <div className="sidebar-threads">
+            {threads.length === 0 ? (
+              <p className="sidebar-empty">{t('empty', 'No conversations yet')}</p>
+            ) : (
+              threads.map((th) => (
+                <div
+                  key={th.thread_uid}
+                  className="sidebar-thread-item"
+                  onClick={() => { onSelectThread?.(th.thread_uid); onClose?.() }}
+                >
+                  <MessageSquare size={14} strokeWidth={1.5} className="sidebar-thread-icon" />
+                  <div className="sidebar-thread-text">
+                    <div className="sidebar-thread-title">{th.title || th.preview}</div>
+                    <div className="sidebar-thread-date">
+                      {new Date(th.updatedAt).toLocaleDateString('ja-JP', { month: 'short', day: 'numeric' })}
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
         </div>
 
-        <button className="sidebar-new-chat" onClick={() => { onNewChat?.(); onClose?.(); }}>
-          <Plus size={16} strokeWidth={2} />
-          {(copy.history as any).newChat || "New chat"}
-        </button>
-
-        {restaurantSlug && (
-          <button className="sidebar-menu-list" onClick={() => { openMenuList(); onClose?.(); }}>
-            <UtensilsCrossed size={16} strokeWidth={2} />
-            {(copy as any).webLanding?.exploreMenu || "Menu"}
-          </button>
+        {/* ── セクション 2: メニュー探索 ── */}
+        {inRestaurantContext && (
+          <div className="sidebar-section">
+            <div className="sidebar-section-label">{t('sectionExplore', 'メニュー探索')}</div>
+            <button className="sidebar-row" onClick={() => { openMenuList(); onClose?.(); }}>
+              <UtensilsCrossed size={16} strokeWidth={1.75} />
+              <span>{(copy as any).webLanding?.exploreMenu || 'メニュー一覧'}</span>
+            </button>
+            {onOpenLiked && (
+              <button className="sidebar-row" onClick={() => { onOpenLiked(); onClose?.(); }}>
+                <Heart size={16} strokeWidth={1.75} />
+                <span>{t('favorites', 'お気に入り')}</span>
+              </button>
+            )}
+            {onOpenPopular && (
+              <button className="sidebar-row" onClick={() => { onOpenPopular(); onClose?.(); }}>
+                <Flame size={16} strokeWidth={1.75} />
+                <span>{t('popular', '人気ランキング')}</span>
+              </button>
+            )}
+          </div>
         )}
 
-        <div className="sidebar-threads">
-          {threads.length === 0 ? (
-            <p className="sidebar-empty">{(copy.history as any).empty || "No conversations yet"}</p>
-          ) : (
-            threads.map(t => (
-              <div
-                key={t.thread_uid}
-                className="sidebar-thread-item"
-                onClick={() => {
-                  onSelectThread?.(t.thread_uid)
-                  onClose?.()
-                }}
-              >
-                <div className="sidebar-thread-title">{t.title || t.preview}</div>
-                <div className="sidebar-thread-date">
-                  {new Date(t.updatedAt).toLocaleDateString('ja-JP', { month: 'short', day: 'numeric' })}
-                </div>
-              </div>
-            ))
-          )}
-        </div>
+        {/* ── セクション 3: 店舗 ── */}
+        {inRestaurantContext && (
+          <div className="sidebar-section">
+            <div className="sidebar-section-label">{t('sectionStore', '店舗')}</div>
+            <button
+              className="sidebar-row"
+              onClick={() => {
+                window.dispatchEvent(new CustomEvent('omiseai:open-store-info'))
+                onClose?.()
+              }}
+            >
+              <Store size={16} strokeWidth={1.75} />
+              <span>{t('storeInfo', '店舗情報')}</span>
+            </button>
+          </div>
+        )}
 
-        <div className="sidebar-footer">
-          <button className="sidebar-explore-btn" onClick={() => { router.push('/'); onClose?.(); }}>
-            他の店舗を見る
+        {/* ── セクション 4: 他 ── */}
+        <div className="sidebar-section sidebar-section-bottom">
+          <button
+            className="sidebar-row sidebar-row-muted"
+            onClick={() => { router.push('/'); onClose?.(); }}
+          >
+            <span>{t('exploreOther', '他の店舗を見る')}</span>
           </button>
         </div>
       </aside>
