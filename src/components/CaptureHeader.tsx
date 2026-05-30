@@ -43,6 +43,8 @@ export default function CaptureHeader({ onMenu, onLanguage, onNewChat, restauran
   const [shareToast, setShareToast] = useState<string | null>(null)
   const isJa = language === 'ja'
   const toastTimerRef = useRef<number | null>(null)
+  // drag-to-close 防止: backdrop で pointerdown 起点した時のみ close する
+  const backdropPointerDownRef = useRef(false)
 
   // HistoryDrawer の「店舗情報」ボタンから dispatch されるカスタムイベントで開く
   useEffect(() => {
@@ -143,7 +145,17 @@ export default function CaptureHeader({ onMenu, onLanguage, onNewChat, restauran
 
       {showInfo && restaurantData && (
         <>
-          <div className="store-info-backdrop" onClick={() => setShowInfo(false)} />
+          <div
+            className="store-info-backdrop"
+            onPointerDown={() => { backdropPointerDownRef.current = true }}
+            onPointerUp={() => {
+              if (backdropPointerDownRef.current) {
+                setShowInfo(false)
+              }
+              backdropPointerDownRef.current = false
+            }}
+            onPointerCancel={() => { backdropPointerDownRef.current = false }}
+          />
         <div className="store-info-panel">
           <div className="store-info-header">
             <span className="store-info-title">{restaurantData.name}</span>
@@ -236,10 +248,10 @@ export default function CaptureHeader({ onMenu, onLanguage, onNewChat, restauran
               <span>{isJa ? '共有' : 'Share'}</span>
             </button>
           </div>
-          {shareToast && (
-            <div className="store-info-toast" role="status">{shareToast}</div>
-          )}
         </div>
+        {shareToast && (
+          <div className="store-info-toast" role="status">{shareToast}</div>
+        )}
         </>
       )}
     </>
