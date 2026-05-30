@@ -6504,6 +6504,70 @@ textarea.form-input {
   line-height: 1;
 }
 
+/* ── 拡張アレルゲン UI (8+21+4 品目 + 「なし」chip + カテゴリ section) ── */
+
+/* アレルゲン step は項目数多いので panel をやや広げる */
+.onboarding-panel-allergens {
+  max-width: 580px;
+}
+
+/* 「アレルギーなし」chip: 排他選択用、フル幅、緑系強調 */
+.allergen-chip-none {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 11px 16px;
+  margin-bottom: 14px;
+  background: rgba(16, 163, 127, 0.08);
+  border: 1.5px solid rgba(16, 163, 127, 0.3);
+  border-radius: 12px;
+  color: var(--color-text);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.14s ease;
+}
+.allergen-chip-none:hover {
+  background: rgba(16, 163, 127, 0.14);
+}
+.allergen-chip-none.active {
+  background: rgba(16, 163, 127, 0.22);
+  border-color: #10a37f;
+  color: #10a37f;
+}
+
+/* カテゴリブロック (特定原材料 / ナッツ / 魚介 / 肉 / フルーツ / 食事スタイル) */
+.allergen-section {
+  margin-top: 14px;
+}
+.allergen-section:first-of-type {
+  margin-top: 0;
+}
+.allergen-section-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: rgba(255, 255, 255, 0.42);
+  margin: 0 0 8px;
+}
+.allergen-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(108px, 1fr));
+  gap: 6px;
+}
+@media (max-width: 480px) {
+  .allergen-grid {
+    grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));
+  }
+  .allergen-chip-none {
+    padding: 10px 14px;
+    font-size: 13px;
+  }
+}
+
 /* Step 3 */
 .onboarding-step3-cta {
   display: flex;

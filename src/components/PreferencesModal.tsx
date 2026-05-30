@@ -6,6 +6,9 @@
  * OnboardingModal step 2 と同じピッカーを共通スタイルで使い回す。
  * ハンバーガーメニュー「個人設定 → アレルギー・食事スタイル」から開く。
  *
+ * アレルゲン: 8 (特定原材料) + 21 (準ずる) + 4 (食事スタイル) を 7 カテゴリで表示。
+ * 「アレルギーなし」chip は selected.size === 0 で active な排他選択 UI。
+ *
  * 永続化:
  *   - omiseai_allergies = ['egg', 'milk', ...]
  *   - 保存後に omiseai:preferences-updated カスタムイベント dispatch
@@ -13,56 +16,33 @@
  */
 
 import { useEffect, useState } from 'react'
-import { AlertCircle, X } from 'lucide-react'
+import { AlertCircle, X, Check } from 'lucide-react'
 import { useAppContext } from './AppProvider'
+import { ALLERGEN_CATEGORIES, NONE_CHIP } from '../data/allergens'
 
 const ALLERGIES_KEY = 'omiseai_allergies'
-
-type AllergenChoice = {
-  key: string
-  jp: string
-  en: string
-  emoji: string
-}
-
-const COMMON_ALLERGENS: AllergenChoice[] = [
-  { key: 'egg',    jp: '卵',     en: 'Egg',       emoji: '🥚' },
-  { key: 'milk',   jp: '乳製品', en: 'Dairy',     emoji: '🥛' },
-  { key: 'wheat',  jp: '小麦',   en: 'Wheat',     emoji: '🌾' },
-  { key: 'shrimp', jp: 'えび',   en: 'Shrimp',    emoji: '🦐' },
-  { key: 'crab',   jp: 'かに',   en: 'Crab',      emoji: '🦀' },
-  { key: 'soba',   jp: 'そば',   en: 'Buckwheat', emoji: '🍜' },
-  { key: 'peanut', jp: '落花生', en: 'Peanut',    emoji: '🥜' },
-  { key: 'walnut', jp: 'くるみ', en: 'Walnut',    emoji: '🌰' },
-]
-
-const RELIGIOUS: AllergenChoice[] = [
-  { key: 'halal',      jp: 'ハラール',     en: 'Halal',      emoji: '☪️' },
-  { key: 'hindu',      jp: 'ヒンドゥー',   en: 'Hindu',      emoji: '🕉️' },
-  { key: 'vegetarian', jp: 'ベジタリアン', en: 'Vegetarian', emoji: '🥗' },
-  { key: 'vegan',      jp: 'ヴィーガン',   en: 'Vegan',      emoji: '🌱' },
-]
 
 const COPY: Record<string, Record<string, string>> = {
   ja: {
     title: 'アレルギー・食事スタイル',
     hint: '安全にお食事を楽しんでいただくために設定してください',
-    common: 'アレルギー（8 大品目）',
-    religious: '食事スタイル',
+    none: 'アレルギーなし',
     save: '保存',
     clear: 'クリア',
   },
   en: {
     title: 'Allergies & dietary style',
     hint: 'Set your dietary needs for a safer meal',
-    common: 'Allergens (Top 8)',
-    religious: 'Dietary style',
+    none: 'No allergies',
     save: 'Save',
     clear: 'Clear',
   },
 }
 
 const tr = (lang: string, key: string): string => COPY[lang]?.[key] || COPY.en[key] || key
+
+const labelFor = (lang: string, jp: string, en: string): string =>
+  lang === 'ja' ? jp : en
 
 type PreferencesModalProps = {
   open: boolean
@@ -98,6 +78,8 @@ export default function PreferencesModal({ open, onClose }: PreferencesModalProp
     setSelected(next)
   }
 
+  const selectNone = () => setSelected(new Set())
+
   const save = () => {
     try {
       localStorage.setItem(ALLERGIES_KEY, JSON.stringify([...selected]))
@@ -110,11 +92,11 @@ export default function PreferencesModal({ open, onClose }: PreferencesModalProp
     onClose()
   }
 
-  const clear = () => setSelected(new Set())
+  const isNoneActive = selected.size === 0
 
   return (
     <div className="onboarding-overlay" onClick={onClose}>
-      <div className="onboarding-panel" onClick={(e) => e.stopPropagation()}>
+      <div className="onboarding-panel onboarding-panel-allergens" onClick={(e) => e.stopPropagation()}>
         <button
           type="button"
           className="icon-button"
@@ -132,39 +114,43 @@ export default function PreferencesModal({ open, onClose }: PreferencesModalProp
         </div>
 
         <div className="onboarding-allergens-section">
-          <div className="onboarding-allergens-label">{tr(lang, 'common')}</div>
-          <div className="onboarding-allergens-grid">
-            {COMMON_ALLERGENS.map((a) => (
-              <button
-                key={a.key}
-                type="button"
-                className={`onboarding-allergen-chip${selected.has(a.key) ? ' active' : ''}`}
-                onClick={() => toggle(a.key)}
-              >
-                <span className="onboarding-allergen-emoji">{a.emoji}</span>
-                <span>{lang === 'ja' ? a.jp : a.en}</span>
-              </button>
-            ))}
-          </div>
+          {/* 「なし」chip: 排他選択 UI (selected.size === 0 で active) */}
+          <button
+            type="button"
+            className={`allergen-chip-none${isNoneActive ? ' active' : ''}`}
+            onClick={selectNone}
+            aria-pressed={isNoneActive}
+          >
+            <Check size={16} strokeWidth={2} />
+            <span>{tr(lang, 'none')}</span>
+          </button>
 
-          <div className="onboarding-allergens-label">{tr(lang, 'religious')}</div>
-          <div className="onboarding-allergens-grid">
-            {RELIGIOUS.map((a) => (
-              <button
-                key={a.key}
-                type="button"
-                className={`onboarding-allergen-chip${selected.has(a.key) ? ' active' : ''}`}
-                onClick={() => toggle(a.key)}
-              >
-                <span className="onboarding-allergen-emoji">{a.emoji}</span>
-                <span>{lang === 'ja' ? a.jp : a.en}</span>
-              </button>
-            ))}
-          </div>
+          {/* カテゴリ別にループ表示 */}
+          {ALLERGEN_CATEGORIES.map((category) => (
+            <div key={category.id} className="allergen-section">
+              <div className="allergen-section-label">
+                {labelFor(lang, category.label_ja, category.label_en)}
+              </div>
+              <div className="allergen-grid">
+                {category.items.map((a) => (
+                  <button
+                    key={a.key}
+                    type="button"
+                    className={`onboarding-allergen-chip${selected.has(a.key) ? ' active' : ''}`}
+                    onClick={() => toggle(a.key)}
+                    aria-pressed={selected.has(a.key)}
+                  >
+                    <span className="onboarding-allergen-emoji">{a.emoji}</span>
+                    <span>{labelFor(lang, a.jp, a.en)}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          ))}
         </div>
 
         <div className="onboarding-actions">
-          <button type="button" className="onboarding-skip" onClick={clear}>
+          <button type="button" className="onboarding-skip" onClick={selectNone}>
             {tr(lang, 'clear')}
           </button>
           <button type="button" className="onboarding-next" onClick={save}>

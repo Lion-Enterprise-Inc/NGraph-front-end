@@ -5,7 +5,7 @@
  *
  * ステップ:
  *   1. 言語確認（auto-detect default、変更可）
- *   2. アレルギー宣言（任意、skip 可）
+ *   2. アレルギー宣言（任意、skip 可）— PreferencesModal と同じ仕様
  *   3. 完了 → 自動で「おすすめ教えて」を chat に投入
  *
  * 表示判定:
@@ -19,10 +19,8 @@
  */
 
 import { useEffect, useState } from 'react'
-import { ChevronRight, Globe, AlertCircle, Sparkles, X } from 'lucide-react'
-
-const ONBOARDED_KEY = 'omiseai_onboarded'
-const ALLERGIES_KEY = 'omiseai_allergies'
+import { ChevronRight, Globe, AlertCircle, Sparkles, Check } from 'lucide-react'
+import { ALLERGEN_CATEGORIES, ALL_ALLERGENS } from '../data/allergens'
 
 // 主要 15 言語（おすすめ順、簡易セレクタ用）— 蟹くるふ実需要 11言語 + 周辺
 const QUICK_LANGS: { code: string; label: string; native: string }[] = [
@@ -41,31 +39,6 @@ const QUICK_LANGS: { code: string; label: string; native: string }[] = [
   { code: 'vi',     label: 'Vietnamese', native: 'Tiếng Việt' },
   { code: 'id',     label: 'Indonesian', native: 'Bahasa Indonesia' },
   { code: 'tl',     label: 'Filipino',   native: 'Filipino' },
-]
-
-// 8 大アレルゲン
-type AllergenChoice = {
-  key: string
-  jp: string
-  en: string
-  emoji: string
-}
-const COMMON_ALLERGENS: AllergenChoice[] = [
-  { key: 'egg',      jp: '卵',       en: 'Egg',       emoji: '🥚' },
-  { key: 'milk',     jp: '乳製品',   en: 'Dairy',     emoji: '🥛' },
-  { key: 'wheat',    jp: '小麦',     en: 'Wheat',     emoji: '🌾' },
-  { key: 'shrimp',   jp: 'えび',     en: 'Shrimp',    emoji: '🦐' },
-  { key: 'crab',     jp: 'かに',     en: 'Crab',      emoji: '🦀' },
-  { key: 'soba',     jp: 'そば',     en: 'Buckwheat', emoji: '🍜' },
-  { key: 'peanut',   jp: '落花生',   en: 'Peanut',    emoji: '🥜' },
-  { key: 'walnut',   jp: 'くるみ',   en: 'Walnut',    emoji: '🌰' },
-]
-
-const RELIGIOUS: AllergenChoice[] = [
-  { key: 'halal',       jp: 'ハラール',     en: 'Halal',         emoji: '☪️' },
-  { key: 'hindu',       jp: 'ヒンドゥー',   en: 'Hindu',         emoji: '🕉️' },
-  { key: 'vegetarian',  jp: 'ベジタリアン', en: 'Vegetarian',    emoji: '🥗' },
-  { key: 'vegan',       jp: 'ヴィーガン',   en: 'Vegan',         emoji: '🌱' },
 ]
 
 type OnboardingProps = {
@@ -91,8 +64,7 @@ const t = (lang: string, key: string): string => {
       step3CTAAlt: '自分で聞いてみる',
       next: '次へ',
       back: '戻る',
-      common: 'アレルギー（8 大品目）',
-      religious: '食事スタイル',
+      none: 'アレルギーなし',
     },
     en: {
       welcome: 'Welcome',
@@ -108,12 +80,14 @@ const t = (lang: string, key: string): string => {
       step3CTAAlt: 'Ask my own question',
       next: 'Next',
       back: 'Back',
-      common: 'Allergens (Top 8)',
-      religious: 'Dietary style',
+      none: 'No allergies',
     },
   }
   return dict[lang]?.[key] || dict.en[key] || key
 }
+
+const labelFor = (lang: string, jp: string, en: string): string =>
+  lang === 'ja' ? jp : en
 
 export default function OnboardingModal({ open, defaultLang, onComplete }: OnboardingProps) {
   const [step, setStep] = useState(1)
@@ -136,6 +110,10 @@ export default function OnboardingModal({ open, defaultLang, onComplete }: Onboa
     setSelected(next)
   }
 
+  const selectNone = () => setSelected(new Set())
+
+  const isNoneActive = selected.size === 0
+
   const finishWithRecommendation = () => {
     onComplete(lang, [...selected], buildFirstQuery(lang, [...selected]))
   }
@@ -145,7 +123,7 @@ export default function OnboardingModal({ open, defaultLang, onComplete }: Onboa
 
   return (
     <div className="onboarding-overlay">
-      <div className="onboarding-panel">
+      <div className={`onboarding-panel${step === 2 ? ' onboarding-panel-allergens' : ''}`}>
         {/* Step indicator */}
         <div className="onboarding-progress">
           {[1, 2, 3].map((s) => (
@@ -184,7 +162,7 @@ export default function OnboardingModal({ open, defaultLang, onComplete }: Onboa
           </>
         )}
 
-        {/* ── Step 2: アレルギー ── */}
+        {/* ── Step 2: アレルギー (8 + 21 + 4 + 「なし」) ── */}
         {step === 2 && (
           <>
             <div className="onboarding-header">
@@ -194,35 +172,39 @@ export default function OnboardingModal({ open, defaultLang, onComplete }: Onboa
             </div>
 
             <div className="onboarding-allergens-section">
-              <div className="onboarding-allergens-label">{t(lang, 'common')}</div>
-              <div className="onboarding-allergens-grid">
-                {COMMON_ALLERGENS.map((a) => (
-                  <button
-                    key={a.key}
-                    type="button"
-                    className={`onboarding-allergen-chip${selected.has(a.key) ? ' active' : ''}`}
-                    onClick={() => toggleAllergen(a.key)}
-                  >
-                    <span className="onboarding-allergen-emoji">{a.emoji}</span>
-                    <span>{lang === 'ja' ? a.jp : a.en}</span>
-                  </button>
-                ))}
-              </div>
+              {/* 「なし」chip: 排他選択 (selected.size === 0 で active) */}
+              <button
+                type="button"
+                className={`allergen-chip-none${isNoneActive ? ' active' : ''}`}
+                onClick={selectNone}
+                aria-pressed={isNoneActive}
+              >
+                <Check size={16} strokeWidth={2} />
+                <span>{t(lang, 'none')}</span>
+              </button>
 
-              <div className="onboarding-allergens-label">{t(lang, 'religious')}</div>
-              <div className="onboarding-allergens-grid">
-                {RELIGIOUS.map((a) => (
-                  <button
-                    key={a.key}
-                    type="button"
-                    className={`onboarding-allergen-chip${selected.has(a.key) ? ' active' : ''}`}
-                    onClick={() => toggleAllergen(a.key)}
-                  >
-                    <span className="onboarding-allergen-emoji">{a.emoji}</span>
-                    <span>{lang === 'ja' ? a.jp : a.en}</span>
-                  </button>
-                ))}
-              </div>
+              {/* カテゴリ別表示 */}
+              {ALLERGEN_CATEGORIES.map((category) => (
+                <div key={category.id} className="allergen-section">
+                  <div className="allergen-section-label">
+                    {labelFor(lang, category.label_ja, category.label_en)}
+                  </div>
+                  <div className="allergen-grid">
+                    {category.items.map((a) => (
+                      <button
+                        key={a.key}
+                        type="button"
+                        className={`onboarding-allergen-chip${selected.has(a.key) ? ' active' : ''}`}
+                        onClick={() => toggleAllergen(a.key)}
+                        aria-pressed={selected.has(a.key)}
+                      >
+                        <span className="onboarding-allergen-emoji">{a.emoji}</span>
+                        <span>{labelFor(lang, a.jp, a.en)}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))}
             </div>
 
             <div className="onboarding-actions">
@@ -289,16 +271,32 @@ function buildFirstQuery(lang: string, allergies: string[]): string {
   return 'What do you recommend?'
 }
 
+/** shared 定義から日本語ラベル + 「アレルギー」を組み立て (食事スタイルは別表記) */
 function allergiesLabelJa(allergies: string[]): string {
-  const map: Record<string, string> = {
-    egg: '卵アレルギー', milk: '乳アレルギー', wheat: '小麦アレルギー',
-    shrimp: 'えびアレルギー', crab: 'かにアレルギー', soba: 'そばアレルギー',
-    peanut: '落花生アレルギー', walnut: 'くるみアレルギー',
-    halal: 'ハラール対応希望', hindu: 'ヒンドゥー教徒（牛肉NG）',
-    vegetarian: 'ベジタリアン', vegan: 'ヴィーガン',
+  // 食事スタイル系の特殊文言
+  const dietaryMap: Record<string, string> = {
+    halal: 'ハラール対応希望',
+    hindu: 'ヒンドゥー教徒（牛肉NG）',
+    vegetarian: 'ベジタリアン',
+    vegan: 'ヴィーガン',
   }
-  return allergies.map((a) => map[a] || a).join('・')
+  // shared 定義から jp ラベル取得 → 「{jp}アレルギー」
+  const allergenMap: Record<string, string> = Object.fromEntries(
+    ALL_ALLERGENS.filter((a) => !(a.key in dietaryMap)).map((a) => [a.key, `${a.jp}アレルギー`])
+  )
+  return allergies.map((a) => dietaryMap[a] || allergenMap[a] || a).join('・')
 }
+
+/** 英語: jp と異なり一律 "a {en} allergy" 形式 */
 function allergiesLabelEn(allergies: string[]): string {
-  return allergies.map((a) => `a ${a} allergy`).join(' and ')
+  const dietaryMap: Record<string, string> = {
+    halal: 'halal dietary needs',
+    hindu: 'Hindu dietary needs (no beef)',
+    vegetarian: 'vegetarian diet',
+    vegan: 'vegan diet',
+  }
+  const allergenMap: Record<string, string> = Object.fromEntries(
+    ALL_ALLERGENS.filter((a) => !(a.key in dietaryMap)).map((a) => [a.key, `a ${a.en.toLowerCase()} allergy`])
+  )
+  return allergies.map((a) => dietaryMap[a] || allergenMap[a] || a).join(' and ')
 }
