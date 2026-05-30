@@ -1723,6 +1723,7 @@ export default function CapturePage({
             router.push("/explore");
           })
         }
+        onNewChat={handleNewChat}
         onLanguage={openLanguageModal ?? openLanguageModalFromContext}
         restaurantName={
           (activeLanguage !== 'ja' && selectedRestaurant?.name_romaji

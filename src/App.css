@@ -680,7 +680,17 @@ body {
   justify-self: end;
 }
 
-.capture-header > .icon-button:first-child {
+/* 左側のアイコン群 (ハンバーガー + 新しい会話) — ChatGPT/Claude/Gemini に倣う */
+.capture-header-left {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+  justify-self: start;
+}
+
+.capture-header > .icon-button:first-child,
+.capture-header > .capture-header-left {
   justify-self: start;
 }
 

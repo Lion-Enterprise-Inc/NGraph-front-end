@@ -1,6 +1,6 @@
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
-import { Menu, Info, X, MapPin, Clock, Phone, Instagram, ExternalLink, Sun, Moon } from 'lucide-react'
+import { Menu, Info, X, MapPin, Clock, Phone, Instagram, ExternalLink, Sun, Moon, SquarePen } from 'lucide-react'
 import { getUiCopy } from '../i18n/uiCopy'
 import { useAppContext } from './AppProvider'
 
@@ -29,11 +29,12 @@ interface RestaurantInfo {
 interface CaptureHeaderProps {
   onMenu: () => void
   onLanguage: () => void
+  onNewChat?: () => void
   restaurantName?: string | null
   restaurantData?: RestaurantInfo | null
 }
 
-export default function CaptureHeader({ onMenu, onLanguage, restaurantName, restaurantData }: CaptureHeaderProps) {
+export default function CaptureHeader({ onMenu, onLanguage, onNewChat, restaurantName, restaurantData }: CaptureHeaderProps) {
   const router = useRouter()
   const { language, theme, toggleTheme } = useAppContext()
   const copy = getUiCopy(language)
@@ -46,9 +47,22 @@ export default function CaptureHeader({ onMenu, onLanguage, restaurantName, rest
   return (
     <>
       <header className="capture-header sticky">
-        <button className="icon-button" type="button" aria-label={copy.captureHeader.menu} onClick={onMenu}>
-          <Menu size={22} strokeWidth={1.75} color="currentColor" />
-        </button>
+        <div className="capture-header-left">
+          <button className="icon-button" type="button" aria-label={copy.captureHeader.menu} onClick={onMenu}>
+            <Menu size={22} strokeWidth={1.75} color="currentColor" />
+          </button>
+          {onNewChat && (
+            <button
+              className="icon-button"
+              type="button"
+              aria-label={(copy.history as any).newChat || 'New chat'}
+              title={(copy.history as any).newChat || 'New chat'}
+              onClick={onNewChat}
+            >
+              <SquarePen size={20} strokeWidth={1.75} color="currentColor" />
+            </button>
+          )}
+        </div>
         <div className="capture-header-center">
           {restaurantName ? (
             <>
