@@ -6523,9 +6523,34 @@ textarea.form-input {
 
 /* ── 拡張アレルゲン UI (8+21+4 品目 + 「なし」chip + カテゴリ section) ── */
 
-/* アレルゲン step は項目数多いので panel をやや広げる */
+/*
+ * アレルゲン step は項目数多いので panel をやや広げる + 中だけ scroll。
+ * 上下 (タイトル / 保存ボタン) を sticky、 中央の chip 群だけ overflow-y: auto。
+ */
 .onboarding-panel-allergens {
   max-width: 580px;
+  max-height: 85vh;
+  overflow: hidden;       /* 親 panel 自体は scroll させない */
+  display: flex;
+  flex-direction: column;
+}
+.onboarding-panel-allergens .onboarding-header {
+  flex-shrink: 0;
+  margin-bottom: 12px;
+}
+.onboarding-panel-allergens .onboarding-allergens-section {
+  flex: 1 1 auto;
+  min-height: 0;          /* flex child で overflow を効かせるため必須 */
+  overflow-y: auto;
+  /* scroll bar 表示時の layout 崩れ防止 */
+  padding-right: 6px;
+  margin-right: -6px;
+}
+.onboarding-panel-allergens .onboarding-actions {
+  flex-shrink: 0;
+  border-top: 1px solid var(--color-border);
+  padding-top: 14px;
+  margin-top: 14px;
 }
 
 /* 「アレルギーなし」chip: 排他選択用、フル幅、緑系強調 */
