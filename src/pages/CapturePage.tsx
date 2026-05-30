@@ -267,6 +267,7 @@ export default function CapturePage({
     setOnSelectThread,
     setOnOpenLiked,
     setOnOpenPopular,
+    setOnAskAbout,
     geoLocation,
   } = useAppContext();
   const activeLanguage = contextLanguage ?? language ?? "ja";
@@ -329,6 +330,39 @@ export default function CapturePage({
   const [photoUploading, setPhotoUploading] = useState<string | null>(null); // menu_uid being uploaded
   const [photoResult, setPhotoResult] = useState<Record<string, { status: string; match_result: string }>>({});
   const photoInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+
+  /**
+   * クチコミボタン表示判定。
+   * - 会話 5 ターン超 → 会話の深さで「もう食べた可能性が高い」と推測
+   * - 直近メッセージに「美味しかった/ごちそうさま/ありがとう/delicious/thanks」等の終結語
+   * - 「クチコミ/レビュー/review」を明示
+   * 上記いずれか + google_review_url が設定済 → 表示
+   *
+   * これで全 AI 応答に常時露出するノイズを抑える。
+   */
+  const _REVIEW_END_OF_MEAL_KEYWORDS = [
+    '美味しかった', 'おいしかった', '美味しい', 'おいしい',
+    'ごちそうさま', 'ご馳走さま', 'ごちそう様',
+    'ありがとう', 'ありがと',
+    '満足', '良かった', 'よかった',
+    'delicious', 'tasty', 'thank', 'thanks', 'great food',
+    'enjoyed', 'satisfied',
+  ];
+  const _REVIEW_INTENT_KEYWORDS = [
+    'クチコミ', '口コミ', 'レビュー', '評判', '星', '★',
+    'review', 'rating', 'comment',
+  ];
+
+  const shouldShowReviewPrompt = (responseIdx: number, userMsg?: string) => {
+    if (!restaurantData?.google_review_url) return false;
+    // 5 ターン超 (深い会話 = 食事後の可能性高い)
+    if (responseIdx >= 4) return true;
+    // メッセージに「終結 / 満足 / レビュー」関連語
+    const msg = (userMsg || '').toLowerCase();
+    if (_REVIEW_END_OF_MEAL_KEYWORDS.some((kw) => msg.includes(kw.toLowerCase()))) return true;
+    if (_REVIEW_INTENT_KEYWORDS.some((kw) => msg.includes(kw.toLowerCase()))) return true;
+    return false;
+  };
 
   /** ♡ トグル共通処理。Optimistic UI + サーバ集計 like_count 更新。 */
   const handleLikeToggle = (
@@ -792,7 +826,66 @@ export default function CapturePage({
   }, [restaurantData, activeLanguage]);
 
   const copy = useMemo(() => getUiCopy(activeLanguage), [activeLanguage]);
-  
+
+  // ローテーション placeholder: 3 秒ごとに候補を切替えて入力欄の発見性 UP
+  // ChatGPT/Claude のように発見性の高い質問例を見せる
+  const placeholderCandidates = useMemo<string[]>(() => {
+    const lang = activeLanguage;
+    if (lang === 'ja') {
+      return [
+        '何でも聞いてください',
+        'おすすめは？',
+        'アレルギーはある？',
+        '営業時間を教えて',
+        '予約したい',
+        '季節限定メニューは？',
+        '駐車場はある？',
+      ];
+    }
+    if (lang === 'en') {
+      return [
+        'Ask me anything',
+        'What do you recommend?',
+        'Any allergens?',
+        'What are the opening hours?',
+        'I want to make a reservation',
+        'Any seasonal menu?',
+      ];
+    }
+    if (lang === 'ko') {
+      return [
+        '무엇이든 물어보세요',
+        '추천 메뉴는?',
+        '알레르기 정보',
+        '영업 시간은?',
+        '예약하고 싶어요',
+      ];
+    }
+    if (lang === 'zh-Hans' || lang === 'zh-Hant' || lang === 'zh') {
+      return [
+        '请随意提问',
+        '有什么推荐？',
+        '过敏信息',
+        '营业时间是？',
+        '我想预订',
+      ];
+    }
+    return ['Ask me anything', 'What do you recommend?'];
+  }, [activeLanguage]);
+
+  const [placeholderIdx, setPlaceholderIdx] = useState(0);
+  useEffect(() => {
+    setPlaceholderIdx(0);  // 言語切替時に reset
+    if (placeholderCandidates.length <= 1) return;
+    const id = window.setInterval(() => {
+      setPlaceholderIdx((i) => (i + 1) % placeholderCandidates.length);
+    }, 3000);
+    return () => window.clearInterval(id);
+  }, [placeholderCandidates]);
+
+  const rotatingPlaceholder = placeholderCandidates[placeholderIdx]
+    ?? copy.restaurant.chatPlaceholder;
+
   const currentSuggestions = useMemo(() => {
     if (selectedRestaurant) {
       const displayName = (activeLanguage !== 'ja' && selectedRestaurant.name_romaji)
@@ -801,7 +894,7 @@ export default function CapturePage({
 
       // Quick tap round 1: 名物/おすすめ/迷ってる (Session 73)
       return {
-        guide: copy.restaurant.chatPlaceholder,
+        guide: rotatingPlaceholder,
         chips: [
           copy.restaurant.signatureDish,
           copy.restaurant.bestTime,
@@ -810,7 +903,7 @@ export default function CapturePage({
       };
     }
     return copy.suggestions;
-  }, [selectedRestaurant, copy.suggestions, copy.restaurant, activeLanguage]);
+  }, [selectedRestaurant, copy.suggestions, copy.restaurant, activeLanguage, rotatingPlaceholder]);
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -1779,6 +1872,16 @@ export default function CapturePage({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [restaurantSlug, likedMenus]);
 
+  // MenuListDrawer のチップ → chat に質問投入する callback を登録
+  useEffect(() => {
+    const askHandler = (query: string) => {
+      handleSend(query);
+    };
+    setOnAskAbout(() => askHandler);
+    return () => { setOnAskAbout(null); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [restaurantSlug]);
+
   const handlePhotoUpload = async (menuUid: string, file: File) => {
     setPhotoUploading(menuUid);
     try {
@@ -1941,7 +2044,7 @@ export default function CapturePage({
 
 
         <section className="capture-thread" ref={threadRef}>
-          {responses.map((response) => (
+          {responses.map((response, responseIdx) => (
             <div key={response.id} className="chat-thread-item" id={`msg-${response.id}`}>
               <div className="chat-row chat-row-user">
                 <div className="chat-content">
@@ -2045,9 +2148,9 @@ export default function CapturePage({
                         >
                           <ThumbsDown size={16} />
                         </button>
-                        {restaurantData?.google_review_url && (
+                        {shouldShowReviewPrompt(responseIdx, response.input.text) && (
                           <a
-                            href={restaurantData.google_review_url}
+                            href={restaurantData?.google_review_url ?? undefined}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="google-review-btn"
@@ -2215,9 +2318,9 @@ export default function CapturePage({
                         >
                           <ThumbsDown size={16} />
                         </button>
-                        {restaurantData?.google_review_url && (
+                        {shouldShowReviewPrompt(responseIdx, response.input.text) && (
                           <a
-                            href={restaurantData.google_review_url}
+                            href={restaurantData?.google_review_url ?? undefined}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="google-review-btn"
@@ -2322,9 +2425,9 @@ export default function CapturePage({
                               >
                                 <ThumbsDown size={16} />
                               </button>
-                              {restaurantData?.google_review_url && (
+                              {shouldShowReviewPrompt(responseIdx, response.input.text) && (
                                 <a
-                                  href={restaurantData.google_review_url}
+                                  href={restaurantData?.google_review_url ?? undefined}
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   className="feedback-btn action-btn"

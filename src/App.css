@@ -699,8 +699,11 @@ body {
   align-items: center;
   justify-content: center;
   min-width: 0;
+  /* 左右のアクション領域を踏み越えない上限 (はみ出し時は ellipsis に頼る) */
+  max-width: 100%;
   gap: 0;
   justify-self: center;
+  overflow: hidden;
 }
 
 .capture-header-home {
@@ -730,6 +733,22 @@ body {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  /* 中央寄せでも左右アクション分の余白を残し ellipsis を確実に発火させる */
+  max-width: min(60vw, 360px);
+  min-width: 0;
+}
+@media (max-width: 768px) {
+  .capture-header-name {
+    /* SP では更に厳しく、ハンバーガー2個+テーマ+言語の左右合計を考慮 */
+    max-width: min(48vw, 220px);
+    font-size: 14px;
+  }
+}
+@media (max-width: 420px) {
+  .capture-header-name {
+    max-width: min(42vw, 180px);
+    font-size: 13px;
+  }
 }
 
 .nav-brand {
@@ -1483,28 +1502,38 @@ body {
 
 .scroll-to-bottom-btn {
   position: fixed;
-  bottom: 80px;
+  /* dock の動的高さに連動して常に dock 直上 14px に配置 */
+  bottom: calc(var(--chat-dock-height, 100px) + 14px);
   left: 50%;
   transform: translateX(-50%);
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   border-radius: 999px;
-  background: var(--color-overlay);
+  background: var(--color-surface-input);
   border: 1px solid var(--color-border);
-  color: var(--color-text-secondary);
+  color: var(--color-text);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  box-shadow: none;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  /* FAB 感を強める shadow */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3), 0 1px 3px rgba(0, 0, 0, 0.2);
+  transition: transform 0.18s cubic-bezier(0.4, 0, 0.2, 1),
+              background 0.15s ease,
+              border-color 0.15s ease;
   z-index: 100;
+  animation: scroll-fab-fade-in 0.2s ease-out;
 }
 
 .scroll-to-bottom-btn:hover {
   background: var(--color-surface-active);
   border-color: var(--color-border-strong);
-  transform: translateY(-1px);
+  transform: translateX(-50%) translateY(-2px);
+}
+
+@keyframes scroll-fab-fade-in {
+  from { opacity: 0; transform: translateX(-50%) translateY(8px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
 }
 
 .typing-indicator {
@@ -1607,11 +1636,12 @@ body {
   }
 
   .scroll-to-bottom-btn {
-    bottom: 70px;
+    /* SP では dock 高さ + 12px、サイズ若干小さく */
+    bottom: calc(var(--chat-dock-height, 100px) + 12px);
     left: 50%;
     transform: translateX(-50%);
-    width: 36px;
-    height: 36px;
+    width: 38px;
+    height: 38px;
   }
 }
 
@@ -2432,15 +2462,35 @@ body {
 
 .chat-dock-icons {
   display: flex;
-  gap: 12px;
+  gap: 10px;
+  align-items: center;
 }
 
+/* 履歴 mode のカメラ/画像ボタン: 発見性 UP のため accent 緑で塗りつぶし */
 .chat-dock-icons .chat-icon {
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   border: none;
-  background: rgba(16,163,127,0.15);
+  /* ベース: accent 緑の半透明背景 (現状) を強化 */
+  background: rgba(16, 163, 127, 0.18);
   border-radius: 50%;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+.chat-dock-icons .chat-icon:hover {
+  background: rgba(16, 163, 127, 0.32);
+  transform: scale(1.05);
+}
+.chat-dock-icons .chat-icon:active {
+  transform: scale(0.96);
+}
+@media (max-width: 480px) {
+  .chat-dock-icons {
+    gap: 8px;
+  }
+  .chat-dock-icons .chat-icon {
+    width: 34px;
+    height: 34px;
+  }
 }
 
 .chat-dock-send {
@@ -8549,6 +8599,51 @@ textarea.form-input {
   color: var(--color-text-body);
   line-height: 1.6;
   margin: 0;
+}
+
+/* MenuListDrawer: chat 直結アクションチップ行 */
+.menu-list-detail-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+.menu-list-action-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 10px;
+  background: var(--color-surface-input, rgba(255, 255, 255, 0.04));
+  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.1));
+  border-radius: 999px;
+  color: var(--color-text-body, rgba(255, 255, 255, 0.85));
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.12s ease, border-color 0.12s ease, transform 0.12s ease;
+}
+.menu-list-action-chip:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+.menu-list-action-chip:active {
+  transform: scale(0.97);
+}
+.menu-list-action-like {
+  padding: 6px 10px 6px 8px;
+}
+.menu-list-action-like.liked {
+  color: #ff5050;
+  background: rgba(255, 80, 80, 0.08);
+  border-color: rgba(255, 80, 80, 0.3);
+}
+@media (max-width: 480px) {
+  .menu-list-action-chip {
+    font-size: 11.5px;
+    padding: 5px 9px;
+  }
 }
 
 .menu-list-detail-story {

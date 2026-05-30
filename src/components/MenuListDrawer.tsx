@@ -1,10 +1,11 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { X, ChevronDown, ChevronUp } from 'lucide-react'
+import { X, ChevronDown, ChevronUp, Heart, MessageCircle, Wine, AlertTriangle } from 'lucide-react'
 import { MenuSearchApi, type MenuNFGCard } from '../services/api'
 import { useAppContext } from './AppProvider'
 import { getUiCopy } from '../i18n/uiCopy'
+import { getLikedMenuUids, toggleMenuLike } from '../services/menuLikes'
 
 const CATEGORY_LABELS: Record<string, Record<string, string>> = {
   ja: {
@@ -37,11 +38,13 @@ type MenuListDrawerProps = {
   onClose: () => void
   restaurantSlug: string | null
   businessType?: string | null
+  /** chat に質問を投入する callback（CapturePage 提供）。設定時はチップ行表示。 */
+  onAskAbout?: (query: string) => void
 }
 
 const BAR_TYPES = ['バー', 'カクテルバー', 'ワインバー', 'ダイニングバー', 'bar', 'cocktail bar', 'wine bar', 'dining bar']
 
-export default function MenuListDrawer({ open, onClose, restaurantSlug, businessType }: MenuListDrawerProps) {
+export default function MenuListDrawer({ open, onClose, restaurantSlug, businessType, onAskAbout }: MenuListDrawerProps) {
   const { language } = useAppContext()
   const copy = getUiCopy(language)
   const nfgCopy = (copy as any).nfg || {}
@@ -51,6 +54,40 @@ export default function MenuListDrawer({ open, onClose, restaurantSlug, business
   const [activeCategory, setActiveCategory] = useState('all')
   const [expandedUid, setExpandedUid] = useState<string | null>(null)
   const [categories, setCategories] = useState<string[]>([])
+  // ♡ 状態（NFGCard と同じ localStorage を読み書き）
+  const [likedMenus, setLikedMenus] = useState<Set<string>>(new Set())
+  const [likeCounts, setLikeCounts] = useState<Record<string, number>>({})
+  useEffect(() => {
+    if (open) setLikedMenus(getLikedMenuUids())
+  }, [open])
+
+  /** チップ click → drawer 閉じる + chat にクエリ投入 */
+  const sendToChat = (query: string) => {
+    onAskAbout?.(query)
+    onClose()
+  }
+
+  /** ♡ トグル: Optimistic UI + API */
+  const handleLike = async (menuUid: string, currentCount: number) => {
+    const next = new Set(likedMenus)
+    const isAdding = !next.has(menuUid)
+    if (isAdding) next.add(menuUid); else next.delete(menuUid)
+    setLikedMenus(next)
+    setLikeCounts((prev) => ({
+      ...prev,
+      [menuUid]: Math.max(0, currentCount + (isAdding ? 1 : -1)),
+    }))
+    try {
+      const res = await toggleMenuLike(menuUid)
+      setLikeCounts((prev) => ({ ...prev, [menuUid]: res.like_count }))
+    } catch {
+      // revert
+      const revert = new Set(likedMenus)
+      if (isAdding) revert.delete(menuUid); else revert.add(menuUid)
+      setLikedMenus(revert)
+      setLikeCounts((prev) => ({ ...prev, [menuUid]: currentCount }))
+    }
+  }
 
   const fetchMenus = useCallback(async () => {
     if (!restaurantSlug) return
@@ -288,6 +325,63 @@ export default function MenuListDrawer({ open, onClose, restaurantSlug, business
                           </span>
                         </div>
                       )}
+
+                      {/* ── Action chips: chat 直結 + ♡ ── */}
+                      <div className="menu-list-detail-actions">
+                        <button
+                          type="button"
+                          className={`menu-list-action-chip menu-list-action-like${likedMenus.has(m.uid) ? ' liked' : ''}`}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            const cur = likeCounts[m.uid] ?? (m as any).like_count ?? 0
+                            handleLike(m.uid, cur)
+                          }}
+                          aria-label={likedMenus.has(m.uid) ? 'Unlike' : 'Like'}
+                        >
+                          <Heart size={14} fill={likedMenus.has(m.uid) ? '#ff5050' : 'none'} />
+                          {(() => {
+                            const cnt = likeCounts[m.uid] ?? (m as any).like_count ?? 0
+                            return cnt > 0 ? <span>{cnt}</span> : null
+                          })()}
+                        </button>
+                        {onAskAbout && (
+                          <>
+                            <button
+                              type="button"
+                              className="menu-list-action-chip"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                sendToChat(`${m.name_jp}について教えて`)
+                              }}
+                            >
+                              <MessageCircle size={14} />
+                              <span>もっと知る</span>
+                            </button>
+                            <button
+                              type="button"
+                              className="menu-list-action-chip"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                sendToChat(`${m.name_jp}に合う飲み物は？`)
+                              }}
+                            >
+                              <Wine size={14} />
+                              <span>合う飲み物</span>
+                            </button>
+                            <button
+                              type="button"
+                              className="menu-list-action-chip"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                sendToChat(`${m.name_jp}のアレルゲンを詳しく教えて`)
+                              }}
+                            >
+                              <AlertTriangle size={14} />
+                              <span>アレルゲン</span>
+                            </button>
+                          </>
+                        )}
+                      </div>
                     </div>
                   )}
                 </div>

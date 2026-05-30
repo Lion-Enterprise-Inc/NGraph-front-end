@@ -46,6 +46,9 @@ type AppContextValue = {
   setOnOpenLiked: (fn: (() => void) | null) => void;
   onOpenPopular: (() => void) | null;
   setOnOpenPopular: (fn: (() => void) | null) => void;
+  // MenuListDrawer 内チップから chat に質問投入する callback
+  onAskAbout: ((query: string) => void) | null;
+  setOnAskAbout: (fn: ((query: string) => void) | null) => void;
   geoLocation: { lat: number; lng: number } | null;
   setGeoLocation: (loc: { lat: number; lng: number } | null) => void;
   theme: Theme;
@@ -88,6 +91,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [onSelectThread, setOnSelectThread] = useState<((threadUid: string) => void) | null>(null);
   const [onOpenLiked, setOnOpenLiked] = useState<(() => void) | null>(null);
   const [onOpenPopular, setOnOpenPopular] = useState<(() => void) | null>(null);
+  const [onAskAbout, setOnAskAbout] = useState<((query: string) => void) | null>(null);
   const [geoLocation, setGeoLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [theme, setThemeState] = useState<Theme>("dark");
 
@@ -177,6 +181,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
           setOnOpenLiked,
           onOpenPopular,
           setOnOpenPopular,
+          onAskAbout,
+          setOnAskAbout,
           geoLocation,
           setGeoLocation,
           theme,
@@ -207,6 +213,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
               onClose={() => setMenuListOpen(false)}
               restaurantSlug={restaurantSlug}
               businessType={businessType}
+              onAskAbout={onAskAbout ?? undefined}
             />
           </>
         )}
