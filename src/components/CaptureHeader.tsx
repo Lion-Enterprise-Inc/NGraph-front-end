@@ -116,6 +116,8 @@ export default function CaptureHeader({ onMenu, onLanguage, onNewChat, restauran
       </header>
 
       {showInfo && restaurantData && (
+        <>
+          <div className="store-info-backdrop" onClick={() => setShowInfo(false)} />
         <div className="store-info-panel">
           <div className="store-info-header">
             <span className="store-info-title">{restaurantData.name}</span>
@@ -187,7 +189,7 @@ export default function CaptureHeader({ onMenu, onLanguage, onNewChat, restauran
                 rel="noopener noreferrer"
               >
                 <MapPin size={16} strokeWidth={1.75} />
-                <span>{isJa ? 'Map で開く' : 'Open Map'}</span>
+                <span>Map</span>
               </a>
             )}
             {restaurantData.phone_number && (
@@ -212,6 +214,7 @@ export default function CaptureHeader({ onMenu, onLanguage, onNewChat, restauran
             <div className="store-info-toast" role="status">{shareToast}</div>
           )}
         </div>
+        </>
       )}
     </>
   )
