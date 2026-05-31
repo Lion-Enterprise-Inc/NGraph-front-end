@@ -69,18 +69,42 @@ function buildDrinkSpecRows(meta: DrinkMeta | undefined): SpecRow[] {
       const loc = meta.brewery_location ? `（${meta.brewery_location}）` : '';
       push('蔵元', `${meta.brewery}${loc}`);
     }
+    push('創業', meta.brewery_founded);
     if (meta.rice_variety) {
       const origin = meta.rice_origin ? `（${meta.rice_origin}）` : '';
       push('酒米', `${meta.rice_variety}${origin}`);
     }
-    push('精米歩合', meta.polishing_ratio_pct, '%');
+    if (meta.polishing_ratio_pct !== undefined && meta.polishing_ratio_pct !== null) {
+      push('精米歩合', meta.polishing_ratio_pct, '%');
+    } else if (meta.polishing_ratio_koji_pct || meta.polishing_ratio_kake_pct) {
+      push('精米歩合', `麹米${meta.polishing_ratio_koji_pct ?? '—'}% / 掛米${meta.polishing_ratio_kake_pct ?? '—'}%`);
+    }
     push('日本酒度', meta.sake_meter_value);
+    push('酸度', meta.acidity);
+    push('酵母', meta.yeast);
+    push('仕込み水', meta.water_source);
     push('度数', meta.abv_pct, '%');
     const bottles = joinList(meta.bottle_sizes_ml);
     if (bottles) push('容量', `${bottles}ml`);
     push('推奨温度', meta.recommended_temp);
     push('季節', meta.season);
+  } else if (kind === 'shochu') {
+    push('分類', meta.classification);
+    if (meta.brewery) {
+      const loc = meta.brewery_location ? `（${meta.brewery_location}）` : '';
+      push('蔵元', `${meta.brewery}${loc}`);
+    }
+    push('創業', meta.brewery_founded);
+    push('原料', meta.base_material);
+    push('麹', meta.koji);
+    push('蒸留方式', meta.distillation_method);
+    push('仕込み水', meta.water_source);
+    push('度数', meta.abv_pct, '%');
+    push('おすすめの飲み方', meta.recommended_serve);
+    const bottles = joinList(meta.bottle_sizes_ml);
+    if (bottles) push('容量', `${bottles}ml`);
   } else if (kind === 'wine') {
+    push('生産者', meta.brewery);
     push('品種', meta.grape_variety);
     if (meta.region) {
       const sub = meta.sub_region ? ` / ${meta.sub_region}` : '';
@@ -104,12 +128,13 @@ function buildDrinkSpecRows(meta: DrinkMeta | undefined): SpecRow[] {
     push('度数', meta.abv_pct, '%');
     push('グラス', meta.glass_type);
   } else if (kind === 'whisky' || kind === 'spirit') {
-    push('種類', meta.kind);
     push('蒸留所', meta.brewery);
     if (meta.region) push('産地', meta.region);
-    push('熟成', meta.age_years, '年');
+    if (meta.age_years) push('熟成', meta.age_years, '年');
+    else push('熟成', meta.age_statement);
     push('カスク', meta.cask_type);
     push('度数', meta.abv_pct, '%');
+    push('おすすめの飲み方', meta.recommended_serve);
     const bottles = joinList(meta.bottle_sizes_ml);
     if (bottles) push('容量', `${bottles}ml`);
   } else if (kind === 'soft_drink') {

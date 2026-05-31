@@ -801,8 +801,24 @@ export interface QuickExplainItem {
     base_spirit?: string;
     glass_type?: string;
     age_years?: number;
+    age_statement?: string;
     cask_type?: string;
     caffeine_mg?: number;
+    polishing_ratio_koji_pct?: number;
+    polishing_ratio_kake_pct?: number;
+    // product_master canonical 由来の追加スペック
+    brewery_founded?: string | number;
+    classification?: string;
+    acidity?: string | number;
+    koji?: string;
+    yeast?: string;
+    water_source?: string;
+    base_material?: string;
+    distillation_method?: string;
+    recommended_serve?: string;
+    notes?: string;
+    spec_source?: string;
+    verified_at?: string;
     source_url?: string;
     official_image_url?: string;
     [key: string]: unknown;
