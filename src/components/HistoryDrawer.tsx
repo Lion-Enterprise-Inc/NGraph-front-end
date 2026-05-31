@@ -78,7 +78,7 @@ export default function HistoryDrawer({
                   <div className="sidebar-thread-text">
                     <div className="sidebar-thread-title">{th.title || th.preview}</div>
                     <div className="sidebar-thread-date">
-                      {new Date(th.updatedAt).toLocaleDateString('ja-JP', { month: 'short', day: 'numeric' })}
+                      {new Date(th.updatedAt).toLocaleDateString(language || 'en', { month: 'short', day: 'numeric' })}
                     </div>
                   </div>
                 </div>
