@@ -9280,6 +9280,18 @@ textarea.form-input {
   margin-top: 1px;
 }
 
+.menu-list-daily-badge {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  color: #fff;
+  background: linear-gradient(135deg, #f59e0b, #ef4444);
+  border-radius: 4px;
+  padding: 1px 6px;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+
 .menu-list-item-right {
   display: flex;
   align-items: center;

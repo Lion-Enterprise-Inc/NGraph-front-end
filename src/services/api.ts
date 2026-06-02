@@ -721,6 +721,92 @@ export const MenuApi = {
   },
 };
 
+// 本日の献立 (日替わり) API
+export interface DailyClarification {
+  field: string;
+  question: string;
+  options: string[];
+}
+
+export interface DailyDraftItem extends VisionMenuItem {
+  clarification_needed?: DailyClarification[];
+}
+
+export interface DailyDraftResponse {
+  result: { items_count: number; items: DailyDraftItem[] };
+  message: string;
+  status_code: number;
+}
+
+export interface DailyActiveItem {
+  uid: string;
+  name_jp: string;
+  name_en: string | null;
+  price: number;
+  category: string;
+  active?: boolean;
+  valid_from?: string | null;
+  valid_until?: string | null;
+}
+
+export interface DailyListResponse {
+  result: { items_count: number; items: DailyActiveItem[] };
+  message: string;
+  status_code: number;
+}
+
+export const DailyMenuApi = {
+  // 撮る/貼る → AI抽出(保存なし)。image OR text のどちらか。
+  draft: async (input: { image?: File; text?: string }, restaurantUid?: string): Promise<DailyDraftResponse> => {
+    const formData = new FormData();
+    if (input.image) formData.append('image', input.image);
+    if (input.text) formData.append('text', input.text);
+    if (restaurantUid) formData.append('restaurant_uid', restaurantUid);
+
+    const token = TokenService.getAccessToken();
+    const response = await fetch(`${API_BASE_URL}/menus/daily/draft`, {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+      },
+      body: formData,
+    });
+    if (!response.ok) {
+      let errorMessage = '抽出に失敗しました';
+      try { const e = await response.json(); errorMessage = e.detail || errorMessage; } catch {}
+      throw new Error(errorMessage);
+    }
+    return response.json();
+  },
+
+  // 店主確認済みの本日の献立を確定保存
+  confirm: async (items: DailyDraftItem[], restaurantUid?: string): Promise<{ result: { items_saved: number; deactivated: number }; message: string }> => {
+    return apiClient.post('/menus/daily/confirm', { items, restaurant_uid: restaurantUid });
+  },
+
+  // 今アクティブな本日の献立
+  active: async (restaurantUid?: string): Promise<DailyListResponse> => {
+    const params = new URLSearchParams();
+    if (restaurantUid) params.append('restaurant_uid', restaurantUid);
+    const qs = params.toString();
+    return apiClient.get(`/menus/daily/active${qs ? `?${qs}` : ''}`);
+  },
+
+  // ストック (過去の日替わり品、流用候補)
+  stock: async (restaurantUid?: string): Promise<DailyListResponse> => {
+    const params = new URLSearchParams();
+    if (restaurantUid) params.append('restaurant_uid', restaurantUid);
+    const qs = params.toString();
+    return apiClient.get(`/menus/daily/stock${qs ? `?${qs}` : ''}`);
+  },
+
+  // ストックから流用 (1タップ/「昨日と同じ」)
+  reuse: async (menuUids: string[], restaurantUid?: string): Promise<{ result: { reactivated: number; deactivated: number }; message: string }> => {
+    return apiClient.post('/menus/daily/reuse', { menu_uids: menuUids, restaurant_uid: restaurantUid });
+  },
+};
+
 // Allergen API
 export const AllergenApi = {
   getAll: async (): Promise<AllergenListResponse> => {
@@ -1499,6 +1585,7 @@ export interface MenuNFGCard extends MenuSearchItem {
   score: number;
   restaurant_lat: number | null;
   restaurant_lng: number | null;
+  is_daily?: boolean;
 }
 
 export const MenuSearchApi = {

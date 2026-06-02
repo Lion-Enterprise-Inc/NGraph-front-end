@@ -233,7 +233,10 @@ export default function MenuListDrawer({ open, onClose, restaurantSlug, business
                   {/* Compact row */}
                   <div className="menu-list-item-row">
                     <div className="menu-list-item-info">
-                      <span className="menu-list-item-name">{displayName(m)}</span>
+                      <span className="menu-list-item-name">
+                        {m.is_daily && <span className="menu-list-daily-badge">本日の献立</span>}
+                        {displayName(m)}
+                      </span>
                       {subName(m) && (
                         <span className="menu-list-item-sub">{subName(m)}</span>
                       )}

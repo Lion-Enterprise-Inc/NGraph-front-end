@@ -99,6 +99,7 @@ export default function QRMenuView({ restaurantSlug, language, onChatMode }: QRM
                   )}
                   <div style={s.menuInfo}>
                     <div style={s.menuName}>
+                      {menu.is_daily && <span style={s.dailyBadge}>本日の献立</span>}
                       {activeLang === 'ja' ? menu.name_jp : (menu.name_en || menu.name_jp)}
                     </div>
                     {menu.description_local && (
@@ -269,6 +270,17 @@ const s: Record<string, React.CSSProperties> = {
     fontSize: '15px',
     fontWeight: 600,
     marginBottom: '4px',
+  },
+  dailyBadge: {
+    display: 'inline-block',
+    fontSize: '10px',
+    fontWeight: 700,
+    color: '#F8FAFC',
+    background: 'linear-gradient(135deg, #F59E0B, #EF4444)',
+    borderRadius: '4px',
+    padding: '2px 6px',
+    marginRight: '6px',
+    verticalAlign: 'middle',
   },
   menuDesc: {
     fontSize: '12px',

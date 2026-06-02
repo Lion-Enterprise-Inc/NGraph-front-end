@@ -77,6 +77,7 @@ export default function AdminLayout({ children, title }: Props) {
   
   const restaurantNavItems: NavItem[] = [
     { key: 'menu-list', label: 'メニュー管理', icon: '📋', to: '/admin/menu-list' },
+    { key: 'daily', label: '本日の献立', icon: '🍽️', to: '/admin/daily-specials' },
     { key: 'qr', label: 'QRコード', icon: '📱', to: '/admin/qr-management' },
     { key: 'basic-info', label: '基本情報', icon: '🧾', to: '/admin/basic-info' },
   ]
