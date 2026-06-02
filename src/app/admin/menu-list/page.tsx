@@ -112,6 +112,9 @@ function MenuListContent() {
   const [pendingImageFile, setPendingImageFile] = useState<File | null>(null)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [visionResults, setVisionResults] = useState<VisionMenuItem[]>([])
+  // 承認処理中のフリーズ感対策（押下→「登録中…」表示）
+  const [approvingIndex, setApprovingIndex] = useState<number | null>(null)
+  const [approvingAll, setApprovingAll] = useState(false)
   const [showVisionApproval, setShowVisionApproval] = useState(false)
   const [showTextModal, setShowTextModal] = useState(false)
   const [pasteText, setPasteText] = useState('')
@@ -231,6 +234,7 @@ function MenuListContent() {
     const item = visionResults[index]
     if (!item || !restaurant?.uid) return
 
+    setApprovingIndex(index)
     try {
       await MenuApi.create(buildMenuDataFromVision(item))
       await refreshMenus()
@@ -245,12 +249,15 @@ function MenuListContent() {
       } else {
         toast('error', err instanceof Error ? err.message : 'メニューの保存に失敗しました')
       }
+    } finally {
+      setApprovingIndex(null)
     }
   }
 
   const handleApproveAllVision = async () => {
     if (!restaurant?.uid) return
 
+    setApprovingAll(true)
     // 1件ずつ登録。既登録(409)はスキップ、その他エラーのみ失敗として残す
     const added: string[] = []
     const skipped: string[] = []
@@ -287,6 +294,7 @@ function MenuListContent() {
       ].filter(Boolean).join('、')
       toast('warning', `${summary ? summary + '、' : ''}${failed.length}件失敗: ${failed.join('、')}`)
     }
+    setApprovingAll(false)
   }
 
   const fetchData = useCallback(async (page: number = 1) => {
@@ -940,6 +948,8 @@ function MenuListContent() {
         visionResults={visionResults}
         onApproveVisionItem={handleApproveVisionItem}
         onApproveAllVision={handleApproveAllVision}
+        approvingIndex={approvingIndex}
+        approvingAll={approvingAll}
         onCloseVisionApproval={() => { setShowVisionApproval(false); setVisionResults([]); }}
         onRemoveVisionItem={(index) => setVisionResults(visionResults.filter((_, i) => i !== index))}
         showApprovalModal={showApprovalModal}

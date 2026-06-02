@@ -20,6 +20,8 @@ interface UploadSectionProps {
   visionResults: VisionMenuItem[]
   onApproveVisionItem: (index: number) => void
   onApproveAllVision: () => void
+  approvingIndex: number | null
+  approvingAll: boolean
   onCloseVisionApproval: () => void
   onRemoveVisionItem: (index: number) => void
   showApprovalModal: boolean
@@ -38,10 +40,14 @@ export default function UploadSection({
   onFileSelect, onCameraCapture, onFileUpload, onShowTextModal,
   showTextModal, pasteText, onPasteTextChange, onTextAnalyze, onCloseTextModal,
   isAnalyzing,
-  showVisionApproval, visionResults, onApproveVisionItem, onApproveAllVision, onCloseVisionApproval, onRemoveVisionItem,
+  showVisionApproval, visionResults, onApproveVisionItem, onApproveAllVision, approvingIndex, approvingAll, onCloseVisionApproval, onRemoveVisionItem,
   showApprovalModal, pendingMenus, scrapingUrl, onApproveMenu, onDenyMenu, onApproveAll, onDenyAll, onCloseApprovalModal,
   showFetchModal
 }: UploadSectionProps) {
+  // 解析時にDB照合で既存と判定された品（source==="db"）は登録済み扱い
+  const isRegistered = (item: VisionMenuItem): boolean => item.source === 'db'
+  const newCount = visionResults.filter(item => !isRegistered(item)).length
+  const registeredCount = visionResults.length - newCount
   return (
     <>
       {/* アップロードカード */}
@@ -150,14 +156,23 @@ export default function UploadSection({
             <div className="modal-title">🤖 AI解析結果の確認</div>
 
             <div style={{ background: '#f0fdf4', padding: '12px 16px', borderRadius: '8px', marginBottom: '16px', fontSize: '14px', color: '#166534' }}>
-              📸 画像から <strong>{visionResults.length}件</strong> のメニューを検出しました。内容を確認して承認してください。
+              📸 画像から <strong>{visionResults.length}件</strong> のメニューを検出しました。
+              {registeredCount > 0 && (
+                <span>うち <strong>{registeredCount}件</strong> は登録済み（自動でスキップされます）。</span>
+              )}
+              内容を確認して承認してください。
             </div>
 
             <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
-              <button className="btn" onClick={onApproveAllVision} style={{ background: '#10b981', color: 'white' }}>
-                ✅ すべて承認 ({visionResults.length}件)
+              <button
+                className="btn"
+                onClick={onApproveAllVision}
+                disabled={approvingAll || approvingIndex !== null}
+                style={{ background: '#10b981', color: 'white', opacity: (approvingAll || approvingIndex !== null) ? 0.6 : 1 }}
+              >
+                {approvingAll ? '⏳ 登録中…' : `✅ すべて承認 (${newCount}件)`}
               </button>
-              <button className="btn btn-danger" onClick={onCloseVisionApproval}>
+              <button className="btn btn-danger" onClick={onCloseVisionApproval} disabled={approvingAll}>
                 ❌ すべて破棄
               </button>
             </div>
@@ -170,6 +185,11 @@ export default function UploadSection({
                       <div style={{ fontWeight: 600, fontSize: '16px', marginBottom: '4px' }}>
                         {item.name_jp}
                         {item.name_en && <span style={{ fontSize: '13px', color: '#888', marginLeft: '8px' }}>{item.name_en}</span>}
+                        {isRegistered(item) && (
+                          <span style={{ fontSize: '11px', color: '#92400e', background: '#fef3c7', borderRadius: '6px', padding: '2px 8px', marginLeft: '8px', verticalAlign: 'middle' }}>
+                            登録済み
+                          </span>
+                        )}
                       </div>
                       <div style={{ fontSize: '13px', color: '#94A3B8', marginBottom: '4px' }}>
                         💰 ¥{(item.price || 0).toLocaleString()} | 📂 {DISH_CATEGORIES[item.category] || item.category || '未分類'}
@@ -188,13 +208,19 @@ export default function UploadSection({
                       <button
                         className="btn btn-small"
                         onClick={() => onApproveVisionItem(index)}
-                        style={{ background: '#d1fae5', color: '#059669' }}
+                        disabled={approvingAll || approvingIndex !== null || isRegistered(item)}
+                        style={{
+                          background: isRegistered(item) ? '#e5e7eb' : '#d1fae5',
+                          color: isRegistered(item) ? '#6b7280' : '#059669',
+                          opacity: (approvingAll || (approvingIndex !== null && approvingIndex !== index)) ? 0.6 : 1
+                        }}
                       >
-                        ✅ 承認
+                        {approvingIndex === index ? '⏳ 登録中…' : isRegistered(item) ? '登録済み' : '✅ 承認'}
                       </button>
                       <button
                         className="btn btn-small btn-danger"
                         onClick={() => onRemoveVisionItem(index)}
+                        disabled={approvingAll || approvingIndex !== null}
                       >
                         ❌
                       </button>
