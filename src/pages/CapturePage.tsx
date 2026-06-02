@@ -50,6 +50,7 @@ function visionToQuickExplain(vi: VisionMenuItem): QuickExplainItem {
     confidence: vi.confidence,
     category: vi.category,
     nfg_code: (vi as any).nfg_code,
+    restriction_match: vi.restriction_match,
   };
 }
 

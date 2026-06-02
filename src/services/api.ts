@@ -830,6 +830,8 @@ export interface QuickExplainItem {
   nfg_code?: string;
   like_count?: number;
   share_count?: number;
+  // 客が制約申告済みで、このメニューが該当する場合に true（バックエンドの _menu_violates 判定）
+  restriction_match?: boolean;
 }
 
 export interface QuickExplainResult {
@@ -897,6 +899,8 @@ export interface VisionMenuItem {
   serving?: Record<string, any>;
   featured_tags?: string[];
   verification_rank?: string;
+  // 客が制約申告済みで、このメニューが該当する場合に true（バックエンドの _menu_violates 判定）
+  restriction_match?: boolean;
 }
 
 export interface VisionAnalysisResult {

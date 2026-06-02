@@ -6,6 +6,43 @@ import type { QuickExplainItem } from "../services/api";
 // レーダーチャート表示フラグ（機能成熟後にtrueに戻す）
 const SHOW_TASTE_RADAR = false;
 
+// 客が申告済みの食事制約に該当するメニューに出す context-specific 警告。
+// 汎用免責(選択時に1回)とは別物で、「この品があなたの制約に該当する」という
+// その場限りの新情報。SYSTEM_SPEC §6.2.1 の閲覧経路「タグ強調」の文言。
+const RESTRICTION_MATCH_NOTICE: Record<string, string> = {
+  ja: '申告された制約に該当する可能性があります。スタッフにご確認ください',
+  en: 'May not match your declared dietary needs. Please confirm with staff.',
+  ko: '입력하신 식이 제한에 해당될 수 있습니다. 직원에게 확인해 주세요.',
+  'zh-Hans': '可能不符合您申报的饮食限制，请向工作人员确认。',
+  'zh-Hant': '可能不符合您申報的飲食限制，請向工作人員確認。',
+  es: 'Puede no cumplir sus restricciones declaradas. Confirme con el personal.',
+  fr: 'Peut ne pas convenir à vos restrictions déclarées. Confirmez auprès du personnel.',
+  de: 'Entspricht möglicherweise nicht Ihren angegebenen Einschränkungen. Bitte beim Personal nachfragen.',
+  it: 'Potrebbe non rispettare le restrizioni dichiarate. Confermare con il personale.',
+  pt: 'Pode não atender às suas restrições declaradas. Confirme com a equipe.',
+  ru: 'Может не соответствовать указанным вами ограничениям. Уточните у персонала.',
+  th: 'อาจไม่ตรงกับข้อจำกัดด้านอาหารที่ระบุไว้ กรุณายืนยันกับพนักงาน',
+  vi: 'Có thể không phù hợp với hạn chế bạn đã khai báo. Vui lòng xác nhận với nhân viên.',
+  id: 'Mungkin tidak sesuai dengan pembatasan yang Anda nyatakan. Harap konfirmasi dengan staf.',
+  ms: 'Mungkin tidak menepati sekatan yang anda nyatakan. Sila sahkan dengan kakitangan.',
+  ar: 'قد لا يتوافق مع القيود التي ذكرتها. يرجى التأكيد مع الموظفين.',
+  hi: 'आपके बताए गए प्रतिबंधों से मेल नहीं खा सकता। कृपया स्टाफ से पुष्टि करें।',
+  tr: 'Belirttiğiniz kısıtlamalara uymayabilir. Lütfen personele teyit ettirin.',
+  bn: 'আপনার উল্লেখিত বিধিনিষেধের সাথে নাও মিলতে পারে। অনুগ্রহ করে কর্মীদের সাথে নিশ্চিত করুন।',
+  my: 'သင်ဖော်ပြထားသော ကန့်သတ်ချက်နှင့် ကိုက်ညီမှု မရှိနိုင်ပါ။ ဝန်ထမ်းနှင့် အတည်ပြုပါ။',
+  tl: 'Maaaring hindi tumugma sa iyong idineklarang paghihigpit. Mangyaring kumpirmahin sa staff.',
+  lo: 'ອາດບໍ່ກົງກັບຂໍ້ຈຳກັດທີ່ທ່ານແຈ້ງໄວ້. ກະລຸນາຢືນຢັນກັບພະນັກງານ.',
+  km: 'អាចមិនត្រូវនឹងការដាក់កម្រិតដែលអ្នកបានបញ្ជាក់។ សូមបញ្ជាក់ជាមួយបុគ្គលិក។',
+  ne: 'तपाईंले उल्लेख गर्नुभएको प्रतिबन्धसँग नमिल्न सक्छ। कृपया स्टाफसँग पुष्टि गर्नुहोस्।',
+  mn: 'Таны мэдүүлсэн хязгаарлалттай нийцэхгүй байж магадгүй. Ажилтнаас лавлана уу.',
+  fa: 'ممکن است با محدودیت‌های اعلام‌شده شما مطابقت نداشته باشد. لطفاً با کارکنان تأیید کنید.',
+  uk: 'Може не відповідати зазначеним вами обмеженням. Уточніть у персоналу.',
+  pl: 'Może nie spełniać podanych ograniczeń. Prosimy potwierdzić z personelem.',
+};
+
+const getRestrictionMatchNotice = (lang: string): string =>
+  RESTRICTION_MATCH_NOTICE[lang] || RESTRICTION_MATCH_NOTICE.en;
+
 /**
  * description と narrative.story の重複率を概算する。
  * 文字 3-gram の Jaccard 係数で類似度を測定。NFG enrichment が
@@ -429,9 +466,17 @@ export default function NFGCard({
               <div className="nfgcard-description-local">{item.description_local}</div>
             )}
 
+            {/* 申告された制約に該当: その場限りの警告 + タグ強調 (§6.2.1 閲覧経路) */}
+            {item.restriction_match && (
+              <div className="nfgcard-restriction-warn" role="note">
+                <span className="nfgcard-restriction-warn-icon" aria-hidden="true">⚠</span>
+                <span>{getRestrictionMatchNotice(language)}</span>
+              </div>
+            )}
+
             {/* Always visible: allergens, ingredients, restrictions, image */}
             {item.allergens && item.allergens.length > 0 && (
-              <div className="nfgcard-allergens">
+              <div className={`nfgcard-allergens${item.restriction_match ? ' nfgcard-tags-emphasized' : ''}`}>
                 {item.allergens.map((a, i) => <span key={i} className="nfgcard-allergen-tag">{a}</span>)}
               </div>
             )}
@@ -441,7 +486,7 @@ export default function NFGCard({
               </div>
             )}
             {item.restrictions && item.restrictions.length > 0 && (
-              <div className="nfgcard-restrictions">
+              <div className={`nfgcard-restrictions${item.restriction_match ? ' nfgcard-tags-emphasized' : ''}`}>
                 {item.restrictions.map((r, i) => <span key={i} className="nfgcard-restriction-tag">{r}</span>)}
               </div>
             )}

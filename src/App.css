@@ -8849,6 +8849,37 @@ textarea.form-input {
   color: #c084fc;
 }
 
+/* 申告制約に該当: その場限りの警告バナー (§6.2.1 閲覧経路) */
+.nfgcard-restriction-warn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  padding: 8px 11px;
+  border-radius: 10px;
+  background: rgba(220, 38, 38, 0.12);
+  border: 1px solid rgba(248, 113, 113, 0.45);
+  color: #fca5a5;
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+.nfgcard-restriction-warn-icon {
+  flex-shrink: 0;
+  font-size: 15px;
+  line-height: 1;
+}
+[data-theme="light"] .nfgcard-restriction-warn {
+  background: rgba(220, 38, 38, 0.08);
+  border-color: rgba(185, 28, 28, 0.40);
+  color: #b91c1c;
+}
+/* 該当時はアレルゲン/制約タグを強調（リング + わずかに拡大） */
+.nfgcard-tags-emphasized .nfgcard-allergen-tag,
+.nfgcard-tags-emphasized .nfgcard-restriction-tag {
+  box-shadow: 0 0 0 1.5px rgba(248, 113, 113, 0.7);
+  font-weight: 600;
+}
+
 /* Image (always visible) */
 .nfgcard-image {
   margin-top: 8px;
