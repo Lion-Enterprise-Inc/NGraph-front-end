@@ -137,7 +137,7 @@ function MenuListContent() {
     setIsAnalyzing(true)
     try {
       const response = await VisionApi.analyzeImage(file, restaurantSlug, false)
-      const items = response.result?.items || []
+      const items = (response.result?.items || []).map(normalizeVisionItem)
       if (items.length === 0) {
         toast('warning', 'メニューを検出できませんでした。別のファイルを試してください。')
         return
@@ -163,7 +163,7 @@ function MenuListContent() {
     setIsAnalyzing(true)
     try {
       const response = await VisionApi.analyzeText(pasteText.trim())
-      const items = response.result?.items || []
+      const items = (response.result?.items || []).map(normalizeVisionItem)
       if (items.length === 0) {
         toast('warning', 'メニューを検出できませんでした。別のテキストを試してください。')
         return
@@ -178,6 +178,20 @@ function MenuListContent() {
       setIsAnalyzing(false)
     }
   }
+
+  // AI(LLM)出力は ingredients/allergens を文字列で返すことがある（"鶏肉、玉ねぎ"）。
+  // 配列前提の描画(.join)・承認処理で落ちるため、解析直後に必ず配列へ正規化する。
+  const toStringArray = (v: unknown): string[] => {
+    if (Array.isArray(v)) return v.filter((x): x is string => typeof x === 'string')
+    if (typeof v === 'string') return v.split(/[、,]/).map(s => s.trim()).filter(Boolean)
+    return []
+  }
+
+  const normalizeVisionItem = (item: VisionMenuItem): VisionMenuItem => ({
+    ...item,
+    ingredients: toStringArray(item.ingredients),
+    allergens: toStringArray(item.allergens)
+  })
 
   const mapAllergenNamesToUids = (allergenNames: string[]): string[] => {
     if (!allergenNames || allergenNames.length === 0) return []
