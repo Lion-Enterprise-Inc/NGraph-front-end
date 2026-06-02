@@ -303,7 +303,6 @@ export default function CapturePage({
   const threadRef = useRef<HTMLElement | null>(null);
   const captureBodyRef = useRef<HTMLDivElement | null>(null);
   const typingTimersRef = useRef<number[]>([]);
-  const recommendCacheRef = useRef<Record<string, { response: string; messageUid: string | null }>>({});
   const typingStartedRef = useRef<Set<string>>(new Set());
   const [typingState, setTypingState] = useState<
     Record<string, { title: string; intro: string; body: string[] }>
@@ -847,69 +846,6 @@ export default function CapturePage({
       handleEnd();
     };
   }, [restaurantSlug]);
-
-  // Pre-fetch recommend text responses for instant display
-  useEffect(() => {
-    if (!restaurantData?.recommend_texts?.length) return;
-    const controller = new AbortController();
-    const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://dev-backend.ngraph.jp/api';
-    const slug = restaurantData.slug;
-    const jaTexts = restaurantData.recommend_texts_ja || restaurantData.recommend_texts;
-    recommendCacheRef.current = {};
-
-    restaurantData.recommend_texts.forEach(async (text, i) => {
-      const jaText = jaTexts?.[i] || text;
-      try {
-        // profile を recommend prefetch にも渡す (ベジ/ハラール客に合った内容を初手から)
-        let _prefetchProfile: { restrictions: string[] } | undefined;
-        try {
-          const raw = localStorage.getItem('omiseai_allergies');
-          const arr = raw ? (JSON.parse(raw) as unknown) : null;
-          if (Array.isArray(arr) && arr.length > 0) {
-            _prefetchProfile = { restrictions: arr.filter((v): v is string => typeof v === 'string') };
-          }
-        } catch {}
-        const resp = await fetch(`${apiBaseUrl}/public-chat/${encodeURIComponent(slug)}/stream`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            message: activeLanguage === 'ja' ? jaText : text,
-            in_store: isInStore,
-            language: activeLanguage,
-            ...(isWebMode ? { mode: 'web' } : {}),
-            ...(_prefetchProfile ? { profile: _prefetchProfile } : {}),
-          }),
-          signal: controller.signal,
-        });
-        if (resp.ok && resp.body) {
-          const reader = resp.body.getReader();
-          const decoder = new TextDecoder();
-          let fullText = '';
-          let messageUid: string | null = null;
-          let buffer = '';
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-            buffer += decoder.decode(value, { stream: true });
-            const lines = buffer.split('\n');
-            buffer = lines.pop() || '';
-            for (const line of lines) {
-              if (!line.startsWith('data: ')) continue;
-              try {
-                const data = JSON.parse(line.slice(6));
-                if (data.type === 'content') fullText += data.content;
-                if (data.type === 'done' && data.message_uid) messageUid = data.message_uid;
-              } catch { /* skip */ }
-            }
-          }
-          if (fullText) {
-            recommendCacheRef.current[text] = { response: fullText, messageUid };
-          }
-        }
-      } catch { /* silent — includes AbortError */ }
-    });
-    return () => controller.abort();
-  }, [restaurantData, activeLanguage]);
 
   const copy = useMemo(() => getUiCopy(activeLanguage), [activeLanguage]);
 
@@ -1585,51 +1521,6 @@ export default function CapturePage({
     }
   };
 
-  const handleCachedRecommendation = (text: string, cached: { response: string; messageUid: string | null }) => {
-    if (!cached.response) {
-      handleSend(text);
-      return;
-    }
-    const responseId = `${Date.now()}`;
-    setHideRecommendations(true);
-    setUserScrolledUp(false);
-
-    typingStartedRef.current.add(responseId);
-
-    setResponses((prev) => [
-      ...prev,
-      {
-        id: responseId,
-        input: { text, attachment: null, imageUrl: null },
-        output: { title: '', intro: cached.response, body: [] },
-        language: activeLanguage,
-        feedback: null,
-        messageUid: cached.messageUid,
-      },
-    ]);
-
-    setTypingState((prev) => ({
-      ...prev,
-      [responseId]: { title: '', intro: cached.response, body: [] },
-    }));
-    setTypingComplete((prev) => new Set(prev).add(responseId));
-
-    logConversation({
-      input: { text, attachment: null },
-      output: { title: '', intro: cached.response, body: [] },
-      language: activeLanguage,
-      createdAt: new Date().toISOString(),
-    });
-
-    requestAnimationFrame(() => {
-      const container = captureBodyRef.current;
-      const el = document.getElementById(`msg-${responseId}`);
-      if (container && el) {
-        container.scrollTo({ top: el.offsetTop - container.offsetTop, behavior: 'smooth' });
-      }
-    });
-  };
-
   const handleRecommendationClick = (text: string) => {
     console.log("chip_send", { value: text });
     setHideRecommendations(true);
@@ -1799,7 +1690,6 @@ export default function CapturePage({
     // スレッドとセッションストレージをリセット
     threadUidRef.current = null;
     restoredIdsRef.current = new Set();
-    recommendCacheRef.current = {};
     try {
       const key = `ngraph_responses_${restaurantSlug || 'default'}`;
       const tKey = `ngraph_threadUid_${restaurantSlug || 'default'}`;
@@ -2062,14 +1952,7 @@ export default function CapturePage({
               restaurantName={selectedRestaurant?.name}
               restaurantNameRomaji={activeLanguage !== 'ja' ? selectedRestaurant?.name_romaji : undefined}
               recommendations={currentSuggestions.chips?.slice(0, 3)}
-              onRecommendationClick={(text) => {
-                const cached = recommendCacheRef.current[text];
-                if (cached) {
-                  handleCachedRecommendation(text, cached);
-                } else {
-                  handleSend(text);
-                }
-              }}
+              onRecommendationClick={(text) => handleSend(text)}
               isWebMode={isWebMode}
               restaurantAddress={selectedRestaurant?.address}
               restaurantAccess={selectedRestaurant?.access_info}

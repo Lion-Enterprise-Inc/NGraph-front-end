@@ -13,12 +13,6 @@ const tones = [
   { value: 'professional', label: 'プロフェッショナル（専門的）' },
 ]
 
-const DEFAULT_RECOMMEND_TEXTS = [
-  '{name}の看板料理は何ですか？',
-  '{name}に行くのに最適な時間は？',
-  '食事制限に対応していますか？',
-]
-
 const BASE_PROMPT_DISPLAY = `【基本ルール（編集不可）】
 1. レストランの情報・メニュー・おすすめについてお客様をサポート
 2. ツールを使って正確な情報を提供（メニュー一覧、詳細、アレルギー検索）
@@ -43,7 +37,6 @@ export default function PromptsPage() {
   const [menus, setMenus] = useState<Menu[]>([])
   const [recommendedMenus, setRecommendedMenus] = useState<MenuConfig>({ auto: true, menu_uids: [] })
   const [popularMenus, setPopularMenus] = useState<MenuConfig>({ auto: true, menu_uids: [] })
-  const [recommendTexts, setRecommendTexts] = useState<string[]>([])
   const [googleReviewEnabled, setGoogleReviewEnabled] = useState(false)
 
   const loadRestaurantData = (r: Restaurant) => {
@@ -53,7 +46,6 @@ export default function PromptsPage() {
     setAiTone(r.ai_tone || 'standard')
     setRecommendedMenus(r.recommended_menus || { auto: true, menu_uids: [] })
     setPopularMenus(r.popular_menus || { auto: true, menu_uids: [] })
-    setRecommendTexts(r.recommend_texts || [])
     setGoogleReviewEnabled(r.google_review_enabled || false)
 
     // Load menus for this restaurant
@@ -108,7 +100,6 @@ export default function PromptsPage() {
       setMenus([])
       setRecommendedMenus({ auto: true, menu_uids: [] })
       setPopularMenus({ auto: true, menu_uids: [] })
-      setRecommendTexts([])
       setGoogleReviewEnabled(false)
       return
     }
@@ -138,7 +129,8 @@ export default function PromptsPage() {
       formData.append('ai_tone', aiTone)
       formData.append('recommended_menus', JSON.stringify(recommendedMenus))
       formData.append('popular_menus', JSON.stringify(popularMenus))
-      formData.append('recommend_texts', JSON.stringify(recommendTexts))
+      // レコメンドテキスト機能は廃止。保存時に既存の値をクリアして会話履歴汚染を防ぐ
+      formData.append('recommend_texts', JSON.stringify([]))
       formData.append('google_review_enabled', String(googleReviewEnabled))
 
       const res = await fetch(`${API_BASE_URL}/restaurants/${selectedUid}`, {
@@ -197,24 +189,12 @@ export default function PromptsPage() {
 
       {selectedRestaurant && !loading && (
         <>
-          {/* 基礎プロンプト（読み取り専用） */}
+          {/* カスタム設定（メイン） */}
           <div className="card" style={{ marginBottom: '16px' }}>
-            <div className="card-title">基礎プロンプト（編集不可）</div>
-            <p style={{ color: '#94A3B8', fontSize: '13px', marginBottom: '12px' }}>
-              ツール使用・多言語対応などの必須ルール。全レストラン共通で適用されます。
+            <div className="card-title">AIへの指示 — {selectedRestaurant.name}</div>
+            <p style={{ color: '#94A3B8', fontSize: '13px', marginBottom: '20px' }}>
+              基本ルール（メニュー案内・多言語対応など）は全店共通で自動適用されます。ここでは応答のトーンと、店ならではの追加指示だけ設定すればOKです。
             </p>
-            <textarea
-              className="form-control"
-              rows={8}
-              value={BASE_PROMPT_DISPLAY}
-              readOnly
-              style={{ fontFamily: 'monospace', fontSize: '13px', background: '#1E293B', color: '#94A3B8' }}
-            />
-          </div>
-
-          {/* カスタムプロンプト + トーン */}
-          <div className="card" style={{ marginBottom: '16px' }}>
-            <div className="card-title">カスタム設定 — {selectedRestaurant.name}</div>
 
             {/* トーン選択 */}
             <div style={{ marginBottom: '20px' }}>
@@ -229,169 +209,108 @@ export default function PromptsPage() {
                   <option key={t.value} value={t.value}>{t.label}</option>
                 ))}
               </select>
-              <div style={{ marginTop: '6px', fontSize: '13px', color: '#94A3B8' }}>
-                AIの応答スタイルを選択します。「スタンダード」はデフォルトのトーンです。
-              </div>
             </div>
 
             {/* カスタムプロンプト */}
-            <div style={{ marginBottom: '20px' }}>
-              <label style={{ display: 'block', fontWeight: 600, marginBottom: '8px' }}>カスタムプロンプト</label>
+            <div>
+              <label style={{ display: 'block', fontWeight: 600, marginBottom: '8px' }}>追加の指示（任意）</label>
               <textarea
                 className="form-control"
-                rows={8}
+                rows={6}
                 style={{ fontFamily: 'monospace', fontSize: '13px' }}
                 value={customPrompt}
                 onChange={(e) => setCustomPrompt(e.target.value)}
                 placeholder="例：季節のおすすめメニューを積極的に案内してください。地元食材の魅力も伝えてください。"
               />
               <div style={{ marginTop: '6px', fontSize: '13px', color: '#94A3B8' }}>
-                文字数: {customPrompt.length}　|　AIへの追加指示を自由に記述できます
+                文字数: {customPrompt.length}
               </div>
             </div>
           </div>
 
-          {/* おすすめメニュー */}
-          <div className="card" style={{ marginBottom: '16px' }}>
-            <div className="card-title">おすすめメニュー</div>
-            <p style={{ color: '#94A3B8', fontSize: '13px', marginBottom: '12px' }}>
-              AIが「おすすめは？」と聞かれたときに案内するメニューを設定します。
+          {/* 詳細設定（折りたたみ） */}
+          <details className="card" style={{ marginBottom: '16px' }}>
+            <summary style={{ cursor: 'pointer', fontWeight: 600, fontSize: '15px', color: 'var(--text)' }}>
+              詳細設定（任意）
+            </summary>
+            <p style={{ color: '#94A3B8', fontSize: '13px', margin: '12px 0' }}>
+              通常は触る必要はありません。特定のメニューを「おすすめ／人気」として固定したい場合だけ設定してください。
             </p>
-            <div style={{ marginBottom: '12px' }}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+
+            {/* おすすめメニュー手動指定 */}
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', marginBottom: '8px' }}>
                 <input
                   type="checkbox"
-                  checked={recommendedMenus.auto}
-                  onChange={(e) => setRecommendedMenus({ ...recommendedMenus, auto: e.target.checked })}
+                  checked={!recommendedMenus.auto}
+                  onChange={(e) => setRecommendedMenus({ ...recommendedMenus, auto: !e.target.checked })}
                 />
-                <span style={{ fontSize: '14px' }}>自動（AIがツールで判断）</span>
+                <span style={{ fontSize: '14px', fontWeight: 600 }}>「おすすめ」を手動で指定する</span>
               </label>
+              {!recommendedMenus.auto && (
+                <div style={{ maxHeight: '240px', overflowY: 'auto', border: '1px solid #334155', borderRadius: '6px', padding: '12px' }}>
+                  {menus.length === 0 ? (
+                    <div style={{ color: '#64748B', fontSize: '13px' }}>メニューが登録されていません</div>
+                  ) : (
+                    menus.map((m) => (
+                      <label key={m.uid} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 0', cursor: 'pointer', borderBottom: '1px solid #1E293B' }}>
+                        <input
+                          type="checkbox"
+                          checked={recommendedMenus.menu_uids.includes(m.uid)}
+                          onChange={() => toggleMenuUid(recommendedMenus, setRecommendedMenus, m.uid)}
+                        />
+                        <span style={{ fontSize: '14px' }}>{m.name_jp}</span>
+                        <span style={{ fontSize: '12px', color: '#64748B', marginLeft: 'auto' }}>{m.category} / ¥{m.price?.toLocaleString()}</span>
+                      </label>
+                    ))
+                  )}
+                </div>
+              )}
             </div>
-            {!recommendedMenus.auto && (
-              <div style={{ maxHeight: '300px', overflowY: 'auto', border: '1px solid #334155', borderRadius: '6px', padding: '12px' }}>
-                {menus.length === 0 ? (
-                  <div style={{ color: '#64748B', fontSize: '13px' }}>メニューが登録されていません</div>
-                ) : (
-                  menus.map((m) => (
-                    <label key={m.uid} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 0', cursor: 'pointer', borderBottom: '1px solid #1E293B' }}>
-                      <input
-                        type="checkbox"
-                        checked={recommendedMenus.menu_uids.includes(m.uid)}
-                        onChange={() => toggleMenuUid(recommendedMenus, setRecommendedMenus, m.uid)}
-                      />
-                      <span style={{ fontSize: '14px' }}>{m.name_jp}</span>
-                      <span style={{ fontSize: '12px', color: '#64748B', marginLeft: 'auto' }}>{m.category} / ¥{m.price?.toLocaleString()}</span>
-                    </label>
-                  ))
-                )}
-              </div>
-            )}
-          </div>
 
-          {/* 人気メニュー */}
-          <div className="card" style={{ marginBottom: '16px' }}>
-            <div className="card-title">人気メニュー</div>
-            <p style={{ color: '#94A3B8', fontSize: '13px', marginBottom: '12px' }}>
-              AIが「人気メニューは？」と聞かれたときに案内するメニューを設定します。
-            </p>
-            <div style={{ marginBottom: '12px' }}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+            {/* 人気メニュー手動指定 */}
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', marginBottom: '8px' }}>
                 <input
                   type="checkbox"
-                  checked={popularMenus.auto}
-                  onChange={(e) => setPopularMenus({ ...popularMenus, auto: e.target.checked })}
+                  checked={!popularMenus.auto}
+                  onChange={(e) => setPopularMenus({ ...popularMenus, auto: !e.target.checked })}
                 />
-                <span style={{ fontSize: '14px' }}>自動（AIがツールで判断）</span>
+                <span style={{ fontSize: '14px', fontWeight: 600 }}>「人気メニュー」を手動で指定する</span>
               </label>
+              {!popularMenus.auto && (
+                <div style={{ maxHeight: '240px', overflowY: 'auto', border: '1px solid #334155', borderRadius: '6px', padding: '12px' }}>
+                  {menus.length === 0 ? (
+                    <div style={{ color: '#64748B', fontSize: '13px' }}>メニューが登録されていません</div>
+                  ) : (
+                    menus.map((m) => (
+                      <label key={m.uid} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 0', cursor: 'pointer', borderBottom: '1px solid #1E293B' }}>
+                        <input
+                          type="checkbox"
+                          checked={popularMenus.menu_uids.includes(m.uid)}
+                          onChange={() => toggleMenuUid(popularMenus, setPopularMenus, m.uid)}
+                        />
+                        <span style={{ fontSize: '14px' }}>{m.name_jp}</span>
+                        <span style={{ fontSize: '12px', color: '#64748B', marginLeft: 'auto' }}>{m.category} / ¥{m.price?.toLocaleString()}</span>
+                      </label>
+                    ))
+                  )}
+                </div>
+              )}
             </div>
-            {!popularMenus.auto && (
-              <div style={{ maxHeight: '300px', overflowY: 'auto', border: '1px solid #334155', borderRadius: '6px', padding: '12px' }}>
-                {menus.length === 0 ? (
-                  <div style={{ color: '#64748B', fontSize: '13px' }}>メニューが登録されていません</div>
-                ) : (
-                  menus.map((m) => (
-                    <label key={m.uid} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 0', cursor: 'pointer', borderBottom: '1px solid #1E293B' }}>
-                      <input
-                        type="checkbox"
-                        checked={popularMenus.menu_uids.includes(m.uid)}
-                        onChange={() => toggleMenuUid(popularMenus, setPopularMenus, m.uid)}
-                      />
-                      <span style={{ fontSize: '14px' }}>{m.name_jp}</span>
-                      <span style={{ fontSize: '12px', color: '#64748B', marginLeft: 'auto' }}>{m.category} / ¥{m.price?.toLocaleString()}</span>
-                    </label>
-                  ))
-                )}
-              </div>
-            )}
-          </div>
 
-          {/* レコメンドテキスト */}
-          <div className="card" style={{ marginBottom: '16px' }}>
-            <div className="card-title">レコメンドテキスト</div>
-            <p style={{ color: '#94A3B8', fontSize: '13px', marginBottom: '12px' }}>
-              チャット画面のサジェストボタンに表示されるテキストを設定します（最大3つ）。
-            </p>
-            {recommendTexts.length === 0 ? (
-              <>
-                <div style={{ padding: '12px', background: '#1E293B', borderRadius: '6px', marginBottom: '12px' }}>
-                  <div style={{ fontSize: '12px', color: '#64748B', marginBottom: '8px' }}>現在のデフォルト（自動表示中）:</div>
-                  {DEFAULT_RECOMMEND_TEXTS.map((t, i) => (
-                    <div key={i} style={{ fontSize: '14px', color: '#94A3B8', padding: '4px 0' }}>
-                      {i + 1}. {t.replace('{name}', selectedRestaurant?.name || '')}
-                    </div>
-                  ))}
-                </div>
-                <button
-                  className="btn btn-secondary"
-                  onClick={() => setRecommendTexts(
-                    DEFAULT_RECOMMEND_TEXTS.map(t => t.replace('{name}', selectedRestaurant?.name || ''))
-                  )}
-                >
-                  カスタマイズ
-                </button>
-              </>
-            ) : (
-              <>
-                {recommendTexts.map((text, i) => (
-                  <div key={i} style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
-                    <input
-                      className="form-control"
-                      value={text}
-                      onChange={(e) => {
-                        const updated = [...recommendTexts]
-                        updated[i] = e.target.value
-                        setRecommendTexts(updated)
-                      }}
-                      placeholder={`テキスト ${i + 1}`}
-                    />
-                    <button
-                      className="btn btn-danger"
-                      onClick={() => setRecommendTexts(recommendTexts.filter((_, idx) => idx !== i))}
-                      style={{ flexShrink: 0 }}
-                    >
-                      削除
-                    </button>
-                  </div>
-                ))}
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  {recommendTexts.length < 3 && (
-                    <button
-                      className="btn btn-secondary"
-                      onClick={() => setRecommendTexts([...recommendTexts, ''])}
-                    >
-                      + 追加
-                    </button>
-                  )}
-                  <button
-                    className="btn btn-secondary"
-                    onClick={() => setRecommendTexts([])}
-                  >
-                    デフォルトに戻す
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
+            {/* 基礎プロンプト（参考表示） */}
+            <div>
+              <label style={{ display: 'block', fontWeight: 600, marginBottom: '8px', fontSize: '14px' }}>基礎プロンプト（編集不可・全店共通）</label>
+              <textarea
+                className="form-control"
+                rows={7}
+                value={BASE_PROMPT_DISPLAY}
+                readOnly
+                style={{ fontFamily: 'monospace', fontSize: '13px', background: '#1E293B', color: '#94A3B8' }}
+              />
+            </div>
+          </details>
 
           {/* Googleレビュー誘導 */}
           <div className="card" style={{ marginBottom: '16px' }}>
