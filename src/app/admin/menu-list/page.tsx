@@ -221,6 +221,12 @@ function MenuListContent() {
     }
   }
 
+  // バックエンドは同名メニューを 409「同名のメニューが既に存在します」で弾く。
+  // apiClient は status code を Error に載せないため文言で判定する。
+  // 既登録は失敗ではなく「スキップ」なので、リストから消して成功扱いにする。
+  const isDuplicateError = (err: unknown): boolean =>
+    err instanceof Error && err.message.includes('既に存在')
+
   const handleApproveVisionItem = async (index: number) => {
     const item = visionResults[index]
     if (!item || !restaurant?.uid) return
@@ -232,38 +238,54 @@ function MenuListContent() {
       toast('success', `「${item.name_jp}」を追加しました`)
     } catch (err) {
       console.error('Failed to save menu:', err)
-      // バックエンドのエラー文言（例: 同名メニュー重複）をそのまま見せる
-      toast('error', err instanceof Error ? err.message : 'メニューの保存に失敗しました')
+      if (isDuplicateError(err)) {
+        // 既に登録済み → リストから消してスキップ扱い
+        setVisionResults(visionResults.filter((_, i) => i !== index))
+        toast('info', `「${item.name_jp}」は既に登録済みです`)
+      } else {
+        toast('error', err instanceof Error ? err.message : 'メニューの保存に失敗しました')
+      }
     }
   }
 
   const handleApproveAllVision = async () => {
     if (!restaurant?.uid) return
 
-    // 1件失敗しても全体を止めず、追加できた分は登録・残りはスキップしてサマリ表示
+    // 1件ずつ登録。既登録(409)はスキップ、その他エラーのみ失敗として残す
     const added: string[] = []
+    const skipped: string[] = []
     const failed: string[] = []
     for (const item of visionResults) {
       try {
         await MenuApi.create(buildMenuDataFromVision(item))
         added.push(item.name_jp)
       } catch (err) {
-        console.error('Failed to save menu:', item.name_jp, err)
-        failed.push(item.name_jp)
+        if (isDuplicateError(err)) {
+          skipped.push(item.name_jp)
+        } else {
+          console.error('Failed to save menu:', item.name_jp, err)
+          failed.push(item.name_jp)
+        }
       }
     }
 
     await refreshMenus()
-    const remaining = visionResults.filter(i => !added.includes(i.name_jp))
-    setVisionResults(remaining)
+    // 追加済み・既登録は両方リストから消す（残るのは本当に失敗したものだけ）
+    const processed = new Set([...added, ...skipped])
+    setVisionResults(visionResults.filter(i => !processed.has(i.name_jp)))
 
     if (failed.length === 0) {
       setShowVisionApproval(false)
-      toast('success', `${added.length}件のメニューを追加しました！`)
-    } else if (added.length === 0) {
-      toast('error', `追加できませんでした（既に登録済みの可能性）: ${failed.join('、')}`)
+      const parts: string[] = []
+      if (added.length > 0) parts.push(`${added.length}件追加`)
+      if (skipped.length > 0) parts.push(`${skipped.length}件は登録済みでスキップ`)
+      toast('success', `${parts.join('、') || '処理完了'}しました！`)
     } else {
-      toast('warning', `${added.length}件追加、${failed.length}件スキップ（既に登録済みの可能性）: ${failed.join('、')}`)
+      const summary = [
+        added.length > 0 ? `${added.length}件追加` : '',
+        skipped.length > 0 ? `${skipped.length}件スキップ` : ''
+      ].filter(Boolean).join('、')
+      toast('warning', `${summary ? summary + '、' : ''}${failed.length}件失敗: ${failed.join('、')}`)
     }
   }
 
