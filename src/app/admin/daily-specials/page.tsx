@@ -107,6 +107,15 @@ export default function DailySpecialsPage() {
     setDrafts(prev => prev.filter((_, i) => i !== idx))
   }
 
+  // 未入力欄のライブ警告（店主が埋めると即消える）。AIの意味取り違え確認は
+  // サーバーの clarification_needed 側で別途表示する。
+  const liveWarnings = (d: DailyDraftItem): string[] => {
+    const w: string[] = []
+    if (!d.price || d.price <= 0) w.push('価格が未入力です')
+    if (!d.ingredients || d.ingredients.length === 0) w.push('材料が未入力です（多言語説明・アレルゲン精度に影響）')
+    return w
+  }
+
   const handleConfirm = async () => {
     if (drafts.length === 0) return
     const missing = drafts.filter(d => !d.name_jp?.trim())
@@ -220,18 +229,32 @@ export default function DailySpecialsPage() {
               {confirming ? '確定中...' : 'この内容で確定'}
             </button>
           </div>
+          {active.length > 0 && (
+            <div style={{
+              fontSize: 12, color: '#F59E0B', background: 'rgba(245,158,11,0.1)',
+              border: '1px solid rgba(245,158,11,0.3)', borderRadius: 8,
+              padding: '8px 12px', marginBottom: 12, lineHeight: 1.5,
+            }}>
+              ⚠ 確定すると、今表示中の本日の献立（{active.length}品）はすべてこの内容に差し替わります。
+              前の品はストックに残るので、あとで流用できます。
+            </div>
+          )}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-            {drafts.map((d, idx) => (
+            {drafts.map((d, idx) => {
+              const warnings = liveWarnings(d)
+              const meaningQs = d.clarification_needed ?? []
+              const flagged = warnings.length > 0 || meaningQs.length > 0
+              return (
               <div key={idx} style={{
                 background: 'var(--bg-input)', borderRadius: 10, padding: 16,
-                border: (d.clarification_needed?.length ?? 0) > 0
+                border: flagged
                   ? '1px solid rgba(245,158,11,0.4)' : '1px solid var(--border)',
               }}>
                 <div style={{ display: 'flex', gap: 10, marginBottom: 10 }}>
                   <input value={d.name_jp || ''} placeholder="料理名"
                     onChange={e => updateDraft(idx, { name_jp: e.target.value })}
                     style={{ ...inputStyle, flex: 2 }} />
-                  <input type="number" value={d.price || 0} placeholder="価格"
+                  <input type="number" value={d.price ? d.price : ''} placeholder="価格"
                     onChange={e => updateDraft(idx, { price: Number(e.target.value) })}
                     style={{ ...inputStyle, flex: 1 }} />
                   <input value={d.category || ''} placeholder="カテゴリ"
@@ -250,17 +273,23 @@ export default function DailySpecialsPage() {
                     onChange={e => updateDraft(idx, { allergens: splitList(e.target.value) })}
                     style={{ ...inputStyle, flex: 1 }} />
                 </div>
-                {(d.clarification_needed?.length ?? 0) > 0 && (
+                {(warnings.length > 0 || meaningQs.length > 0) && (
                   <div style={{ marginTop: 8 }}>
-                    {d.clarification_needed!.map((q, qi) => (
-                      <div key={qi} style={{ fontSize: 12, color: '#F59E0B', marginTop: 2 }}>
+                    {meaningQs.map((q, qi) => (
+                      <div key={`q${qi}`} style={{ fontSize: 12, color: '#F59E0B', marginTop: 2 }}>
                         ⚠ {q.question}
+                      </div>
+                    ))}
+                    {warnings.map((w, wi) => (
+                      <div key={`w${wi}`} style={{ fontSize: 12, color: '#F59E0B', marginTop: 2 }}>
+                        ⚠ {w}
                       </div>
                     ))}
                   </div>
                 )}
               </div>
-            ))}
+              )
+            })}
           </div>
         </div>
       )}
