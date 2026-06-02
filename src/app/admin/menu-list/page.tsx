@@ -215,26 +215,41 @@ function MenuListContent() {
       await MenuApi.create(buildMenuDataFromVision(item))
       await refreshMenus()
       setVisionResults(visionResults.filter((_, i) => i !== index))
+      toast('success', `「${item.name_jp}」を追加しました`)
     } catch (err) {
       console.error('Failed to save menu:', err)
-      toast('error', 'メニューの保存に失敗しました')
+      // バックエンドのエラー文言（例: 同名メニュー重複）をそのまま見せる
+      toast('error', err instanceof Error ? err.message : 'メニューの保存に失敗しました')
     }
   }
 
   const handleApproveAllVision = async () => {
     if (!restaurant?.uid) return
 
-    try {
-      for (const item of visionResults) {
+    // 1件失敗しても全体を止めず、追加できた分は登録・残りはスキップしてサマリ表示
+    const added: string[] = []
+    const failed: string[] = []
+    for (const item of visionResults) {
+      try {
         await MenuApi.create(buildMenuDataFromVision(item))
+        added.push(item.name_jp)
+      } catch (err) {
+        console.error('Failed to save menu:', item.name_jp, err)
+        failed.push(item.name_jp)
       }
-      await refreshMenus()
-      setVisionResults([])
+    }
+
+    await refreshMenus()
+    const remaining = visionResults.filter(i => !added.includes(i.name_jp))
+    setVisionResults(remaining)
+
+    if (failed.length === 0) {
       setShowVisionApproval(false)
-      toast('success', `${visionResults.length}件のメニューを追加しました！`)
-    } catch (err) {
-      console.error('Failed to save menus:', err)
-      toast('error', 'メニューの保存に失敗しました')
+      toast('success', `${added.length}件のメニューを追加しました！`)
+    } else if (added.length === 0) {
+      toast('error', `追加できませんでした（既に登録済みの可能性）: ${failed.join('、')}`)
+    } else {
+      toast('warning', `${added.length}件追加、${failed.length}件スキップ（既に登録済みの可能性）: ${failed.join('、')}`)
     }
   }
 
