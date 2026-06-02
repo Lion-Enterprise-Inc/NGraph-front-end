@@ -2,6 +2,7 @@
 
 import { useState, useRef } from "react";
 import type { QuickExplainItem } from "../services/api";
+import { getCategoryLabel } from "../i18n/categoryLabels";
 
 // レーダーチャート表示フラグ（機能成熟後にtrueに戻す）
 const SHOW_TASTE_RADAR = false;
@@ -387,15 +388,13 @@ export default function NFGCard({
                 </button>
               )}
               {item.category && item.category !== 'bento' && (
-                <span className="nfgcard-badge nfgcard-badge-category">{item.category}</span>
+                <span className="nfgcard-badge nfgcard-badge-category">{getCategoryLabel(item.category, language)}</span>
               )}
               {isVerified ? (
                 <span className="nfgcard-badge nfgcard-badge-verified">{copy.verified}</span>
-              ) : isDb ? (
-                <span className="nfgcard-badge nfgcard-badge-pending">{copy.pending}</span>
-              ) : (
+              ) : !isDb ? (
                 <span className="nfgcard-badge nfgcard-badge-ai">{copy.aiEstimate}</span>
-              )}
+              ) : null}
               {item.is_new && (
                 <span className="nfgcard-badge nfgcard-badge-new">{copy.newItem}</span>
               )}
@@ -449,8 +448,11 @@ export default function NFGCard({
                 {item.ingredients.map((ing, i) => <span key={i} className="nfgcard-ingredient-tag">{ing}</span>)}
               </div>
             )}
-            {item.restrictions && item.restrictions.length > 0 && (
-              <div className={`nfgcard-restrictions${item.restriction_match ? ' nfgcard-tags-emphasized' : ''}`}>
+            {/* 食事制約(対応食)タグは申告プロフィールに該当する時だけ表示。
+                一般客には嗜好タグ(ペスカタリアン等)はノイズなので常時表示しない。
+                命に関わるアレルゲンは上の nfgcard-allergens で常時表示済み。 */}
+            {item.restriction_match && item.restrictions && item.restrictions.length > 0 && (
+              <div className="nfgcard-restrictions nfgcard-tags-emphasized">
                 {item.restrictions.map((r, i) => <span key={i} className="nfgcard-restriction-tag">{r}</span>)}
               </div>
             )}
@@ -491,28 +493,17 @@ export default function NFGCard({
                   <TasteChart values={item.taste_values} labels={tasteLabels} />
                 )}
                 {item.narrative && (() => {
-                  const isDrink = item.category === 'drink';
+                  // 食感・食べ方・合う飲み物はラベル分けせず、ガイドの語りとして
+                  // 一段落の散文に統合する(項目ラベルの羅列を避けて読みやすく)。
+                  const n = item.narrative as Record<string, unknown>;
+                  const parts = [n.texture, n.how_to_eat, n.pairing]
+                    .map((p) => (typeof p === "string" ? p.trim() : ""))
+                    .filter(Boolean);
+                  if (parts.length === 0) return null;
                   return (
-                  <div className="nfgcard-narrative">
-                    {item.narrative.texture && (
-                      <div className="nfgcard-field">
-                        <span className="nfgcard-field-label">{isDrink ? (copy.textureDrink ?? copy.texture) : copy.texture}</span>
-                        <span className="nfgcard-field-value">{item.narrative.texture}</span>
-                      </div>
-                    )}
-                    {item.narrative.how_to_eat && (
-                      <div className="nfgcard-field">
-                        <span className="nfgcard-field-label">{isDrink ? (copy.howToEatDrink ?? copy.howToEat) : copy.howToEat}</span>
-                        <span className="nfgcard-field-value">{item.narrative.how_to_eat}</span>
-                      </div>
-                    )}
-                    {item.narrative.pairing && (
-                      <div className="nfgcard-field">
-                        <span className="nfgcard-field-label">{isDrink ? (copy.pairingDrink ?? copy.pairing) : copy.pairing}</span>
-                        <span className="nfgcard-field-value">{item.narrative.pairing}</span>
-                      </div>
-                    )}
-                  </div>
+                    <div className="nfgcard-narrative">
+                      <p className="nfgcard-narrative-story">{parts.join(" ")}</p>
+                    </div>
                   );
                 })()}
                 {item.serving && (item.serving.style || item.serving.portion || item.serving.temperature) && (

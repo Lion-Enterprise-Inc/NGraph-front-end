@@ -7269,7 +7269,7 @@ textarea.form-input {
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 2px;
 }
 .nfg-cards-container::before {
   display: none;
@@ -8536,7 +8536,7 @@ textarea.form-input {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  padding: 8px 0;
+  padding: 0 0 8px;
 }
 .nfgcard-user-photo {
   border-radius: 10px;
@@ -8768,7 +8768,15 @@ textarea.form-input {
 .nfgcard-like-btn:hover {
   color: rgba(255, 255, 255, 0.75);
 }
-.nfgcard-like-btn.liked {
+/* ライトモードは白文字だとクリーム背景で♡が見えないので黒系に上書き */
+[data-theme="light"] .nfgcard-like-btn {
+  color: rgba(0, 0, 0, 0.42);
+}
+[data-theme="light"] .nfgcard-like-btn:hover {
+  color: rgba(0, 0, 0, 0.62);
+}
+.nfgcard-like-btn.liked,
+[data-theme="light"] .nfgcard-like-btn.liked {
   color: #ff5050;
 }
 .nfgcard-like-btn.liked .nfgcard-like-icon {
