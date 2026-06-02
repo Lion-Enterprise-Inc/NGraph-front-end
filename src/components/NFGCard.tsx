@@ -43,42 +43,6 @@ const RESTRICTION_MATCH_NOTICE: Record<string, string> = {
 const getRestrictionMatchNotice = (lang: string): string =>
   RESTRICTION_MATCH_NOTICE[lang] || RESTRICTION_MATCH_NOTICE.en;
 
-/**
- * description と narrative.story の重複率を概算する。
- * 文字 3-gram の Jaccard 係数で類似度を測定。NFG enrichment が
- * 同じ事実を 2 つのフィールドに重複して書くケースを検出する。
- *
- * @returns 0.0 (全く別) 〜 1.0 (完全一致)
- */
-function textOverlapRatio(a: string | undefined | null, b: string | undefined | null): number {
-  if (!a || !b) return 0;
-  // 句読点・空白を除去して正規化
-  const norm = (s: string) => s.replace(/[、。・\s　「」『』（）()]/g, "");
-  const A = norm(a);
-  const B = norm(b);
-  if (A.length < 6 || B.length < 6) return 0;
-  // 3-gram セット
-  const grams = (s: string): Set<string> => {
-    const set = new Set<string>();
-    for (let i = 0; i <= s.length - 3; i++) set.add(s.slice(i, i + 3));
-    return set;
-  };
-  const ga = grams(A);
-  const gb = grams(B);
-  let common = 0;
-  ga.forEach((g) => {
-    if (gb.has(g)) common++;
-  });
-  // Jaccard 係数（共通 / 全体）
-  const union = ga.size + gb.size - common;
-  return union === 0 ? 0 : common / union;
-}
-
-// description と一定以上重複する narrative.story を非表示にする閾値（Jaccard 係数）
-// 実測: ESHIKOTO 五百万石 (NFG enrichment が同事実反復) = 0.187 → 隠す
-//      梅酒のパウンドケーキ (story が再利用の文脈追加) = 0.106 → 表示
-const STORY_DUPLICATE_THRESHOLD = 0.15;
-
 type DrinkMeta = NonNullable<QuickExplainItem['drink_meta']>;
 type SpecRow = { label: string; value: string };
 
@@ -528,17 +492,8 @@ export default function NFGCard({
                 )}
                 {item.narrative && (() => {
                   const isDrink = item.category === 'drink';
-                  // description と story が同じ事実を反復している場合は story を非表示
-                  // (NFG enrichment の prompt が守られない時の UI セーフティ)
-                  const storyOverlapsDesc =
-                    item.description && item.narrative.story
-                      ? textOverlapRatio(item.description, item.narrative.story) >= STORY_DUPLICATE_THRESHOLD
-                      : false;
                   return (
                   <div className="nfgcard-narrative">
-                    {item.narrative.story && !storyOverlapsDesc && (
-                      <div className="nfgcard-narrative-story">{item.narrative.story}</div>
-                    )}
                     {item.narrative.texture && (
                       <div className="nfgcard-field">
                         <span className="nfgcard-field-label">{isDrink ? (copy.textureDrink ?? copy.texture) : copy.texture}</span>
@@ -557,13 +512,6 @@ export default function NFGCard({
                         <span className="nfgcard-field-value">{item.narrative.pairing}</span>
                       </div>
                     )}
-                    {!isDrink && item.narrative.kid_friendly != null && (
-                      <div className="nfgcard-field">
-                        <span className="nfgcard-field-label">
-                          {item.narrative.kid_friendly ? copy.kidFriendly : copy.notKidFriendly}
-                        </span>
-                      </div>
-                    )}
                   </div>
                   );
                 })()}
@@ -579,12 +527,6 @@ export default function NFGCard({
                   <div className="nfgcard-field">
                     <span className="nfgcard-field-label">{copy.calories}</span>
                     <span className="nfgcard-field-value">{item.estimated_calories}</span>
-                  </div>
-                )}
-                {item.confidence != null && item.confidence > 0 && (
-                  <div className="nfgcard-field">
-                    <span className="nfgcard-field-label">{copy.confidence}</span>
-                    <span className="nfgcard-field-value">{item.confidence}%</span>
                   </div>
                 )}
                 {/* Actions */}

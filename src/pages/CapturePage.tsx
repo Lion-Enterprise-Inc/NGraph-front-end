@@ -1054,19 +1054,9 @@ export default function CapturePage({
         typingTimersRef.current.push(timer);
       });
 
-    const scrollToBottom = (smooth = true) => {
-      const container = captureBodyRef.current;
-      if (!container) return;
-
-      // Don't force-scroll if user has scrolled up
-      const distanceFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
-      if (distanceFromBottom > 300) return;
-
-      container.scrollTo({
-        top: container.scrollHeight,
-        behavior: smooth ? "smooth" : "auto",
-      });
-    };
+    // Auto-follow during typing is disabled: the response is anchored at send
+    // time and content grows downward from there. User scrolls at their pace.
+    const scrollToBottom = (_smooth = true) => {};
 
     const typeText = async (
       fullText: string,
@@ -1165,14 +1155,7 @@ export default function CapturePage({
       // Mark typing as inactive - now respect user scroll position
       setIsTypingActive(false);
 
-      // Scroll to the start of this AI response so user can read from the beginning
-      await wait(100);
-      requestAnimationFrame(() => {
-        const msgEl = document.getElementById(`msg-${response.id}`);
-        if (msgEl) {
-          msgEl.scrollIntoView({ behavior: "smooth", block: "start" });
-        }
-      });
+      // No completion scroll: the response stays anchored where the user left it.
     };
 
     responses.forEach((response) => {
@@ -1184,51 +1167,9 @@ export default function CapturePage({
     });
   }, [responses]);
 
-  // Auto-scroll when typing state changes during active typing - ChatGPT style
-  useEffect(() => {
-    if (isTypingActive) {
-      const container = captureBodyRef.current;
-      if (container) {
-        // Immediate scroll without smooth behavior for real-time following
-        // This creates the ChatGPT-like effect where content is always visible
-        requestAnimationFrame(() => {
-          container.scrollTop = container.scrollHeight;
-        });
-      }
-    }
-  }, [typingState, isTypingActive]);
-
-  // Gentle auto-scroll during loading only (not during typing animation)
-  // During typing, scrollToBottom is called per-chunk inside typeText instead
-  useEffect(() => {
-    let rafId: number | null = null;
-    let lastTime = 0;
-
-    const scrollStep = (time: number) => {
-      if (time - lastTime >= 300) {
-        lastTime = time;
-        const container = captureBodyRef.current;
-        if (container) {
-          const distanceFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
-          // Only auto-scroll if user is near the bottom (hasn't scrolled up)
-          if (distanceFromBottom < 300) {
-            container.scrollTo({ top: container.scrollHeight, behavior: "smooth" });
-          }
-        }
-      }
-      rafId = requestAnimationFrame(scrollStep);
-    };
-
-    if (loading) {
-      rafId = requestAnimationFrame(scrollStep);
-    }
-
-    return () => {
-      if (rafId !== null) {
-        cancelAnimationFrame(rafId);
-      }
-    };
-  }, [loading]);
+  // Auto-follow during generation is intentionally disabled. The response is
+  // anchored at send time and content grows downward; the user scrolls at their
+  // own pace (no jumpy follow-down or snap-back-to-top).
 
   const handleScrollToBottom = () => {
     const container = captureBodyRef.current;
@@ -1306,21 +1247,22 @@ export default function CapturePage({
     setUserScrolledUp(false); // Reset scroll state for new message
     setIsTypingActive(false); // Ensure typing state is reset
 
-    // Scroll to bottom after React renders the new message
-    const scrollToBottomImmediate = () => {
+    // Anchor the user's new message near the top of the viewport so the answer
+    // grows downward from a fixed position (no auto-follow, no snap-back).
+    const anchorMessageTop = () => {
       const container = captureBodyRef.current;
-      if (container) {
-        container.scrollTop = container.scrollHeight;
+      const el = document.getElementById(`msg-${responseId}`);
+      if (container && el) {
+        container.scrollTo({ top: el.offsetTop - container.offsetTop, behavior: "smooth" });
       }
     };
 
-    // Wait for React DOM update, then scroll to show user's sent message
     requestAnimationFrame(() => {
-      scrollToBottomImmediate();
-      requestAnimationFrame(scrollToBottomImmediate);
+      anchorMessageTop();
+      requestAnimationFrame(anchorMessageTop);
     });
-    setTimeout(scrollToBottomImmediate, 100);
-    setTimeout(scrollToBottomImmediate, 300);
+    setTimeout(anchorMessageTop, 100);
+    setTimeout(anchorMessageTop, 300);
 
     try {
       let output: MockOutput;
@@ -1577,15 +1519,7 @@ export default function CapturePage({
             setIsTypingActive(false);
             setTypingComplete((prev) => new Set(prev).add(responseId));
 
-            // Scroll to user's sent message so response is readable from top
-            setTimeout(() => {
-              const el = document.getElementById(`msg-${responseId}`);
-              const container = captureBodyRef.current;
-              if (el && container) {
-                const top = el.offsetTop - container.offsetTop;
-                container.scrollTo({ top, behavior: 'smooth' });
-              }
-            }, 150);
+            // No completion scroll: position stays where the user left it.
 
             // Save to history drawer (localStorage)
             if (threadUidRef.current && restaurantSlug) {
@@ -1689,7 +1623,10 @@ export default function CapturePage({
 
     requestAnimationFrame(() => {
       const container = captureBodyRef.current;
-      if (container) container.scrollTop = container.scrollHeight;
+      const el = document.getElementById(`msg-${responseId}`);
+      if (container && el) {
+        container.scrollTo({ top: el.offsetTop - container.offsetTop, behavior: 'smooth' });
+      }
     });
   };
 
@@ -1798,7 +1735,10 @@ export default function CapturePage({
 
     requestAnimationFrame(() => {
       const container = captureBodyRef.current;
-      if (container) container.scrollTop = container.scrollHeight;
+      const el = document.getElementById(`msg-${responseId}`);
+      if (container && el) {
+        container.scrollTo({ top: el.offsetTop - container.offsetTop, behavior: 'smooth' });
+      }
     });
   };
 
