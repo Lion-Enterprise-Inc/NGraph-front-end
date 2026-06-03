@@ -1843,6 +1843,28 @@ export default function CapturePage({
     }
   };
 
+  // 「この料理について聞く」: 料理名を入力欄に引用挿入し、客がそのまま質問を続けられるようにする
+  const handleAskAbout = (item: QuickExplainItem) => {
+    const name = activeLanguage !== 'ja' && item.name_en ? item.name_en : item.name_jp;
+    const prefix: Record<string, string> = {
+      ja: `「${name}」について `,
+      en: `About "${name}": `,
+      ko: `「${name}」에 대해 `,
+      'zh-Hans': `关于「${name}」：`,
+      'zh-Hant': `關於「${name}」：`,
+    };
+    const text = prefix[activeLanguage] || prefix.en;
+    setMessage(text);
+    requestAnimationFrame(() => {
+      const ta = textareaRef.current;
+      if (!ta) return;
+      ta.focus();
+      ta.setSelectionRange(text.length, text.length);
+      ta.style.height = 'auto';
+      ta.style.height = `${ta.scrollHeight}px`;
+    });
+  };
+
   // QRスキャン時: メニュー一覧を優先表示
   if (qrMenuMode && restaurantSlug) {
     return (
@@ -2023,6 +2045,7 @@ export default function CapturePage({
                             restaurant_uid: selectedRestaurant?.uid,
                           });
                         }}
+                        onAskAbout={handleAskAbout}
                         onPhotoUpload={handlePhotoUpload}
                         photoUploading={photoUploading}
                         cleanUrlBase={cleanUrlBase || undefined}
@@ -2220,6 +2243,7 @@ export default function CapturePage({
                             restaurant_uid: selectedRestaurant?.uid,
                           });
                         }}
+                        onAskAbout={handleAskAbout}
                         onPhotoUpload={handlePhotoUpload}
                         photoUploading={photoUploading}
                         cleanUrlBase={cleanUrlBase || undefined}

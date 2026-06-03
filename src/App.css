@@ -8735,20 +8735,22 @@ textarea.form-input {
   background: rgba(79, 140, 255, 0.12);
   color: #6c9bff;
 }
-.nfgcard-share-btn {
+.nfgcard-ask-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   background: rgba(0, 232, 150, 0.1);
   border: 1px solid rgba(0, 232, 150, 0.25);
   border-radius: 6px;
-  padding: 3px 10px;
-  font-size: 11px;
+  padding: 4px 11px;
+  font-size: 12px;
   font-weight: 500;
   cursor: pointer;
   color: #00e896;
   letter-spacing: 0.3px;
 }
-.nfgcard-share-btn.copied {
-  background: rgba(0, 232, 150, 0.2);
-  color: #00e896;
+.nfgcard-ask-btn:hover {
+  background: rgba(0, 232, 150, 0.18);
 }
 .nfgcard-like-btn {
   background: transparent;
@@ -8980,20 +8982,20 @@ textarea.form-input {
   margin-top: 6px;
 }
 .nfgcard-narrative-story {
-  font-size: 13px;
+  font-size: 14px;
   color: var(--color-text-body);
-  line-height: 1.7;
+  line-height: 1.6;
   margin-bottom: 8px;
 }
 .nfgcard-narrative-culture {
-  font-size: 12.5px;
-  color: var(--color-text-secondary);
-  line-height: 1.65;
+  font-size: 14px;
+  color: var(--color-text-body);
+  line-height: 1.6;
   margin-bottom: 8px;
 }
 .nfgcard-narrative-senses {
-  font-size: 12.5px;
-  color: var(--color-text-secondary);
+  font-size: 14px;
+  color: var(--color-text-body);
   line-height: 1.6;
   margin-bottom: 6px;
 }

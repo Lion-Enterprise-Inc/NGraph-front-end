@@ -44,6 +44,17 @@ const RESTRICTION_MATCH_NOTICE: Record<string, string> = {
 const getRestrictionMatchNotice = (lang: string): string =>
   RESTRICTION_MATCH_NOTICE[lang] || RESTRICTION_MATCH_NOTICE.en;
 
+// 「この料理についてAIに聞く」ボタンのラベル。タップで料理名を入力欄に引用して質問できる。
+const ASK_LABEL: Record<string, string> = {
+  ja: 'この料理について聞く',
+  en: 'Ask about this',
+  ko: '이 메뉴 질문하기',
+  'zh-Hans': '咨询这道菜',
+  'zh-Hant': '詢問這道菜',
+};
+
+const getAskLabel = (lang: string): string => ASK_LABEL[lang] || ASK_LABEL.en;
+
 type DrinkMeta = NonNullable<QuickExplainItem['drink_meta']>;
 type SpecRow = { label: string; value: string };
 
@@ -175,6 +186,7 @@ type Props = {
   likedMenus?: Set<string>;
   onLike?: (menuUid: string) => void;
   onSuggestEdit?: (info: { name_jp: string; menu_uid?: string }) => void;
+  onAskAbout?: (item: QuickExplainItem) => void;
   onPhotoUpload?: (menuUid: string, file: File) => void;
   photoUploading?: string | null;
   userPhoto?: string;
@@ -276,40 +288,16 @@ function TasteChart({ values, labels }: { values: Record<string, number>; labels
 }
 
 export default function NFGCard({
-  items, language, likedMenus, onLike, onSuggestEdit, onPhotoUpload,
-  photoUploading, userPhoto, restaurantName, restaurantCity, showRestaurantInfo, cleanUrlBase, copy,
+  items, language, likedMenus, onLike, onSuggestEdit, onAskAbout, onPhotoUpload,
+  photoUploading, userPhoto, restaurantName, restaurantCity, showRestaurantInfo, copy,
 }: Props) {
   const [expandedIdx, setExpandedIdx] = useState<Set<number>>(new Set());
-  const [copiedNfgCode, setCopiedNfgCode] = useState<string | null>(null);
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
   const photoRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
-  const handleShareCard = async (e: React.MouseEvent, item: QuickExplainItem) => {
+  const handleAskAbout = (e: React.MouseEvent, item: QuickExplainItem) => {
     e.stopPropagation();
-    const nfgCode = item.nfg_code;
-    if (!nfgCode) return;
-    const base = cleanUrlBase || `${window.location.origin}/capture`;
-    const url = cleanUrlBase ? `${base}/nfg/${nfgCode}` : `${window.location.origin}${window.location.pathname}${window.location.search}`;
-    const displayName = language !== 'ja' && item.name_en ? item.name_en : item.name_jp;
-    const subName = language !== 'ja' ? item.name_jp : item.name_en;
-    const text = `${displayName}${subName ? ` - ${subName}` : ''}`;
-    let via: string = 'copy';
-    if (navigator.share) {
-      via = 'native';
-      navigator.share({ title: item.name_jp, text, url }).catch(() => {});
-    } else {
-      navigator.clipboard.writeText(`${text}\n${url}`).then(() => {
-        setCopiedNfgCode(nfgCode);
-        setTimeout(() => setCopiedNfgCode(null), 2000);
-      });
-    }
-    // サーバ拡散カウンタを更新 (失敗してもユーザー体験を妨げない)
-    if (item.menu_uid) {
-      try {
-        const { logMenuShare } = await import('../services/menuLikes');
-        logMenuShare(item.menu_uid, via);
-      } catch {}
-    }
+    onAskAbout?.(item);
   };
 
   const toggle = (idx: number) => {
@@ -399,14 +387,15 @@ export default function NFGCard({
                 <span className="nfgcard-badge nfgcard-badge-new">{copy.newItem}</span>
               )}
             </div>
-            {item.nfg_code && (
+            {onAskAbout && (
               <div className="nfgcard-action-row">
                 <button
                   type="button"
-                  className={`nfgcard-share-btn${copiedNfgCode === item.nfg_code ? ' copied' : ''}`}
-                  onClick={(e) => handleShareCard(e, item)}
+                  className="nfgcard-ask-btn"
+                  onClick={(e) => handleAskAbout(e, item)}
                 >
-                  {copiedNfgCode === item.nfg_code ? '\u2705 Copied' : 'Share'}
+                  <span aria-hidden="true">{'\ud83d\udcac'}</span>
+                  {getAskLabel(language)}
                 </button>
               </div>
             )}
