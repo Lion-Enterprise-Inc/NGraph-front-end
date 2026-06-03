@@ -493,16 +493,23 @@ export default function NFGCard({
                   <TasteChart values={item.taste_values} labels={tasteLabels} />
                 )}
                 {item.narrative && (() => {
-                  // 食感・食べ方・合う飲み物はラベル分けせず、ガイドの語りとして
-                  // 一段落の散文に統合する(項目ラベルの羅列を避けて読みやすく)。
+                  // 段階開示: 折りたたみ時は description だけ。展開時にここで
+                  // 文化ストーリー(story)→背景(cultural_context/regional_note)→
+                  // 食感・食べ方・合う飲み物 の順に厚く見せる。
+                  // narrative は backend で表示言語にローカライズ済み。
                   const n = item.narrative as Record<string, unknown>;
-                  const parts = [n.texture, n.how_to_eat, n.pairing]
-                    .map((p) => (typeof p === "string" ? p.trim() : ""))
-                    .filter(Boolean);
-                  if (parts.length === 0) return null;
+                  const str = (v: unknown) => (typeof v === "string" ? v.trim() : "");
+                  const story = str(n.story);
+                  const culture = [str(n.cultural_context), str(n.regional_note)]
+                    .filter(Boolean).join(" ");
+                  const senses = [n.texture, n.how_to_eat, n.pairing]
+                    .map(str).filter(Boolean).join(" ");
+                  if (!story && !culture && !senses) return null;
                   return (
                     <div className="nfgcard-narrative">
-                      <p className="nfgcard-narrative-story">{parts.join(" ")}</p>
+                      {story && <p className="nfgcard-narrative-story">{story}</p>}
+                      {culture && <p className="nfgcard-narrative-culture">{culture}</p>}
+                      {senses && <p className="nfgcard-narrative-senses">{senses}</p>}
                     </div>
                   );
                 })()}
@@ -566,7 +573,9 @@ export default function NFGCard({
               </div>
             )}
             {!open && hasDetails && (
-              <div className="nfgcard-expand-hint">▼</div>
+              <div className="nfgcard-expand-hint">
+                {(({ ja: '詳しく', en: 'Details', ko: '자세히', 'zh-Hans': '详情', 'zh-Hant': '詳情' } as Record<string, string>)[language] || 'Details')} ▼
+              </div>
             )}
           </div>
         );
