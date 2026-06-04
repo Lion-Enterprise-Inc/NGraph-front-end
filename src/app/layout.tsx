@@ -12,22 +12,22 @@ export const viewport = {
 }
 
 export const metadata: Metadata = {
-  title: 'NGraph — 食を正しく伝える、データインフラ',
+  title: 'OmiseAI — AIがメニューを多言語でご案内',
   description: 'AI多言語メニューガイド。カメラやチャットで、あなたの言葉でメニューをご案内。',
   openGraph: {
-    title: 'NGraph — 食を正しく伝える、データインフラ',
+    title: 'OmiseAI — AIがメニューを多言語でご案内',
     description: 'AI多言語メニューガイド。カメラやチャットで、あなたの言葉でメニューをご案内。',
     url: 'https://app.ngraph.jp',
-    siteName: 'NGraph',
-    images: [{ url: 'https://app.ngraph.jp/og-ngraph.png', width: 1200, height: 630 }],
+    siteName: 'OmiseAI',
+    images: [{ url: 'https://app.ngraph.jp/og-omiseai.png', width: 1200, height: 630 }],
     type: 'website',
     locale: 'ja_JP',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'NGraph — 食を正しく伝える、データインフラ',
+    title: 'OmiseAI — AIがメニューを多言語でご案内',
     description: 'AI多言語メニューガイド。カメラやチャットで、あなたの言葉でメニューをご案内。',
-    images: ['https://app.ngraph.jp/og-ngraph.png'],
+    images: ['https://app.ngraph.jp/og-omiseai.png'],
   },
 }
 
