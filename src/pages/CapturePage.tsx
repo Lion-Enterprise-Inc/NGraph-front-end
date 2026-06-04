@@ -911,11 +911,11 @@ export default function CapturePage({
     return () => window.clearInterval(id);
   }, [placeholderCandidates]);
 
-  // 会話が始まったら placeholder を出さない (hero state = 最初の発話前のみ rotate)
+  // hero (最初の発話前) は質問例を rotate、会話中は静的な placeholder を常時表示
   const isFirstMessage = responses.length === 0;
   const rotatingPlaceholder = isFirstMessage
     ? (placeholderCandidates[placeholderIdx] ?? copy.restaurant.chatPlaceholder)
-    : '';
+    : copy.restaurant.chatPlaceholder;
 
   const currentSuggestions = useMemo(() => {
     if (selectedRestaurant) {
