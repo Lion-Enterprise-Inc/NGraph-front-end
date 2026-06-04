@@ -24,6 +24,7 @@ export interface DishQuestion {
   type: 'text' | 'multi_select' | 'menu_select'
   options: KitchenQuestionOption[] | null
   max_select?: number
+  target_field?: string
 }
 
 export interface SurveyPreview {

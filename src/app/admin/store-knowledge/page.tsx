@@ -6,6 +6,14 @@ import { apiClient, TokenService } from '../../../services/api'
 import { useToast } from '../../../components/admin/Toast'
 import type { KitchenQuestion, SurveyPreview } from './questions'
 
+// 質問の対象フィールド → 日本語ラベル（バッジ表示用）
+const FIELD_LABELS: Record<string, string> = {
+  allergens: 'アレルゲン',
+  ingredients: '食材',
+  cooking_methods: '調理法',
+  restrictions: '対応',
+}
+
 function ProgressBar({ filled, total }: { filled: number; total: number }) {
   const pct = total > 0 ? (filled / total) * 100 : 0
   return (
@@ -175,6 +183,7 @@ export default function StoreKnowledgePage() {
           menu_uids: q.menu_uids,
           selected: selected || null,
           text_note: text_note || null,
+          target_field: q.target_field || null,
         })
       }).filter(Boolean)
       await Promise.allSettled(promises)
@@ -361,8 +370,8 @@ export default function StoreKnowledgePage() {
       }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
           <div>
-            <h3 style={{ fontSize: 16, fontWeight: 600, margin: '0 0 4px' }}>Phase 2: 料理ヒアリング</h3>
-            <p style={{ fontSize: 12, color: 'var(--muted)', margin: 0 }}>テンプレートベースの質問</p>
+            <h3 style={{ fontSize: 16, fontWeight: 600, margin: '0 0 4px' }}>AIが見つけた要確認ポイント</h3>
+            <p style={{ fontSize: 12, color: 'var(--muted)', margin: 0 }}>答えると料理データが「確認済み」になり精度が上がります</p>
           </div>
           <button
             onClick={saveDishAnswers}
@@ -390,7 +399,7 @@ export default function StoreKnowledgePage() {
                 <span style={{
                   fontSize: 10, color: '#64748B', whiteSpace: 'nowrap', marginLeft: 8,
                   padding: '2px 6px', background: 'rgba(100,116,139,0.2)', borderRadius: 4,
-                }}>{q.template}</span>
+                }}>{FIELD_LABELS[q.target_field || ''] || '確認'}</span>
               </div>
 
               {q.type === 'text' && (
