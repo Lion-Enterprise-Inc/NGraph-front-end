@@ -130,7 +130,6 @@ function MenuListContent() {
   const [showTextModal, setShowTextModal] = useState(false)
   const [pasteText, setPasteText] = useState('')
   const [avgConfidence, setAvgConfidence] = useState<number | null>(null)
-  const [rankCounts, setRankCounts] = useState<{S: number, A: number, B: number, C: number, none: number}>({S: 0, A: 0, B: 0, C: 0, none: 0})
   const fileInputRef = useRef<HTMLInputElement>(null)
   const cameraInputRef = useRef<HTMLInputElement>(null)
 
@@ -372,12 +371,6 @@ function MenuListContent() {
             verifiedBy: (menu as any).verified_by || null
           }))
           setMenuItems(menus)
-
-          // rank分布（API全件ベース）
-          const rs = menusResponse.result?.rank_summary
-          if (rs) {
-            setRankCounts({ S: rs.S || 0, A: rs.A || 0, B: rs.B || 0, C: rs.C || 0, none: 0 })
-          }
         } catch (menuErr) {
           setMenuItems([])
           setTotalItems(0)
@@ -809,32 +802,39 @@ function MenuListContent() {
         </div>
       )}
 
-      {(rankCounts.S + rankCounts.A + rankCounts.B + rankCounts.C) > 0 && (() => {
-        const total = rankCounts.S + rankCounts.A + rankCounts.B + rankCounts.C
-        const pctS = Math.round(rankCounts.S / total * 100)
-        const pctA = Math.round(rankCounts.A / total * 100)
-        const pctB = Math.round(rankCounts.B / total * 100)
-        const pctC = Math.round(rankCounts.C / total * 100)
-        return (
-          <div style={{ background: 'var(--bg-surface)', borderRadius: 12, padding: 20, marginBottom: 16, border: '1px solid var(--border)', boxShadow: '0 1px 3px rgba(0,0,0,0.3)' }}>
-            <div style={{ fontSize: 16, fontWeight: 600, color: 'var(--text)', marginBottom: 12 }}>{t.menuList.verifyPriorityTitle}</div>
-            <div style={{ height: 16, background: '#1E293B', borderRadius: 8, overflow: 'hidden', display: 'flex' }}>
-              {pctS > 0 && <div style={{ width: `${pctS}%`, height: '100%', background: '#EF4444' }} />}
-              {pctA > 0 && <div style={{ width: `${pctA}%`, height: '100%', background: '#F59E0B' }} />}
-              {pctB > 0 && <div style={{ width: `${pctB}%`, height: '100%', background: '#3B82F6' }} />}
-              {pctC > 0 && <div style={{ width: `${pctC}%`, height: '100%', background: '#10B981' }} />}
-            </div>
-            <div style={{ display: 'flex', gap: 16, marginTop: 10, flexWrap: 'wrap' }}>
-              <span style={{ fontSize: 13 }}><span style={{ color: '#EF4444', fontWeight: 700 }}>S</span><span style={{ color: '#94A3B8' }}> {t.menuList.rankMustVerify} </span><span style={{ fontWeight: 600, color: '#EF4444' }}>{rankCounts.S}</span></span>
-              <span style={{ fontSize: 13 }}><span style={{ color: '#F59E0B', fontWeight: 700 }}>A</span><span style={{ color: '#94A3B8' }}> {t.menuList.rankNeedReview} </span><span style={{ fontWeight: 600, color: '#F59E0B' }}>{rankCounts.A}</span></span>
-              <span style={{ fontSize: 13 }}><span style={{ color: '#3B82F6', fontWeight: 700 }}>B</span><span style={{ color: '#94A3B8' }}> {t.menuList.rankReviewRecommended} </span><span style={{ fontWeight: 600, color: '#3B82F6' }}>{rankCounts.B}</span></span>
-              <span style={{ fontSize: 13 }}><span style={{ color: '#10B981', fontWeight: 700 }}>C</span><span style={{ color: '#94A3B8' }}> {t.menuList.rankVerified} </span><span style={{ fontWeight: 600, color: '#10B981' }}>{rankCounts.C}</span></span>
-            </div>
-          </div>
-        )
-      })()}
+      <UploadSection
+        fileInputRef={fileInputRef}
+        cameraInputRef={cameraInputRef}
+        onFileSelect={handleFileSelect}
+        onCameraCapture={handleCameraCapture}
+        onFileUpload={handleFileUpload}
+        onShowTextModal={() => setShowTextModal(true)}
+        showTextModal={showTextModal}
+        pasteText={pasteText}
+        onPasteTextChange={setPasteText}
+        onTextAnalyze={handleTextAnalyze}
+        onCloseTextModal={() => { setShowTextModal(false); setPasteText(''); }}
+        isAnalyzing={isAnalyzing}
+        showVisionApproval={showVisionApproval}
+        visionResults={visionResults}
+        onApproveVisionItem={handleApproveVisionItem}
+        onApproveAllVision={handleApproveAllVision}
+        approvingIndex={approvingIndex}
+        approvingAll={approvingAll}
+        onCloseVisionApproval={() => { setShowVisionApproval(false); setVisionResults([]); }}
+        onRemoveVisionItem={(index) => setVisionResults(visionResults.filter((_, i) => i !== index))}
+        showApprovalModal={showApprovalModal}
+        pendingMenus={pendingMenus}
+        scrapingUrl={scrapingUrl}
+        onApproveMenu={handleApproveMenu}
+        onDenyMenu={handleDenyMenu}
+        onApproveAll={handleApproveAll}
+        onDenyAll={handleDenyAll}
+        onCloseApprovalModal={() => setShowApprovalModal(false)}
+        showFetchModal={showFetchModal}
+      />
 
-      <div className="card">
+      <div className="card" style={{ marginTop: 16 }}>
         <div className="card-title">{t.menuList.cardTitle}</div>
 
         <MenuTable
@@ -939,38 +939,6 @@ function MenuListContent() {
         item={previewItem}
         onEdit={handleEdit}
         onApprove={handleOwnerVerify}
-      />
-
-      <UploadSection
-        fileInputRef={fileInputRef}
-        cameraInputRef={cameraInputRef}
-        onFileSelect={handleFileSelect}
-        onCameraCapture={handleCameraCapture}
-        onFileUpload={handleFileUpload}
-        onShowTextModal={() => setShowTextModal(true)}
-        showTextModal={showTextModal}
-        pasteText={pasteText}
-        onPasteTextChange={setPasteText}
-        onTextAnalyze={handleTextAnalyze}
-        onCloseTextModal={() => { setShowTextModal(false); setPasteText(''); }}
-        isAnalyzing={isAnalyzing}
-        showVisionApproval={showVisionApproval}
-        visionResults={visionResults}
-        onApproveVisionItem={handleApproveVisionItem}
-        onApproveAllVision={handleApproveAllVision}
-        approvingIndex={approvingIndex}
-        approvingAll={approvingAll}
-        onCloseVisionApproval={() => { setShowVisionApproval(false); setVisionResults([]); }}
-        onRemoveVisionItem={(index) => setVisionResults(visionResults.filter((_, i) => i !== index))}
-        showApprovalModal={showApprovalModal}
-        pendingMenus={pendingMenus}
-        scrapingUrl={scrapingUrl}
-        onApproveMenu={handleApproveMenu}
-        onDenyMenu={handleDenyMenu}
-        onApproveAll={handleApproveAll}
-        onDenyAll={handleDenyAll}
-        onCloseApprovalModal={() => setShowApprovalModal(false)}
-        showFetchModal={showFetchModal}
       />
 
       <style jsx>{`

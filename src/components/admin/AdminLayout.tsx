@@ -78,16 +78,12 @@ export default function AdminLayout({ children, title }: Props) {
   }
 
   const restaurantNavItems: NavItem[] = [
+    { key: 'dashboard', label: t.nav.dashboard, icon: '🏠', to: '/admin' },
     { key: 'menu-list', label: t.nav.menuList, icon: '📋', to: '/admin/menu-list' },
     { key: 'daily', label: t.nav.dailySpecials, icon: '🍽️', to: '/admin/daily-specials' },
-    { key: 'qr', label: t.nav.qrManagement, icon: '📱', to: '/admin/qr-management' },
     { key: 'basic-info', label: t.nav.basicInfo, icon: '🧾', to: '/admin/basic-info' },
-  ]
-
-  const restaurantAdvancedNavItems: NavItem[] = [
-    { key: 'dashboard', label: t.nav.dashboard, icon: '🏠', to: '/admin' },
-    { key: 'menu-analytics', label: t.nav.menuAnalytics, icon: '📊', to: '/admin/menu-analytics' },
     { key: 'store-knowledge', label: t.nav.storeKnowledge, icon: '🧠', to: '/admin/store-knowledge' },
+    { key: 'qr', label: t.nav.qrManagement, icon: '📱', to: '/admin/qr-management' },
     { key: 'photo-review', label: t.nav.photoReview, icon: '📸', to: '/admin/photo-review' },
     { key: 'conversations', label: t.nav.conversations, icon: '💬', to: '/admin/conversations' },
     { key: 'prompts', label: t.nav.prompts, icon: '🤖', to: '/admin/prompts' },
@@ -272,31 +268,6 @@ export default function AdminLayout({ children, title }: Props) {
                 </a>
               )
             })}
-            {userType === 'store' && (
-              <details style={{ marginTop: '8px' }}>
-                <summary style={{
-                  padding: '10px 20px', fontSize: '13px', color: '#64748B',
-                  cursor: 'pointer', listStyle: 'none', display: 'flex', alignItems: 'center', gap: '8px'
-                }}>
-                  <span>&#9662;</span> {t.layout.more}
-                </summary>
-                {restaurantAdvancedNavItems.map((item) => {
-                  const isActive = pathname === item.to || (item.to !== '/admin' && pathname?.startsWith(item.to))
-                  return (
-                    <a
-                      key={item.key}
-                      href={item.to}
-                      className={`nav-link ${isActive ? 'active' : ''}`}
-                      aria-current={isActive ? 'page' : undefined}
-                      onClick={(e) => handleNavClick(e, item)}
-                    >
-                      <span className="icon">{item.icon}</span>
-                      <span className="label">{item.label}</span>
-                    </a>
-                  )
-                })}
-              </details>
-            )}
           </nav>
 
           {/* Account Section */}

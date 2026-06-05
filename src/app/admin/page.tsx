@@ -7,6 +7,7 @@ import { apiClient, MenuApi } from '../../services/api'
 import { useAuth } from '../../contexts/AuthContext'
 import { useAdminLang } from '../../hooks/useAdminLang'
 import { getTopicLabel } from '../../i18n/adminCopy'
+import MenuAnalyticsSection from './menu-analytics/MenuAnalyticsSection'
 
 const LANG_COLORS: Record<string, string> = {
   ja: '#3B82F6',
@@ -31,28 +32,19 @@ function LangBar({ dist, label }: { dist: Record<string, number> | null | undefi
   if (total === 0) return null
 
   return (
-    <div style={{ marginTop: 12 }}>
-      <div style={{ fontSize: 12, color: '#94A3B8', marginBottom: 6 }}>{label}</div>
-      <div style={{ display: 'flex', height: 20, borderRadius: 6, overflow: 'hidden', background: '#1E293B' }}>
-        {entries.map(([lang, count]) => {
-          const pct = (count / total) * 100
-          const color = LANG_COLORS[lang] || '#64748B'
-          return (
-            <div
-              key={lang}
-              title={`${lang}: ${count} (${pct.toFixed(1)}%)`}
-              style={{ width: `${pct}%`, background: color, minWidth: pct > 0 ? 2 : 0 }}
-            />
-          )
-        })}
-      </div>
-      <div style={{ display: 'flex', gap: 12, marginTop: 4, flexWrap: 'wrap' }}>
-        {entries.map(([lang, count]) => (
-          <span key={lang} style={{ fontSize: 11, color: LANG_COLORS[lang] || '#64748B' }}>
-            {lang}: {count}
+    <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
+      <span style={{ fontSize: 12, color: '#94A3B8' }}>{label}</span>
+      {entries.map(([lang, count]) => {
+        const pct = Math.round((count / total) * 100)
+        const color = LANG_COLORS[lang] || '#64748B'
+        return (
+          <span key={lang} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12, color: '#E2E8F0' }}>
+            <span style={{ width: 8, height: 8, borderRadius: '50%', background: color, flexShrink: 0 }} />
+            <strong style={{ color }}>{lang}</strong> {count}
+            <span style={{ color: '#64748B' }}>({pct}%)</span>
           </span>
-        ))}
-      </div>
+        )
+      })}
     </div>
   )
 }
@@ -284,7 +276,7 @@ function StoreDashboard() {
 
             <div className="card" style={{ width: '100%', maxWidth: 'none' }}>
               <div className="card-title">{t.dashboard.eventLogStats}</div>
-              <div className="dashboard-metrics" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '16px', width: '100%', maxWidth: 'none' }}>
+              <div className="dashboard-metrics" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(88px, 1fr))', gap: '10px', width: '100%' }}>
                 {[
                   { label: 'Good', key: 'good', color: '#10B981' },
                   { label: 'Bad', key: 'bad', color: '#EF4444' },
@@ -293,20 +285,15 @@ function StoreDashboard() {
                   { label: 'Review', key: 'review', color: '#F59E0B' },
                   { label: 'Scan', key: 'scan', color: '#06B6D4' },
                 ].map(item => (
-                  <div key={item.key} className="stat-card" style={{
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+                  <div key={item.key} style={{
                     textAlign: 'center',
-                    padding: '16px',
-                    minHeight: '120px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    borderRadius: '12px',
-                    border: '1px solid #1E293B'
+                    padding: '10px 8px',
+                    borderRadius: '10px',
+                    border: '1px solid #1E293B',
+                    background: '#0F172A'
                   }}>
-                    <div className="stat-label" style={{ fontSize: '16px', fontWeight: 600, color: '#F8FAFC', marginBottom: '12px' }}>{item.label}</div>
-                    <div className="stat-value" style={{ fontSize: '36px', fontWeight: 700, color: item.color }}>{eventStats?.[item.key] ?? '-'}</div>
+                    <div style={{ fontSize: '12px', fontWeight: 600, color: '#94A3B8', marginBottom: '4px' }}>{item.label}</div>
+                    <div style={{ fontSize: '24px', fontWeight: 700, color: item.color }}>{eventStats?.[item.key] ?? '-'}</div>
                   </div>
                 ))}
               </div>
@@ -323,20 +310,26 @@ function StoreDashboard() {
             {sessionStats && sessionStats.total_sessions > 0 && (
               <div className="card" style={{ marginTop: '16px' }}>
                 <div className="card-title">{t.dashboard.sessionStats}</div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '16px' }}>
-                  <div style={{ padding: '16px', background: '#1E293B', borderRadius: '8px', textAlign: 'center' }}>
-                    <div style={{ fontSize: '14px', color: '#94A3B8', marginBottom: '4px' }}>{t.dashboard.sessionCount}</div>
-                    <div style={{ fontSize: '24px', fontWeight: 700, color: '#3B82F6' }}>{sessionStats.total_sessions}</div>
+                <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                  <div style={{ padding: '12px 20px', background: '#1E293B', borderRadius: '8px', textAlign: 'center', minWidth: 110 }}>
+                    <div style={{ fontSize: '12px', color: '#94A3B8', marginBottom: '4px' }}>{t.dashboard.sessionCount}</div>
+                    <div style={{ fontSize: '22px', fontWeight: 700, color: '#3B82F6' }}>{sessionStats.total_sessions}</div>
                   </div>
-                  <div style={{ padding: '16px', background: '#1E293B', borderRadius: '8px', textAlign: 'center' }}>
-                    <div style={{ fontSize: '14px', color: '#94A3B8', marginBottom: '4px' }}>{t.dashboard.avgStay}</div>
-                    <div style={{ fontSize: '24px', fontWeight: 700, color: '#10B981' }}>
+                  <div style={{ padding: '12px 20px', background: '#1E293B', borderRadius: '8px', textAlign: 'center', minWidth: 110 }}>
+                    <div style={{ fontSize: '12px', color: '#94A3B8', marginBottom: '4px' }}>{t.dashboard.avgStay}</div>
+                    <div style={{ fontSize: '22px', fontWeight: 700, color: '#10B981' }}>
                       {sessionStats.avg_duration >= 60 ? `${Math.floor(sessionStats.avg_duration / 60)}${t.dashboard.minute}` : `${sessionStats.avg_duration}${t.dashboard.second}`}
                     </div>
                   </div>
                 </div>
               </div>
             )}
+
+            {/* メニュー分析（旧・独立ページから統合） */}
+            <div style={{ marginTop: 24 }}>
+              <h2 className="section-title" style={{ margin: '0 0 16px', textAlign: 'left', fontSize: 18 }}>{t.nav.menuAnalytics}</h2>
+              <MenuAnalyticsSection uid={selectedStoreUid || restaurant?.uid} />
+            </div>
           </>
         ) : null}
       </section>
