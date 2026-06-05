@@ -7,7 +7,6 @@ import { apiClient, MenuApi } from '../../services/api'
 import { useAuth } from '../../contexts/AuthContext'
 import { useAdminLang } from '../../hooks/useAdminLang'
 import { getTopicLabel } from '../../i18n/adminCopy'
-import MenuAnalyticsSection from './menu-analytics/MenuAnalyticsSection'
 
 const LANG_COLORS: Record<string, string> = {
   ja: '#3B82F6',
@@ -324,12 +323,6 @@ function StoreDashboard() {
                 </div>
               </div>
             )}
-
-            {/* メニュー分析（旧・独立ページから統合） */}
-            <div style={{ marginTop: 24 }}>
-              <h2 className="section-title" style={{ margin: '0 0 16px', textAlign: 'left', fontSize: 18 }}>{t.nav.menuAnalytics}</h2>
-              <MenuAnalyticsSection uid={selectedStoreUid || restaurant?.uid} />
-            </div>
           </>
         ) : null}
       </section>
