@@ -1202,6 +1202,7 @@ export interface ConversationListItem {
   topic?: string;
   events?: { copy: number; share: number; review: number };
   langs?: Record<string, number>;
+  image_count?: number;
 }
 
 export interface ConversationMessage {
@@ -1245,11 +1246,12 @@ export interface ConversationDetailResponse {
 
 // Conversation API
 export const ConversationApi = {
-  getAll: async (page: number = 1, size: number = 20, restaurantUid?: string): Promise<ConversationListResponse> => {
+  getAll: async (page: number = 1, size: number = 20, restaurantUid?: string, hasImages?: boolean): Promise<ConversationListResponse> => {
     const params = new URLSearchParams();
     params.append('page', page.toString());
     params.append('size', size.toString());
     if (restaurantUid) params.append('restaurant_uid', restaurantUid);
+    if (hasImages) params.append('has_images', 'true');
     return apiClient.get<ConversationListResponse>(`/admin/conversations?${params.toString()}`);
   },
 

@@ -52,6 +52,7 @@ export default function ConversationsPage() {
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [total, setTotal] = useState(0)
+  const [imagesOnly, setImagesOnly] = useState(false)
 
   // Detail view
   const [detail, setDetail] = useState<ConversationDetail | null>(null)
@@ -60,10 +61,10 @@ export default function ConversationsPage() {
 
   const toast = useToast()
 
-  const fetchConversations = async (p: number = 1, restaurantUid?: string) => {
+  const fetchConversations = async (p: number = 1, restaurantUid?: string, hasImages: boolean = false) => {
     try {
       setLoading(true)
-      const res = await ConversationApi.getAll(p, 20, restaurantUid || undefined)
+      const res = await ConversationApi.getAll(p, 20, restaurantUid || undefined, hasImages || undefined)
       setConversations(res.result.items)
       setTotalPages(res.result.pages)
       setTotal(res.result.total)
@@ -91,7 +92,32 @@ export default function ConversationsPage() {
 
   const handleFilterChange = (restaurantUid: string) => {
     setSelectedRestaurant(restaurantUid)
-    fetchConversations(1, restaurantUid)
+    fetchConversations(1, restaurantUid, imagesOnly)
+  }
+
+  const handleImagesOnlyToggle = () => {
+    const next = !imagesOnly
+    setImagesOnly(next)
+    fetchConversations(1, selectedRestaurant, next)
+  }
+
+  // お客さんが撮った画像をダウンロード（data URL も http URL も対応、失敗時は別タブで開く）
+  const downloadImage = async (src: string, idx: number) => {
+    try {
+      const res = await fetch(src)
+      const blob = await res.blob()
+      const objUrl = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = objUrl
+      const ext = (blob.type.split('/')[1] || 'jpg').split('+')[0]
+      a.download = `photo-${idx + 1}.${ext}`
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      URL.revokeObjectURL(objUrl)
+    } catch {
+      window.open(src, '_blank', 'noopener')
+    }
   }
 
   const openDetail = async (threadUid: string, index: number) => {
@@ -262,6 +288,35 @@ export default function ConversationsPage() {
                   {msg.user_message}
                 </div>
               </div>
+              {/* お客さんが撮った画像 */}
+              {msg.images && msg.images.length > 0 && (
+                <div style={{ display: 'flex', justifyContent: 'flex-end', flexWrap: 'wrap', gap: 8 }}>
+                  {msg.images.map((src, i) => (
+                    <div key={i} style={{ position: 'relative', display: 'inline-block' }}>
+                      <a href={src} target="_blank" rel="noopener noreferrer">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={src}
+                          alt=""
+                          style={{ width: 140, height: 140, objectFit: 'cover', borderRadius: 10, border: '1px solid var(--border-strong)', display: 'block' }}
+                        />
+                      </a>
+                      <button
+                        onClick={() => downloadImage(src, i)}
+                        title={lang === 'ja' ? '画像をダウンロード' : 'Download image'}
+                        style={{
+                          position: 'absolute', bottom: 6, right: 6,
+                          background: 'rgba(0,0,0,0.65)', color: '#fff',
+                          border: 'none', borderRadius: 6, padding: '4px 8px',
+                          fontSize: 12, cursor: 'pointer',
+                        }}
+                      >
+                        ⬇
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
               {/* AI response */}
               {msg.ai_response && (
                 <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
@@ -341,6 +396,21 @@ export default function ConversationsPage() {
             <option key={r.uid} value={r.uid}>{r.name}</option>
           ))}
         </select>
+        <button
+          onClick={handleImagesOnlyToggle}
+          style={{
+            background: imagesOnly ? 'rgba(59,130,246,0.15)' : 'var(--bg-input)',
+            color: imagesOnly ? '#60A5FA' : 'var(--text-body)',
+            border: `1px solid ${imagesOnly ? '#3B82F6' : 'var(--border-strong)'}`,
+            borderRadius: 8,
+            padding: '8px 14px',
+            fontSize: 14,
+            cursor: 'pointer',
+            fontWeight: imagesOnly ? 600 : 400,
+          }}
+        >
+          📷 {lang === 'ja' ? '画像あり' : 'With photos'}
+        </button>
         <span style={{ color: 'var(--muted)', fontSize: 14 }}>
           {t.conversations.totalCount(total)}
         </span>
@@ -396,6 +466,14 @@ export default function ConversationsPage() {
                         textOverflow: 'ellipsis',
                         whiteSpace: 'nowrap',
                       }}>
+                        {c.image_count ? (
+                          <span style={{
+                            display: 'inline-flex', alignItems: 'center', gap: 3,
+                            background: 'rgba(59,130,246,0.15)', color: '#60A5FA',
+                            padding: '1px 6px', borderRadius: 6, fontSize: 11, fontWeight: 600,
+                            marginRight: 6, verticalAlign: 'middle',
+                          }}>📷 {c.image_count}</span>
+                        ) : null}
                         {c.summary || t.conversations.noSummary}
                       </td>
                       <td style={{ padding: '10px 12px', borderBottom: '1px solid var(--border)', textAlign: 'center' }}>
@@ -466,7 +544,7 @@ export default function ConversationsPage() {
             }}>
               <button
                 disabled={page <= 1}
-                onClick={() => fetchConversations(page - 1, selectedRestaurant)}
+                onClick={() => fetchConversations(page - 1, selectedRestaurant, imagesOnly)}
                 style={{
                   background: 'var(--bg-hover)',
                   color: 'var(--text)',
@@ -485,7 +563,7 @@ export default function ConversationsPage() {
               </span>
               <button
                 disabled={page >= totalPages}
-                onClick={() => fetchConversations(page + 1, selectedRestaurant)}
+                onClick={() => fetchConversations(page + 1, selectedRestaurant, imagesOnly)}
                 style={{
                   background: 'var(--bg-hover)',
                   color: 'var(--text)',

@@ -7,12 +7,32 @@ import { apiClient, MenuApi } from '../../services/api'
 import { useAuth } from '../../contexts/AuthContext'
 import { useAdminLang } from '../../hooks/useAdminLang'
 import { getTopicLabel } from '../../i18n/adminCopy'
+import MenuAnalyticsSection from './menu-analytics/MenuAnalyticsSection'
 
 const LANG_COLORS: Record<string, string> = {
   ja: '#3B82F6',
   en: '#10B981',
   zh: '#EF4444',
   ko: '#8B5CF6',
+}
+
+// スクロールで画面に入った時だけ子を描画する（重い分析を初期描画から外しフリーズを防ぐ）
+function LazyMount({ children, minHeight = 200 }: { children: React.ReactNode; minHeight?: number }) {
+  const ref = useRef<HTMLDivElement>(null)
+  const [show, setShow] = useState(false)
+  useEffect(() => {
+    const el = ref.current
+    if (!el || show) return
+    const io = new IntersectionObserver((entries) => {
+      if (entries.some(e => e.isIntersecting)) {
+        setShow(true)
+        io.disconnect()
+      }
+    }, { rootMargin: '200px' })
+    io.observe(el)
+    return () => io.disconnect()
+  }, [show])
+  return <div ref={ref} style={show ? undefined : { minHeight }}>{show ? children : null}</div>
 }
 
 const TOPIC_COLORS: Record<string, string> = {
@@ -299,30 +319,40 @@ function StoreDashboard() {
               <LangBar dist={eventStats?.lang_distribution} label={t.dashboard.langDistribution} />
             </div>
 
-            {messageStats && messageStats.lang_distribution && Object.keys(messageStats.lang_distribution).length > 0 && (
-              <div className="card" style={{ marginTop: '16px' }}>
-                <div className="card-title">{t.dashboard.chatStatsLabel(messageStats.total_messages)}</div>
-                <LangBar dist={messageStats.lang_distribution} label={t.dashboard.langDistribution} />
-              </div>
-            )}
-
-            {sessionStats && sessionStats.total_sessions > 0 && (
-              <div className="card" style={{ marginTop: '16px' }}>
-                <div className="card-title">{t.dashboard.sessionStats}</div>
-                <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-                  <div style={{ padding: '12px 20px', background: '#1E293B', borderRadius: '8px', textAlign: 'center', minWidth: 110 }}>
-                    <div style={{ fontSize: '12px', color: '#94A3B8', marginBottom: '4px' }}>{t.dashboard.sessionCount}</div>
-                    <div style={{ fontSize: '22px', fontWeight: 700, color: '#3B82F6' }}>{sessionStats.total_sessions}</div>
-                  </div>
-                  <div style={{ padding: '12px 20px', background: '#1E293B', borderRadius: '8px', textAlign: 'center', minWidth: 110 }}>
-                    <div style={{ fontSize: '12px', color: '#94A3B8', marginBottom: '4px' }}>{t.dashboard.avgStay}</div>
-                    <div style={{ fontSize: '22px', fontWeight: 700, color: '#10B981' }}>
-                      {sessionStats.avg_duration >= 60 ? `${Math.floor(sessionStats.avg_duration / 60)}${t.dashboard.minute}` : `${sessionStats.avg_duration}${t.dashboard.second}`}
+            {/* チャット統計 + セッション統計 を横並びにして余白を詰める */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '16px', marginTop: '16px' }}>
+              {messageStats && messageStats.lang_distribution && Object.keys(messageStats.lang_distribution).length > 0 && (
+                <div className="card">
+                  <div className="card-title">{t.dashboard.chatStatsLabel(messageStats.total_messages)}</div>
+                  <LangBar dist={messageStats.lang_distribution} label={t.dashboard.langDistribution} />
+                </div>
+              )}
+              {sessionStats && sessionStats.total_sessions > 0 && (
+                <div className="card">
+                  <div className="card-title">{t.dashboard.sessionStats}</div>
+                  <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                    <div style={{ flex: 1, minWidth: 110, padding: '12px 20px', background: '#1E293B', borderRadius: '8px', textAlign: 'center' }}>
+                      <div style={{ fontSize: '12px', color: '#94A3B8', marginBottom: '4px' }}>{t.dashboard.sessionCount}</div>
+                      <div style={{ fontSize: '22px', fontWeight: 700, color: '#3B82F6' }}>{sessionStats.total_sessions}</div>
+                    </div>
+                    <div style={{ flex: 1, minWidth: 110, padding: '12px 20px', background: '#1E293B', borderRadius: '8px', textAlign: 'center' }}>
+                      <div style={{ fontSize: '12px', color: '#94A3B8', marginBottom: '4px' }}>{t.dashboard.avgStay}</div>
+                      <div style={{ fontSize: '22px', fontWeight: 700, color: '#10B981' }}>
+                        {sessionStats.avg_duration >= 60 ? `${Math.floor(sessionStats.avg_duration / 60)}${t.dashboard.minute}` : `${sessionStats.avg_duration}${t.dashboard.second}`}
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
+
+            {/* メニュー分析（統合・遅延読み込みでフリーズ防止） */}
+            <div style={{ marginTop: 24 }}>
+              <h2 className="section-title" style={{ margin: '0 0 16px', textAlign: 'left', fontSize: 18 }}>{t.nav.menuAnalytics}</h2>
+              <LazyMount minHeight={320}>
+                <MenuAnalyticsSection uid={selectedStoreUid || restaurant?.uid} />
+              </LazyMount>
+            </div>
           </>
         ) : null}
       </section>

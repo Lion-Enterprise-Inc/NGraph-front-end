@@ -79,10 +79,10 @@ function SummaryCard({ label, value, sub }: { label: string; value: string | num
       background: 'linear-gradient(135deg, var(--bg-surface), rgba(74,158,255,0.04))',
       border: '1px solid var(--border)',
       borderRadius: 'var(--radius)',
-      padding: '24px 28px',
+      padding: '16px 20px',
     }}>
-      <div style={{ fontSize: 11, color: 'var(--muted)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.8px', fontWeight: 500 }}>{label}</div>
-      <div style={{ fontSize: 36, fontWeight: 800, color: 'var(--text)', fontFamily: MONO, lineHeight: 1.1 }}>{value}</div>
+      <div style={{ fontSize: 11, color: 'var(--muted)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.8px', fontWeight: 500 }}>{label}</div>
+      <div style={{ fontSize: 28, fontWeight: 800, color: 'var(--text)', fontFamily: MONO, lineHeight: 1.1 }}>{value}</div>
       {sub && <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 6 }}>{sub}</div>}
     </div>
   )

@@ -84,8 +84,6 @@ export default function AdminLayout({ children, title }: Props) {
     { key: 'basic-info', label: t.nav.basicInfo, icon: '🧾', to: '/admin/basic-info' },
     { key: 'store-knowledge', label: t.nav.storeKnowledge, icon: '🧠', to: '/admin/store-knowledge' },
     { key: 'qr', label: t.nav.qrManagement, icon: '📱', to: '/admin/qr-management' },
-    { key: 'menu-analytics', label: t.nav.menuAnalytics, icon: '📊', to: '/admin/menu-analytics' },
-    { key: 'photo-review', label: t.nav.photoReview, icon: '📸', to: '/admin/photo-review' },
     { key: 'conversations', label: t.nav.conversations, icon: '💬', to: '/admin/conversations' },
     { key: 'prompts', label: t.nav.prompts, icon: '🤖', to: '/admin/prompts' },
   ]
