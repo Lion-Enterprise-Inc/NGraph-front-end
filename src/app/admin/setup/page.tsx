@@ -6,12 +6,14 @@ import QRCode from 'qrcode'
 import { Upload, Camera, Check, Download, ArrowRight, Plus, Trash2, Loader2, CheckCircle } from 'lucide-react'
 import { useAuth } from '../../../contexts/AuthContext'
 import { MenuApi, AutoCreateMenuItem } from '../../../services/api'
+import { useAdminLang } from '../../../hooks/useAdminLang'
 
 type Step = 'upload' | 'confirm' | 'qr'
 
 export default function SetupWizardPage() {
   const router = useRouter()
   const { user, isLoading: authLoading, isAuthenticated } = useAuth()
+  const { t } = useAdminLang()
   const [step, setStep] = useState<Step>('upload')
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [createdMenus, setCreatedMenus] = useState<AutoCreateMenuItem[]>([])
@@ -38,9 +40,9 @@ export default function SetupWizardPage() {
       }
     } catch (err: unknown) {
       if (err instanceof Error && (err as any).status === 402) {
-        alert('クレジットが不足しています。管理画面からクレジットを購入してください。')
+        alert(t.setup.creditExhausted)
       } else {
-        const message = err instanceof Error ? err.message : 'アップロードに失敗しました'
+        const message = err instanceof Error ? err.message : t.setup.uploadFailed
         alert(message)
       }
     } finally {
@@ -48,6 +50,7 @@ export default function SetupWizardPage() {
       if (fileInputRef.current) fileInputRef.current.value = ''
       if (cameraInputRef.current) cameraInputRef.current.value = ''
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -81,7 +84,7 @@ export default function SetupWizardPage() {
       await generateQR()
       setStep('qr')
     } catch {
-      alert('公開に失敗しました')
+      alert(t.setup.publishFailed)
     }
   }
 
@@ -119,9 +122,9 @@ export default function SetupWizardPage() {
   }
 
   const categoryLabel: Record<string, string> = {
-    main: 'メイン', appetizer: '前菜', rice: 'ご飯', sashimi: '刺身',
-    sushi: '寿司', drink: 'ドリンク', dessert: 'デザート', side: '一品',
-    soup: '汁物', salad: 'サラダ', other: 'その他',
+    main: t.setup.categoryMain, appetizer: t.setup.categoryAppetizer, rice: t.setup.categoryRice, sashimi: t.setup.categorySashimi,
+    sushi: t.setup.categorySushi, drink: t.setup.categoryDrink, dessert: t.setup.categoryDessert, side: t.setup.categorySide,
+    soup: t.setup.categorySoup, salad: t.setup.categorySalad, other: t.setup.categoryOther,
   }
 
   const steps: Step[] = ['upload', 'confirm', 'qr']
@@ -156,7 +159,7 @@ export default function SetupWizardPage() {
                 display: i === steps.length - 1 ? 'none' : 'block',
               }} />
               <span style={{ fontSize: '11px', color: currentIdx === i ? '#fff' : '#64748B', marginTop: '4px' }}>
-                {s === 'upload' ? 'アップロード' : s === 'confirm' ? '確認' : 'QR'}
+                {s === 'upload' ? t.setup.stepUpload : s === 'confirm' ? t.setup.stepConfirm : t.setup.stepQr}
               </span>
             </div>
           ))}
@@ -165,8 +168,8 @@ export default function SetupWizardPage() {
         {/* Step 1: Upload */}
         {step === 'upload' && (
           <div style={styles.stepContent}>
-            <h1 style={styles.title}>メニュー写真をアップロード</h1>
-            <p style={styles.subtitle}>写真を撮るかファイルを選ぶだけ。AIが自動でメニューを読み取ります。</p>
+            <h1 style={styles.title}>{t.setup.uploadTitle}</h1>
+            <p style={styles.subtitle}>{t.setup.uploadSubtitle}</p>
 
             <input ref={fileInputRef} type="file" accept="image/*,.pdf" onChange={handleFileUpload} style={{ display: 'none' }} />
             <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" onChange={handleFileUpload} style={{ display: 'none' }} />
@@ -176,8 +179,8 @@ export default function SetupWizardPage() {
                 <div style={styles.pulseRing}>
                   <Loader2 size={40} style={{ animation: 'spin 1s linear infinite', color: '#3B82F6' }} />
                 </div>
-                <p style={{ marginTop: '20px', color: '#E2E8F0', fontSize: '16px', fontWeight: 600 }}>AIがメニューを読み取っています...</p>
-                <p style={{ color: '#64748B', fontSize: '13px', marginTop: '4px' }}>通常30秒程度かかります</p>
+                <p style={{ marginTop: '20px', color: '#E2E8F0', fontSize: '16px', fontWeight: 600 }}>{t.setup.analyzing}</p>
+                <p style={{ color: '#64748B', fontSize: '13px', marginTop: '4px' }}>{t.setup.analyzingNote}</p>
               </div>
             ) : (
               <>
@@ -194,25 +197,25 @@ export default function SetupWizardPage() {
                 >
                   <Upload size={40} style={{ color: isDragging ? '#3B82F6' : '#64748B' }} />
                   <p style={{ fontSize: '16px', fontWeight: 600, color: '#E2E8F0', marginTop: '12px' }}>
-                    メニュー写真をドラッグ＆ドロップ
+                    {t.setup.dropZoneTitle}
                   </p>
                   <p style={{ fontSize: '13px', color: '#64748B', marginTop: '4px' }}>
-                    またはクリックしてファイルを選択
+                    {t.setup.dropZoneOr}
                   </p>
                   <p style={{ fontSize: '12px', color: '#475569', marginTop: '12px' }}>
-                    JPEG, PNG, PDF対応
+                    {t.setup.dropZoneFormats}
                   </p>
                 </div>
 
                 <button style={styles.cameraBtn} onClick={() => cameraInputRef.current?.click()}>
-                  <Camera size={18} /> スマホで写真を撮る
+                  <Camera size={18} /> {t.setup.cameraBtn}
                 </button>
               </>
             )}
 
             {createdMenus.length > 0 && (
               <button style={styles.primaryBtn} onClick={() => setStep('confirm')}>
-                確認へ進む ({createdMenus.length}品) <ArrowRight size={16} />
+                {t.setup.proceedToConfirm(createdMenus.length)} <ArrowRight size={16} />
               </button>
             )}
           </div>
@@ -221,9 +224,9 @@ export default function SetupWizardPage() {
         {/* Step 2: Confirm */}
         {step === 'confirm' && (
           <div style={styles.stepContent}>
-            <div style={styles.countBadge}>{createdMenus.length}品</div>
-            <h1 style={styles.title}>メニューが見つかりました</h1>
-            <p style={styles.subtitle}>不要なものは削除してください。追加の写真も撮れます。</p>
+            <div style={styles.countBadge}>{t.setup.countLabel(createdMenus.length)}</div>
+            <h1 style={styles.title}>{t.setup.confirmTitle}</h1>
+            <p style={styles.subtitle}>{t.setup.confirmSubtitle}</p>
 
             <div style={styles.menuList}>
               {createdMenus.map(menu => (
@@ -241,10 +244,10 @@ export default function SetupWizardPage() {
 
             <div style={styles.actions}>
               <button style={styles.primaryBtn} onClick={publishAll}>
-                全て公開する <ArrowRight size={16} />
+                {t.setup.publishAll} <ArrowRight size={16} />
               </button>
               <button style={styles.secondaryBtn} onClick={() => setStep('upload')}>
-                <Plus size={16} /> もう1枚追加する
+                <Plus size={16} /> {t.setup.addAnother}
               </button>
             </div>
           </div>
@@ -256,10 +259,9 @@ export default function SetupWizardPage() {
             <div style={styles.celebrationIcon}>
               <CheckCircle size={56} style={{ color: '#22C55E' }} />
             </div>
-            <h1 style={{ ...styles.title, fontSize: '26px' }}>準備完了!</h1>
-            <p style={styles.subtitle}>
-              QRコードを印刷してお店のテーブルに設置してください。<br />
-              外国人のお客様がスマホでスキャンするだけでメニューが読めます。
+            <h1 style={{ ...styles.title, fontSize: '26px' }}>{t.setup.qrReadyTitle}</h1>
+            <p style={{ ...styles.subtitle, whiteSpace: 'pre-line' as const }}>
+              {t.setup.qrReadySubtitle}
             </p>
 
             {qrDataUrl && (
@@ -271,19 +273,19 @@ export default function SetupWizardPage() {
 
             <div style={styles.actions}>
               <button style={styles.primaryBtn} onClick={downloadQR}>
-                <Download size={16} /> QRコードをダウンロード
+                <Download size={16} /> {t.setup.downloadQr}
               </button>
               <button style={{ ...styles.primaryBtn, backgroundColor: '#1E293B', border: '1px solid #334155' }} onClick={() => router.push('/admin')}>
-                管理画面へ <ArrowRight size={16} />
+                {t.setup.goToAdmin} <ArrowRight size={16} />
               </button>
             </div>
 
             <div style={styles.infoBox}>
-              <p>AIが裏側でメニューの詳細データ(栄養情報・アレルゲン・翻訳)を生成中です。数分後に自動で反映されます。</p>
+              <p>{t.setup.qrInfoBox}</p>
             </div>
 
             <div style={styles.tipBox}>
-              <p>基本情報（営業時間・住所など）は管理画面からいつでも設定できます</p>
+              <p>{t.setup.qrTipBox}</p>
             </div>
           </div>
         )}

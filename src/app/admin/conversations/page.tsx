@@ -10,6 +10,8 @@ import {
   type ConversationDetail,
   type Restaurant,
 } from '../../../services/api'
+import { useAdminLang } from '../../../hooks/useAdminLang'
+import { getTopicLabel } from '../../../i18n/adminCopy'
 
 const LANG_LABELS: Record<string, string> = {
   ja: '日本語', en: 'English', zh: '中文', 'zh-Hans': '简体中文', 'zh-TW': '繁體中文',
@@ -42,6 +44,7 @@ const TOPIC_COLORS: Record<string, { bg: string; color: string }> = {
 }
 
 export default function ConversationsPage() {
+  const { lang, t } = useAdminLang()
   const [conversations, setConversations] = useState<ConversationListItem[]>([])
   const [restaurants, setRestaurants] = useState<Restaurant[]>([])
   const [selectedRestaurant, setSelectedRestaurant] = useState('')
@@ -66,7 +69,7 @@ export default function ConversationsPage() {
       setTotal(res.result.total)
       setPage(res.result.page)
     } catch (err) {
-      toast('error', '会話ログの取得に失敗しました')
+      toast('error', t.conversations.failedList)
     } finally {
       setLoading(false)
     }
@@ -98,7 +101,7 @@ export default function ConversationsPage() {
       const res = await ConversationApi.getDetail(threadUid)
       setDetail(res.result)
     } catch {
-      toast('error', '会話詳細の取得に失敗しました')
+      toast('error', t.conversations.failedDetail)
     } finally {
       setDetailLoading(false)
     }
@@ -113,7 +116,7 @@ export default function ConversationsPage() {
   const formatDate = (dateStr: string | null) => {
     if (!dateStr) return '-'
     const d = new Date(dateStr)
-    return d.toLocaleDateString('ja-JP', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+    return d.toLocaleDateString(lang === 'ja' ? 'ja-JP' : 'en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
   }
 
   const currentConv = currentIndex >= 0 ? conversations[currentIndex] : null
@@ -121,7 +124,7 @@ export default function ConversationsPage() {
   // Detail view
   if (detail) {
     return (
-      <AdminLayout title="会話ログ詳細">
+      <AdminLayout title={t.conversations.titleDetail}>
         <div style={{ marginBottom: 16, display: 'flex', gap: 8, alignItems: 'center' }}>
           <button
             onClick={() => { setDetail(null); setCurrentIndex(-1) }}
@@ -135,7 +138,7 @@ export default function ConversationsPage() {
               fontSize: 14,
             }}
           >
-            ← 一覧に戻る
+            {t.conversations.backToList}
           </button>
           <button
             disabled={currentIndex <= 0}
@@ -151,7 +154,7 @@ export default function ConversationsPage() {
               fontSize: 14,
             }}
           >
-            ← 前へ
+            {t.conversations.prev}
           </button>
           <span style={{ fontSize: 13, color: 'var(--muted)' }}>
             {currentIndex + 1} / {conversations.length}
@@ -170,7 +173,7 @@ export default function ConversationsPage() {
               fontSize: 14,
             }}
           >
-            次へ →
+            {t.conversations.next}
           </button>
         </div>
 
@@ -183,24 +186,24 @@ export default function ConversationsPage() {
         }}>
           <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap', fontSize: 14, alignItems: 'center' }}>
             <div>
-              <span style={{ color: 'var(--muted)' }}>店舗: </span>
+              <span style={{ color: 'var(--muted)' }}>{t.conversations.detailStore}: </span>
               <span style={{ fontWeight: 600 }}>{detail.restaurant_name || '-'}</span>
             </div>
             <div>
-              <span style={{ color: 'var(--muted)' }}>要約: </span>
-              <span>{detail.summary || '(なし)'}</span>
+              <span style={{ color: 'var(--muted)' }}>{t.conversations.detailSummary}: </span>
+              <span>{detail.summary || t.conversations.summaryNone}</span>
             </div>
             <div>
-              <span style={{ color: 'var(--muted)' }}>ラリー数: </span>
+              <span style={{ color: 'var(--muted)' }}>{t.conversations.detailRallies}: </span>
               <span>{detail.messages.length}</span>
             </div>
             <div>
-              <span style={{ color: 'var(--muted)' }}>開始: </span>
+              <span style={{ color: 'var(--muted)' }}>{t.conversations.detailStart}: </span>
               <span>{formatDate(detail.created_at)}</span>
             </div>
             {detail.user_agent && (
               <div title={detail.user_agent}>
-                <span style={{ color: 'var(--muted)' }}>端末: </span>
+                <span style={{ color: 'var(--muted)' }}>{t.conversations.detailDevice}: </span>
                 <span>{parseUA(detail.user_agent)}</span>
               </div>
             )}
@@ -302,7 +305,7 @@ export default function ConversationsPage() {
 
         {detail.messages.length === 0 && (
           <div style={{ textAlign: 'center', padding: 40, color: 'var(--muted)' }}>
-            メッセージがありません
+            {t.conversations.noMessages}
           </div>
         )}
       </AdminLayout>
@@ -311,7 +314,7 @@ export default function ConversationsPage() {
 
   // List view
   return (
-    <AdminLayout title="会話ログ">
+    <AdminLayout title={t.conversations.titleList}>
       {/* Filter */}
       <div style={{
         display: 'flex',
@@ -333,24 +336,24 @@ export default function ConversationsPage() {
             minWidth: 200,
           }}
         >
-          <option value="">全店舗</option>
+          <option value="">{t.conversations.allStores}</option>
           {restaurants.map((r) => (
             <option key={r.uid} value={r.uid}>{r.name}</option>
           ))}
         </select>
         <span style={{ color: 'var(--muted)', fontSize: 14 }}>
-          {total}件の会話
+          {t.conversations.totalCount(total)}
         </span>
       </div>
 
       {/* Table */}
       {loading ? (
         <div style={{ textAlign: 'center', padding: 40, color: 'var(--muted)' }}>
-          読み込み中...
+          {t.layout.loading}
         </div>
       ) : conversations.length === 0 ? (
         <div style={{ textAlign: 'center', padding: 40, color: 'var(--muted)' }}>
-          会話ログがありません
+          {t.conversations.empty}
         </div>
       ) : (
         <>
@@ -362,15 +365,15 @@ export default function ConversationsPage() {
             }}>
               <thead>
                 <tr>
-                  <th style={{ textAlign: 'left', padding: '10px 12px', borderBottom: '1px solid var(--border)' }}>店舗</th>
-                  <th style={{ textAlign: 'left', padding: '10px 12px', borderBottom: '1px solid var(--border)' }}>要約</th>
-                  <th style={{ textAlign: 'center', padding: '10px 12px', borderBottom: '1px solid var(--border)', width: 100 }}>トピック</th>
-                  <th style={{ textAlign: 'center', padding: '10px 12px', borderBottom: '1px solid var(--border)', width: 80 }}>言語</th>
-                  <th style={{ textAlign: 'center', padding: '10px 12px', borderBottom: '1px solid var(--border)', width: 60 }}>件数</th>
+                  <th style={{ textAlign: 'left', padding: '10px 12px', borderBottom: '1px solid var(--border)' }}>{t.conversations.colStore}</th>
+                  <th style={{ textAlign: 'left', padding: '10px 12px', borderBottom: '1px solid var(--border)' }}>{t.conversations.colSummary}</th>
+                  <th style={{ textAlign: 'center', padding: '10px 12px', borderBottom: '1px solid var(--border)', width: 100 }}>{t.conversations.colTopic}</th>
+                  <th style={{ textAlign: 'center', padding: '10px 12px', borderBottom: '1px solid var(--border)', width: 80 }}>{t.conversations.colLang}</th>
+                  <th style={{ textAlign: 'center', padding: '10px 12px', borderBottom: '1px solid var(--border)', width: 60 }}>{t.conversations.colCount}</th>
                   <th style={{ textAlign: 'center', padding: '10px 12px', borderBottom: '1px solid var(--border)', width: 60 }}>👍</th>
                   <th style={{ textAlign: 'center', padding: '10px 12px', borderBottom: '1px solid var(--border)', width: 60 }}>👎</th>
-                  <th style={{ textAlign: 'center', padding: '10px 12px', borderBottom: '1px solid var(--border)', width: 120 }}>アクション</th>
-                  <th style={{ textAlign: 'right', padding: '10px 12px', borderBottom: '1px solid var(--border)', width: 120 }}>日時</th>
+                  <th style={{ textAlign: 'center', padding: '10px 12px', borderBottom: '1px solid var(--border)', width: 120 }}>{t.conversations.colActions}</th>
+                  <th style={{ textAlign: 'right', padding: '10px 12px', borderBottom: '1px solid var(--border)', width: 120 }}>{t.conversations.colDate}</th>
                 </tr>
               </thead>
               <tbody>
@@ -393,7 +396,7 @@ export default function ConversationsPage() {
                         textOverflow: 'ellipsis',
                         whiteSpace: 'nowrap',
                       }}>
-                        {c.summary || '(要約なし)'}
+                        {c.summary || t.conversations.noSummary}
                       </td>
                       <td style={{ padding: '10px 12px', borderBottom: '1px solid var(--border)', textAlign: 'center' }}>
                         <span style={{
@@ -405,7 +408,7 @@ export default function ConversationsPage() {
                           fontWeight: 600,
                           whiteSpace: 'nowrap',
                         }}>
-                          {c.topic || 'その他'}
+                          {getTopicLabel(lang, c.topic || 'その他')}
                         </span>
                       </td>
                       <td style={{ padding: '10px 12px', borderBottom: '1px solid var(--border)', textAlign: 'center' }}>
@@ -475,7 +478,7 @@ export default function ConversationsPage() {
                   fontSize: 13,
                 }}
               >
-                前へ
+                {t.common.prev}
               </button>
               <span style={{ padding: '6px 12px', fontSize: 13, color: 'var(--muted)' }}>
                 {page} / {totalPages}
@@ -494,7 +497,7 @@ export default function ConversationsPage() {
                   fontSize: 13,
                 }}
               >
-                次へ
+                {t.common.next}
               </button>
             </div>
           )}
@@ -514,7 +517,7 @@ export default function ConversationsPage() {
           justifyContent: 'center',
           zIndex: 1000,
         }}>
-          <div style={{ color: '#fff', fontSize: 16 }}>読み込み中...</div>
+          <div style={{ color: '#fff', fontSize: 16 }}>{t.layout.loading}</div>
         </div>
       )}
     </AdminLayout>

@@ -4,6 +4,7 @@ import React, { useState, ReactNode, useEffect } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { TokenService, AuthApi, User } from '../../services/api'
 import { useToast } from './Toast'
+import { useAdminLang } from '../../hooks/useAdminLang'
 
 type NavItem = { key: string; label: string; icon: string; to: string; locked?: boolean }
 
@@ -20,6 +21,7 @@ export default function AdminLayout({ children, title }: Props) {
   const pathname = usePathname()
   const router = useRouter()
   const toast = useToast()
+  const { lang, toggle: toggleLang, t } = useAdminLang()
 
   useEffect(() => {
     // Check for JWT token and user data
@@ -68,42 +70,42 @@ export default function AdminLayout({ children, title }: Props) {
   const handleNavClick = (e: React.MouseEvent, item: NavItem) => {
     e.preventDefault()
     if (item.locked) {
-      toast('warning', 'この機能はビジネスプラン以上で利用可能です')
+      toast('warning', t.layout.planLockedToast)
       return
     }
     setSidebarOpen(false)
     router.push(item.to)
   }
-  
+
   const restaurantNavItems: NavItem[] = [
-    { key: 'menu-list', label: 'メニュー管理', icon: '📋', to: '/admin/menu-list' },
-    { key: 'daily', label: '本日の献立', icon: '🍽️', to: '/admin/daily-specials' },
-    { key: 'qr', label: 'QRコード', icon: '📱', to: '/admin/qr-management' },
-    { key: 'basic-info', label: '基本情報', icon: '🧾', to: '/admin/basic-info' },
+    { key: 'menu-list', label: t.nav.menuList, icon: '📋', to: '/admin/menu-list' },
+    { key: 'daily', label: t.nav.dailySpecials, icon: '🍽️', to: '/admin/daily-specials' },
+    { key: 'qr', label: t.nav.qrManagement, icon: '📱', to: '/admin/qr-management' },
+    { key: 'basic-info', label: t.nav.basicInfo, icon: '🧾', to: '/admin/basic-info' },
   ]
 
   const restaurantAdvancedNavItems: NavItem[] = [
-    { key: 'dashboard', label: 'ダッシュボード', icon: '🏠', to: '/admin' },
-    { key: 'menu-analytics', label: 'メニュー分析', icon: '📊', to: '/admin/menu-analytics' },
-    { key: 'store-knowledge', label: '店舗知識', icon: '🧠', to: '/admin/store-knowledge' },
-    { key: 'photo-review', label: '写真レビュー', icon: '📸', to: '/admin/photo-review' },
-    { key: 'conversations', label: '会話ログ', icon: '💬', to: '/admin/conversations' },
-    { key: 'prompts', label: 'AI設定', icon: '🤖', to: '/admin/prompts' },
+    { key: 'dashboard', label: t.nav.dashboard, icon: '🏠', to: '/admin' },
+    { key: 'menu-analytics', label: t.nav.menuAnalytics, icon: '📊', to: '/admin/menu-analytics' },
+    { key: 'store-knowledge', label: t.nav.storeKnowledge, icon: '🧠', to: '/admin/store-knowledge' },
+    { key: 'photo-review', label: t.nav.photoReview, icon: '📸', to: '/admin/photo-review' },
+    { key: 'conversations', label: t.nav.conversations, icon: '💬', to: '/admin/conversations' },
+    { key: 'prompts', label: t.nav.prompts, icon: '🤖', to: '/admin/prompts' },
   ]
 
   const platformOwnerNavItems: NavItem[] = [
-    { key: 'dashboard', label: 'ダッシュボード', icon: '🏠', to: '/admin' },
-    { key: 'users', label: 'ユーザー管理', icon: '👥', to: '/admin/users' },
-    { key: 'restaurant-list', label: '掲載レストラン', icon: '🍽️', to: '/admin/stores' },
-    { key: 'menu-analytics', label: 'メニュー分析', icon: '📊', to: '/admin/menu-analytics' },
-    { key: 'conversations', label: '会話ログ', icon: '💬', to: '/admin/conversations' },
-    { key: 'photo-review', label: '写真レビュー', icon: '📸', to: '/admin/photo-review' },
-    { key: 'search-logs', label: '検索ログ', icon: '🔍', to: '/admin/search-logs' },
-    { key: 'prompts', label: 'AI設定', icon: '🤖', to: '/admin/prompts' },
+    { key: 'dashboard', label: t.nav.dashboard, icon: '🏠', to: '/admin' },
+    { key: 'users', label: t.nav.users, icon: '👥', to: '/admin/users' },
+    { key: 'restaurant-list', label: t.nav.restaurantList, icon: '🍽️', to: '/admin/stores' },
+    { key: 'menu-analytics', label: t.nav.menuAnalytics, icon: '📊', to: '/admin/menu-analytics' },
+    { key: 'conversations', label: t.nav.conversations, icon: '💬', to: '/admin/conversations' },
+    { key: 'photo-review', label: t.nav.photoReview, icon: '📸', to: '/admin/photo-review' },
+    { key: 'search-logs', label: t.nav.searchLogs, icon: '🔍', to: '/admin/search-logs' },
+    { key: 'prompts', label: t.nav.prompts, icon: '🤖', to: '/admin/prompts' },
   ]
 
   const navItems = userType === 'store' ? restaurantNavItems : platformOwnerNavItems
-  const pageTitle = title ?? (userType === 'store' ? 'レストラン管理システム' : 'プラットフォーム管理システム')
+  const pageTitle = title ?? (userType === 'store' ? t.layout.restaurantSystemTitle : t.layout.platformSystemTitle)
 
   const handleLogout = () => {
     // Clear all auth data using the API service
@@ -134,7 +136,7 @@ export default function AdminLayout({ children, title }: Props) {
           borderRadius: '50%',
           animation: 'spin 1s linear infinite'
         }} />
-        <div style={{ marginTop: '16px', color: '#94A3B8', fontSize: '14px' }}>読み込み中...</div>
+        <div style={{ marginTop: '16px', color: '#94A3B8', fontSize: '14px' }}>{t.layout.loading}</div>
         <style>{`
           @keyframes spin {
             to { transform: rotate(360deg); }
@@ -246,9 +248,9 @@ export default function AdminLayout({ children, title }: Props) {
           {/* User Type Badge */}
           <div className="user-type-badge">
             {userType === 'store' ? (
-              <>🍽️ {selectedStoreName || user?.restaurant_slug || 'レストランビュー'}</>
+              <>🍽️ {selectedStoreName || user?.restaurant_slug || t.layout.restaurantView}</>
             ) : (
-              <>👑 プラットフォームビュー</>
+              <>👑 {t.layout.platformView}</>
             )}
           </div>
 
@@ -276,7 +278,7 @@ export default function AdminLayout({ children, title }: Props) {
                   padding: '10px 20px', fontSize: '13px', color: '#64748B',
                   cursor: 'pointer', listStyle: 'none', display: 'flex', alignItems: 'center', gap: '8px'
                 }}>
-                  <span>&#9662;</span> その他
+                  <span>&#9662;</span> {t.layout.more}
                 </summary>
                 {restaurantAdvancedNavItems.map((item) => {
                   const isActive = pathname === item.to || (item.to !== '/admin' && pathname?.startsWith(item.to))
@@ -301,19 +303,29 @@ export default function AdminLayout({ children, title }: Props) {
           <div className="sidebar-account">
             {/* User Info */}
             <div id="sidebarUserInfo" className="user-info">
-              <div className="user-info-label">ログイン中</div>
+              <div className="user-info-label">{t.layout.loggedInAs}</div>
               <div id="sidebarUserEmail" className="user-info-email">{userEmail || 'user@example.com'}</div>
-              <div id="sidebarUserType" className="user-info-type">{userType === 'store' ? 'レストランオーナー' : 'プラットフォームオーナー'}</div>
+              <div id="sidebarUserType" className="user-info-type">{userType === 'store' ? t.layout.restaurantOwner : t.layout.platformOwner}</div>
             </div>
-            
+
             <div className="account-actions">
+              <button
+                type="button"
+                className="lang-toggle"
+                onClick={toggleLang}
+                aria-label={t.layout.langToggleAria}
+                title={t.layout.langToggleAria}
+              >
+                <span className={`lang-chip ${lang === 'ja' ? 'active' : ''}`}>JP</span>
+                <span className={`lang-chip ${lang === 'en' ? 'active' : ''}`}>EN</span>
+              </button>
               <button id="sidebarLogoutBtn" className="account-btn" onClick={handleLogout}>
                 <span className="icon">🚪</span>
-                <span className="label">ログアウト</span>
+                <span className="label">{t.layout.logout}</span>
               </button>
               <button id="sidebarSettingsBtn" className="account-btn" onClick={() => router.push('/admin/account')}>
                 <span className="icon">👤</span>
-                <span className="label">アカウント情報</span>
+                <span className="label">{t.layout.account}</span>
               </button>
             </div>
           </div>
@@ -504,6 +516,43 @@ export default function AdminLayout({ children, title }: Props) {
           display: flex;
           flex-direction: column;
           gap: 8px;
+        }
+
+        .lang-toggle {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 4px;
+          padding: 4px;
+          background: var(--bg-input);
+          border: 1px solid var(--border);
+          border-radius: 8px;
+          cursor: pointer;
+        }
+
+        .lang-chip {
+          font-size: 12px;
+          font-weight: 600;
+          padding: 4px 10px;
+          border-radius: 6px;
+          color: var(--muted);
+          letter-spacing: 0.04em;
+          transition: background 0.15s ease, color 0.15s ease;
+        }
+
+        .lang-chip.active {
+          background: rgba(59, 130, 246, 0.18);
+          color: var(--primary);
+        }
+
+        @media (max-width: 1024px) {
+          .lang-toggle {
+            padding: 2px;
+          }
+          .lang-chip {
+            font-size: 11px;
+            padding: 4px 6px;
+          }
         }
 
         .account-btn {

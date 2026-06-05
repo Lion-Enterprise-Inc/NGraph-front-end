@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import AdminLayout from '../../../components/admin/AdminLayout'
 import { useToast } from '../../../components/admin/Toast'
 import { apiClient, TokenService } from '../../../services/api'
+import { useAdminLang } from '../../../hooks/useAdminLang'
 
 type ApiUser = {
   uid: string
@@ -24,6 +25,7 @@ type User = {
 }
 
 export default function UsersPage() {
+  const { lang, t } = useAdminLang()
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -46,7 +48,7 @@ export default function UsersPage() {
       setLoading(true)
       const token = TokenService.getAccessToken()
       if (!token) {
-        setError('認証が必要です')
+        setError(t.users.authRequired)
         return
       }
 
@@ -58,14 +60,14 @@ export default function UsersPage() {
         email: apiUser.email,
         role: apiUser.role,
         status: apiUser.is_active ? 'active' : 'inactive',
-        createdAt: new Date(apiUser.created_at).toLocaleDateString('ja-JP'),
-        lastLogin: apiUser.updated_at ? new Date(apiUser.updated_at).toLocaleString('ja-JP') : '-'
+        createdAt: new Date(apiUser.created_at).toLocaleDateString(lang === 'ja' ? 'ja-JP' : 'en-US'),
+        lastLogin: apiUser.updated_at ? new Date(apiUser.updated_at).toLocaleString(lang === 'ja' ? 'ja-JP' : 'en-US') : '-'
       }))
       
       setUsers(formattedUsers)
     } catch (err) {
       console.error('Error fetching users:', err)
-      setError('ユーザーの取得に失敗しました')
+      setError(t.users.fetchFailed)
     } finally {
       setLoading(false)
     }
@@ -74,6 +76,7 @@ export default function UsersPage() {
   // Fetch users from API
   useEffect(() => {
     fetchUsers()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const filteredUsers = users.filter(user => {
@@ -90,15 +93,15 @@ export default function UsersPage() {
     const errors: { email?: string; password?: string } = {}
 
     if (!createUser.email.trim()) {
-      errors.email = 'メールアドレスを入力してください'
+      errors.email = t.users.validateEmailRequired
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(createUser.email)) {
-      errors.email = '有効なメールアドレスを入力してください'
+      errors.email = t.users.validateEmailFormat
     }
 
     if (!createUser.password) {
-      errors.password = 'パスワードを入力してください'
+      errors.password = t.users.validatePasswordRequired
     } else if (createUser.password.length < 8) {
-      errors.password = 'パスワードは8文字以上で入力してください'
+      errors.password = t.users.validatePasswordLength
     }
 
     setCreateErrors(errors)
@@ -117,7 +120,7 @@ export default function UsersPage() {
       }) as { status_code: number; message: string; result: { email: string; role: string; is_validated: boolean } }
 
       if (response.status_code === 201) {
-        toast('success', `${response.message} ユーザー: ${response.result.email} 役割: ${response.result.role}`)
+        toast('success', t.users.createSuccess(response.message, response.result.email, response.result.role))
         setShowCreateModal(false)
         resetCreateForm()
         // Refresh user list
@@ -125,7 +128,7 @@ export default function UsersPage() {
       }
     } catch (error) {
       console.error('Failed to create user:', error)
-      toast('error', `ユーザー作成に失敗しました: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      toast('error', t.users.createFailed(error instanceof Error ? error.message : 'Unknown error'))
     } finally {
       setIsSubmitting(false)
     }
@@ -143,9 +146,9 @@ export default function UsersPage() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'active':
-        return <span style={{ background: 'rgba(16,185,129,0.1)', color: '#2E7D32', padding: '4px 8px', borderRadius: '12px', fontSize: '12px', fontWeight: 600 }}>✅ 有効</span>
+        return <span style={{ background: 'rgba(16,185,129,0.1)', color: '#2E7D32', padding: '4px 8px', borderRadius: '12px', fontSize: '12px', fontWeight: 600 }}>{t.users.statusActive}</span>
       case 'inactive':
-        return <span style={{ background: '#FFEBEE', color: '#C62828', padding: '4px 8px', borderRadius: '12px', fontSize: '12px', fontWeight: 600 }}>⛔ 無効</span>
+        return <span style={{ background: '#FFEBEE', color: '#C62828', padding: '4px 8px', borderRadius: '12px', fontSize: '12px', fontWeight: 600 }}>{t.users.statusInactive}</span>
       default:
         return null
     }
@@ -154,15 +157,15 @@ export default function UsersPage() {
   const getRoleBadge = (role: string) => {
     switch (role) {
       case 'platform_owner':
-        return <span style={{ background: 'rgba(59,130,246,0.1)', color: '#1565C0', padding: '4px 8px', borderRadius: '12px', fontSize: '12px', fontWeight: 600 }}>👑 プラットフォームオーナー</span>
+        return <span style={{ background: 'rgba(59,130,246,0.1)', color: '#1565C0', padding: '4px 8px', borderRadius: '12px', fontSize: '12px', fontWeight: 600 }}>{t.users.rolePlatformOwner}</span>
       case 'restaurant_owner':
-        return <span style={{ background: 'rgba(16,185,129,0.1)', color: '#2E7D32', padding: '4px 8px', borderRadius: '12px', fontSize: '12px', fontWeight: 600 }}>🍽️ レストランオーナー</span>
+        return <span style={{ background: 'rgba(16,185,129,0.1)', color: '#2E7D32', padding: '4px 8px', borderRadius: '12px', fontSize: '12px', fontWeight: 600 }}>{t.users.roleRestaurantOwner}</span>
       case 'superadmin':
-        return <span style={{ background: 'rgba(245,158,11,0.1)', color: '#E65100', padding: '4px 8px', borderRadius: '12px', fontSize: '12px', fontWeight: 600 }}>👑 スーパー管理者</span>
+        return <span style={{ background: 'rgba(245,158,11,0.1)', color: '#E65100', padding: '4px 8px', borderRadius: '12px', fontSize: '12px', fontWeight: 600 }}>{t.users.roleSuperadmin}</span>
       case 'consumer':
-        return <span style={{ background: 'rgba(139,92,246,0.1)', color: '#7B1FA2', padding: '4px 8px', borderRadius: '12px', fontSize: '12px', fontWeight: 600 }}>👤 コンシューマー</span>
+        return <span style={{ background: 'rgba(139,92,246,0.1)', color: '#7B1FA2', padding: '4px 8px', borderRadius: '12px', fontSize: '12px', fontWeight: 600 }}>{t.users.roleConsumer}</span>
       default:
-        return <span style={{ background: '#F5F5F5', color: '#94A3B8', padding: '4px 8px', borderRadius: '12px', fontSize: '12px', fontWeight: 600 }}>❓ 不明</span>
+        return <span style={{ background: '#F5F5F5', color: '#94A3B8', padding: '4px 8px', borderRadius: '12px', fontSize: '12px', fontWeight: 600 }}>{t.users.roleUnknown}</span>
     }
   }
 
@@ -175,10 +178,10 @@ export default function UsersPage() {
 
   if (loading) {
     return (
-      <AdminLayout title="ユーザー管理">
+      <AdminLayout title={t.users.title}>
         <div className="card" style={{ width: '100%', maxWidth: 'none', textAlign: 'center', padding: '60px' }}>
-          <div style={{ fontSize: '18px', marginBottom: '16px' }}>🔄 読み込み中...</div>
-          <div style={{ color: '#94A3B8' }}>ユーザー情報を取得しています</div>
+          <div style={{ fontSize: '18px', marginBottom: '16px' }}>{t.users.loading}</div>
+          <div style={{ color: '#94A3B8' }}>{t.users.loadingDetail}</div>
         </div>
       </AdminLayout>
     )
@@ -186,15 +189,15 @@ export default function UsersPage() {
 
   if (error) {
     return (
-      <AdminLayout title="ユーザー管理">
+      <AdminLayout title={t.users.title}>
         <div className="card" style={{ width: '100%', maxWidth: 'none', textAlign: 'center', padding: '60px' }}>
-          <div style={{ fontSize: '18px', marginBottom: '16px', color: '#dc2626' }}>❌ エラー</div>
+          <div style={{ fontSize: '18px', marginBottom: '16px', color: '#dc2626' }}>{t.users.error}</div>
           <div style={{ color: '#94A3B8', marginBottom: '20px' }}>{error}</div>
-          <button 
-            className="btn btn-primary" 
+          <button
+            className="btn btn-primary"
             onClick={() => window.location.reload()}
           >
-            再読み込み
+            {t.users.reload}
           </button>
         </div>
       </AdminLayout>
@@ -202,20 +205,20 @@ export default function UsersPage() {
   }
 
   return (
-    <AdminLayout title="ユーザー管理">
+    <AdminLayout title={t.users.title}>
       <div className="card" style={{ width: '100%', maxWidth: 'none' }}>
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
           <div>
-            <h2 className="card-title" style={{ margin: 0 }}>👥 ユーザー管理</h2>
-            <p style={{ margin: '8px 0 0', color: '#94A3B8', fontSize: '14px' }}>プラットフォームの全ユーザーを管理します</p>
+            <h2 className="card-title" style={{ margin: 0 }}>{t.users.titleHeader}</h2>
+            <p style={{ margin: '8px 0 0', color: '#94A3B8', fontSize: '14px' }}>{t.users.subtitle}</p>
           </div>
-          <button 
-            className="btn btn-primary" 
+          <button
+            className="btn btn-primary"
             onClick={() => setShowCreateModal(true)}
             style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
           >
-            ➕ 新規ユーザー作成
+            {t.users.create}
           </button>
         </div>
 
@@ -223,27 +226,27 @@ export default function UsersPage() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '16px', marginBottom: '20px' }}>
           <div style={{ background: '#1E293B', padding: '16px', borderRadius: '12px', textAlign: 'center' }}>
             <div style={{ fontSize: '28px', fontWeight: 700, color: '#667eea' }}>{users.length}</div>
-            <div style={{ fontSize: '13px', color: '#94A3B8' }}>総ユーザー数</div>
+            <div style={{ fontSize: '13px', color: '#94A3B8' }}>{t.users.statTotal}</div>
           </div>
           <div style={{ background: 'rgba(59,130,246,0.1)', padding: '16px', borderRadius: '12px', textAlign: 'center' }}>
             <div style={{ fontSize: '28px', fontWeight: 700, color: '#1565C0' }}>{platformOwnerCount}</div>
-            <div style={{ fontSize: '13px', color: '#94A3B8' }}>プラットフォームオーナー</div>
+            <div style={{ fontSize: '13px', color: '#94A3B8' }}>{t.users.statPlatformOwner}</div>
           </div>
           <div style={{ background: 'rgba(16,185,129,0.1)', padding: '16px', borderRadius: '12px', textAlign: 'center' }}>
             <div style={{ fontSize: '28px', fontWeight: 700, color: '#2E7D32' }}>{restaurantOwnerCount}</div>
-            <div style={{ fontSize: '13px', color: '#94A3B8' }}>レストランオーナー</div>
+            <div style={{ fontSize: '13px', color: '#94A3B8' }}>{t.users.statRestaurantOwner}</div>
           </div>
           <div style={{ background: 'rgba(139,92,246,0.1)', padding: '16px', borderRadius: '12px', textAlign: 'center' }}>
             <div style={{ fontSize: '28px', fontWeight: 700, color: '#7B1FA2' }}>{consumerCount}</div>
-            <div style={{ fontSize: '13px', color: '#94A3B8' }}>コンシューマー</div>
+            <div style={{ fontSize: '13px', color: '#94A3B8' }}>{t.users.statConsumer}</div>
           </div>
           <div style={{ background: 'rgba(245,158,11,0.1)', padding: '16px', borderRadius: '12px', textAlign: 'center' }}>
             <div style={{ fontSize: '28px', fontWeight: 700, color: '#E65100' }}>{superadminCount}</div>
-            <div style={{ fontSize: '13px', color: '#94A3B8' }}>スーパー管理者</div>
+            <div style={{ fontSize: '13px', color: '#94A3B8' }}>{t.users.statSuperadmin}</div>
           </div>
           <div style={{ background: 'rgba(16,185,129,0.1)', padding: '16px', borderRadius: '12px', textAlign: 'center' }}>
             <div style={{ fontSize: '28px', fontWeight: 700, color: '#2E7D32' }}>{activeCount}</div>
-            <div style={{ fontSize: '13px', color: '#94A3B8' }}>有効</div>
+            <div style={{ fontSize: '13px', color: '#94A3B8' }}>{t.users.statActive}</div>
           </div>
         </div>
 
@@ -252,7 +255,7 @@ export default function UsersPage() {
           <input
             type="text"
             className="form-input"
-            placeholder="🔍 メールアドレスで検索..."
+            placeholder={t.users.searchPlaceholder}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             style={{ flex: 1, minWidth: '250px' }}
@@ -263,11 +266,11 @@ export default function UsersPage() {
             onChange={(e) => setFilter(e.target.value as typeof filter)}
             style={{ width: '180px' }}
           >
-            <option value="all">全ての役割</option>
-            <option value="platform_owner">プラットフォームオーナー</option>
-            <option value="restaurant_owner">レストランオーナー</option>
-            <option value="consumer">コンシューマー</option>
-            <option value="superadmin">スーパー管理者</option>
+            <option value="all">{t.users.filterAllRoles}</option>
+            <option value="platform_owner">{t.users.statPlatformOwner}</option>
+            <option value="restaurant_owner">{t.users.statRestaurantOwner}</option>
+            <option value="consumer">{t.users.statConsumer}</option>
+            <option value="superadmin">{t.users.statSuperadmin}</option>
           </select>
           <select
             className="form-input"
@@ -275,9 +278,9 @@ export default function UsersPage() {
             onChange={(e) => setStatusFilter(e.target.value as typeof statusFilter)}
             style={{ width: '150px' }}
           >
-            <option value="all">全てのステータス</option>
-            <option value="active">有効</option>
-            <option value="inactive">無効</option>
+            <option value="all">{t.users.filterAllStatuses}</option>
+            <option value="active">{t.users.statActive}</option>
+            <option value="inactive">{t.dashboard.statusInactive}</option>
           </select>
         </div>
 
@@ -286,12 +289,12 @@ export default function UsersPage() {
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ background: '#1E293B' }}>
-                <th style={{ padding: '12px', textAlign: 'left', borderBottom: '2px solid #1E293B', fontSize: '13px', fontWeight: 600 }}>ユーザー情報</th>
-                <th style={{ padding: '12px', textAlign: 'left', borderBottom: '2px solid #1E293B', fontSize: '13px', fontWeight: 600 }}>役割</th>
-                <th style={{ padding: '12px', textAlign: 'center', borderBottom: '2px solid #1E293B', fontSize: '13px', fontWeight: 600 }}>ステータス</th>
-                <th style={{ padding: '12px', textAlign: 'left', borderBottom: '2px solid #1E293B', fontSize: '13px', fontWeight: 600 }}>作成日</th>
-                <th style={{ padding: '12px', textAlign: 'left', borderBottom: '2px solid #1E293B', fontSize: '13px', fontWeight: 600 }}>最終更新</th>
-                <th style={{ padding: '12px', textAlign: 'center', borderBottom: '2px solid #1E293B', fontSize: '13px', fontWeight: 600 }}>操作</th>
+                <th style={{ padding: '12px', textAlign: 'left', borderBottom: '2px solid #1E293B', fontSize: '13px', fontWeight: 600 }}>{t.users.colUserInfo}</th>
+                <th style={{ padding: '12px', textAlign: 'left', borderBottom: '2px solid #1E293B', fontSize: '13px', fontWeight: 600 }}>{t.users.colRole}</th>
+                <th style={{ padding: '12px', textAlign: 'center', borderBottom: '2px solid #1E293B', fontSize: '13px', fontWeight: 600 }}>{t.users.colStatus}</th>
+                <th style={{ padding: '12px', textAlign: 'left', borderBottom: '2px solid #1E293B', fontSize: '13px', fontWeight: 600 }}>{t.users.colCreatedAt}</th>
+                <th style={{ padding: '12px', textAlign: 'left', borderBottom: '2px solid #1E293B', fontSize: '13px', fontWeight: 600 }}>{t.users.colLastUpdated}</th>
+                <th style={{ padding: '12px', textAlign: 'center', borderBottom: '2px solid #1E293B', fontSize: '13px', fontWeight: 600 }}>{t.users.colActions}</th>
               </tr>
             </thead>
             <tbody>
@@ -319,36 +322,36 @@ export default function UsersPage() {
                         <button
                           className="btn btn-secondary btn-small"
                           disabled
-                          title="無効化（準備中）"
+                          title={t.users.actionDisable}
                           style={{ opacity: 0.5 }}
                         >
-                          ⛔ (準備中)
+                          ⛔ {t.users.pending}
                         </button>
                       ) : (
                         <button
                           className="btn btn-primary btn-small"
                           disabled
-                          title="有効化（準備中）"
+                          title={t.users.actionEnable}
                           style={{ opacity: 0.5 }}
                         >
-                          ✅ (準備中)
+                          ✅ {t.users.pending}
                         </button>
                       )}
                       <button
                         className="btn btn-secondary btn-small"
                         disabled
-                        title="パスワードリセット（準備中）"
+                        title={t.users.actionResetPassword}
                         style={{ opacity: 0.5 }}
                       >
-                        🔑 (準備中)
+                        🔑 {t.users.pending}
                       </button>
                       <button
                         className="btn btn-secondary btn-small"
                         disabled
-                        title="削除（準備中）"
+                        title={t.users.actionDelete}
                         style={{ opacity: 0.5, color: '#C62828' }}
                       >
-                        🗑️ (準備中)
+                        🗑️ {t.users.pending}
                       </button>
                     </div>
                   </td>
@@ -360,7 +363,7 @@ export default function UsersPage() {
 
         {filteredUsers.length === 0 && (
           <div style={{ textAlign: 'center', padding: '40px', color: '#94A3B8' }}>
-            該当するユーザーが見つかりません
+            {t.users.emptyFiltered}
           </div>
         )}
       </div>
@@ -396,7 +399,7 @@ export default function UsersPage() {
             }}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-              <h2 style={{ margin: 0, fontSize: '20px', fontWeight: 600, color: '#F8FAFC' }}>➕ 新規ユーザー作成</h2>
+              <h2 style={{ margin: 0, fontSize: '20px', fontWeight: 600, color: '#F8FAFC' }}>{t.users.createModalTitle}</h2>
               <button 
                 onClick={() => setShowCreateModal(false)}
                 style={{ background: 'none', border: 'none', fontSize: '24px', cursor: 'pointer', color: '#94A3B8' }}
@@ -407,7 +410,7 @@ export default function UsersPage() {
 
             <div style={{ marginBottom: '20px' }}>
               <div className="form-group">
-                <label className="form-label">メールアドレス *</label>
+                <label className="form-label">{t.users.fieldEmail}</label>
                 <input
                   type="email"
                   className="form-input"
@@ -420,30 +423,30 @@ export default function UsersPage() {
               </div>
 
               <div className="form-group">
-                <label className="form-label">パスワード *</label>
+                <label className="form-label">{t.users.fieldPassword}</label>
                 <input
                   type="password"
                   className="form-input"
                   value={createUser.password}
                   onChange={(e) => setCreateUser({...createUser, password: e.target.value})}
-                  placeholder="8文字以上のパスワード"
+                  placeholder={t.users.passwordPlaceholder}
                   disabled={isSubmitting}
                 />
                 {createErrors.password && <div style={{ color: '#dc2626', fontSize: '12px', marginTop: '4px' }}>{createErrors.password}</div>}
               </div>
 
               <div className="form-group">
-                <label className="form-label">役割 *</label>
+                <label className="form-label">{t.users.fieldRole}</label>
                 <select
                   className="form-input"
                   value={createUser.role}
                   onChange={(e) => setCreateUser({...createUser, role: e.target.value as typeof createUser.role})}
                   disabled={isSubmitting}
                 >
-                  <option value="consumer">👤 コンシューマー</option>
-                  <option value="restaurant_owner">🍽️ レストランオーナー</option>
-                  <option value="platform_owner">👑 プラットフォームオーナー</option>
-                  <option value="superadmin">👑 スーパー管理者</option>
+                  <option value="consumer">{t.users.roleConsumer}</option>
+                  <option value="restaurant_owner">{t.users.roleRestaurantOwner}</option>
+                  <option value="platform_owner">{t.users.rolePlatformOwner}</option>
+                  <option value="superadmin">{t.users.roleSuperadmin}</option>
                 </select>
               </div>
             </div>
@@ -454,15 +457,15 @@ export default function UsersPage() {
                 onClick={() => setShowCreateModal(false)}
                 disabled={isSubmitting}
               >
-                キャンセル
+                {t.users.cancel}
               </button>
-              <button 
-                className="btn btn-primary" 
+              <button
+                className="btn btn-primary"
                 onClick={handleCreateUser}
                 disabled={isSubmitting}
                 style={{ opacity: isSubmitting ? 0.7 : 1 }}
               >
-                {isSubmitting ? '⏳ 作成中...' : '✅ 作成する'}
+                {isSubmitting ? t.users.creating : t.users.create2}
               </button>
             </div>
           </div>

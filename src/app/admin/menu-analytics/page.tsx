@@ -3,24 +3,14 @@
 import React, { useEffect, useState, useMemo } from 'react'
 import AdminLayout from '../../../components/admin/AdminLayout'
 import { MenuAnalyticsApi, MenuAnalyticsData, TokenService, RestaurantApi, Restaurant } from '../../../services/api'
+import { useAdminLang } from '../../../hooks/useAdminLang'
+import type { AdminCopy } from '../../../i18n/adminCopy'
 
 const RANK_COLORS: Record<string, string> = {
   S: '#EF4444',
   A: '#F59E0B',
   B: '#4A9EFF',
   C: '#10B981',
-}
-const RANK_LABELS: Record<string, string> = {
-  S: '必ず確認',
-  A: '要確認',
-  B: '確認推奨',
-  C: '確認不要',
-}
-const RANK_HINTS: Record<string, string> = {
-  S: 'アレルゲン未確認・原材料不明 → 店主確認で降格',
-  A: 'AI推定のみ・一部未確認 → 原材料確認で降格',
-  B: '大部分確認済み → 提供情報追加でCへ',
-  C: '全データ確認済み',
 }
 
 const PALETTE = [
@@ -34,56 +24,51 @@ const MONO = "'SF Mono', 'Cascadia Code', 'Consolas', 'Monaco', monospace"
 // レーダーに表示する味覚（分かりやすいものだけ）
 const TASTE_DISPLAY = ['甘味', '酸味', '塩味', '苦味', '旨味', '辛味', 'コク', 'さっぱり', 'まろやか', '香ばしい']
 
-function topNWithOther(items: Array<{ label: string; value: number; color?: string }>, n: number = 8) {
+function topNWithOther(items: Array<{ label: string; value: number; color?: string }>, otherLabel: string, n: number = 8) {
   if (items.length <= n + 1) return items.map((d, i) => ({ ...d, color: d.color || PALETTE[i % PALETTE.length] }))
   const top = items.slice(0, n)
   const otherSum = items.slice(n).reduce((s, d) => s + d.value, 0)
   const result = top.map((d, i) => ({ ...d, color: d.color || PALETTE[i % PALETTE.length] }))
-  if (otherSum > 0) result.push({ label: 'その他', value: otherSum, color: '#64748B' })
+  if (otherSum > 0) result.push({ label: otherLabel, value: otherSum, color: '#64748B' })
   return result
 }
 
-function generateStoreCharacter(data: MenuAnalyticsData): string[] {
+function generateStoreCharacter(data: MenuAnalyticsData, t: AdminCopy): string[] {
   const lines: string[] = []
 
-  // 素材別の特徴
   const protein = (data.protein_distribution || []).sort((a, b) => b.count - a.count)
   const topProtein = protein.filter(p => p.count > 0).slice(0, 2)
   if (topProtein.length > 0) {
     const names = topProtein.map(p => p.label.replace('料理', '')).join('・')
-    lines.push(`${names}を中心とした品揃え`)
+    lines.push(t.menuAnalytics.charProteinSuffix(names))
   }
 
-  // ドリンクの特徴
   const drinks = (data.drink_breakdown || []).filter(d => d.count > 0).sort((a, b) => b.count - a.count)
   if (drinks.length > 0 && drinks[0].label !== 'ソフトドリンク') {
-    lines.push(`${drinks[0].label}の品揃えが充実`)
+    lines.push(t.menuAnalytics.charDrinkSuffix(drinks[0].label))
   }
 
-  // 味覚の特徴
   const tastes = data.taste_profile_distribution.filter(d => d.count > 0).sort((a, b) => b.count - a.count)
   if (tastes.length >= 2) {
-    const topTastes = tastes.slice(0, 3).map(t => t.name_jp).join('・')
-    lines.push(`味の傾向: ${topTastes}`)
+    const topTastes = tastes.slice(0, 3).map(d => d.name_jp).join('・')
+    lines.push(t.menuAnalytics.charTasteSuffix(topTastes))
   }
 
-  // 価格帯からターゲット層
   const avgPrice = data.avg_price
   if (avgPrice <= 1000) {
-    lines.push('手頃な価格帯 — 普段使いやファミリーに最適')
+    lines.push(t.menuAnalytics.charPriceLow)
   } else if (avgPrice <= 2000) {
-    lines.push('中価格帯 — 旅行者や郷土料理を楽しむ層に最適')
+    lines.push(t.menuAnalytics.charPriceMid)
   } else if (avgPrice <= 3500) {
-    lines.push('やや高価格帯 — 記念日や接待利用にも')
+    lines.push(t.menuAnalytics.charPriceHigh)
   } else {
-    lines.push('高価格帯 — 本格的な食体験を求める層向け')
+    lines.push(t.menuAnalytics.charPriceVeryHigh)
   }
 
-  // フード構成の特徴
   const composition = (data.menu_composition || []).filter(d => d.count > 0).sort((a, b) => b.count - a.count)
   if (composition.length >= 2) {
     const topCats = composition.slice(0, 3).map(c => c.label).join('・')
-    lines.push(`フードの中心: ${topCats}`)
+    lines.push(t.menuAnalytics.charFoodCenterSuffix(topCats))
   }
 
   return lines
@@ -117,10 +102,10 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
   )
 }
 
-function DonutChart({ data: rawData, size = 200, centerLabel }: { data: Array<{ label: string; value: number; color: string }>; size?: number; centerLabel?: string }) {
+function DonutChart({ data: rawData, size = 200, centerLabel, noDataLabel, defaultCenterLabel }: { data: Array<{ label: string; value: number; color: string }>; size?: number; centerLabel?: string; noDataLabel: string; defaultCenterLabel: string }) {
   const data = [...rawData].sort((a, b) => b.value - a.value)
   const total = data.reduce((s, d) => s + d.value, 0)
-  if (total === 0) return <div style={{ color: 'var(--muted)', fontSize: 13 }}>データなし</div>
+  if (total === 0) return <div style={{ color: 'var(--muted)', fontSize: 13 }}>{noDataLabel}</div>
 
   const thickness = size * 0.18
   const radius = (size - thickness) / 2
@@ -169,7 +154,7 @@ function DonutChart({ data: rawData, size = 200, centerLabel }: { data: Array<{ 
           flexDirection: 'column',
         }}>
           <div style={{ fontSize: 26, fontWeight: 800, color: 'var(--text)', fontFamily: MONO }}>{total}</div>
-          <div style={{ fontSize: 10, color: 'var(--muted)', marginTop: 2 }}>{centerLabel || '品目'}</div>
+          <div style={{ fontSize: 10, color: 'var(--muted)', marginTop: 2 }}>{centerLabel || defaultCenterLabel}</div>
         </div>
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8, minWidth: 140 }}>
@@ -208,7 +193,7 @@ function DonutChart({ data: rawData, size = 200, centerLabel }: { data: Array<{ 
   )
 }
 
-function HorizontalBarChart({ data }: { data: Array<{ label: string; value: number; color: string }> }) {
+function HorizontalBarChart({ data, unitLabel }: { data: Array<{ label: string; value: number; color: string }>; unitLabel: string }) {
   const maxVal = Math.max(...data.map(d => d.value), 1)
   const total = data.reduce((s, d) => s + d.value, 0)
 
@@ -222,7 +207,7 @@ function HorizontalBarChart({ data }: { data: Array<{ label: string; value: numb
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
               <span style={{ fontSize: 13, color: 'var(--text-body)' }}>{d.label}</span>
               <span style={{ fontSize: 12, color: 'var(--muted)', fontFamily: MONO, fontVariantNumeric: 'tabular-nums' }}>
-                {d.value}品 ({pct}%)
+                {d.value}{unitLabel} ({pct}%)
               </span>
             </div>
             <div style={{
@@ -246,8 +231,8 @@ function HorizontalBarChart({ data }: { data: Array<{ label: string; value: numb
   )
 }
 
-function RadarChart({ data, size = 240 }: { data: Array<{ label: string; value: number }>; size?: number }) {
-  if (!data.length) return <div style={{ color: 'var(--muted)', fontSize: 13 }}>データなし</div>
+function RadarChart({ data, size = 240, noDataLabel }: { data: Array<{ label: string; value: number }>; size?: number; noDataLabel: string }) {
+  if (!data.length) return <div style={{ color: 'var(--muted)', fontSize: 13 }}>{noDataLabel}</div>
 
   const maxVal = Math.max(...data.map(d => d.value), 1)
   const cx = size / 2
@@ -326,6 +311,19 @@ const cardStyle: React.CSSProperties = {
 }
 
 export default function MenuAnalyticsPage() {
+  const { t } = useAdminLang()
+  const RANK_LABELS: Record<string, string> = {
+    S: t.menuAnalytics.rankS,
+    A: t.menuAnalytics.rankA,
+    B: t.menuAnalytics.rankB,
+    C: t.menuAnalytics.rankC,
+  }
+  const RANK_HINTS: Record<string, string> = {
+    S: t.menuAnalytics.rankHintS,
+    A: t.menuAnalytics.rankHintA,
+    B: t.menuAnalytics.rankHintB,
+    C: t.menuAnalytics.rankHintC,
+  }
   const [data, setData] = useState<MenuAnalyticsData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -354,7 +352,7 @@ export default function MenuAnalyticsPage() {
         const res = await MenuAnalyticsApi.get(selectedUid || undefined)
         setData(res.result)
       } catch (e: any) {
-        setError(e.message || 'データの取得に失敗しました')
+        setError(e.message || t.menuAnalytics.fetchFailed)
       } finally {
         setLoading(false)
       }
@@ -362,23 +360,25 @@ export default function MenuAnalyticsPage() {
     fetchData()
   }, [selectedUid, isAdmin, restaurants.length])
 
-  const storeCharacter = useMemo(() => data ? generateStoreCharacter(data) : [], [data])
+  const storeCharacter = useMemo(() => data ? generateStoreCharacter(data, t) : [], [data, t])
 
   if (loading) {
     return (
-      <AdminLayout title="メニュー分析">
-        <div style={{ textAlign: 'center', padding: 60, color: 'var(--muted)' }}>読み込み中...</div>
+      <AdminLayout title={t.menuAnalytics.title}>
+        <div style={{ textAlign: 'center', padding: 60, color: 'var(--muted)' }}>{t.layout.loading}</div>
       </AdminLayout>
     )
   }
 
   if (error || !data) {
     return (
-      <AdminLayout title="メニュー分析">
-        <div style={{ textAlign: 'center', padding: 60, color: 'var(--error)' }}>{error || 'データなし'}</div>
+      <AdminLayout title={t.menuAnalytics.title}>
+        <div style={{ textAlign: 'center', padding: 60, color: 'var(--error)' }}>{error || t.menuAnalytics.noData}</div>
       </AdminLayout>
     )
   }
+
+  const otherLabel = t.menuAnalytics.other
 
   const rankData = ['S', 'A', 'B', 'C'].map(r => ({
     label: `${r} — ${RANK_LABELS[r]}`,
@@ -387,31 +387,36 @@ export default function MenuAnalyticsPage() {
   }))
 
   const categoryData = topNWithOther(
-    data.category_distribution.map(d => ({ label: d.label, value: d.count }))
+    data.category_distribution.map(d => ({ label: d.label, value: d.count })),
+    otherLabel,
   )
 
   const cookingData = topNWithOther(
-    data.cooking_method_distribution.map(d => ({ label: d.name_jp, value: d.count }))
+    data.cooking_method_distribution.map(d => ({ label: d.name_jp, value: d.count })),
+    otherLabel,
   )
 
   const priceData = data.price_ranges.map((d, i) => ({
-    label: `${d.range}円`,
+    label: t.menuAnalytics.yenSuffix(d.range),
     value: d.count,
     color: PALETTE[i % PALETTE.length],
   }))
 
   const ingredientData = topNWithOther(
     data.top_ingredients.slice(0, 15).map(d => ({ label: d.name, value: d.count })),
-    8
+    otherLabel,
+    8,
   )
 
   const allergenDonutData = topNWithOther(
     data.allergen_coverage.top_allergens.map(d => ({ label: d.name_jp, value: d.count })),
-    10
+    otherLabel,
+    10,
   )
 
   const calorieData = topNWithOther(
-    data.calorie_distribution.map(d => ({ label: d.name_jp, value: d.count }))
+    data.calorie_distribution.map(d => ({ label: d.name_jp, value: d.count })),
+    otherLabel,
   )
 
   // 味覚プロファイル: 分かりやすいものだけ＆データがあるものに絞る
@@ -419,28 +424,31 @@ export default function MenuAnalyticsPage() {
     .filter(d => d.count > 0 && TASTE_DISPLAY.includes(d.name_jp))
 
   const proteinData = topNWithOther(
-    (data.protein_distribution || []).filter(d => d.count > 0).map(d => ({ label: d.label, value: d.count }))
+    (data.protein_distribution || []).filter(d => d.count > 0).map(d => ({ label: d.label, value: d.count })),
+    otherLabel,
   )
 
   const compositionData = topNWithOther(
-    (data.menu_composition || []).filter(d => d.count > 0).map(d => ({ label: d.label, value: d.count }))
+    (data.menu_composition || []).filter(d => d.count > 0).map(d => ({ label: d.label, value: d.count })),
+    otherLabel,
   )
 
   const drinkDonutData = topNWithOther(
-    (data.drink_breakdown || []).filter(d => d.count > 0).map(d => ({ label: d.label, value: d.count }))
+    (data.drink_breakdown || []).filter(d => d.count > 0).map(d => ({ label: d.label, value: d.count })),
+    otherLabel,
   )
 
   const totalAllergenMenus = data.allergen_coverage.with_allergens + data.allergen_coverage.without_allergens
   const allergenPct = totalAllergenMenus > 0 ? Math.round((data.allergen_coverage.with_allergens / totalAllergenMenus) * 100) : 0
 
   return (
-    <AdminLayout title="メニュー分析">
+    <AdminLayout title={t.menuAnalytics.title}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
 
         {/* Restaurant Selector (admin only) */}
         {isAdmin && restaurants.length > 0 && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <label style={{ fontSize: 13, color: 'var(--muted)', flexShrink: 0 }}>店舗:</label>
+            <label style={{ fontSize: 13, color: 'var(--muted)', flexShrink: 0 }}>{t.menuAnalytics.storeLabel}</label>
             <select
               value={selectedUid}
               onChange={e => setSelectedUid(e.target.value)}
@@ -464,10 +472,10 @@ export default function MenuAnalyticsPage() {
 
         {/* Summary Cards */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 16 }}>
-          <SummaryCard label="総メニュー数" value={data.total_menus} />
-          <SummaryCard label="提供中" value={data.active_menus} />
-          <SummaryCard label="平均価格" value={`¥${data.avg_price.toLocaleString()}`} />
-          <SummaryCard label="平均完成度" value={`${data.avg_confidence}%`} />
+          <SummaryCard label={t.menuAnalytics.summaryTotal} value={data.total_menus} />
+          <SummaryCard label={t.menuAnalytics.summaryActive} value={data.active_menus} />
+          <SummaryCard label={t.menuAnalytics.summaryAvgPrice} value={`¥${data.avg_price.toLocaleString()}`} />
+          <SummaryCard label={t.menuAnalytics.summaryConfidence} value={`${data.avg_confidence}%`} />
         </div>
 
         {/* ── 店舗の特徴 ── */}
@@ -477,7 +485,7 @@ export default function MenuAnalyticsPage() {
             background: 'linear-gradient(135deg, var(--bg-surface), rgba(74,158,255,0.06))',
             borderColor: 'rgba(74,158,255,0.2)',
           }}>
-            <SectionTitle>この店舗の特徴</SectionTitle>
+            <SectionTitle>{t.menuAnalytics.storeCharacter}</SectionTitle>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {storeCharacter.map((line, i) => (
                 <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -492,19 +500,19 @@ export default function MenuAnalyticsPage() {
         {/* ── メニュー構成 ── */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 20 }}>
           <div style={cardStyle}>
-            <SectionTitle>カテゴリ構成</SectionTitle>
-            <DonutChart data={categoryData} />
+            <SectionTitle>{t.menuAnalytics.categoryComposition}</SectionTitle>
+            <DonutChart data={categoryData} noDataLabel={t.menuAnalytics.noData} defaultCenterLabel={t.menuAnalytics.centerItems} />
           </div>
           <div style={cardStyle}>
-            <SectionTitle>フード構成</SectionTitle>
-            <DonutChart data={compositionData} centerLabel="フード" />
+            <SectionTitle>{t.menuAnalytics.foodComposition}</SectionTitle>
+            <DonutChart data={compositionData} centerLabel={t.menuAnalytics.centerFood} noDataLabel={t.menuAnalytics.noData} defaultCenterLabel={t.menuAnalytics.centerItems} />
           </div>
         </div>
         {drinkDonutData.length > 0 && (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 20 }}>
             <div style={cardStyle}>
-              <SectionTitle>ドリンク内訳</SectionTitle>
-              <DonutChart data={drinkDonutData} />
+              <SectionTitle>{t.menuAnalytics.drinkBreakdown}</SectionTitle>
+              <DonutChart data={drinkDonutData} noDataLabel={t.menuAnalytics.noData} defaultCenterLabel={t.menuAnalytics.centerItems} />
             </div>
           </div>
         )}
@@ -512,35 +520,36 @@ export default function MenuAnalyticsPage() {
         {/* ── 食材・調理・味覚 ── */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 20 }}>
           <div style={cardStyle}>
-            <SectionTitle>素材別分布</SectionTitle>
-            <DonutChart data={proteinData} />
+            <SectionTitle>{t.menuAnalytics.proteinDistribution}</SectionTitle>
+            <DonutChart data={proteinData} noDataLabel={t.menuAnalytics.noData} defaultCenterLabel={t.menuAnalytics.centerItems} />
           </div>
           <div style={cardStyle}>
-            <SectionTitle>食材 TOP{Math.min(ingredientData.length, 8)}</SectionTitle>
-            <DonutChart data={ingredientData} />
+            <SectionTitle>{t.menuAnalytics.topIngredients(Math.min(ingredientData.length, 8))}</SectionTitle>
+            <DonutChart data={ingredientData} noDataLabel={t.menuAnalytics.noData} defaultCenterLabel={t.menuAnalytics.centerItems} />
           </div>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 20 }}>
           <div style={cardStyle}>
-            <SectionTitle>調理法分布</SectionTitle>
-            <DonutChart data={cookingData} />
+            <SectionTitle>{t.menuAnalytics.cookingMethods}</SectionTitle>
+            <DonutChart data={cookingData} noDataLabel={t.menuAnalytics.noData} defaultCenterLabel={t.menuAnalytics.centerItems} />
           </div>
           {calorieData.length > 0 && (
             <div style={cardStyle}>
-              <SectionTitle>カロリー帯分布</SectionTitle>
-              <DonutChart data={calorieData} />
+              <SectionTitle>{t.menuAnalytics.calorieDistribution}</SectionTitle>
+              <DonutChart data={calorieData} noDataLabel={t.menuAnalytics.noData} defaultCenterLabel={t.menuAnalytics.centerItems} />
             </div>
           )}
         </div>
 
         {/* 味覚プロファイル */}
         <div style={cardStyle}>
-          <SectionTitle>味覚プロファイル</SectionTitle>
+          <SectionTitle>{t.menuAnalytics.tasteProfile}</SectionTitle>
           {tasteData.length >= 3 ? (
             <div style={{ display: 'flex', justifyContent: 'center' }}>
               <RadarChart
                 data={tasteData.map(d => ({ label: d.name_jp, value: d.count }))}
                 size={300}
+                noDataLabel={t.menuAnalytics.noData}
               />
             </div>
           ) : tasteData.length > 0 ? (
@@ -552,15 +561,15 @@ export default function MenuAnalyticsPage() {
               ))}
             </div>
           ) : (
-            <div style={{ color: 'var(--muted)', fontSize: 13 }}>データなし</div>
+            <div style={{ color: 'var(--muted)', fontSize: 13 }}>{t.menuAnalytics.noData}</div>
           )}
         </div>
 
         {/* ── 安全管理 ── */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 20 }}>
           <div style={cardStyle}>
-            <SectionTitle>確認優先度</SectionTitle>
-            <DonutChart data={rankData} />
+            <SectionTitle>{t.menuAnalytics.rankPriority}</SectionTitle>
+            <DonutChart data={rankData} noDataLabel={t.menuAnalytics.noData} defaultCenterLabel={t.menuAnalytics.centerItems} />
             <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 6 }}>
               {['S', 'A', 'B', 'C'].map(r => (
                 <div key={r} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11, color: 'var(--muted)' }}>
@@ -571,7 +580,7 @@ export default function MenuAnalyticsPage() {
             </div>
           </div>
           <div style={cardStyle}>
-            <SectionTitle>アレルゲン情報</SectionTitle>
+            <SectionTitle>{t.menuAnalytics.allergenInfo}</SectionTitle>
             <div style={{ marginBottom: 16 }}>
               <div style={{
                 display: 'flex',
@@ -580,7 +589,7 @@ export default function MenuAnalyticsPage() {
                 color: 'var(--muted)',
                 marginBottom: 6,
               }}>
-                <span>登録済み <span style={{ fontFamily: MONO }}>{data.allergen_coverage.with_allergens}</span>品</span>
+                <span>{t.menuAnalytics.registered} <span style={{ fontFamily: MONO }}>{data.allergen_coverage.with_allergens}</span>{t.menuAnalytics.units}</span>
                 <span style={{ fontFamily: MONO }}>{allergenPct}%</span>
               </div>
               <div style={{
@@ -598,29 +607,29 @@ export default function MenuAnalyticsPage() {
                 }} />
               </div>
             </div>
-            <DonutChart data={allergenDonutData} size={160} />
+            <DonutChart data={allergenDonutData} size={160} noDataLabel={t.menuAnalytics.noData} defaultCenterLabel={t.menuAnalytics.centerItems} />
           </div>
         </div>
 
         {/* ── 価格分析（最下部） ── */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 20 }}>
           <div style={cardStyle}>
-            <SectionTitle>価格帯分布（全体）</SectionTitle>
-            <DonutChart data={priceData} centerLabel="全品目" />
+            <SectionTitle>{t.menuAnalytics.priceRange}</SectionTitle>
+            <DonutChart data={priceData} centerLabel={t.menuAnalytics.centerAll} noDataLabel={t.menuAnalytics.noData} defaultCenterLabel={t.menuAnalytics.centerItems} />
           </div>
         </div>
         {(data.category_price_ranges || []).length > 0 && (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 20 }}>
             {(data.category_price_ranges || []).slice(0, 6).map(cp => {
               const cpData = cp.ranges.map((r, i) => ({
-                label: `${r.range}円`,
+                label: t.menuAnalytics.yenSuffix(r.range),
                 value: r.count,
                 color: PALETTE[i % PALETTE.length],
               }))
               return (
                 <div key={cp.category} style={cardStyle}>
-                  <SectionTitle>価格帯：{cp.label}</SectionTitle>
-                  <HorizontalBarChart data={cpData} />
+                  <SectionTitle>{t.menuAnalytics.priceRangeBy(cp.label)}</SectionTitle>
+                  <HorizontalBarChart data={cpData} unitLabel={t.menuAnalytics.units} />
                 </div>
               )
             })}

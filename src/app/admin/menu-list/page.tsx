@@ -10,6 +10,7 @@ import MenuTable from './MenuTable'
 import MenuFormModal from './MenuFormModal'
 import UploadSection from './UploadSection'
 import PreviewModal from './PreviewModal'
+import { useAdminLang } from '../../../hooks/useAdminLang'
 
 export interface MenuItem {
   uid: string
@@ -42,14 +43,24 @@ export interface MenuItem {
 
 export default function MenuListPage() {
   return (
-    <Suspense fallback={<AdminLayout title="メニュー一覧"><div style={{ textAlign: 'center', padding: '40px' }}>読み込み中...</div></AdminLayout>}>
+    <Suspense fallback={<MenuListFallback />}>
       <MenuListContent />
     </Suspense>
   )
 }
 
+function MenuListFallback() {
+  const { t } = useAdminLang()
+  return (
+    <AdminLayout title={t.nav.menuList}>
+      <div style={{ textAlign: 'center', padding: '40px' }}>{t.layout.loading}</div>
+    </AdminLayout>
+  )
+}
+
 function MenuListContent() {
   const toast = useToast()
+  const { t } = useAdminLang()
   const { user, isLoading: authLoading } = useAuth()
   const searchParams = useSearchParams()
   const uidParam = searchParams?.get('uid') ?? null
@@ -142,14 +153,14 @@ function MenuListContent() {
       const response = await VisionApi.analyzeImage(file, restaurantSlug, false)
       const items = (response.result?.items || []).map(normalizeVisionItem)
       if (items.length === 0) {
-        toast('warning', 'メニューを検出できませんでした。別のファイルを試してください。')
+        toast('warning', t.menuList.noMenuDetected)
         return
       }
       setVisionResults(items)
       setShowVisionApproval(true)
     } catch (err) {
       console.error('File analysis failed:', err)
-      toast('error', `ファイル解析に失敗しました: ${err instanceof Error ? err.message : 'Unknown error'}`)
+      toast('error', t.menuList.fileAnalysisFailed(err instanceof Error ? err.message : 'Unknown error'))
     } finally {
       setIsAnalyzing(false)
       e.target.value = ''
@@ -158,7 +169,7 @@ function MenuListContent() {
 
   const handleTextAnalyze = async () => {
     if (!pasteText.trim()) {
-      toast('warning', 'テキストを入力してください')
+      toast('warning', t.menuList.enterText)
       return
     }
 
@@ -168,7 +179,7 @@ function MenuListContent() {
       const response = await VisionApi.analyzeText(pasteText.trim())
       const items = (response.result?.items || []).map(normalizeVisionItem)
       if (items.length === 0) {
-        toast('warning', 'メニューを検出できませんでした。別のテキストを試してください。')
+        toast('warning', t.menuList.noMenuDetectedText)
         return
       }
       setVisionResults(items)
@@ -176,7 +187,7 @@ function MenuListContent() {
       setPasteText('')
     } catch (err) {
       console.error('Text analysis failed:', err)
-      toast('error', `テキスト解析に失敗しました: ${err instanceof Error ? err.message : 'Unknown error'}`)
+      toast('error', t.menuList.textAnalysisFailed(err instanceof Error ? err.message : 'Unknown error'))
     } finally {
       setIsAnalyzing(false)
     }
@@ -213,7 +224,7 @@ function MenuListContent() {
     return {
       name_jp: item.name_jp,
       name_en: item.name_en || null,
-      category: item.category || '未分類',
+      category: item.category || t.menuList.uncategorized,
       price: item.price || 0,
       description: item.description || null,
       restaurant_uid: restaurant!.uid,
@@ -239,15 +250,14 @@ function MenuListContent() {
       await MenuApi.create(buildMenuDataFromVision(item))
       await refreshMenus()
       setVisionResults(visionResults.filter((_, i) => i !== index))
-      toast('success', `「${item.name_jp}」を追加しました`)
+      toast('success', t.menuList.addedItem(item.name_jp))
     } catch (err) {
       console.error('Failed to save menu:', err)
       if (isDuplicateError(err)) {
-        // 既に登録済み → リストから消してスキップ扱い
         setVisionResults(visionResults.filter((_, i) => i !== index))
-        toast('info', `「${item.name_jp}」は既に登録済みです`)
+        toast('info', t.menuList.duplicateItem(item.name_jp))
       } else {
-        toast('error', err instanceof Error ? err.message : 'メニューの保存に失敗しました')
+        toast('error', err instanceof Error ? err.message : t.menuList.saveFailed)
       }
     } finally {
       setApprovingIndex(null)
@@ -284,15 +294,15 @@ function MenuListContent() {
     if (failed.length === 0) {
       setShowVisionApproval(false)
       const parts: string[] = []
-      if (added.length > 0) parts.push(`${added.length}件追加`)
-      if (skipped.length > 0) parts.push(`${skipped.length}件は登録済みでスキップ`)
-      toast('success', `${parts.join('、') || '処理完了'}しました！`)
+      if (added.length > 0) parts.push(t.menuList.addedCount(added.length))
+      if (skipped.length > 0) parts.push(t.menuList.skippedCount(skipped.length))
+      toast('success', `${parts.join(t.menuList.sep) || t.menuList.processedDone}`)
     } else {
       const summary = [
-        added.length > 0 ? `${added.length}件追加` : '',
-        skipped.length > 0 ? `${skipped.length}件スキップ` : ''
-      ].filter(Boolean).join('、')
-      toast('warning', `${summary ? summary + '、' : ''}${failed.length}件失敗: ${failed.join('、')}`)
+        added.length > 0 ? t.menuList.addedCount(added.length) : '',
+        skipped.length > 0 ? t.menuList.skippedCount(skipped.length) : ''
+      ].filter(Boolean).join(t.menuList.sep)
+      toast('warning', `${summary ? summary + t.menuList.sep : ''}${t.menuList.failedCount(failed.length)}: ${failed.join(t.menuList.sep)}`)
     }
     setApprovingAll(false)
   }
@@ -413,7 +423,7 @@ function MenuListContent() {
       }
     } catch (err: any) {
       console.error('Failed to fetch restaurant data:', err)
-      setError('レストラン情報の取得に失敗しました。')
+      setError(t.menuList.fetchRestaurantFailed)
     } finally {
       setIsLoading(false)
     }
@@ -461,11 +471,11 @@ function MenuListContent() {
 
   const handleAddMenu = async () => {
     if (!newMenu.name || !newMenu.price || !newMenu.category) {
-      toast('warning', '料理名、価格、カテゴリーは必須です')
+      toast('warning', t.menuList.requiredFields)
       return
     }
     if (!restaurant?.uid) {
-      toast('error', 'レストラン情報が見つかりません')
+      toast('error', t.menuList.restaurantNotFound)
       return
     }
 
@@ -505,7 +515,7 @@ function MenuListContent() {
           await MenuApi.uploadImage(createResp.result.uid, pendingImageFile)
         } catch (imgErr) {
           console.error('Image upload failed:', imgErr)
-          toast('warning', 'メニューは追加しましたが、画像のアップロードに失敗しました')
+          toast('warning', t.menuList.imageUploadFailed)
         }
       }
 
@@ -518,10 +528,10 @@ function MenuListContent() {
       setPendingImageFile(null)
       setShowAddModal(false)
       setActiveTab('basic')
-      toast('success', 'メニューを追加しました！')
+      toast('success', t.menuList.addedSuccess)
     } catch (err) {
       console.error('Failed to add menu:', err)
-      toast('error', `メニューの追加に失敗しました: ${err instanceof Error ? err.message : 'Unknown error'}`)
+      toast('error', t.menuList.addFailed(err instanceof Error ? err.message : 'Unknown error'))
     } finally {
       setIsSaving(false)
     }
@@ -529,12 +539,12 @@ function MenuListContent() {
 
   const handleFetchFromSource = async () => {
     if (!restaurant?.uid) {
-      toast('error', 'レストラン情報が見つかりません')
+      toast('error', t.menuList.restaurantNotFound)
       return
     }
 
     if (!scrapingUrl) {
-      toast('warning', 'メニュー情報ソースURLが設定されていません。基本情報→情報ソースタブでURLを設定してください。')
+      toast('warning', t.menuList.sourceUrlMissing)
       return
     }
 
@@ -552,7 +562,7 @@ function MenuListContent() {
     } catch (err) {
       console.error('Failed to start scraping:', err)
       setShowFetchModal(false)
-      toast('error', 'スクレイピングの開始に失敗しました')
+      toast('error', t.menuList.scrapeStartFailed)
     }
   }
 
@@ -576,7 +586,7 @@ function MenuListContent() {
         setScrapingTaskId(null)
       } else if (task.status === 'failed') {
         setShowFetchModal(false)
-        setError(task.error || 'スクレイピングに失敗しました')
+        setError(task.error || t.menuList.scrapeFailed)
         setScrapingTaskId(null)
       } else {
         setTimeout(() => pollTaskStatus(taskId), 2000)
@@ -585,7 +595,7 @@ function MenuListContent() {
       console.error('Failed to check task status:', err)
       setShowFetchModal(false)
       setScrapingTaskId(null)
-      setError('タスクステータスの確認に失敗しました。再度お試しください。')
+      setError(t.menuList.taskStatusCheckFailed)
     }
   }
 
@@ -605,7 +615,7 @@ function MenuListContent() {
         setPendingMenus(pendingMenus.filter(m => m.id !== menuId))
       } catch (err) {
         console.error('Failed to approve menu:', err)
-        toast('error', 'メニューの承認に失敗しました')
+        toast('error', t.menuList.approveFailed)
       }
     }
   }
@@ -631,10 +641,10 @@ function MenuListContent() {
       await refreshMenus()
       setPendingMenus([])
       setShowApprovalModal(false)
-      toast('success', 'すべてのメニューを承認しました！')
+      toast('success', t.menuList.allApprovedSuccess)
     } catch (err) {
       console.error('Failed to approve all menus:', err)
-      toast('error', 'メニューの承認に失敗しました')
+      toast('error', t.menuList.approveFailed)
     }
   }
 
@@ -696,10 +706,10 @@ function MenuListContent() {
       setEditSelectedAllergenUids([])
       setEditSelectedCookingMethodUids([])
       setEditSelectedRestrictionUids([])
-      toast('success', 'メニューを更新しました！')
+      toast('success', t.menuList.updatedSuccess)
     } catch (err) {
       console.error('Failed to update menu:', err)
-      toast('error', `メニューの更新に失敗しました: ${err instanceof Error ? err.message : 'Unknown error'}`)
+      toast('error', t.menuList.updateFailed(err instanceof Error ? err.message : 'Unknown error'))
     } finally {
       setIsSaving(false)
     }
@@ -711,7 +721,7 @@ function MenuListContent() {
       await refreshMenus()
     } catch (err) {
       console.error('Failed to approve menu:', err)
-      toast('error', '承認に失敗しました')
+      toast('error', t.menuList.approvalFailed)
     }
   }
 
@@ -723,10 +733,10 @@ function MenuListContent() {
         data_source: 'owner_verified',
       } as any)
       await refreshMenus()
-      toast('success', `「${item.name}」を店主確認済みにしました`)
+      toast('success', t.menuList.ownerVerifiedItem(item.name))
     } catch (err) {
       console.error('Failed to verify menu:', err)
-      toast('error', '店主確認の登録に失敗しました')
+      toast('error', t.menuList.ownerVerifyFailed)
     }
   }
 
@@ -735,48 +745,48 @@ function MenuListContent() {
       await MenuApi.update(uid, { status: newStatus })
       await refreshMenus()
     } catch {
-      toast('error', 'ステータス変更に失敗しました')
+      toast('error', t.menuList.statusChangeFailed)
     }
   }
 
   const handleBulkApprove = async () => {
     const unverified = menuItems.filter(i => !i.status)
     if (unverified.length === 0) {
-      toast('info', '承認待ちのメニューはありません')
+      toast('info', t.menuList.noPendingApproval)
       return
     }
-    if (!confirm(`${unverified.length}件の未承認メニューをすべて承認しますか？`)) return
+    if (!confirm(t.menuList.confirmBulkApprove(unverified.length))) return
 
     try {
       for (const item of unverified) {
         await MenuApi.update(item.uid, { status: true })
       }
       await refreshMenus()
-      toast('success', `${unverified.length}件を承認しました`)
+      toast('success', t.menuList.bulkApproved(unverified.length))
     } catch (err) {
       console.error('Failed to bulk approve:', err)
-      toast('error', '一括承認に失敗しました')
+      toast('error', t.menuList.bulkApproveFailed)
     }
   }
 
   const handleDelete = async (uid: string) => {
-    if (!confirm('このメニューを削除しますか？')) return
+    if (!confirm(t.menuList.confirmDeleteMenu)) return
 
     try {
       await MenuApi.delete(uid)
       await refreshMenus()
-      toast('success', 'メニューを削除しました')
+      toast('success', t.menuList.deletedMenu)
     } catch (err) {
       console.error('Failed to delete menu:', err)
-      toast('error', `メニューの削除に失敗しました: ${err instanceof Error ? err.message : 'Unknown error'}`)
+      toast('error', t.menuList.deleteMenuFailed(err instanceof Error ? err.message : 'Unknown error'))
     }
   }
 
   return (
-    <AdminLayout title="メニュー一覧">
+    <AdminLayout title={t.nav.menuList}>
       {hasMultipleStores && !isAdminViewing && (
         <div style={{ background: 'var(--bg-surface)', borderRadius: 12, padding: '12px 16px', marginBottom: 16, border: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 12 }}>
-          <span style={{ fontSize: 13, color: 'var(--muted)', whiteSpace: 'nowrap' }}>店舗</span>
+          <span style={{ fontSize: 13, color: 'var(--muted)', whiteSpace: 'nowrap' }}>{t.menuList.storeLabel}</span>
           <select
             value={selectedStoreUid || userRestaurants[0]?.uid || ''}
             onChange={(e) => {
@@ -807,7 +817,7 @@ function MenuListContent() {
         const pctC = Math.round(rankCounts.C / total * 100)
         return (
           <div style={{ background: 'var(--bg-surface)', borderRadius: 12, padding: 20, marginBottom: 16, border: '1px solid var(--border)', boxShadow: '0 1px 3px rgba(0,0,0,0.3)' }}>
-            <div style={{ fontSize: 16, fontWeight: 600, color: 'var(--text)', marginBottom: 12 }}>確認優先度</div>
+            <div style={{ fontSize: 16, fontWeight: 600, color: 'var(--text)', marginBottom: 12 }}>{t.menuList.verifyPriorityTitle}</div>
             <div style={{ height: 16, background: '#1E293B', borderRadius: 8, overflow: 'hidden', display: 'flex' }}>
               {pctS > 0 && <div style={{ width: `${pctS}%`, height: '100%', background: '#EF4444' }} />}
               {pctA > 0 && <div style={{ width: `${pctA}%`, height: '100%', background: '#F59E0B' }} />}
@@ -815,17 +825,17 @@ function MenuListContent() {
               {pctC > 0 && <div style={{ width: `${pctC}%`, height: '100%', background: '#10B981' }} />}
             </div>
             <div style={{ display: 'flex', gap: 16, marginTop: 10, flexWrap: 'wrap' }}>
-              <span style={{ fontSize: 13 }}><span style={{ color: '#EF4444', fontWeight: 700 }}>S</span><span style={{ color: '#94A3B8' }}> 必ず確認 </span><span style={{ fontWeight: 600, color: '#EF4444' }}>{rankCounts.S}</span></span>
-              <span style={{ fontSize: 13 }}><span style={{ color: '#F59E0B', fontWeight: 700 }}>A</span><span style={{ color: '#94A3B8' }}> 要確認 </span><span style={{ fontWeight: 600, color: '#F59E0B' }}>{rankCounts.A}</span></span>
-              <span style={{ fontSize: 13 }}><span style={{ color: '#3B82F6', fontWeight: 700 }}>B</span><span style={{ color: '#94A3B8' }}> 確認推奨 </span><span style={{ fontWeight: 600, color: '#3B82F6' }}>{rankCounts.B}</span></span>
-              <span style={{ fontSize: 13 }}><span style={{ color: '#10B981', fontWeight: 700 }}>C</span><span style={{ color: '#94A3B8' }}> 確認不要 </span><span style={{ fontWeight: 600, color: '#10B981' }}>{rankCounts.C}</span></span>
+              <span style={{ fontSize: 13 }}><span style={{ color: '#EF4444', fontWeight: 700 }}>S</span><span style={{ color: '#94A3B8' }}> {t.menuList.rankMustVerify} </span><span style={{ fontWeight: 600, color: '#EF4444' }}>{rankCounts.S}</span></span>
+              <span style={{ fontSize: 13 }}><span style={{ color: '#F59E0B', fontWeight: 700 }}>A</span><span style={{ color: '#94A3B8' }}> {t.menuList.rankNeedReview} </span><span style={{ fontWeight: 600, color: '#F59E0B' }}>{rankCounts.A}</span></span>
+              <span style={{ fontSize: 13 }}><span style={{ color: '#3B82F6', fontWeight: 700 }}>B</span><span style={{ color: '#94A3B8' }}> {t.menuList.rankReviewRecommended} </span><span style={{ fontWeight: 600, color: '#3B82F6' }}>{rankCounts.B}</span></span>
+              <span style={{ fontSize: 13 }}><span style={{ color: '#10B981', fontWeight: 700 }}>C</span><span style={{ color: '#94A3B8' }}> {t.menuList.rankVerified} </span><span style={{ fontWeight: 600, color: '#10B981' }}>{rankCounts.C}</span></span>
             </div>
           </div>
         )
       })()}
 
       <div className="card">
-        <div className="card-title">📋 メニュー・商品管理</div>
+        <div className="card-title">{t.menuList.cardTitle}</div>
 
         <MenuTable
           items={filteredItems}

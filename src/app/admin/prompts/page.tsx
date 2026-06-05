@@ -3,26 +3,20 @@
 import { useState, useEffect } from 'react'
 import AdminLayout from '../../../components/admin/AdminLayout'
 import { TokenService, RestaurantApi, MenuApi, Restaurant, Menu } from '../../../services/api'
+import { useAdminLang } from '../../../hooks/useAdminLang'
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://dev-backend.ngraph.jp/api'
-
-const tones = [
-  { value: 'standard', label: 'スタンダード（標準）' },
-  { value: 'formal', label: 'フォーマル（丁寧）' },
-  { value: 'casual', label: 'カジュアル（親しみやすい）' },
-  { value: 'professional', label: 'プロフェッショナル（専門的）' },
-]
-
-const BASE_PROMPT_DISPLAY = `【基本ルール（編集不可）】
-1. レストランの情報・メニュー・おすすめについてお客様をサポート
-2. ツールを使って正確な情報を提供（メニュー一覧、詳細、アレルギー検索）
-3. メニューや材料を勝手に作り上げない
-4. お客様の言語を検出し、同じ言語で応答（日本語・英語・中国語・韓国語等）
-5. そのレストランの話題のみに応答を限定`
 
 type MenuConfig = { auto: boolean; menu_uids: string[] }
 
 export default function PromptsPage() {
+  const { t } = useAdminLang()
+  const tones = [
+    { value: 'standard', label: t.prompts.toneStandard },
+    { value: 'formal', label: t.prompts.toneFormal },
+    { value: 'casual', label: t.prompts.toneCasual },
+    { value: 'professional', label: t.prompts.toneProfessional },
+  ]
   const [userType, setUserType] = useState<'admin' | 'store'>('store')
   const [restaurants, setRestaurants] = useState<Restaurant[]>([])
   const [selectedUid, setSelectedUid] = useState('')
@@ -142,11 +136,11 @@ export default function PromptsPage() {
         body: formData,
       })
 
-      if (!res.ok) throw new Error('保存に失敗しました')
+      if (!res.ok) throw new Error(t.prompts.saveFailed)
 
-      setMessage({ type: 'success', text: '保存しました' })
+      setMessage({ type: 'success', text: t.prompts.saved })
     } catch (e: any) {
-      setMessage({ type: 'error', text: e.message || '保存に失敗しました' })
+      setMessage({ type: 'error', text: e.message || t.prompts.saveFailed })
     } finally {
       setSaving(false)
     }
@@ -162,22 +156,22 @@ export default function PromptsPage() {
   const hasGmb = Boolean(selectedRestaurant?.google_business_profile)
 
   return (
-    <AdminLayout title="AI設定">
+    <AdminLayout title={t.prompts.title}>
       <div className="breadcrumb-nav">
-        <span className="breadcrumb-item active">AI設定</span>
+        <span className="breadcrumb-item active">{t.prompts.breadcrumb}</span>
       </div>
 
       {/* レストラン選択（Admin のみ） */}
       {userType === 'admin' && (
         <div className="card" style={{ marginBottom: '16px' }}>
-          <label style={{ display: 'block', fontWeight: 600, marginBottom: '8px' }}>レストランを選択</label>
+          <label style={{ display: 'block', fontWeight: 600, marginBottom: '8px' }}>{t.prompts.selectRestaurant}</label>
           <select
             className="form-control"
             style={{ maxWidth: '400px' }}
             value={selectedUid}
             onChange={(e) => handleSelectRestaurant(e.target.value)}
           >
-            <option value="">選択してください</option>
+            <option value="">{t.prompts.pleaseSelect}</option>
             {restaurants.map((r) => (
               <option key={r.uid} value={r.uid}>{r.name}</option>
             ))}
@@ -185,45 +179,45 @@ export default function PromptsPage() {
         </div>
       )}
 
-      {loading && <div style={{ padding: '20px', color: '#94A3B8' }}>読み込み中...</div>}
+      {loading && <div style={{ padding: '20px', color: '#94A3B8' }}>{t.layout.loading}</div>}
 
       {selectedRestaurant && !loading && (
         <>
           {/* カスタム設定（メイン） */}
           <div className="card" style={{ marginBottom: '16px' }}>
-            <div className="card-title">AIへの指示 — {selectedRestaurant.name}</div>
+            <div className="card-title">{t.prompts.aiInstructionsFor(selectedRestaurant.name)}</div>
             <p style={{ color: '#94A3B8', fontSize: '13px', marginBottom: '20px' }}>
-              基本ルール（メニュー案内・多言語対応など）は全店共通で自動適用されます。ここでは応答のトーンと、店ならではの追加指示だけ設定すればOKです。
+              {t.prompts.intro}
             </p>
 
             {/* トーン選択 */}
             <div style={{ marginBottom: '20px' }}>
-              <label style={{ display: 'block', fontWeight: 600, marginBottom: '8px' }}>AIトーン</label>
+              <label style={{ display: 'block', fontWeight: 600, marginBottom: '8px' }}>{t.prompts.aiTone}</label>
               <select
                 className="form-control"
                 style={{ maxWidth: '300px' }}
                 value={aiTone}
                 onChange={(e) => setAiTone(e.target.value)}
               >
-                {tones.map((t) => (
-                  <option key={t.value} value={t.value}>{t.label}</option>
+                {tones.map((opt) => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
                 ))}
               </select>
             </div>
 
             {/* カスタムプロンプト */}
             <div>
-              <label style={{ display: 'block', fontWeight: 600, marginBottom: '8px' }}>追加の指示（任意）</label>
+              <label style={{ display: 'block', fontWeight: 600, marginBottom: '8px' }}>{t.prompts.additionalInstructions}</label>
               <textarea
                 className="form-control"
                 rows={6}
                 style={{ fontFamily: 'monospace', fontSize: '13px' }}
                 value={customPrompt}
                 onChange={(e) => setCustomPrompt(e.target.value)}
-                placeholder="例：季節のおすすめメニューを積極的に案内してください。地元食材の魅力も伝えてください。"
+                placeholder={t.prompts.promptPlaceholder}
               />
               <div style={{ marginTop: '6px', fontSize: '13px', color: '#94A3B8' }}>
-                文字数: {customPrompt.length}
+                {t.prompts.charCount(customPrompt.length)}
               </div>
             </div>
           </div>
@@ -231,10 +225,10 @@ export default function PromptsPage() {
           {/* 詳細設定（折りたたみ） */}
           <details className="card" style={{ marginBottom: '16px' }}>
             <summary style={{ cursor: 'pointer', fontWeight: 600, fontSize: '15px', color: 'var(--text)' }}>
-              詳細設定（任意）
+              {t.prompts.advanced}
             </summary>
             <p style={{ color: '#94A3B8', fontSize: '13px', margin: '12px 0' }}>
-              通常は触る必要はありません。特定のメニューを「おすすめ／人気」として固定したい場合だけ設定してください。
+              {t.prompts.advancedDesc}
             </p>
 
             {/* おすすめメニュー手動指定 */}
@@ -245,12 +239,12 @@ export default function PromptsPage() {
                   checked={!recommendedMenus.auto}
                   onChange={(e) => setRecommendedMenus({ ...recommendedMenus, auto: !e.target.checked })}
                 />
-                <span style={{ fontSize: '14px', fontWeight: 600 }}>「おすすめ」を手動で指定する</span>
+                <span style={{ fontSize: '14px', fontWeight: 600 }}>{t.prompts.enableManualRecommended}</span>
               </label>
               {!recommendedMenus.auto && (
                 <div style={{ maxHeight: '240px', overflowY: 'auto', border: '1px solid #334155', borderRadius: '6px', padding: '12px' }}>
                   {menus.length === 0 ? (
-                    <div style={{ color: '#64748B', fontSize: '13px' }}>メニューが登録されていません</div>
+                    <div style={{ color: '#64748B', fontSize: '13px' }}>{t.prompts.noMenus}</div>
                   ) : (
                     menus.map((m) => (
                       <label key={m.uid} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 0', cursor: 'pointer', borderBottom: '1px solid #1E293B' }}>
@@ -276,12 +270,12 @@ export default function PromptsPage() {
                   checked={!popularMenus.auto}
                   onChange={(e) => setPopularMenus({ ...popularMenus, auto: !e.target.checked })}
                 />
-                <span style={{ fontSize: '14px', fontWeight: 600 }}>「人気メニュー」を手動で指定する</span>
+                <span style={{ fontSize: '14px', fontWeight: 600 }}>{t.prompts.enableManualPopular}</span>
               </label>
               {!popularMenus.auto && (
                 <div style={{ maxHeight: '240px', overflowY: 'auto', border: '1px solid #334155', borderRadius: '6px', padding: '12px' }}>
                   {menus.length === 0 ? (
-                    <div style={{ color: '#64748B', fontSize: '13px' }}>メニューが登録されていません</div>
+                    <div style={{ color: '#64748B', fontSize: '13px' }}>{t.prompts.noMenus}</div>
                   ) : (
                     menus.map((m) => (
                       <label key={m.uid} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 0', cursor: 'pointer', borderBottom: '1px solid #1E293B' }}>
@@ -301,11 +295,11 @@ export default function PromptsPage() {
 
             {/* 基礎プロンプト（参考表示） */}
             <div>
-              <label style={{ display: 'block', fontWeight: 600, marginBottom: '8px', fontSize: '14px' }}>基礎プロンプト（編集不可・全店共通）</label>
+              <label style={{ display: 'block', fontWeight: 600, marginBottom: '8px', fontSize: '14px' }}>{t.prompts.basePrompt}</label>
               <textarea
                 className="form-control"
                 rows={7}
-                value={BASE_PROMPT_DISPLAY}
+                value={t.prompts.basePromptContent}
                 readOnly
                 style={{ fontFamily: 'monospace', fontSize: '13px', background: '#1E293B', color: '#94A3B8' }}
               />
@@ -314,9 +308,9 @@ export default function PromptsPage() {
 
           {/* Googleレビュー誘導 */}
           <div className="card" style={{ marginBottom: '16px' }}>
-            <div className="card-title">Googleレビュー誘導</div>
+            <div className="card-title">{t.prompts.googleReview}</div>
             <p style={{ color: '#94A3B8', fontSize: '13px', marginBottom: '12px' }}>
-              会話の終盤でGoogleクチコミへの投稿を促します。
+              {t.prompts.googleReviewDesc}
             </p>
             {hasGmb ? (
               <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
@@ -325,11 +319,11 @@ export default function PromptsPage() {
                   checked={googleReviewEnabled}
                   onChange={(e) => setGoogleReviewEnabled(e.target.checked)}
                 />
-                <span style={{ fontSize: '14px' }}>有効にする</span>
+                <span style={{ fontSize: '14px' }}>{t.prompts.enable}</span>
               </label>
             ) : (
               <div style={{ padding: '12px', background: '#1E293B', borderRadius: '6px', color: '#64748B', fontSize: '13px' }}>
-                Googleビジネスプロフィールが基本情報に未設定です。先に基本情報ページでGMB URLを設定してください。
+                {t.prompts.noGmbNotice}
               </div>
             )}
           </div>
@@ -354,7 +348,7 @@ export default function PromptsPage() {
             onClick={handleSave}
             disabled={saving}
           >
-            {saving ? '保存中...' : '保存'}
+            {saving ? t.prompts.saving : t.prompts.save}
           </button>
         </>
       )}

@@ -5,12 +5,14 @@ import { useRouter } from 'next/navigation'
 import AdminLayout from '../../../components/admin/AdminLayout'
 import { useAuth } from '../../../contexts/AuthContext'
 import { useToast } from '../../../components/admin/Toast'
+import { useAdminLang } from '../../../hooks/useAdminLang'
 
 type PlanType = 'free' | 'light' | 'business' | 'pro'
 
 export default function AccountPage() {
   const router = useRouter()
   const { user, isRestaurantOwner } = useAuth()
+  const { t } = useAdminLang()
   const [email, setEmail] = useState('demo@example.com')
   const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
@@ -28,40 +30,40 @@ export default function AccountPage() {
 
   const handleUpdateEmail = () => {
     sessionStorage.setItem('admin_user_email', email)
-    toast('success', 'メールアドレスを保存しました')
+    toast('success', t.account.savedEmail)
   }
 
   const handleUpdatePassword = () => {
     if (!currentPassword || !newPassword) {
-      toast('warning', 'パスワードを入力してください')
+      toast('warning', t.account.pleaseEnterPassword)
       return
     }
-    toast('success', 'パスワードを変更しました')
+    toast('success', t.account.savedPassword)
     setCurrentPassword('')
     setNewPassword('')
   }
 
   const handleSelectPlan = (plan: PlanType) => {
     if (plan === 'pro') {
-      toast('info', 'Proプランは準備中です')
+      toast('info', t.account.proPlanComing)
       return
     }
     if (plan === currentPlan) {
-      toast('info', '現在ご利用中のプランです')
+      toast('info', t.account.alreadyOnPlan)
       return
     }
-    if (confirm(`${getPlanName(plan)}に変更しますか？`)) {
+    if (confirm(t.account.confirmChangePlan(getPlanName(plan)))) {
       setCurrentPlan(plan)
-      toast('success', `${getPlanName(plan)}に変更しました`)
+      toast('success', t.account.changedToPlan(getPlanName(plan)))
     }
   }
 
   const getPlanName = (plan: PlanType) => {
     switch (plan) {
-      case 'free': return 'フリープラン'
-      case 'light': return 'ライトプラン'
-      case 'business': return 'ビジネスプラン'
-      case 'pro': return 'Proプラン'
+      case 'free': return t.account.planFree
+      case 'light': return t.account.planLight
+      case 'business': return t.account.planBusiness
+      case 'pro': return t.account.planPro
     }
   }
 
@@ -79,7 +81,7 @@ export default function AccountPage() {
       <div className="admin-loading">
         <div className="admin-loading-content">
           <div className="admin-loading-icon">🔄</div>
-          <div className="admin-loading-text">読み込み中...</div>
+          <div className="admin-loading-text">{t.layout.loading}</div>
         </div>
       </div>
     )
@@ -88,39 +90,39 @@ export default function AccountPage() {
   // Plan Management View - Only for Restaurant Owners
   if (showPlanManagement && isRestaurantOwner) {
     return (
-      <AdminLayout title="プラン・契約管理">
+      <AdminLayout title={t.account.titlePlanMgmt}>
         {/* Breadcrumb */}
         <div className="breadcrumb">
-          <span className="breadcrumb-link" onClick={() => setShowPlanManagement(false)}>👤 アカウント情報</span>
+          <span className="breadcrumb-link" onClick={() => setShowPlanManagement(false)}>{t.account.breadcrumbAccount}</span>
           <span className="separator">›</span>
-          <span className="current">💳 プラン・契約管理</span>
+          <span className="current">{t.account.breadcrumbPlan}</span>
         </div>
 
         {/* Header */}
         <div className="header-card">
-          <h1 className="page-title">プラン・契約管理</h1>
-          <p className="page-description">プランを選択・変更できます</p>
+          <h1 className="page-title">{t.account.titlePlanMgmt}</h1>
+          <p className="page-description">{t.account.pageDesc}</p>
         </div>
 
         {/* Current Plan Banner */}
         <div className="current-plan-banner">
           <div className="banner-left">
-            <div className="banner-label">現在のプラン</div>
+            <div className="banner-label">{t.account.currentPlan}</div>
             <div className="banner-plan-name">{getPlanName(currentPlan)}</div>
-            <div className="banner-price">月額 {getPlanPrice(currentPlan)}</div>
+            <div className="banner-price">{t.account.monthly} {getPlanPrice(currentPlan)}</div>
           </div>
           <div className="banner-right">
             <div className="banner-detail">
-              <span className="detail-label">契約開始日</span>
+              <span className="detail-label">{t.account.contractStart}</span>
               <span className="detail-value">2024-10-01</span>
             </div>
             <div className="banner-detail">
-              <span className="detail-label">次回更新日</span>
+              <span className="detail-label">{t.account.nextRenewal}</span>
               <span className="detail-value">2024-11-01</span>
             </div>
             <div className="banner-detail">
-              <span className="detail-label">ステータス</span>
-              <span className="detail-value">利用中</span>
+              <span className="detail-label">{t.account.statusLabel}</span>
+              <span className="detail-value">{t.account.statusInUse}</span>
             </div>
           </div>
         </div>
@@ -130,23 +132,23 @@ export default function AccountPage() {
           {/* Free Plan */}
           <div className={`plan-card ${currentPlan === 'free' ? 'active' : ''}`}>
             <div className="plan-header">
-              <h3 className="plan-name">フリープラン</h3>
+              <h3 className="plan-name">{t.account.planFree}</h3>
               <div className="plan-price">¥0</div>
-              <div className="plan-period">月額</div>
+              <div className="plan-period">{t.account.monthly}</div>
             </div>
             <div className="plan-body">
               <p className="plan-desc">
-                一般ユーザー向け機能。セッションが切れてもNGraphの撮って解説機能は使用可能。
+                {t.account.freeDesc}
               </p>
               <div className="plan-features">
-                <div className="features-label">機能：</div>
-                <div className="feature-text">履歴保存期間3ヶ月</div>
+                <div className="features-label">{t.account.featuresLabel}</div>
+                <div className="feature-text">{t.account.freeFeature}</div>
               </div>
-              <button 
+              <button
                 className={`plan-select-btn ${currentPlan === 'free' ? 'selected' : 'secondary'}`}
                 onClick={() => handleSelectPlan('free')}
               >
-                {currentPlan === 'free' ? '現在のプラン' : 'このプランを選択'}
+                {currentPlan === 'free' ? t.account.currentPlanLabel : t.account.selectThisPlan}
               </button>
             </div>
           </div>
@@ -154,87 +156,76 @@ export default function AccountPage() {
           {/* Light Plan */}
           <div className={`plan-card ${currentPlan === 'light' ? 'active' : ''}`}>
             <div className="plan-header">
-              <h3 className="plan-name">ライトプラン</h3>
+              <h3 className="plan-name">{t.account.planLight}</h3>
               <div className="plan-price">¥980</div>
-              <div className="plan-period">月額</div>
+              <div className="plan-period">{t.account.monthly}</div>
             </div>
             <div className="plan-body">
               <p className="plan-desc">
-                スマホで撮るだけ。AIが商品名はもちろん背景や原材料など深い情報を多言語で即解説。
+                {t.account.lightDesc}
               </p>
               <div className="plan-features">
-                <div className="features-label">機能：</div>
+                <div className="features-label">{t.account.featuresLabel}</div>
                 <ul>
-                  <li>QRポップ送付</li>
-                  <li>AI多言語ガイド</li>
-                  <li>お店基礎情報登録</li>
-                  <li>Googleクチコミ連携</li>
+                  {t.account.lightFeatures.map((f) => <li key={f}>{f}</li>)}
                 </ul>
               </div>
-              <button 
+              <button
                 className={`plan-select-btn ${currentPlan === 'light' ? 'selected' : 'primary'}`}
                 onClick={() => handleSelectPlan('light')}
               >
-                {currentPlan === 'light' ? '現在のプラン' : 'このプランを選択'}
+                {currentPlan === 'light' ? t.account.currentPlanLabel : t.account.selectThisPlan}
               </button>
             </div>
           </div>
 
           {/* Business Plan - Recommended */}
           <div className={`plan-card recommended ${currentPlan === 'business' ? 'active' : ''}`}>
-            <div className="recommend-tag">おススメ</div>
+            <div className="recommend-tag">{t.account.recommendTag}</div>
             <div className="plan-header">
-              <h3 className="plan-name">ビジネスプラン</h3>
+              <h3 className="plan-name">{t.account.planBusiness}</h3>
               <div className="plan-price">¥3,980</div>
-              <div className="plan-period">月額</div>
+              <div className="plan-period">{t.account.monthly}</div>
             </div>
             <div className="plan-body">
               <p className="plan-desc">
-                おススメや人気商品など学習データから設定、編集可能。AIがデータに基づき売上アップや業務改善に直接貢献。
+                {t.account.businessDesc}
               </p>
               <div className="plan-features">
-                <div className="features-label">機能：</div>
+                <div className="features-label">{t.account.featuresLabel}</div>
                 <ul>
-                  <li>店舗ロゴ入りQRポップ</li>
-                  <li>店舗専用AIガイド</li>
-                  <li>店舗情報学習</li>
-                  <li>AIおすすめ/人気ランキング</li>
-                  <li>編集機能管理画面</li>
-                  <li>データ管理、分析</li>
+                  {t.account.businessFeatures.map((f) => <li key={f}>{f}</li>)}
                 </ul>
               </div>
-              <button 
+              <button
                 className={`plan-select-btn ${currentPlan === 'business' ? 'selected' : 'primary'}`}
                 onClick={() => handleSelectPlan('business')}
               >
-                {currentPlan === 'business' ? '現在のプラン' : 'このプランを選択'}
+                {currentPlan === 'business' ? t.account.currentPlanLabel : t.account.selectThisPlan}
               </button>
             </div>
           </div>
 
           {/* Pro Plan - Coming Soon */}
           <div className="plan-card coming-soon">
-            <div className="coming-tag">準備中 🔜</div>
+            <div className="coming-tag">{t.account.comingTag}</div>
             <div className="plan-header">
-              <h3 className="plan-name">プロプラン</h3>
+              <h3 className="plan-name">{t.account.planPro}</h3>
               <div className="plan-price">¥8,800</div>
-              <div className="plan-period">月額</div>
+              <div className="plan-period">{t.account.monthly}</div>
             </div>
             <div className="plan-body">
               <p className="plan-desc">
-                店舗支援機能までてっついたフルスペック
+                {t.account.proDesc}
               </p>
               <div className="plan-features">
-                <div className="features-label">機能：</div>
+                <div className="features-label">{t.account.featuresLabel}</div>
                 <ul>
-                  <li>店舗AIの全機能+</li>
-                  <li>SNSエージェント機能</li>
-                  <li>スタッフ教育モード</li>
-                  <li>予約管理/需要予測</li>
+                  {t.account.proFeatures.map((f) => <li key={f}>{f}</li>)}
                 </ul>
               </div>
               <button className="plan-select-btn disabled" disabled>
-                準備中
+                {t.account.pending}
               </button>
             </div>
           </div>
@@ -499,13 +490,13 @@ export default function AccountPage() {
 
   // Account Info View (Main)
   return (
-    <AdminLayout title="アカウント情報">
+    <AdminLayout title={t.account.titleAccount}>
       <div className="account-card">
-        <h2 className="card-title">アカウント情報</h2>
+        <h2 className="card-title">{t.account.accountInfoHeading}</h2>
 
         {/* Email Section */}
         <div className="form-section">
-          <label className="form-label">メールアドレス</label>
+          <label className="form-label">{t.account.email}</label>
           <div className="input-row">
             <input
               type="email"
@@ -515,31 +506,31 @@ export default function AccountPage() {
               placeholder="example@email.com"
             />
             <button className="btn-primary btn-small" onClick={handleUpdateEmail}>
-              保存
+              {t.account.save}
             </button>
           </div>
         </div>
 
         {/* Password Section */}
         <div className="form-section">
-          <label className="form-label">パスワード変更</label>
+          <label className="form-label">{t.account.passwordChange}</label>
           <div className="password-inputs">
             <input
               type="password"
               className="form-input"
               value={currentPassword}
               onChange={(e) => setCurrentPassword(e.target.value)}
-              placeholder="現在のパスワード"
+              placeholder={t.account.currentPasswordPlaceholder}
             />
             <input
               type="password"
               className="form-input"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
-              placeholder="新しいパスワード"
+              placeholder={t.account.newPasswordPlaceholder}
             />
             <button className="btn-primary btn-small" onClick={handleUpdatePassword}>
-              パスワードを変更
+              {t.account.changePassword}
             </button>
           </div>
         </div>
@@ -549,13 +540,13 @@ export default function AccountPage() {
         <div className="qr-section">
           <div className="qr-card">
             <div className="qr-content">
-              <h3 className="qr-title">QRコード管理</h3>
+              <h3 className="qr-title">{t.account.qrTitle}</h3>
               <p className="qr-desc">
-                QRコードの生成・ダウンロードは基本情報ページから行えます。店頭掲示用のPDFも準備できます。
+                {t.account.qrDesc}
               </p>
             </div>
             <button className="btn-primary" onClick={() => router.push('/admin/basic-info')}>
-              基本情報を開く
+              {t.account.qrOpenBasicInfo}
             </button>
           </div>
         </div>

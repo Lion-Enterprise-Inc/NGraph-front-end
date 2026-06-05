@@ -3,6 +3,7 @@
 import { useState, useRef } from 'react'
 import { Ingredient, Allergen, CookingMethod, Restriction, DISH_CATEGORIES, MenuApi } from '../../../services/api'
 import type { MenuItem } from './page'
+import { useAdminLang } from '../../../hooks/useAdminLang'
 
 interface MenuFormModalProps {
   isOpen: boolean
@@ -52,6 +53,7 @@ export default function MenuFormModal({
   isSaving, onSave, activeTab, onTabChange,
   pendingImageFile, onPendingImageFileChange
 }: MenuFormModalProps) {
+  const { t } = useAdminLang()
   const [isUploading, setIsUploading] = useState(false)
   const [uploadError, setUploadError] = useState('')
   const [dragOver, setDragOver] = useState(false)
@@ -66,8 +68,8 @@ export default function MenuFormModal({
   const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB
 
   const validateFile = (file: File): string | null => {
-    if (!ACCEPTED_TYPES.includes(file.type)) return 'jpg, png, webp のみ対応'
-    if (file.size > MAX_FILE_SIZE) return 'ファイルサイズは5MB以下'
+    if (!ACCEPTED_TYPES.includes(file.type)) return t.menuList.mfValidateImageType
+    if (file.size > MAX_FILE_SIZE) return t.menuList.mfValidateImageSize
     return null
   }
 
@@ -83,7 +85,7 @@ export default function MenuFormModal({
         const resp = await MenuApi.uploadImage(editItem.uid, file)
         onEditItemChange({ ...editItem, imageUrl: resp.image_url })
       } catch (e: any) {
-        setUploadError(e.message || 'アップロードに失敗しました')
+        setUploadError(e.message || t.menuList.mfUploadFailed)
       } finally {
         setIsUploading(false)
       }
@@ -176,50 +178,50 @@ export default function MenuFormModal({
     <div className="modal active">
       <div className="modal-content">
         <button className="modal-close" onClick={handleClose}>×</button>
-        <div className="modal-title">📝 メニュー編集</div>
+        <div className="modal-title">{t.menuList.mfTitle}</div>
 
         <div className="tab-nav">
-          <button className={`tab-nav-btn ${activeTab === 'basic' ? 'active' : ''}`} onClick={() => onTabChange('basic')}>📝 基本情報</button>
-          <button className={`tab-nav-btn ${activeTab === 'materials' ? 'active' : ''}`} onClick={() => onTabChange('materials')}>🥕 原材料</button>
-          <button className={`tab-nav-btn ${activeTab === 'allergens' ? 'active' : ''}`} onClick={() => onTabChange('allergens')}>⚠️ アレルギー</button>
-          <button className={`tab-nav-btn ${activeTab === 'nfg' ? 'active' : ''}`} onClick={() => onTabChange('nfg')}>📊 NFG詳細</button>
+          <button className={`tab-nav-btn ${activeTab === 'basic' ? 'active' : ''}`} onClick={() => onTabChange('basic')}>{t.menuList.mfTabBasic}</button>
+          <button className={`tab-nav-btn ${activeTab === 'materials' ? 'active' : ''}`} onClick={() => onTabChange('materials')}>{t.menuList.mfTabMaterials}</button>
+          <button className={`tab-nav-btn ${activeTab === 'allergens' ? 'active' : ''}`} onClick={() => onTabChange('allergens')}>{t.menuList.mfTabAllergens}</button>
+          <button className={`tab-nav-btn ${activeTab === 'nfg' ? 'active' : ''}`} onClick={() => onTabChange('nfg')}>{t.menuList.mfTabNfg}</button>
         </div>
 
         {activeTab === 'basic' && (
           <div className="tab-content">
             <div className="form-group">
-              <label className="form-label">料理名（日本語）*</label>
+              <label className="form-label">{t.menuList.mfFieldNameJp}</label>
               <input type="text" className="form-input" value={getName()} onChange={(e) => setField('name', e.target.value)} />
             </div>
             <div className="form-group">
-              <label className="form-label">料理名（英語）</label>
+              <label className="form-label">{t.menuList.mfFieldNameEn}</label>
               <input type="text" className="form-input" value={getNameEn()} onChange={(e) => setField('nameEn', e.target.value)} />
-              <button className="btn ai-btn btn-small" style={{ marginTop: '5px' }}>🤖 AI自動翻訳</button>
+              <button className="btn ai-btn btn-small" style={{ marginTop: '5px' }}>{t.menuList.mfBtnAiTranslate}</button>
             </div>
             <div className="form-group">
-              <label className="form-label">価格 *</label>
+              <label className="form-label">{t.menuList.mfFieldPrice}</label>
               <input type="number" className="form-input" value={getPrice()} onChange={(e) => setField('price', isEdit ? Number(e.target.value) : e.target.value)} />
             </div>
             <div className="form-group">
-              <label className="form-label">カテゴリー *</label>
+              <label className="form-label">{t.menuList.mfFieldCategory}</label>
               <select className="form-input" value={getCategory()} onChange={(e) => setField('category', e.target.value)}>
-                <option value="">選択してください</option>
+                <option value="">{t.menuList.mfSelect}</option>
                 {Object.entries(DISH_CATEGORIES).map(([value, label]) => (
                   <option key={value} value={value}>{label}</option>
                 ))}
               </select>
             </div>
             <div className="form-group">
-              <label className="form-label">料理の説明（日本語）</label>
+              <label className="form-label">{t.menuList.mfFieldDescJp}</label>
               <textarea className="form-input" value={getDescription()} onChange={(e) => setField('description', e.target.value)} />
-              <button className="btn ai-btn btn-small" style={{ marginTop: '5px' }}>🤖 AI生成</button>
+              <button className="btn ai-btn btn-small" style={{ marginTop: '5px' }}>{t.menuList.mfBtnAiGenerate}</button>
             </div>
             <div className="form-group">
-              <label className="form-label">料理の説明（英語）</label>
+              <label className="form-label">{t.menuList.mfFieldDescEn}</label>
               <textarea className="form-input" value={getDescriptionEn()} onChange={(e) => setField('descriptionEn', e.target.value)} />
             </div>
             <div className="form-group">
-              <label className="form-label">商品画像</label>
+              <label className="form-label">{t.menuList.mfFieldImage}</label>
               <div
                 onDragOver={(e) => { e.preventDefault(); setDragOver(true) }}
                 onDragLeave={() => setDragOver(false)}
@@ -244,38 +246,38 @@ export default function MenuFormModal({
                   onChange={handleFileInputChange}
                 />
                 {isUploading ? (
-                  <div style={{ color: '#667eea', fontSize: 14 }}>アップロード中...</div>
+                  <div style={{ color: '#667eea', fontSize: 14 }}>{t.menuList.mfUploading}</div>
                 ) : (
                   <>
                     <div style={{ fontSize: 24, marginBottom: 4 }}>📷</div>
-                    <div style={{ fontSize: 13, color: 'var(--muted)' }}>画像をドロップまたはクリックして選択</div>
-                    <div style={{ fontSize: 11, color: '#94A3B8', marginTop: 4 }}>jpg / png / webp、最大5MB</div>
+                    <div style={{ fontSize: 13, color: 'var(--muted)' }}>{t.menuList.mfImageDropHint}</div>
+                    <div style={{ fontSize: 11, color: '#94A3B8', marginTop: 4 }}>{t.menuList.mfImageFormats}</div>
                   </>
                 )}
               </div>
               {uploadError && <div style={{ color: '#EF4444', fontSize: 12, marginBottom: 4 }}>{uploadError}</div>}
               {!isEdit && pendingImageFile && (
-                <div style={{ fontSize: 12, color: '#10B981', marginBottom: 4 }}>選択済み: {pendingImageFile.name}（保存後にアップロードされます）</div>
+                <div style={{ fontSize: 12, color: '#10B981', marginBottom: 4 }}>{t.menuList.mfImageSelected(pendingImageFile.name)}</div>
               )}
               {getImageUrl() && (
                 <div style={{ marginTop: 4 }}>
                   <img
                     src={getImageUrl()}
-                    alt="商品画像プレビュー"
+                    alt={t.menuList.mfImageAltPreview}
                     style={{ maxWidth: 200, maxHeight: 150, borderRadius: 8, border: '1px solid var(--border)', objectFit: 'cover' }}
                     onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
                   />
                 </div>
               )}
-              <label className="form-label" style={{ marginTop: 8 }}>または画像URLを直接入力</label>
+              <label className="form-label" style={{ marginTop: 8 }}>{t.menuList.mfImageUrlLabel}</label>
               <input type="url" className="form-input" value={getImageUrl()} onChange={(e) => setField('imageUrl', e.target.value || null)} placeholder="https://example.com/image.jpg" />
             </div>
             <div className="form-group">
-              <label className="form-label">商品ページURL</label>
+              <label className="form-label">{t.menuList.mfFieldProductUrl}</label>
               <input type="url" className="form-input" value={getProductUrl()} onChange={(e) => setField('productUrl', e.target.value || null)} placeholder="https://example.com/product" />
-              <div style={{ fontSize: 11, color: '#94A3B8', marginTop: 4 }}>メーカーページ等のリンク（ドリンク商品向け）</div>
+              <div style={{ fontSize: 11, color: '#94A3B8', marginTop: 4 }}>{t.menuList.mfProductUrlHint}</div>
             </div>
-            <button className="btn btn-primary" onClick={() => onTabChange('materials')}>次へ: 原材料設定 →</button>
+            <button className="btn btn-primary" onClick={() => onTabChange('materials')}>{t.menuList.mfBtnNextMaterials}</button>
           </div>
         )}
 
@@ -283,26 +285,26 @@ export default function MenuFormModal({
           <div className="tab-content">
             {!isEdit && (
               <div className="alert-info">
-                現在の信頼度: <strong>65%</strong> → 完了後: <strong>95%</strong>
+                {t.menuList.mfConfidenceHint}
               </div>
             )}
             <div className="form-group">
-              <label className="form-label">原材料（カンマ区切りで入力）</label>
-              <button className="btn ai-btn btn-small" style={{ marginBottom: '12px' }}>🤖 AI推察</button>
+              <label className="form-label">{t.menuList.mfFieldIngredients}</label>
+              <button className="btn ai-btn btn-small" style={{ marginBottom: '12px' }}>{t.menuList.mfBtnAiSuggest}</button>
               <textarea
                 className="form-input"
                 value={getIngredients()}
                 onChange={(e) => isEdit ? onEditIngredientsTextChange(e.target.value) : onNewMenuChange({ ...newMenu, ingredients: e.target.value })}
-                placeholder="例: 鶏肉, 玉ねぎ, にんじん, 醤油, みりん"
+                placeholder={t.menuList.mfIngredientsPlaceholder}
                 rows={3}
                 style={{ marginBottom: '8px' }}
               />
               <div style={{ fontSize: '12px', color: '#94A3B8' }}>
-                ※ 複数の原材料はカンマ（,）で区切って入力してください
+                {t.menuList.mfIngredientsHint}
               </div>
             </div>
             <div className="form-group" style={{ marginTop: '20px' }}>
-              <label className="form-label">調理法</label>
+              <label className="form-label">{t.menuList.mfFieldCookingMethods}</label>
               {cookingMethods.length > 0 ? (
                 <div className="checkbox-group">
                   {cookingMethods.map(cm => (
@@ -323,11 +325,11 @@ export default function MenuFormModal({
                   ))}
                 </div>
               ) : (
-                <div style={{ color: '#94A3B8', fontStyle: 'italic', fontSize: '13px' }}>調理法マスタデータなし</div>
+                <div style={{ color: '#94A3B8', fontStyle: 'italic', fontSize: '13px' }}>{t.menuList.mfNoCookingMethods}</div>
               )}
             </div>
             <div style={{ marginTop: '12px', paddingTop: '8px', borderTop: '1px solid #1E293B' }}>
-              <button className="btn btn-primary" onClick={() => onTabChange('allergens')}>次へ: アレルギー設定 →</button>
+              <button className="btn btn-primary" onClick={() => onTabChange('allergens')}>{t.menuList.mfBtnNextAllergens}</button>
             </div>
           </div>
         )}
@@ -335,10 +337,10 @@ export default function MenuFormModal({
         {activeTab === 'allergens' && (
           <div className="tab-content">
             <div className="form-group">
-              <label className="form-label">⚠️ アレルゲン情報</label>
+              <label className="form-label">{t.menuList.mfFieldAllergenInfo}</label>
               {allergens && allergens.mandatory && allergens.mandatory.length > 0 && (
                 <div style={{ marginBottom: '20px' }}>
-                  <strong>特定原材料（表示義務）:</strong>
+                  <strong>{t.menuList.mfAllergenMandatory}</strong>
                   <div className="checkbox-group">
                     {allergens.mandatory.map(allergen => (
                       <label key={allergen.uid} className="checkbox-item">
@@ -360,7 +362,7 @@ export default function MenuFormModal({
               )}
               {allergens && allergens.recommended && allergens.recommended.length > 0 && (
                 <div style={{ marginBottom: '20px' }}>
-                  <strong>推奨表示アレルゲン:</strong>
+                  <strong>{t.menuList.mfAllergenRecommended}</strong>
                   <div className="checkbox-group">
                     {allergens.recommended.map(allergen => (
                       <label key={allergen.uid} className="checkbox-item">
@@ -382,12 +384,12 @@ export default function MenuFormModal({
               )}
               {(!allergens || (!allergens.mandatory?.length && !allergens.recommended?.length)) && (
                 <div style={{ color: '#94A3B8', fontStyle: 'italic' }}>
-                  アレルゲン情報が読み込めませんでした。後で再試行してください。
+                  {t.menuList.mfAllergenLoadFailed}
                 </div>
               )}
             </div>
             <div className="form-group" style={{ marginTop: '20px' }}>
-              <label className="form-label">食事制約</label>
+              <label className="form-label">{t.menuList.mfFieldRestrictions}</label>
               {restrictions.length > 0 ? (
                 <div className="checkbox-group">
                   {restrictions.map(r => (
@@ -408,11 +410,11 @@ export default function MenuFormModal({
                   ))}
                 </div>
               ) : (
-                <div style={{ color: '#94A3B8', fontStyle: 'italic', fontSize: '13px' }}>制約マスタデータなし</div>
+                <div style={{ color: '#94A3B8', fontStyle: 'italic', fontSize: '13px' }}>{t.menuList.mfNoRestrictions}</div>
               )}
             </div>
             <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: isEdit ? '20px' : '0' }}>
-              <button className="btn btn-primary" onClick={() => onTabChange('nfg')}>次へ: NFG詳細 →</button>
+              <button className="btn btn-primary" onClick={() => onTabChange('nfg')}>{t.menuList.mfBtnNextNfg}</button>
             </div>
           </div>
         )}
@@ -420,85 +422,85 @@ export default function MenuFormModal({
         {activeTab === 'nfg' && (
           <div className="tab-content">
             <div style={{ marginBottom: '20px' }}>
-              <h4 style={{ fontSize: '15px', fontWeight: 600, marginBottom: '12px', color: '#374151' }}>📖 ナラティブ（料理の物語）</h4>
+              <h4 style={{ fontSize: '15px', fontWeight: 600, marginBottom: '12px', color: '#374151' }}>{t.menuList.mfSectionNarrative}</h4>
               <div className="form-group">
-                <label className="form-label">料理のストーリー</label>
-                <textarea className="form-input" rows={2} value={getNarrative('story')} onChange={(e) => setNarrative('story', e.target.value)} placeholder="この料理が生まれた背景やこだわり" />
+                <label className="form-label">{t.menuList.mfNarrativeStory}</label>
+                <textarea className="form-input" rows={2} value={getNarrative('story')} onChange={(e) => setNarrative('story', e.target.value)} placeholder={t.menuList.mfNarrativeStoryPh} />
               </div>
               <div className="form-group">
-                <label className="form-label">シェフのコメント</label>
-                <textarea className="form-input" rows={2} value={getNarrative('chef_note')} onChange={(e) => setNarrative('chef_note', e.target.value)} placeholder="料理人のおすすめポイント" />
+                <label className="form-label">{t.menuList.mfNarrativeChef}</label>
+                <textarea className="form-input" rows={2} value={getNarrative('chef_note')} onChange={(e) => setNarrative('chef_note', e.target.value)} placeholder={t.menuList.mfNarrativeChefPh} />
               </div>
               <div className="form-group">
-                <label className="form-label">テイスティングノート</label>
-                <textarea className="form-input" rows={2} value={getNarrative('tasting_note')} onChange={(e) => setNarrative('tasting_note', e.target.value)} placeholder="味わいの特徴" />
+                <label className="form-label">{t.menuList.mfNarrativeTasting}</label>
+                <textarea className="form-input" rows={2} value={getNarrative('tasting_note')} onChange={(e) => setNarrative('tasting_note', e.target.value)} placeholder={t.menuList.mfNarrativeTastingPh} />
               </div>
               <div className="form-group">
-                <label className="form-label">ペアリング提案</label>
-                <input type="text" className="form-input" value={getNarrative('pairing_suggestion')} onChange={(e) => setNarrative('pairing_suggestion', e.target.value)} placeholder="おすすめのお酒や組み合わせ" />
+                <label className="form-label">{t.menuList.mfNarrativePairing}</label>
+                <input type="text" className="form-input" value={getNarrative('pairing_suggestion')} onChange={(e) => setNarrative('pairing_suggestion', e.target.value)} placeholder={t.menuList.mfNarrativePairingPh} />
               </div>
               <div className="form-group">
-                <label className="form-label">季節のメモ</label>
-                <input type="text" className="form-input" value={getNarrative('seasonal_note')} onChange={(e) => setNarrative('seasonal_note', e.target.value)} placeholder="旬の情報など" />
+                <label className="form-label">{t.menuList.mfNarrativeSeasonal}</label>
+                <input type="text" className="form-input" value={getNarrative('seasonal_note')} onChange={(e) => setNarrative('seasonal_note', e.target.value)} placeholder={t.menuList.mfNarrativeSeasonalPh} />
               </div>
             </div>
 
             <div style={{ marginBottom: '20px', borderTop: '1px solid #1E293B', paddingTop: '16px' }}>
-              <h4 style={{ fontSize: '15px', fontWeight: 600, marginBottom: '12px', color: '#374151' }}>🍽️ 提供情報</h4>
+              <h4 style={{ fontSize: '15px', fontWeight: 600, marginBottom: '12px', color: '#374151' }}>{t.menuList.mfSectionServing}</h4>
               <div style={{ display: 'flex', gap: '12px' }}>
                 <div className="form-group" style={{ flex: 1 }}>
-                  <label className="form-label">サイズ</label>
+                  <label className="form-label">{t.menuList.mfServingSize}</label>
                   <select className="form-input" value={getServing('size')} onChange={(e) => setServing('size', e.target.value)}>
-                    <option value="">未設定</option>
-                    <option value="small">小盛り</option>
-                    <option value="regular">普通</option>
-                    <option value="large">大盛り</option>
-                    <option value="family">ファミリー</option>
+                    <option value="">{t.menuList.mfServingNotSet}</option>
+                    <option value="small">{t.menuList.mfServingSmall}</option>
+                    <option value="regular">{t.menuList.mfServingRegular}</option>
+                    <option value="large">{t.menuList.mfServingLarge}</option>
+                    <option value="family">{t.menuList.mfServingFamily}</option>
                   </select>
                 </div>
                 <div className="form-group" style={{ flex: 1 }}>
-                  <label className="form-label">提供期間</label>
+                  <label className="form-label">{t.menuList.mfServingPeriod}</label>
                   <select className="form-input" value={getServing('availability')} onChange={(e) => setServing('availability', e.target.value)}>
-                    <option value="">未設定</option>
-                    <option value="always">通年</option>
-                    <option value="seasonal">季節限定</option>
-                    <option value="limited">数量限定</option>
-                    <option value="special_event">イベント限定</option>
+                    <option value="">{t.menuList.mfServingNotSet}</option>
+                    <option value="always">{t.menuList.mfServingAlways}</option>
+                    <option value="seasonal">{t.menuList.mfServingSeasonal}</option>
+                    <option value="limited">{t.menuList.mfServingLimited}</option>
+                    <option value="special_event">{t.menuList.mfServingSpecial}</option>
                   </select>
                 </div>
               </div>
             </div>
 
             <div style={{ marginBottom: '20px', borderTop: '1px solid #1E293B', paddingTop: '16px' }}>
-              <h4 style={{ fontSize: '15px', fontWeight: 600, marginBottom: '12px', color: '#374151' }}>🏷️ 特集タグ</h4>
+              <h4 style={{ fontSize: '15px', fontWeight: 600, marginBottom: '12px', color: '#374151' }}>{t.menuList.mfSectionTags}</h4>
               <div className="form-group">
                 <input type="text" className="form-input"
                   value={(isEdit ? (editItem!.featuredTags || []) : (newMenu as any).featuredTags || []).join(', ')}
                   onChange={(e) => {
-                    const tags = e.target.value.split(/[,、]/).map(t => t.trim()).filter(Boolean)
+                    const tags = e.target.value.split(/[,、]/).map(tag => tag.trim()).filter(Boolean)
                     setField('featuredTags', tags.length > 0 ? tags : null)
                   }}
-                  placeholder="人気, 店長おすすめ, 季節限定（カンマ区切り）"
+                  placeholder={t.menuList.mfTagsPlaceholder}
                 />
-                <div style={{ fontSize: 11, color: '#94A3B8', marginTop: 4 }}>カンマ区切りで入力。チャットAIが「おすすめは？」に活用します</div>
+                <div style={{ fontSize: 11, color: '#94A3B8', marginTop: 4 }}>{t.menuList.mfTagsHint}</div>
               </div>
             </div>
 
             <div style={{ marginBottom: '20px', borderTop: '1px solid #1E293B', paddingTop: '16px' }}>
-              <h4 style={{ fontSize: '15px', fontWeight: 600, marginBottom: '12px', color: '#374151' }}>💰 価格詳細</h4>
+              <h4 style={{ fontSize: '15px', fontWeight: 600, marginBottom: '12px', color: '#374151' }}>{t.menuList.mfSectionPrice}</h4>
               <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                 <div className="form-group" style={{ flex: 1 }}>
-                  <label className="form-label">通貨</label>
+                  <label className="form-label">{t.menuList.mfCurrency}</label>
                   <input type="text" className="form-input" value={getPriceDetail('currency') || 'JPY'} onChange={(e) => setPriceDetail('currency', e.target.value)} />
                 </div>
                 <div className="form-group" style={{ flex: 1 }}>
-                  <label className="form-label">税率(%)</label>
+                  <label className="form-label">{t.menuList.mfTaxRate}</label>
                   <input type="number" className="form-input" value={getPriceDetail('tax_rate') ?? 10} onChange={(e) => setPriceDetail('tax_rate', Number(e.target.value))} />
                 </div>
                 <div className="form-group" style={{ flex: 1, paddingTop: '24px' }}>
                   <label className="checkbox-item">
                     <input type="checkbox" checked={getPriceDetail('tax_included') !== false} onChange={(e) => setPriceDetail('tax_included', e.target.checked)} />
-                    税込価格
+                    {t.menuList.mfTaxIncluded}
                   </label>
                 </div>
               </div>
@@ -507,7 +509,7 @@ export default function MenuFormModal({
             {/* Status toggle (edit mode only) */}
             {isEdit && editItem && (
               <div className="form-group" style={{ marginTop: '20px', padding: '16px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-                <label className="form-label" style={{ marginBottom: '12px', display: 'block' }}>📋 確認ステータス</label>
+                <label className="form-label" style={{ marginBottom: '12px', display: 'block' }}>{t.menuList.mfStatusLabel}</label>
                 <div style={{ display: 'flex', gap: '12px' }}>
                   <button
                     type="button"
@@ -525,7 +527,7 @@ export default function MenuFormModal({
                       gap: '6px'
                     }}
                   >
-                    ✓ 承認済み
+                    {t.menuList.mfStatusVerified}
                   </button>
                   <button
                     type="button"
@@ -543,18 +545,18 @@ export default function MenuFormModal({
                       gap: '6px'
                     }}
                   >
-                    ⚠️ 未承認
+                    {t.menuList.mfStatusPending}
                   </button>
                 </div>
                 <div style={{ fontSize: '12px', color: '#94A3B8', marginTop: '8px' }}>
-                  ※ 「承認済み」に設定すると、メニューが検証済みとしてマークされます
+                  {t.menuList.mfStatusHint}
                 </div>
               </div>
             )}
 
             <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '20px' }}>
-              <button className="btn btn-secondary" onClick={handleClose}>キャンセル</button>
-              <button className="btn btn-primary" onClick={onSave}>💾 保存</button>
+              <button className="btn btn-secondary" onClick={handleClose}>{t.menuList.mfCancel}</button>
+              <button className="btn btn-primary" onClick={onSave}>{t.menuList.mfSave}</button>
             </div>
           </div>
         )}

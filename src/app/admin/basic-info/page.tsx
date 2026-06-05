@@ -7,16 +7,27 @@ import { apiClient, BUSINESS_TYPES } from '../../../services/api'
 import { useAuth } from '../../../contexts/AuthContext'
 import { useToast } from '../../../components/admin/Toast'
 import { FormField, FormInput, FormSelect, FormTextarea, FormGrid } from '../../../components/admin/ui'
+import { useAdminLang } from '../../../hooks/useAdminLang'
 
 export default function BasicInfoPage() {
   return (
-    <Suspense fallback={<AdminLayout title="基本情報"><div style={{ textAlign: 'center', padding: '40px' }}>読み込み中...</div></AdminLayout>}>
+    <Suspense fallback={<BasicInfoFallback />}>
       <BasicInfoContent />
     </Suspense>
   )
 }
 
+function BasicInfoFallback() {
+  const { t } = useAdminLang()
+  return (
+    <AdminLayout title={t.basicInfo.title}>
+      <div style={{ textAlign: 'center', padding: '40px' }}>{t.basicInfo.loading}</div>
+    </AdminLayout>
+  )
+}
+
 function BasicInfoContent() {
+  const { t } = useAdminLang()
   const { user, isLoading: authLoading } = useAuth()
   const searchParams = useSearchParams()
   const uidParam = searchParams?.get('uid') ?? null
@@ -103,7 +114,7 @@ function BasicInfoContent() {
       })
     } catch (error) {
       console.error('Failed to fetch restaurant:', error)
-      setRestaurantError('レストラン情報の取得に失敗しました')
+      setRestaurantError(t.basicInfo.errorRestaurantFetch)
     } finally {
       setRestaurantLoading(false)
     }
@@ -114,9 +125,10 @@ function BasicInfoContent() {
     if (!authLoading && user?.uid) {
       fetchRestaurantData(user.uid)
     } else if (!authLoading && !user) {
-      setRestaurantError('ユーザーデータが見つかりません')
+      setRestaurantError(t.basicInfo.errorUserNotFound)
       setRestaurantLoading(false)
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authLoading, user?.uid, isAdminViewing, uidParam])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -125,7 +137,7 @@ function BasicInfoContent() {
 
   const handleSave = async () => {
     if (!restaurant) {
-      toast('error', 'レストラン情報が読み込まれていません')
+      toast('error', t.basicInfo.errorRestaurantNotLoaded)
       return
     }
 
@@ -181,10 +193,10 @@ function BasicInfoContent() {
         await fetchRestaurantData(user.uid)
       }
 
-      toast('success', 'レストラン情報を保存しました')
+      toast('success', t.basicInfo.saved)
     } catch (error) {
       console.error('Failed to save restaurant:', error)
-      toast('error', `保存に失敗しました: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      toast('error', t.basicInfo.saveFailed(error instanceof Error ? error.message : 'Unknown error'))
     } finally {
       setIsSaving(false)
     }
@@ -245,33 +257,34 @@ function BasicInfoContent() {
           googleBusinessProfile: toStr(info.google_business_profile) || prev.googleBusinessProfile,
         }))
 
-        toast('success', `Web検索で情報を取得しました。内容を確認して保存してください。${withMenus && data.result?.menu_scrape ? ` メニュー: ${data.result.menu_scrape.items_saved || 0}件登録` : ''}`)
+        const extra = withMenus && data.result?.menu_scrape ? t.basicInfo.menuCountSuffix(data.result.menu_scrape.items_saved || 0) : ''
+        toast('success', t.basicInfo.searchSuccess(extra))
       }
     } catch (error) {
       console.error('Search failed:', error)
-      toast('error', `情報の検索に失敗しました: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      toast('error', t.basicInfo.searchFailed(error instanceof Error ? error.message : 'Unknown error'))
     } finally {
       setIsSearching(false)
     }
   }
 
   return (
-    <AdminLayout title="基本情報">
+    <AdminLayout title={t.basicInfo.title}>
       <div className="page-content">
         {restaurantLoading ? (
           <div style={{ textAlign: 'center', padding: '40px' }}>
-            <div style={{ fontSize: '18px', marginBottom: '16px' }}>レストラン情報を読み込み中...</div>
-            <div style={{ color: '#94A3B8' }}>情報を取得しています</div>
+            <div style={{ fontSize: '18px', marginBottom: '16px' }}>{t.basicInfo.loadingDetail}</div>
+            <div style={{ color: '#94A3B8' }}>{t.basicInfo.loading}</div>
           </div>
         ) : restaurantError ? (
           <div style={{ textAlign: 'center', padding: '40px' }}>
-            <div style={{ fontSize: '18px', marginBottom: '16px', color: '#dc2626' }}>エラー</div>
+            <div style={{ fontSize: '18px', marginBottom: '16px', color: '#dc2626' }}>{t.basicInfo.error}</div>
             <div style={{ color: '#94A3B8', marginBottom: '20px' }}>{restaurantError}</div>
             <button
               className="btn btn-primary"
               onClick={() => window.location.reload()}
             >
-              再読み込み
+              {t.basicInfo.reload}
             </button>
           </div>
         ) : (
@@ -281,26 +294,26 @@ function BasicInfoContent() {
               <div className="section-card">
 
                 <FormGrid cols={2}>
-                  <FormField label="レストラン名" required>
+                  <FormField label={t.basicInfo.restaurantName} required>
                     <FormInput type="text" name="storeName" value={formData.storeName} onChange={handleChange} />
                   </FormField>
-                  <FormField label="公式HP">
+                  <FormField label={t.basicInfo.officialWebsite}>
                     <FormInput type="url" name="officialWebsite" placeholder="https://..." value={formData.officialWebsite} onChange={handleChange} />
                   </FormField>
                 </FormGrid>
 
                 <FormGrid cols={2}>
-                  <FormField label="電話番号">
+                  <FormField label={t.basicInfo.phone}>
                     <FormInput type="tel" name="phone" value={formData.phone} onChange={handleChange} />
                   </FormField>
-                  <FormField label="住所">
+                  <FormField label={t.basicInfo.address}>
                     <FormInput type="text" name="address" value={formData.address} onChange={handleChange} />
                   </FormField>
                 </FormGrid>
 
-                <FormField label="業種">
+                <FormField label={t.basicInfo.businessType}>
                   <FormSelect name="storeType" value={formData.storeType} onChange={handleChange}>
-                    <option value="">選択してください</option>
+                    <option value="">{t.basicInfo.pleaseSelect}</option>
                     {Object.entries(BUSINESS_TYPES).map(([key, label]) => (
                       <option key={key} value={key}>{label}</option>
                     ))}
@@ -308,11 +321,11 @@ function BasicInfoContent() {
                 </FormField>
 
                 <FormGrid cols={2}>
-                  <FormField label="運営事業者(会社名)">
-                    <FormInput type="text" name="companyName" placeholder="例: アイダプランニング株式会社" value={formData.companyName} onChange={handleChange} />
+                  <FormField label={t.basicInfo.companyName}>
+                    <FormInput type="text" name="companyName" placeholder={t.basicInfo.companyNamePlaceholder} value={formData.companyName} onChange={handleChange} />
                   </FormField>
-                  <FormField label="代表者名">
-                    <FormInput type="text" name="representativeName" placeholder="例: 林真史" value={formData.representativeName} onChange={handleChange} />
+                  <FormField label={t.basicInfo.representativeName}>
+                    <FormInput type="text" name="representativeName" placeholder={t.basicInfo.representativeNamePlaceholder} value={formData.representativeName} onChange={handleChange} />
                   </FormField>
                 </FormGrid>
 
@@ -320,9 +333,9 @@ function BasicInfoContent() {
 
               {/* Section 2: AI情報取得 */}
               <div className="section-card">
-                <div className="card-title">AI情報取得</div>
+                <div className="card-title">{t.basicInfo.sectionAiSearch}</div>
                 <p style={{ color: '#94A3B8', marginBottom: '16px', fontSize: '13px' }}>
-                  店名で検索すると、食べログ・Googleマップ・公式HPなどから情報を自動取得します
+                  {t.basicInfo.aiSearchDesc}
                 </p>
                 <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
                   <button
@@ -330,57 +343,57 @@ function BasicInfoContent() {
                     onClick={() => handleSearchInfo(false)}
                     disabled={isSearching}
                   >
-                    {isSearching ? '検索中...' : '店名で情報を検索'}
+                    {isSearching ? t.basicInfo.searching : t.basicInfo.searchByName}
                   </button>
                   <button
                     className="btn btn-secondary"
                     onClick={() => handleSearchInfo(true)}
                     disabled={isSearching}
                   >
-                    {isSearching ? '検索中...' : 'メニューも一緒に検索'}
+                    {isSearching ? t.basicInfo.searching : t.basicInfo.searchByNameAndMenu}
                   </button>
                 </div>
               </div>
 
               {/* Section 3: 詳細情報 */}
               <div className="section-card">
-                <div className="card-title">詳細情報</div>
+                <div className="card-title">{t.basicInfo.sectionDetail}</div>
 
-                <FormField label="レストラン紹介">
-                  <FormTextarea name="description" placeholder="レストランの特徴や魅力を入力してください" value={formData.description} onChange={handleChange} rows={4} />
+                <FormField label={t.basicInfo.introduction}>
+                  <FormTextarea name="description" placeholder={t.basicInfo.introductionPlaceholder} value={formData.description} onChange={handleChange} rows={4} />
                 </FormField>
 
                 <FormGrid cols={2}>
-                  <FormField label="営業時間">
+                  <FormField label={t.basicInfo.businessHours}>
                     <FormInput type="text" name="businessHours" value={formData.businessHours} onChange={handleChange} />
                   </FormField>
-                  <FormField label="定休日">
+                  <FormField label={t.basicInfo.holidays}>
                     <FormInput type="text" name="holidays" value={formData.holidays} onChange={handleChange} />
                   </FormField>
-                  <FormField label="座席数">
-                    <FormInput type="text" name="seats" placeholder="例: 50席" value={formData.seats} onChange={handleChange} />
+                  <FormField label={t.basicInfo.seats}>
+                    <FormInput type="text" name="seats" placeholder={t.basicInfo.seatsPlaceholder} value={formData.seats} onChange={handleChange} />
                   </FormField>
-                  <FormField label="予算">
-                    <FormInput type="text" name="budget" placeholder="例: ¥3,000〜¥4,000" value={formData.budget} onChange={handleChange} />
+                  <FormField label={t.basicInfo.budget}>
+                    <FormInput type="text" name="budget" placeholder={t.basicInfo.budgetPlaceholder} value={formData.budget} onChange={handleChange} />
                   </FormField>
-                  <FormField label="駐車場">
-                    <FormInput type="text" name="parking" placeholder="例: 有（10台）" value={formData.parking} onChange={handleChange} />
+                  <FormField label={t.basicInfo.parking}>
+                    <FormInput type="text" name="parking" placeholder={t.basicInfo.parkingPlaceholder} value={formData.parking} onChange={handleChange} />
                   </FormField>
-                  <FormField label="支払い方法">
-                    <FormInput type="text" name="payment" placeholder="例: カード可、電子マネー可" value={formData.payment} onChange={handleChange} />
+                  <FormField label={t.basicInfo.payment}>
+                    <FormInput type="text" name="payment" placeholder={t.basicInfo.paymentPlaceholder} value={formData.payment} onChange={handleChange} />
                   </FormField>
-                  <FormField label="最寄り駅・アクセス">
-                    <FormInput type="text" name="accessInfo" placeholder="例: JR福井駅 徒歩5分" value={formData.accessInfo} onChange={handleChange} />
+                  <FormField label={t.basicInfo.accessInfo}>
+                    <FormInput type="text" name="accessInfo" placeholder={t.basicInfo.accessInfoPlaceholder} value={formData.accessInfo} onChange={handleChange} />
                   </FormField>
-                  <FormField label="予約URL">
+                  <FormField label={t.basicInfo.reservationUrl}>
                     <FormInput type="url" name="reservationUrl" placeholder="https://..." value={formData.reservationUrl} onChange={handleChange} />
                   </FormField>
                 </FormGrid>
 
-                <FormField label="特徴・注意事項（AIが客に答える素材）">
+                <FormField label={t.basicInfo.featuresLabel}>
                   <FormTextarea
                     name="features"
-                    placeholder="例: 子ども連れOK / 個室あり / 多目的トイレあり / Wi-Fi利用可 / 車椅子対応 / 完全予約制（モーニング）/ テーブルチャージ¥1,500 等"
+                    placeholder={t.basicInfo.featuresPlaceholder}
                     value={formData.features}
                     onChange={handleChange}
                     rows={4}
@@ -390,19 +403,19 @@ function BasicInfoContent() {
 
               {/* Section 4: 外部リンク */}
               <div className="section-card">
-                <div className="card-title">外部リンク</div>
+                <div className="card-title">{t.basicInfo.sectionExternalLinks}</div>
 
                 <FormGrid cols={2}>
-                  <FormField label="Googleマップ">
+                  <FormField label={t.basicInfo.googleMaps}>
                     <FormInput type="url" name="googleBusinessProfile" placeholder="https://maps.google.com/..." value={formData.googleBusinessProfile} onChange={handleChange} />
                   </FormField>
-                  <FormField label="食べログ">
+                  <FormField label={t.basicInfo.tabelog}>
                     <FormInput type="url" name="tabelogUrl" placeholder="https://tabelog.com/..." value={formData.tabelogUrl} onChange={handleChange} />
                   </FormField>
-                  <FormField label="ぐるなび">
+                  <FormField label={t.basicInfo.gurunavi}>
                     <FormInput type="url" name="gurunaviUrl" placeholder="https://r.gnavi.co.jp/..." value={formData.gurunaviUrl} onChange={handleChange} />
                   </FormField>
-                  <FormField label="Instagram">
+                  <FormField label={t.basicInfo.instagram}>
                     <FormInput type="url" name="instagramUrl" placeholder="https://instagram.com/..." value={formData.instagramUrl} onChange={handleChange} />
                   </FormField>
                 </FormGrid>
@@ -414,7 +427,7 @@ function BasicInfoContent() {
         {/* Global Save Button */}
         <div style={{ display: 'flex', justifyContent: 'center', marginTop: '20px', paddingTop: '20px', borderTop: '1px solid var(--border)' }}>
           <button className="btn btn-primary" onClick={handleSave} disabled={isSaving} style={{ padding: '12px 24px', fontSize: '16px' }}>
-            {isSaving ? '保存中...' : 'すべての変更を保存'}
+            {isSaving ? t.prompts.saving : t.basicInfo.saveAll}
           </button>
         </div>
       </div>

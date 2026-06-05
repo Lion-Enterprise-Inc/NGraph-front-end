@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import AdminLayout from '../../../components/admin/AdminLayout'
 import { useToast } from '../../../components/admin/Toast'
 import { RestaurantApi, UserApi, UserListItem, CreateRestaurantRequest, Restaurant, BUSINESS_TYPES, apiClient } from '../../../services/api'
+import { useAdminLang } from '../../../hooks/useAdminLang'
 
 // Store type for UI display
 interface StoreDisplay {
@@ -26,6 +27,7 @@ interface StoreDisplay {
 export default function StoresPage() {
   const router = useRouter()
   const toast = useToast()
+  const { lang, t } = useAdminLang()
   const [filter, setFilter] = useState('all')
   const [searchQuery, setSearchQuery] = useState('')
   const [stores, setStores] = useState<StoreDisplay[]>([])
@@ -74,8 +76,8 @@ export default function StoresPage() {
         name: restaurant.name,
         location: extractLocation(restaurant),
         address: restaurant.address || '',
-        type: restaurant.business_type ? (BUSINESS_TYPES[restaurant.business_type] || restaurant.business_type) : '未設定',
-        plan: (restaurant as any).subscription_plan === 'standard' ? '正規導入' : 'フリー',
+        type: restaurant.business_type ? (BUSINESS_TYPES[restaurant.business_type] || restaurant.business_type) : t.stores.notSet,
+        plan: (restaurant as any).subscription_plan === 'standard' ? t.stores.badgePlanOnboarded : t.stores.badgePlanFree,
         planId: (restaurant as any).subscription_plan || 'free',
         planPrice: (restaurant as any).subscription_plan === 'standard' ? 20000 : 0,
         menuCount: restaurant.menu_count || 0,
@@ -101,7 +103,7 @@ export default function StoresPage() {
     }
     if (address.includes('東京')) return '東京'
     if (address.includes('大阪')) return '大阪'
-    return address.split(',')[0] || '未設定'
+    return address.split(',')[0] || t.stores.notSet
   }
 
   // Helper to format date
@@ -110,10 +112,10 @@ export default function StoresPage() {
     const now = new Date()
     const diffMs = now.getTime() - date.getTime()
     const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
-    if (diffDays === 0) return '今日'
-    if (diffDays === 1) return '1日前'
-    if (diffDays < 7) return `${diffDays}日前`
-    return date.toLocaleDateString('ja-JP')
+    if (diffDays === 0) return t.stores.todayLabel
+    if (diffDays === 1) return t.stores.oneDayAgo
+    if (diffDays < 7) return t.stores.daysAgoLabel(diffDays)
+    return date.toLocaleDateString(lang === 'ja' ? 'ja-JP' : 'en-US')
   }
   const [newStore, setNewStore] = useState({
     name: '',
@@ -175,17 +177,16 @@ export default function StoresPage() {
 
   const handleCreateStore = async () => {
     if (!newStore.name || !newStore.user_uid) {
-      toast('warning', 'レストラン名とレストランオーナーは必須です')
+      toast('warning', t.stores.validateNameOwner)
       return
     }
 
-    // Validate required fields based on API requirements
     if (!newStore.phone) {
-      toast('warning', '電話番号は必須です')
+      toast('warning', t.stores.validatePhone)
       return
     }
     if (!newStore.address) {
-      toast('warning', '住所は必須です')
+      toast('warning', t.stores.validateAddress)
       return
     }
 
@@ -224,23 +225,23 @@ export default function StoresPage() {
           name: response.result.name,
           location: extractLocation(response.result),
           address: response.result.address || '',
-          type: newStore.type ? (BUSINESS_TYPES[newStore.type] || newStore.type) : '未設定',
-          plan: 'フリープラン',
+          type: newStore.type ? (BUSINESS_TYPES[newStore.type] || newStore.type) : t.stores.notSet,
+          plan: t.stores.badgePlanFree,
           planId: 'free',
           planPrice: 0,
           menuCount: 0,
-          lastUpdate: '今',
+          lastUpdate: t.stores.nowLabel,
           status: response.result.is_active ? 'active' : 'inactive'
         }
 
         setStores([...stores, newStoreData])
         setShowModal(false)
         resetNewStore()
-        toast('success', `レストラン "${response.result.name}" を登録しました（UID: ${response.result.uid}）`)
+        toast('success', t.stores.createdMsg(response.result.name, response.result.uid))
       }
     } catch (error) {
       console.error('Failed to create restaurant:', error)
-      toast('error', `レストラン作成に失敗しました: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      toast('error', t.stores.createFailed(error instanceof Error ? error.message : 'Unknown error'))
     } finally {
       setIsSubmitting(false)
     }
@@ -256,7 +257,7 @@ export default function StoresPage() {
 
   const handleStoreSearch = async () => {
     if (!newStore.name.trim()) {
-      toast('warning', '店名を入力してください')
+      toast('warning', t.stores.validateStoreName)
       return
     }
 
@@ -299,37 +300,36 @@ export default function StoresPage() {
           accessInfo: info.access || prev.accessInfo,
           features: info.features || prev.features,
         }))
-        toast('success', '情報を取得しました。内容を確認して登録してください。')
+        toast('success', t.stores.searchSuccess)
       } else {
-        toast('info', '情報が見つかりませんでした')
+        toast('info', t.stores.searchNotFound)
       }
     } catch (error) {
       console.error('Search failed:', error)
-      toast('error', `情報の検索に失敗しました: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      toast('error', t.stores.searchFailed(error instanceof Error ? error.message : 'Unknown error'))
     } finally {
       setIsStoreSearching(false)
     }
   }
 
   const handleDeleteStore = async (storeUid: string, storeName: string) => {
-    if (!confirm(`レストラン "${storeName}" を削除しますか？\n\nこの操作は元に戻すことができません。`)) return
+    if (!confirm(t.stores.confirmDelete(storeName))) return
 
     try {
       await RestaurantApi.delete(storeUid)
-      // Remove from local state
       setStores(stores.filter(s => s.uid !== storeUid))
       setTotalRestaurants(prev => prev - 1)
-      toast('success', `レストラン "${storeName}" を削除しました`)
+      toast('success', t.stores.deletedMsg(storeName))
     } catch (error) {
       console.error('Failed to delete restaurant:', error)
-      toast('error', `レストランの削除に失敗しました: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      toast('error', t.stores.deleteFailed(error instanceof Error ? error.message : 'Unknown error'))
     }
   }
 
   // Show full page loader before data is ready
   if (loading) {
     return (
-      <AdminLayout title="掲載レストラン一覧">
+      <AdminLayout title={t.stores.title}>
         <div style={{
           display: 'flex',
           flexDirection: 'column',
@@ -338,24 +338,24 @@ export default function StoresPage() {
           minHeight: '400px',
           width: '100%'
         }}>
-          <div style={{ color: '#94A3B8', fontSize: '16px' }}>レストランを読み込み中...</div>
+          <div style={{ color: '#94A3B8', fontSize: '16px' }}>{t.stores.loadingDetail}</div>
         </div>
       </AdminLayout>
     )
   }
 
   return (
-    <AdminLayout title="掲載レストラン一覧">
+    <AdminLayout title={t.stores.title}>
       <div className="card" style={{ width: '100%', maxWidth: 'none' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-          <h2 className="card-title" style={{ margin: 0 }}>掲載レストラン一覧</h2>
+          <h2 className="card-title" style={{ margin: 0 }}>{t.stores.headerTitle}</h2>
           <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
             <button className="btn btn-primary" onClick={() => setShowModal(true)}>
-              新規レストランを登録
+              {t.stores.newStore}
             </button>
             <div>
               <span style={{ fontSize: '24px', fontWeight: 700, color: '#10a37f' }}>{stores.length}</span>
-              <span style={{ color: '#94A3B8', marginLeft: '5px' }}>レストラン</span>
+              <span style={{ color: '#94A3B8', marginLeft: '5px' }}>{t.stores.countSuffix}</span>
             </div>
           </div>
         </div>
@@ -365,7 +365,7 @@ export default function StoresPage() {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="店名・住所・コードで検索..."
+            placeholder={t.stores.searchPlaceholder}
             style={{
               width: '100%', maxWidth: '360px', padding: '8px 12px',
               border: '1px solid var(--border-strong)', borderRadius: '6px',
@@ -379,20 +379,20 @@ export default function StoresPage() {
             className={`btn btn-secondary btn-small ${filter === 'all' ? 'active' : ''}`}
             onClick={() => setFilter('all')}
           >
-            すべて ({stores.length})
+            {t.stores.all} ({stores.length})
           </button>
           <button
             className={`btn btn-secondary btn-small ${filter === 'onboarded' ? 'active' : ''}`}
             onClick={() => setFilter('onboarded')}
             style={filter === 'onboarded' ? { background: '#10B981', borderColor: '#10B981' } : {}}
           >
-            正規導入 ({stores.filter(s => s.planId === 'standard').length})
+            {t.stores.onboarded} ({stores.filter(s => s.planId === 'standard').length})
           </button>
           <button
             className={`btn btn-secondary btn-small ${filter === 'free' ? 'active' : ''}`}
             onClick={() => setFilter('free')}
           >
-            フリー ({stores.filter(s => s.planId === 'free').length})
+            {t.stores.free} ({stores.filter(s => s.planId === 'free').length})
           </button>
           {cityFilters.map(([city, count]) => (
             <button
@@ -408,7 +408,7 @@ export default function StoresPage() {
         {filteredStores.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '60px 40px', color: '#94A3B8', width: '100%' }}>
             <div style={{ fontSize: '32px', marginBottom: '12px' }}>--</div>
-            <div>レストランが見つかりません</div>
+            <div>{t.stores.empty}</div>
           </div>
         ) : (
           <div id="storeListContainer">
@@ -423,22 +423,22 @@ export default function StoresPage() {
                 <div className="store-status-compact">
                   {store.storeCode && <div className="store-id-badge">ID: {store.storeCode}</div>}
                   <div className={`badge ${store.planId === 'standard' ? 'badge-success' : 'badge-secondary'}`} style={store.planId === 'standard' ? { background: '#10B981' } : { background: '#475569' }}>{store.plan}</div>
-                  <div className="store-update-compact">更新: {store.lastUpdate}</div>
+                  <div className="store-update-compact">{t.stores.updateLabel}: {store.lastUpdate}</div>
                 </div>
               </div>
 
               <div className="store-metrics-compact">
                 <div className="metric-item">
                   <span className="metric-value">{store.menuCount}</span>
-                  <span className="metric-label">メニュー</span>
+                  <span className="metric-label">{t.stores.metricMenu}</span>
                 </div>
                 <div className="metric-item">
                   <span className="metric-value" style={{ color: '#10B981' }}>{restaurantStats[store.uid]?.verified_count ?? '-'}</span>
-                  <span className="metric-label">承認済</span>
+                  <span className="metric-label">{t.stores.metricVerified}</span>
                 </div>
                 <div className="metric-item">
                   <span className="metric-value" style={{ color: '#06B6D4' }}>{restaurantStats[store.uid]?.scan_count ?? '-'}</span>
-                  <span className="metric-label">QRスキャン</span>
+                  <span className="metric-label">{t.stores.metricScan}</span>
                 </div>
               </div>
               {(() => {
@@ -467,18 +467,18 @@ export default function StoresPage() {
               })()}
 
               <div className="store-actions-compact">
-                <button className="btn btn-primary btn-small" onClick={() => router.push(`/admin/basic-info?uid=${store.uid}`)} title="基本情報を管理">
-                  管理
+                <button className="btn btn-primary btn-small" onClick={() => router.push(`/admin/basic-info?uid=${store.uid}`)} title={t.stores.titleManage}>
+                  {t.stores.btnManage}
                 </button>
-                <button className="btn btn-secondary btn-small" onClick={() => router.push(`/admin/menu-list?uid=${store.uid}`)} title="メニュー一覧を表示">
-                  メニュー
+                <button className="btn btn-secondary btn-small" onClick={() => router.push(`/admin/menu-list?uid=${store.uid}`)} title={t.stores.titleMenu}>
+                  {t.stores.btnMenu}
                 </button>
                 <button
                   className="btn btn-danger btn-small"
                   onClick={() => handleDeleteStore(store.uid, store.name)}
-                  title="レストランを削除"
+                  title={t.stores.titleDelete}
                 >
-                  削除
+                  {t.stores.btnDelete}
                 </button>
               </div>
             </div>
@@ -492,17 +492,17 @@ export default function StoresPage() {
         <div id="newStoreModal" className="modal active" onClick={(e) => { if (e.target === e.currentTarget) setShowModal(false) }}>
           <div className="modal-content">
             <div className="modal-header">
-              <h2 style={{ fontSize: '24px', fontWeight: 700, margin: 0 }}>新規レストランを登録</h2>
+              <h2 style={{ fontSize: '24px', fontWeight: 700, margin: 0 }}>{t.stores.modalTitle}</h2>
               <button className="close-btn" onClick={() => setShowModal(false)}>×</button>
             </div>
 
             <div className="form-group">
-              <label className="form-label">レストラン名 *</label>
+              <label className="form-label">{t.stores.fieldName}</label>
               <div style={{ display: 'flex', gap: '10px' }}>
                 <input
                   type="text"
                   className="form-input"
-                  placeholder="例: 蟹と海鮮ぼんた くるふ福井駅店"
+                  placeholder={t.stores.fieldNamePlaceholder}
                   value={newStore.name}
                   onChange={(e) => setNewStore({...newStore, name: e.target.value})}
                   style={{ flex: 1 }}
@@ -514,15 +514,15 @@ export default function StoresPage() {
                   disabled={isStoreSearching}
                   style={{ whiteSpace: 'nowrap' }}
                 >
-                  {isStoreSearching ? '検索中...' : '店名で情報を検索'}
+                  {isStoreSearching ? t.stores.searching : t.stores.searchByName}
                 </button>
               </div>
-              <p style={{ fontSize: '12px', color: '#94A3B8', marginTop: '4px' }}>店名を入力して検索すると、食べログ・Googleマップ等から情報を自動取得します</p>
+              <p style={{ fontSize: '12px', color: '#94A3B8', marginTop: '4px' }}>{t.stores.searchHint}</p>
             </div>
 
             <div className="form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
               <div className="form-group" style={{ marginBottom: 0 }}>
-                <label className="form-label">レストランオーナー *</label>
+                <label className="form-label">{t.stores.fieldOwner}</label>
                 <select
                   className="form-input"
                   value={newStore.user_uid}
@@ -530,7 +530,7 @@ export default function StoresPage() {
                   disabled={loadingOwners}
                 >
                   <option value="">
-                    {loadingOwners ? '読み込み中...' : 'オーナーを選択してください'}
+                    {loadingOwners ? t.layout.loading : t.stores.chooseOwner}
                   </option>
                   {restaurantOwners.map(owner => (
                     <option key={owner.uid} value={owner.uid}>
@@ -540,70 +540,70 @@ export default function StoresPage() {
                 </select>
                 {restaurantOwners.length === 0 && !loadingOwners && (
                   <div style={{ fontSize: '12px', color: '#E65100', marginTop: '4px' }}>
-                    利用可能なレストランオーナーがいません
+                    {t.stores.noOwnersAvailable}
                   </div>
                 )}
               </div>
               <div className="form-group" style={{ marginBottom: 0 }}>
-                <label className="form-label">業種</label>
+                <label className="form-label">{t.stores.fieldType}</label>
                 <select
                   className="form-input"
                   value={newStore.type}
                   onChange={(e) => setNewStore({...newStore, type: e.target.value})}
                 >
-                  <option value="">選択してください</option>
+                  <option value="">{t.stores.pleaseSelect}</option>
                   {Object.entries(BUSINESS_TYPES).map(([key, label]) => (
                     <option key={key} value={key}>{label}</option>
                   ))}
                 </select>
               </div>
               <div className="form-group" style={{ marginBottom: 0 }}>
-                <label className="form-label">住所 *</label>
-                <input type="text" className="form-input" placeholder="例: 福井県福井市中央1-1-25" value={newStore.address} onChange={(e) => setNewStore({...newStore, address: e.target.value})} />
+                <label className="form-label">{t.stores.fieldAddress}</label>
+                <input type="text" className="form-input" placeholder={t.stores.addressPlaceholder} value={newStore.address} onChange={(e) => setNewStore({...newStore, address: e.target.value})} />
               </div>
               <div className="form-group" style={{ marginBottom: 0 }}>
-                <label className="form-label">電話番号 *</label>
-                <input type="tel" className="form-input" placeholder="例: 0776-22-2235" value={newStore.phone} onChange={(e) => setNewStore({...newStore, phone: e.target.value})} />
+                <label className="form-label">{t.stores.fieldPhone}</label>
+                <input type="tel" className="form-input" placeholder={t.stores.phonePlaceholder} value={newStore.phone} onChange={(e) => setNewStore({...newStore, phone: e.target.value})} />
               </div>
             </div>
 
             <div className="card" style={{ background: '#1E293B', borderRadius: '12px', padding: '20px', border: '1px solid #1E293B', marginBottom: '16px' }}>
-              <h3 style={{ fontSize: '14px', fontWeight: 600, color: '#F8FAFC', marginBottom: '12px' }}>詳細情報（検索で自動入力されます）</h3>
+              <h3 style={{ fontSize: '14px', fontWeight: 600, color: '#F8FAFC', marginBottom: '12px' }}>{t.stores.detailSection}</h3>
               <div className="form-group">
-                <label className="form-label">レストラン紹介</label>
-                <textarea className="form-input" rows={3} placeholder="レストランの特徴や魅力" value={newStore.description} onChange={(e) => setNewStore({...newStore, description: e.target.value})} />
+                <label className="form-label">{t.stores.introduction}</label>
+                <textarea className="form-input" rows={3} placeholder={t.stores.introductionPlaceholder} value={newStore.description} onChange={(e) => setNewStore({...newStore, description: e.target.value})} />
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                 <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label className="form-label">営業時間</label>
+                  <label className="form-label">{t.stores.businessHours}</label>
                   <input type="text" className="form-input" value={newStore.hours} onChange={(e) => setNewStore({...newStore, hours: e.target.value})} />
                 </div>
                 <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label className="form-label">定休日</label>
+                  <label className="form-label">{t.stores.holidays}</label>
                   <input type="text" className="form-input" value={newStore.holidays} onChange={(e) => setNewStore({...newStore, holidays: e.target.value})} />
                 </div>
                 <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label className="form-label">座席数</label>
+                  <label className="form-label">{t.stores.seats}</label>
                   <input type="text" className="form-input" value={newStore.seats} onChange={(e) => setNewStore({...newStore, seats: e.target.value})} />
                 </div>
                 <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label className="form-label">予算</label>
+                  <label className="form-label">{t.stores.budget}</label>
                   <input type="text" className="form-input" value={newStore.budget} onChange={(e) => setNewStore({...newStore, budget: e.target.value})} />
                 </div>
                 <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label className="form-label">駐車場</label>
+                  <label className="form-label">{t.stores.parking}</label>
                   <input type="text" className="form-input" value={newStore.parking} onChange={(e) => setNewStore({...newStore, parking: e.target.value})} />
                 </div>
                 <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label className="form-label">支払い方法</label>
+                  <label className="form-label">{t.stores.payment}</label>
                   <input type="text" className="form-input" value={newStore.payment} onChange={(e) => setNewStore({...newStore, payment: e.target.value})} />
                 </div>
                 <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label className="form-label">アクセス</label>
+                  <label className="form-label">{t.stores.access}</label>
                   <input type="text" className="form-input" value={newStore.accessInfo} onChange={(e) => setNewStore({...newStore, accessInfo: e.target.value})} />
                 </div>
                 <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label className="form-label">特徴・こだわり</label>
+                  <label className="form-label">{t.stores.features}</label>
                   <input type="text" className="form-input" value={newStore.features} onChange={(e) => setNewStore({...newStore, features: e.target.value})} />
                 </div>
               </div>
@@ -616,14 +616,14 @@ export default function StoresPage() {
                 disabled={isSubmitting}
                 style={{ opacity: isSubmitting ? 0.7 : 1 }}
               >
-                {isSubmitting ? '登録中...' : '登録する'}
+                {isSubmitting ? t.stores.registering : t.stores.register}
               </button>
               <button
                 className="btn btn-secondary"
                 onClick={() => setShowModal(false)}
                 disabled={isSubmitting}
               >
-                キャンセル
+                {t.stores.cancel}
               </button>
             </div>
           </div>

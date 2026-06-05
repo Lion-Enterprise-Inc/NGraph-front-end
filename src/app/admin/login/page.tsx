@@ -4,26 +4,19 @@ import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '../../../contexts/AuthContext'
 import { AuthApi } from '../../../services/api'
+import { useAdminLang } from '../../../hooks/useAdminLang'
+import type { AdminCopy } from '../../../i18n/adminCopy'
 
-// Validation helpers
-const validateEmail = (email: string): string | null => {
-  if (!email.trim()) {
-    return 'メールアドレスを入力してください'
-  }
+const makeValidateEmail = (t: AdminCopy) => (email: string): string | null => {
+  if (!email.trim()) return t.login.validateEmailRequired
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-  if (!emailRegex.test(email)) {
-    return '有効なメールアドレスを入力してください'
-  }
+  if (!emailRegex.test(email)) return t.login.validateEmailFormat
   return null
 }
 
-const validatePassword = (password: string): string | null => {
-  if (!password) {
-    return 'パスワードを入力してください'
-  }
-  if (password.length < 8) {
-    return 'パスワードは8文字以上で入力してください'
-  }
+const makeValidatePassword = (t: AdminCopy) => (password: string): string | null => {
+  if (!password) return t.login.validatePasswordRequired
+  if (password.length < 8) return t.login.validatePasswordLength
   return null
 }
 
@@ -42,6 +35,9 @@ interface RegisterFieldErrors {
 export default function AdminLoginPage() {
   const router = useRouter()
   const { login } = useAuth()
+  const { t } = useAdminLang()
+  const validateEmail = makeValidateEmail(t)
+  const validatePassword = makeValidatePassword(t)
   const [mounted, setMounted] = useState(false)
   const [activeTab, setActiveTab] = useState<'login' | 'register'>('login')
   const [email, setEmail] = useState('')
@@ -90,7 +86,7 @@ export default function AdminLoginPage() {
           borderRadius: '50%',
           animation: 'spin 1s linear infinite'
         }} />
-        <div style={{ marginTop: '16px', color: '#94A3B8', fontSize: '14px' }}>読み込み中...</div>
+        <div style={{ marginTop: '16px', color: '#94A3B8', fontSize: '14px' }}>{t.login.loading}</div>
         <style>{`
           @keyframes spin {
             to { transform: rotate(360deg); }
@@ -155,17 +151,16 @@ export default function AdminLoginPage() {
       if (result.success) {
         router.push('/admin')
       } else {
-        setError(result.error || 'ログインに失敗しました')
+        setError(result.error || t.login.loginFailed)
       }
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'ログインに失敗しました'
-      // Map common error messages to Japanese
+      const errorMessage = err instanceof Error ? err.message : t.login.loginFailed
       if (errorMessage.toLowerCase().includes('invalid') || errorMessage.toLowerCase().includes('incorrect')) {
-        setError('メールアドレスまたはパスワードが正しくありません')
+        setError(t.login.invalidCredentials)
       } else if (errorMessage.toLowerCase().includes('not found')) {
-        setError('アカウントが見つかりません')
+        setError(t.login.accountNotFound)
       } else if (errorMessage.toLowerCase().includes('network') || errorMessage.toLowerCase().includes('fetch')) {
-        setError('ネットワークエラーが発生しました。接続を確認してください')
+        setError(t.login.networkError)
       } else {
         setError(errorMessage)
       }
@@ -183,10 +178,10 @@ export default function AdminLoginPage() {
     const passErr = validatePassword(registerPassword)
     if (passErr) errors.password = passErr
     if (!restaurantName.trim()) {
-      errors.restaurantName = 'レストラン名を入力してください'
+      errors.restaurantName = t.login.validateRestaurantNameRequired
     }
     if (!termsAgreed) {
-      errors.terms = '利用規約に同意してください'
+      errors.terms = t.login.validateTermsRequired
     }
 
     setRegisterFieldErrors(errors)
@@ -210,7 +205,7 @@ export default function AdminLoginPage() {
         return
       }
       // 自動ログイン失敗時はフォールバック
-      setRegisterSuccess('登録が完了しました。ログインしてください。')
+      setRegisterSuccess(t.login.registerSuccess)
       setActiveTab('login')
       setEmail(registerEmail)
       setRegisterEmail('')
@@ -218,9 +213,9 @@ export default function AdminLoginPage() {
       setRestaurantName('')
       setTermsAgreed(false)
     } catch (err) {
-      const msg = err instanceof Error ? err.message : '登録に失敗しました'
+      const msg = err instanceof Error ? err.message : t.login.registerFailed
       if (msg.toLowerCase().includes('already registered')) {
-        setRegisterError('このメールアドレスは既に登録されています')
+        setRegisterError(t.login.emailAlreadyRegistered)
       } else {
         setRegisterError(msg)
       }
@@ -234,12 +229,12 @@ export default function AdminLoginPage() {
       <div className="login-card">
         {/* Left: Visual Panel */}
         <div className="login-visual">
-          <h1>AIスタッフで店舗の魅力を24時間案内</h1>
-          <p>メニュー更新から多言語対応まで、AIスタッフが対応します。まずは無料プランでQRポップをお試しください。</p>
+          <h1>{t.login.visualTitle}</h1>
+          <p>{t.login.visualLead}</p>
           <ul>
-            <li>QRポップを自動生成してその場でダウンロード</li>
-            <li>Stripe決済でプランをそのままアップグレード</li>
-            <li>AIエディタ、メニュー管理、分析ダッシュボード完備</li>
+            <li>{t.login.visualBullet1}</li>
+            <li>{t.login.visualBullet2}</li>
+            <li>{t.login.visualBullet3}</li>
           </ul>
         </div>
 
@@ -252,21 +247,21 @@ export default function AdminLoginPage() {
               className={`login-tab-button ${activeTab === 'login' ? 'active' : ''}`}
               onClick={() => setActiveTab('login')}
             >
-              ログイン
+              {t.login.tabLogin}
             </button>
             <button
               type="button"
               className={`login-tab-button ${activeTab === 'register' ? 'active' : ''}`}
               onClick={() => setActiveTab('register')}
             >
-              新規登録
+              {t.login.tabRegister}
             </button>
           </div>
 
           {activeTab === 'login' ? (
             <form className="login-form" onSubmit={handleLogin}>
               <div className="form-group">
-                <label className="form-label">メールアドレス</label>
+                <label className="form-label">{t.login.email}</label>
                 <input
                   type="email"
                   className={`form-input ${fieldErrors.email ? 'input-error' : ''}`}
@@ -279,11 +274,11 @@ export default function AdminLoginPage() {
               </div>
 
               <div className="form-group">
-                <label className="form-label">パスワード</label>
+                <label className="form-label">{t.login.password}</label>
                 <input
                   type="password"
                   className={`form-input ${fieldErrors.password ? 'input-error' : ''}`}
-                  placeholder="8文字以上"
+                  placeholder={t.login.passwordPlaceholder}
                   value={password}
                   onChange={(e) => handlePasswordChange(e.target.value)}
                   onBlur={() => handleBlur('password')}
@@ -295,18 +290,18 @@ export default function AdminLoginPage() {
               {error && <div className="error-message">{error}</div>}
 
               <button type="submit" className="submit-btn" disabled={isLoading}>
-                {isLoading ? 'ログイン中...' : 'ログイン'}
+                {isLoading ? t.login.submittingLogin : t.login.submitLogin}
               </button>
 
               <div className="form-footer">
-                <span className="link">パスワードをお忘れですか？</span>
-                <span className="link">サポートに連絡</span>
+                <span className="link">{t.login.forgotPassword}</span>
+                <span className="link">{t.login.contactSupport}</span>
               </div>
             </form>
           ) : (
             <form className="login-form" onSubmit={handleRegister}>
               <div className="form-group">
-                <label className="form-label">メールアドレス</label>
+                <label className="form-label">{t.login.email}</label>
                 <input
                   type="email"
                   className={`form-input ${registerFieldErrors.email ? 'input-error' : ''}`}
@@ -318,12 +313,12 @@ export default function AdminLoginPage() {
               </div>
 
               <div className="form-group">
-                <label className="form-label">パスワード</label>
+                <label className="form-label">{t.login.password}</label>
                 <div className="password-wrap">
                   <input
                     type={showRegisterPassword ? 'text' : 'password'}
                     className={`form-input ${registerFieldErrors.password ? 'input-error' : ''}`}
-                    placeholder="8文字以上"
+                    placeholder={t.login.passwordPlaceholder}
                     value={registerPassword}
                     onChange={(e) => { setRegisterPassword(e.target.value); setRegisterError('') }}
                   />
@@ -335,11 +330,11 @@ export default function AdminLoginPage() {
               </div>
 
               <div className="form-group">
-                <label className="form-label">レストラン名</label>
+                <label className="form-label">{t.login.restaurantName}</label>
                 <input
                   type="text"
                   className={`form-input ${registerFieldErrors.restaurantName ? 'input-error' : ''}`}
-                  placeholder="例: ぼんた本店"
+                  placeholder={t.login.restaurantNamePlaceholder}
                   value={restaurantName}
                   onChange={(e) => { setRestaurantName(e.target.value); setRegisterError('') }}
                 />
@@ -352,19 +347,19 @@ export default function AdminLoginPage() {
                   checked={termsAgreed}
                   onChange={(e) => setTermsAgreed(e.target.checked)}
                 />
-                <span><a href="https://ngraph.jp/legal.html" target="_blank" rel="noopener" className="link">利用規約</a>に同意</span>
+                <span><a href="https://ngraph.jp/legal.html" target="_blank" rel="noopener" className="link">{t.login.termsLinkText}</a>{t.login.agreeToTerms}</span>
               </label>
               {registerFieldErrors.terms && <span className="field-error">{registerFieldErrors.terms}</span>}
 
               {registerError && <div className="error-message">{registerError}</div>}
 
               <button type="submit" className="submit-btn" disabled={registerLoading}>
-                {registerLoading ? '登録中...' : '登録してメニューを作る'}
+                {registerLoading ? t.login.submittingRegister : t.login.submitRegister}
               </button>
 
               <div className="form-footer">
-                <span className="link">パスワードをお忘れですか？</span>
-                <span className="link">サポートに連絡</span>
+                <span className="link">{t.login.forgotPassword}</span>
+                <span className="link">{t.login.contactSupport}</span>
               </div>
             </form>
           )}

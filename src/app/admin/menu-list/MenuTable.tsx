@@ -3,14 +3,7 @@
 import { DISH_CATEGORIES } from '../../../services/api'
 import type { MenuItem } from './page'
 import { getMissingFields } from './menuHelpers'
-
-const SORT_OPTIONS = [
-  { value: 'default', label: 'デフォルト' },
-  { value: 'rank', label: '確認優先度' },
-  { value: 'created', label: '登録日' },
-  { value: 'price', label: '価格' },
-  { value: 'name', label: '名前' },
-]
+import { useAdminLang } from '../../../hooks/useAdminLang'
 
 function isNew(createdAt: string | null): boolean {
   if (!createdAt) return false
@@ -50,7 +43,8 @@ interface MenuTableProps {
 }
 
 function HintBadges({ item, onEditWithTab }: { item: MenuItem; onEditWithTab: (item: MenuItem, tab: string) => void }) {
-  const missing = getMissingFields(item)
+  const { t } = useAdminLang()
+  const missing = getMissingFields(item, t)
   if (missing.length === 0) return null
   const show = missing.slice(0, 3)
   const rest = missing.length - show.length
@@ -83,17 +77,25 @@ export default function MenuTable({
   onPreview, onEdit, onEditWithTab, onDelete, onApprove, onBulkApprove, onAddNew, onFetchFromSource,
   onToggleStatus
 }: MenuTableProps) {
+  const { t } = useAdminLang()
+  const SORT_OPTIONS = [
+    { value: 'default', label: t.menuList.tableSortOptDefault },
+    { value: 'rank', label: t.menuList.tableSortOptRank },
+    { value: 'created', label: t.menuList.tableSortOptCreated },
+    { value: 'price', label: t.menuList.tableSortOptPrice },
+    { value: 'name', label: t.menuList.tableSortOptName },
+  ]
   return (
     <>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <h2 style={{ fontSize: '18px', margin: 0 }}>メニュー一覧</h2>
+          <h2 style={{ fontSize: '18px', margin: 0 }}>{t.menuList.tableTitle}</h2>
           <span style={{ fontSize: '14px', color: '#94A3B8', background: '#f0f4ff', padding: '4px 10px', borderRadius: '12px', fontWeight: 600 }}>
-            登録数: {totalItems}件
+            {t.menuList.tableTotalCount(totalItems)}
           </span>
         </div>
         <button className="btn btn-primary" onClick={onFetchFromSource} style={{ padding: '8px 16px', fontSize: '13px' }}>
-          🤖 基本情報のソースからメニューを取得
+          {t.menuList.tableFetchFromSourceBtn}
         </button>
       </div>
 
@@ -102,7 +104,7 @@ export default function MenuTable({
         <div style={{ position: 'relative', maxWidth: '400px' }}>
           <input
             type="text"
-            placeholder="🔍 メニュー名、カテゴリ、原材料で検索..."
+            placeholder={t.menuList.tableSearchBoxPlaceholder}
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
             style={{ width: '100%', padding: '10px 40px 10px 12px', border: '1px solid #ddd', borderRadius: '6px', fontSize: '14px' }}
@@ -120,17 +122,17 @@ export default function MenuTable({
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', flexWrap: 'wrap', gap: '8px' }}>
         <div className="filter-buttons" style={{ display: 'flex', gap: '8px' }}>
           <button className={`filter-btn ${filter === 'all' ? 'active' : ''}`} onClick={() => onFilterChange('all')} style={{ padding: '6px 12px', fontSize: '13px' }}>
-            全て ({countAll})
+            {t.menuList.tableFilterAll(countAll)}
           </button>
           <button className={`filter-btn ${filter === 'warning' ? 'active' : ''}`} onClick={() => onFilterChange('warning')} style={{ padding: '6px 12px', fontSize: '13px' }}>
-            未承認 ({countWarning})
+            {t.menuList.tableFilterWarning(countWarning)}
           </button>
           <button className={`filter-btn ${filter === 'verified' ? 'active' : ''}`} onClick={() => onFilterChange('verified')} style={{ padding: '6px 12px', fontSize: '13px' }}>
-            承認済み ({countVerified})
+            {t.menuList.tableFilterVerified(countVerified)}
           </button>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <label style={{ fontSize: '13px', color: '#94A3B8' }}>並び替え:</label>
+          <label style={{ fontSize: '13px', color: '#94A3B8' }}>{t.menuList.tableSortLabel}</label>
           <select
             value={sortKey}
             onChange={(e) => onSortChange(e.target.value, e.target.value === 'rank' ? 'asc' : sortDir)}
@@ -143,19 +145,19 @@ export default function MenuTable({
               onClick={() => onSortChange(sortKey, sortDir === 'asc' ? 'desc' : 'asc')}
               style={{ padding: '4px 8px', border: '1px solid #ddd', borderRadius: '4px', fontSize: '13px', background: 'var(--bg-surface)', cursor: 'pointer', color: 'var(--text)' }}
             >
-              {sortDir === 'asc' ? '↑ 昇順' : '↓ 降順'}
+              {sortDir === 'asc' ? t.menuList.tableSortAscWithArrow : t.menuList.tableSortDescWithArrow}
             </button>
           )}
-          <label style={{ fontSize: '13px', color: '#94A3B8', marginLeft: '8px' }}>表示件数:</label>
+          <label style={{ fontSize: '13px', color: '#94A3B8', marginLeft: '8px' }}>{t.menuList.tableShowLabel}</label>
           <select
             value={itemsPerPage}
             onChange={(e) => onItemsPerPageChange(Number(e.target.value))}
             style={{ padding: '4px 8px', border: '1px solid #ddd', borderRadius: '4px', fontSize: '13px' }}
           >
-            <option value={10}>10件</option>
-            <option value={30}>30件</option>
-            <option value={50}>50件</option>
-            <option value={100}>100件</option>
+            <option value={10}>{t.menuList.tablePerPageOpt(10)}</option>
+            <option value={30}>{t.menuList.tablePerPageOpt(30)}</option>
+            <option value={50}>{t.menuList.tablePerPageOpt(50)}</option>
+            <option value={100}>{t.menuList.tablePerPageOpt(100)}</option>
           </select>
         </div>
       </div>
@@ -163,14 +165,14 @@ export default function MenuTable({
       {/* Loading/Error states */}
       {isLoading && (
         <div style={{ textAlign: 'center', padding: '40px' }}>
-          <div style={{ fontSize: '18px', marginBottom: '16px' }}>📋 メニューを読み込み中...</div>
+          <div style={{ fontSize: '18px', marginBottom: '16px' }}>{t.menuList.tableLoading}</div>
         </div>
       )}
 
       {error && (
         <div style={{ textAlign: 'center', padding: '40px', color: '#dc2626' }}>
           <div style={{ fontSize: '18px', marginBottom: '16px' }}>❌ {error}</div>
-          <button className="btn btn-primary" onClick={() => window.location.reload()}>再読み込み</button>
+          <button className="btn btn-primary" onClick={() => window.location.reload()}>{t.menuList.tableReload}</button>
         </div>
       )}
 
@@ -182,7 +184,7 @@ export default function MenuTable({
             onClick={onBulkApprove}
             style={{ background: '#10b981', color: 'white', padding: '8px 16px', fontSize: '13px' }}
           >
-            一括承認 ({countWarning}件)
+            {t.menuList.tableBulkApproveCount(countWarning)}
           </button>
         </div>
       )}
@@ -193,25 +195,25 @@ export default function MenuTable({
           <table className="menu-table desktop-table">
             <thead>
               <tr>
-                <th style={{ width: '4%', textAlign: 'center' }}>No.</th>
-                <th style={{ width: '33%' }}>メニュー詳細</th>
-                <th style={{ width: '10%', textAlign: 'center' }}>価格</th>
-                <th style={{ width: '10%', textAlign: 'center' }}>確認優先度</th>
-                <th style={{ width: '10%', textAlign: 'center' }}>ステータス</th>
-                <th style={{ width: '33%', textAlign: 'center' }}>操作</th>
+                <th style={{ width: '4%', textAlign: 'center' }}>{t.menuList.tableColNo}</th>
+                <th style={{ width: '33%' }}>{t.menuList.tableColDetail}</th>
+                <th style={{ width: '10%', textAlign: 'center' }}>{t.menuList.colPrice}</th>
+                <th style={{ width: '10%', textAlign: 'center' }}>{t.menuList.verifyPriorityTitle}</th>
+                <th style={{ width: '10%', textAlign: 'center' }}>{t.menuList.colStatus}</th>
+                <th style={{ width: '33%', textAlign: 'center' }}>{t.menuList.colActions}</th>
               </tr>
             </thead>
             <tbody>
               {items.length === 0 ? (
                 <tr>
                   <td colSpan={6} style={{ textAlign: 'center', padding: '40px', color: '#94A3B8' }}>
-                    メニューがありません。「手動で新規追加」ボタンからメニューを追加してください。
+                    {t.menuList.tableEmpty}
                   </td>
                 </tr>
               ) : items.map((item, index) => {
                 const rank = item.verificationRank
                 const rkColor = rank === 'S' ? '#EF4444' : rank === 'A' ? '#F59E0B' : rank === 'B' ? '#3B82F6' : rank === 'C' ? '#10B981' : ''
-                const rkLabel = rank === 'S' ? '必ず確認' : rank === 'A' ? '要確認' : rank === 'B' ? '確認推奨' : rank === 'C' ? '確認不要' : ''
+                const rkLabel = rank === 'S' ? t.menuList.rankMustVerify : rank === 'A' ? t.menuList.rankNeedReview : rank === 'B' ? t.menuList.rankReviewRecommended : rank === 'C' ? t.menuList.rankVerified : ''
                 const rowNum = (currentPage - 1) * itemsPerPage + index + 1
                 const itemIsNew = isNew(item.createdAt)
                 return (
@@ -243,7 +245,7 @@ export default function MenuTable({
                             📂 {DISH_CATEGORIES[item.category] || item.category}
                           </div>
                           <div style={{ fontSize: '10px', color: 'var(--muted)', marginBottom: '2px' }}>
-                            🥘 {item.ingredients?.length > 0 ? item.ingredients.map(ing => ing.name).join(', ') : '原材料なし'}
+                            🥘 {item.ingredients?.length > 0 ? item.ingredients.map(ing => ing.name).join(', ') : t.menuList.tableNoIngredients}
                           </div>
                           <HintBadges item={item} onEditWithTab={onEditWithTab} />
                         </div>
@@ -270,20 +272,20 @@ export default function MenuTable({
                           />
                           <span className="toggle-slider" />
                           <span style={{ fontSize: '11px', color: item.status ? '#22C55E' : '#94A3B8', marginLeft: '4px' }}>
-                            {item.status ? '公開' : '非公開'}
+                            {item.status ? t.menuList.tableStatusPublic : t.menuList.tableStatusPrivate}
                           </span>
                         </label>
                       ) : item.status ? (
-                        <span className="status-badge verified">承認済み</span>
+                        <span className="status-badge verified">{t.menuList.tableStatusVerified}</span>
                       ) : (
-                        <button className="btn-action btn-approve" onClick={() => onApprove(item)}>✓ 承認</button>
+                        <button className="btn-action btn-approve" onClick={() => onApprove(item)}>{t.menuList.tableApproveSymbol}</button>
                       )}
                     </td>
                     <td style={{ textAlign: 'center' }}>
                       <div style={{ display: 'flex', gap: '4px', justifyContent: 'center', flexWrap: 'wrap' }}>
-                        <button className="btn-action btn-preview" onClick={() => onPreview(item)}>👁️ プレビュー</button>
-                        <button className="btn-action btn-edit" onClick={() => onEdit(item)}>✏️ 編集</button>
-                        <button className="btn-action btn-delete" onClick={() => onDelete(item.uid)}>🗑️ 削除</button>
+                        <button className="btn-action btn-preview" onClick={() => onPreview(item)}>{t.menuList.tablePreviewBtn}</button>
+                        <button className="btn-action btn-edit" onClick={() => onEdit(item)}>{t.menuList.tableEditBtn}</button>
+                        <button className="btn-action btn-delete" onClick={() => onDelete(item.uid)}>{t.menuList.tableDeleteBtn}</button>
                       </div>
                     </td>
                   </tr>
@@ -299,12 +301,12 @@ export default function MenuTable({
         <div className="mobile-card-list">
           {items.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '40px', color: '#94A3B8' }}>
-              メニューがありません。「手動で新規追加」ボタンからメニューを追加してください。
+              {t.menuList.tableEmpty}
             </div>
           ) : items.map((item, index) => {
             const mRank = item.verificationRank
             const mRkColor = mRank === 'S' ? '#EF4444' : mRank === 'A' ? '#F59E0B' : mRank === 'B' ? '#3B82F6' : mRank === 'C' ? '#10B981' : ''
-            const mRkLabel = mRank === 'S' ? '必ず確認' : mRank === 'A' ? '要確認' : mRank === 'B' ? '確認推奨' : mRank === 'C' ? '確認不要' : ''
+            const mRkLabel = mRank === 'S' ? t.menuList.rankMustVerify : mRank === 'A' ? t.menuList.rankNeedReview : mRank === 'B' ? t.menuList.rankReviewRecommended : mRank === 'C' ? t.menuList.rankVerified : ''
             const rowNum = (currentPage - 1) * itemsPerPage + index + 1
             const itemIsNew = isNew(item.createdAt)
             return (
@@ -329,9 +331,9 @@ export default function MenuTable({
                   <div style={{ textAlign: 'right' }}>
                     <div style={{ fontWeight: 600, color: '#28a745', fontSize: '15px' }}>¥{item.price.toLocaleString()}</div>
                     {item.status ? (
-                      <span className="status-badge verified" style={{ marginTop: '4px', display: 'inline-block' }}>承認済み</span>
+                      <span className="status-badge verified" style={{ marginTop: '4px', display: 'inline-block' }}>{t.menuList.tableStatusVerified}</span>
                     ) : (
-                      <span className="status-badge warning" style={{ marginTop: '4px', display: 'inline-block' }}>未承認</span>
+                      <span className="status-badge warning" style={{ marginTop: '4px', display: 'inline-block' }}>{t.menuList.tableStatusPending}</span>
                     )}
                   </div>
                 </div>
@@ -342,7 +344,7 @@ export default function MenuTable({
                 <HintBadges item={item} onEditWithTab={onEditWithTab} />
                 <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginTop: '8px' }}>
                   {!item.status && (
-                    <button className="btn-action btn-approve" onClick={() => onApprove(item)}>✓ 承認</button>
+                    <button className="btn-action btn-approve" onClick={() => onApprove(item)}>{t.menuList.tableApproveSymbol}</button>
                   )}
                   <button className="btn-action btn-preview" onClick={() => onPreview(item)}>👁️</button>
                   <button className="btn-action btn-edit" onClick={() => onEdit(item)}>✏️</button>
@@ -363,11 +365,11 @@ export default function MenuTable({
             disabled={currentPage === 1}
             style={{ padding: '8px 16px', opacity: currentPage === 1 ? 0.5 : 1 }}
           >
-            ← 前へ
+            ← {t.menuList.pagePrev}
           </button>
 
           <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-            <span style={{ fontSize: '14px', color: '#94A3B8' }}>ページ</span>
+            <span style={{ fontSize: '14px', color: '#94A3B8' }}>{t.menuList.tablePagePage}</span>
             {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
               const pageNum = Math.max(1, Math.min(totalPages - 4, currentPage - 2)) + i
               if (pageNum > totalPages) return null
@@ -391,7 +393,7 @@ export default function MenuTable({
             disabled={currentPage === totalPages}
             style={{ padding: '8px 16px', opacity: currentPage === totalPages ? 0.5 : 1 }}
           >
-            次へ →
+            {t.menuList.pageNext} →
           </button>
         </div>
       )}
@@ -399,12 +401,12 @@ export default function MenuTable({
       {/* Total items info */}
       {!isLoading && !error && (
         <div style={{ textAlign: 'center', marginBottom: '16px', color: '#94A3B8', fontSize: '14px' }}>
-          全{totalItems}件中 {(currentPage - 1) * itemsPerPage + 1}-{Math.min(currentPage * itemsPerPage, totalItems)}件を表示
+          {t.menuList.tableShowingItems(totalItems, (currentPage - 1) * itemsPerPage + 1, Math.min(currentPage * itemsPerPage, totalItems))}
         </div>
       )}
 
       <button className="btn btn-primary" onClick={onAddNew} style={{ width: 'auto', minWidth: '180px', maxWidth: '250px', margin: '8px auto', display: 'block', padding: '10px 20px', fontSize: '14px' }}>
-        ➕ 手動で新規追加
+        {t.menuList.tableManualAdd}
       </button>
 
       <style jsx>{`

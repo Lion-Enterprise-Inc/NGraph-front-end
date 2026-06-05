@@ -5,14 +5,7 @@ import AdminLayout from '../../../components/admin/AdminLayout'
 import { apiClient, TokenService } from '../../../services/api'
 import { useToast } from '../../../components/admin/Toast'
 import type { KitchenQuestion, SurveyPreview } from './questions'
-
-// 質問の対象フィールド → 日本語ラベル（バッジ表示用）
-const FIELD_LABELS: Record<string, string> = {
-  allergens: 'アレルゲン',
-  ingredients: '食材',
-  cooking_methods: '調理法',
-  restrictions: '対応',
-}
+import { useAdminLang } from '../../../hooks/useAdminLang'
 
 function ProgressBar({ filled, total }: { filled: number; total: number }) {
   const pct = total > 0 ? (filled / total) * 100 : 0
@@ -31,6 +24,13 @@ function ProgressBar({ filled, total }: { filled: number; total: number }) {
 }
 
 export default function StoreKnowledgePage() {
+  const { t } = useAdminLang()
+  const FIELD_LABELS: Record<string, string> = {
+    allergens: t.storeKnowledge.fieldAllergens,
+    ingredients: t.storeKnowledge.fieldIngredients,
+    cooking_methods: t.storeKnowledge.fieldCookingMethods,
+    restrictions: t.storeKnowledge.fieldRestrictions,
+  }
   const [loading, setLoading] = useState(true)
   const [slug, setSlug] = useState<string | null>(null)
   const [preview, setPreview] = useState<SurveyPreview | null>(null)
@@ -108,7 +108,7 @@ export default function StoreKnowledgePage() {
       }
     } catch (err) {
       console.error(err)
-      toast('error', '質問の読み込みに失敗')
+      toast('error', t.storeKnowledge.loadFailed)
     } finally {
       setLoading(false)
     }
@@ -132,12 +132,12 @@ export default function StoreKnowledgePage() {
       const added = r.allergens_added?.length || 0
       const removed = r.allergens_removed?.length || 0
       if (added > 0 || removed > 0) {
-        toast('success', `${r.affected_menus}品に波及 (+${added} -${removed})`)
+        toast('success', t.storeKnowledge.propagatedAllergens(r.affected_menus, added, removed))
       } else {
-        toast('success', `保存完了 (${r.affected_menus}品対象)`)
+        toast('success', t.storeKnowledge.savedAffected(r.affected_menus))
       }
     } catch {
-      toast('error', '保存失敗')
+      toast('error', t.storeKnowledge.saveFailed)
     } finally {
       setApplyingId(null)
     }
@@ -158,9 +158,9 @@ export default function StoreKnowledgePage() {
         selected_value: newArr,
       }) as any
       const r = resp?.result || resp
-      toast('success', `${r.affected_menus}品に波及`)
+      toast('success', t.storeKnowledge.propagatedAffected(r.affected_menus))
     } catch {
-      toast('error', '保存失敗')
+      toast('error', t.storeKnowledge.saveFailed)
     } finally {
       setApplyingId(null)
     }
@@ -187,9 +187,9 @@ export default function StoreKnowledgePage() {
         })
       }).filter(Boolean)
       await Promise.allSettled(promises)
-      toast('success', `${count}件保存`)
+      toast('success', t.storeKnowledge.savedCount(count))
     } catch {
-      toast('error', '保存失敗')
+      toast('error', t.storeKnowledge.saveFailed)
     } finally {
       setSavingDish(false)
     }
@@ -208,9 +208,9 @@ export default function StoreKnowledgePage() {
       const r = data?.result || data
       const baseUrl = typeof window !== 'undefined' ? window.location.origin : ''
       setSurveyResult({ url: `${baseUrl}/verify?token=${r.token}`, passcode: r.passcode })
-      toast('success', 'サーベイを作成しました')
+      toast('success', t.storeKnowledge.surveyCreated)
     } catch {
-      toast('error', 'サーベイ作成に失敗しました')
+      toast('error', t.storeKnowledge.surveyFailed)
     } finally {
       setCreatingSurvey(false)
     }
@@ -227,9 +227,9 @@ export default function StoreKnowledgePage() {
       const r = data?.result || data
       const baseUrl = typeof window !== 'undefined' ? window.location.origin : ''
       setUploadResult({ url: `${baseUrl}/upload?token=${r.token}`, passcode: r.passcode })
-      toast('success', 'メニュー収集リンクを作成しました')
+      toast('success', t.storeKnowledge.uploadCreated)
     } catch {
-      toast('error', 'リンク作成に失敗しました')
+      toast('error', t.storeKnowledge.uploadFailed)
     } finally {
       setCreatingUpload(false)
     }
@@ -237,7 +237,7 @@ export default function StoreKnowledgePage() {
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text)
-    toast('success', 'コピーしました')
+    toast('success', t.storeKnowledge.copied)
   }
 
   // Counts
@@ -261,14 +261,14 @@ export default function StoreKnowledgePage() {
   }
 
   if (loading) {
-    return <AdminLayout title="店舗知識"><div style={{ textAlign: 'center', padding: 60, color: 'var(--muted)' }}>読み込み中...</div></AdminLayout>
+    return <AdminLayout title={t.storeKnowledge.title}><div style={{ textAlign: 'center', padding: 60, color: 'var(--muted)' }}>{t.layout.loading}</div></AdminLayout>
   }
   if (!slug || !preview) {
-    return <AdminLayout title="店舗知識"><div style={{ textAlign: 'center', padding: 60, color: 'var(--muted)' }}>レストランが見つかりません</div></AdminLayout>
+    return <AdminLayout title={t.storeKnowledge.title}><div style={{ textAlign: 'center', padding: 60, color: 'var(--muted)' }}>{t.storeKnowledge.notFound}</div></AdminLayout>
   }
 
   return (
-    <AdminLayout title="店舗知識">
+    <AdminLayout title={t.storeKnowledge.title}>
       {/* Header */}
       <div style={{
         background: 'var(--bg-surface)', border: '1px solid var(--border)',
@@ -276,7 +276,7 @@ export default function StoreKnowledgePage() {
       }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
           <div>
-            <h2 style={{ fontSize: 18, fontWeight: 600, margin: 0 }}>店舗知識 (v2.1)</h2>
+            <h2 style={{ fontSize: 18, fontWeight: 600, margin: 0 }}>{t.storeKnowledge.headerTitle}</h2>
             <p style={{ fontSize: 13, color: 'var(--muted)', marginTop: 4 }}>
               {preview.restaurant_name} — {slug}
             </p>
@@ -285,16 +285,16 @@ export default function StoreKnowledgePage() {
             <button onClick={() => { setUploadResult(null); setShowUploadModal(true) }} style={{
               padding: '10px 16px', background: 'transparent', color: '#16A34A',
               border: '1px solid #16A34A', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: 600,
-            }}>メニュー収集リンク</button>
+            }}>{t.storeKnowledge.uploadLinkBtn}</button>
             <button onClick={() => { setSurveyResult(null); setShowSurveyModal(true) }} style={{
               padding: '10px 16px', background: 'transparent', color: '#3B82F6',
               border: '1px solid #3B82F6', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: 600,
-            }}>オーナーサーベイ作成</button>
+            }}>{t.storeKnowledge.surveyBtn}</button>
           </div>
         </div>
         <ProgressBar filled={answered} total={total} />
         <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 6 }}>
-          {answered === 0 ? '未回答' : `${answered}問回答済み / 全${total}問`}
+          {answered === 0 ? t.storeKnowledge.notAnswered : t.storeKnowledge.progressLabel(answered, total)}
         </div>
       </div>
 
@@ -303,9 +303,9 @@ export default function StoreKnowledgePage() {
         background: 'var(--bg-surface)', border: '1px solid var(--border)',
         borderRadius: 12, padding: 20, marginBottom: 16,
       }}>
-        <h3 style={{ fontSize: 16, fontWeight: 600, margin: '0 0 4px' }}>Phase 1: 厨房プロファイル</h3>
+        <h3 style={{ fontSize: 16, fontWeight: 600, margin: '0 0 4px' }}>{t.storeKnowledge.phase1Title}</h3>
         <p style={{ fontSize: 12, color: 'var(--muted)', margin: '0 0 16px' }}>
-          回答すると即座にメニューのアレルゲンに波及
+          {t.storeKnowledge.phase1Hint}
         </p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           {(preview.kitchen_questions || []).filter(showBranch).map(q => {
@@ -322,7 +322,7 @@ export default function StoreKnowledgePage() {
                     {q.is_branch && '↳ '}{q.question}
                   </span>
                   <span style={{ fontSize: 11, color: '#64748B', whiteSpace: 'nowrap', marginLeft: 8 }}>
-                    {q.affected_menu_count}品対象
+                    {t.storeKnowledge.affectedSuffix(q.affected_menu_count)}
                   </span>
                 </div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
@@ -351,13 +351,13 @@ export default function StoreKnowledgePage() {
                     )
                   })}
                 </div>
-                {isApplying && <div style={{ fontSize: 11, color: '#F59E0B', marginTop: 6 }}>波及処理中...</div>}
+                {isApplying && <div style={{ fontSize: 11, color: '#F59E0B', marginTop: 6 }}>{t.storeKnowledge.propagating}</div>}
               </div>
             )
           })}
           {preview.kitchen_questions.length === 0 && (
             <div style={{ color: 'var(--muted)', fontSize: 13 }}>
-              厨房プロファイル質問なし（揚げ物・炒め物・だし系メニューなし）
+              {t.storeKnowledge.phase1NoQuestions}
             </div>
           )}
         </div>
@@ -370,8 +370,8 @@ export default function StoreKnowledgePage() {
       }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
           <div>
-            <h3 style={{ fontSize: 16, fontWeight: 600, margin: '0 0 4px' }}>AIが見つけた要確認ポイント</h3>
-            <p style={{ fontSize: 12, color: 'var(--muted)', margin: 0 }}>答えると料理データが「確認済み」になり精度が上がります</p>
+            <h3 style={{ fontSize: 16, fontWeight: 600, margin: '0 0 4px' }}>{t.storeKnowledge.phase2Title}</h3>
+            <p style={{ fontSize: 12, color: 'var(--muted)', margin: 0 }}>{t.storeKnowledge.phase2Hint}</p>
           </div>
           <button
             onClick={saveDishAnswers}
@@ -383,7 +383,7 @@ export default function StoreKnowledgePage() {
               opacity: dishAnswered === 0 ? 0.5 : 1,
             }}
           >
-            {savingDish ? '保存中...' : `保存 (${dishAnswered}件)`}
+            {savingDish ? t.storeKnowledge.saving : t.storeKnowledge.saveLabel(dishAnswered)}
           </button>
         </div>
 
@@ -399,14 +399,14 @@ export default function StoreKnowledgePage() {
                 <span style={{
                   fontSize: 10, color: '#64748B', whiteSpace: 'nowrap', marginLeft: 8,
                   padding: '2px 6px', background: 'rgba(100,116,139,0.2)', borderRadius: 4,
-                }}>{FIELD_LABELS[q.target_field || ''] || '確認'}</span>
+                }}>{FIELD_LABELS[q.target_field || ''] || t.storeKnowledge.fieldDefault}</span>
               </div>
 
               {q.type === 'text' && (
                 <textarea
                   value={dishTexts[q.index] || ''}
                   onChange={e => setDishTexts(prev => ({ ...prev, [q.index]: e.target.value }))}
-                  placeholder="回答を入力"
+                  placeholder={t.storeKnowledge.answerInputPlaceholder}
                   rows={2}
                   style={{
                     width: '100%', padding: '10px 12px',
@@ -477,7 +477,7 @@ export default function StoreKnowledgePage() {
                   })}
                   {q.max_select && (
                     <div style={{ fontSize: 11, color: '#64748B', marginTop: 4 }}>
-                      最大{q.max_select}品選択（{(dishSelects[q.index] || []).length}品選択中）
+                      {t.storeKnowledge.maxSelectHint(q.max_select, (dishSelects[q.index] || []).length)}
                     </div>
                   )}
                 </div>
@@ -485,7 +485,7 @@ export default function StoreKnowledgePage() {
             </div>
           ))}
           {preview.dish_questions.length === 0 && (
-            <div style={{ color: 'var(--muted)', fontSize: 13 }}>料理ヒアリング質問がありません</div>
+            <div style={{ color: 'var(--muted)', fontSize: 13 }}>{t.storeKnowledge.phase2NoQuestions}</div>
           )}
         </div>
       </div>
@@ -503,7 +503,7 @@ export default function StoreKnowledgePage() {
               fontSize: 14, fontWeight: 600, boxShadow: '0 4px 20px rgba(59,130,246,0.4)',
             }}
           >
-            {savingDish ? '保存中...' : `Phase 2 保存 (${dishAnswered}件)`}
+            {savingDish ? t.storeKnowledge.saving : t.storeKnowledge.phase2FloatingSave(dishAnswered)}
           </button>
         </div>
       )}
@@ -520,14 +520,14 @@ export default function StoreKnowledgePage() {
             padding: 24, width: 400, maxWidth: '90vw',
             border: '1px solid var(--border, #334155)',
           }} onClick={e => e.stopPropagation()}>
-            <h3 style={{ margin: '0 0 16px', fontSize: 16, fontWeight: 600 }}>オーナーサーベイ作成</h3>
+            <h3 style={{ margin: '0 0 16px', fontSize: 16, fontWeight: 600 }}>{t.storeKnowledge.surveyModalTitle}</h3>
             <p style={{ fontSize: 13, color: 'var(--muted, #94A3B8)', marginBottom: 16 }}>
-              {slug} のメニュー確認URLを発行します
+              {t.storeKnowledge.surveyModalDesc(slug)}
             </p>
             {!surveyResult ? (
               <>
                 <div style={{ marginBottom: 12 }}>
-                  <label style={{ fontSize: 13, display: 'block', marginBottom: 4 }}>質問数</label>
+                  <label style={{ fontSize: 13, display: 'block', marginBottom: 4 }}>{t.storeKnowledge.fieldQuestionLimit}</label>
                   <input type="number" min={5} max={50} value={surveyLimit}
                     onChange={e => setSurveyLimit(Number(e.target.value))}
                     style={{
@@ -538,7 +538,7 @@ export default function StoreKnowledgePage() {
                   />
                 </div>
                 <div style={{ marginBottom: 16 }}>
-                  <label style={{ fontSize: 13, display: 'block', marginBottom: 4 }}>有効期限（日数）</label>
+                  <label style={{ fontSize: 13, display: 'block', marginBottom: 4 }}>{t.storeKnowledge.fieldExpiresDays}</label>
                   <input type="number" min={1} max={30} value={surveyExpDays}
                     onChange={e => setSurveyExpDays(Number(e.target.value))}
                     style={{
@@ -552,12 +552,12 @@ export default function StoreKnowledgePage() {
                   <button onClick={() => setShowSurveyModal(false)} style={{
                     padding: '8px 16px', background: 'transparent', color: 'var(--muted)',
                     border: '1px solid var(--border)', borderRadius: 8, cursor: 'pointer', fontSize: 13,
-                  }}>キャンセル</button>
+                  }}>{t.storeKnowledge.cancel}</button>
                   <button onClick={handleCreateSurvey} disabled={creatingSurvey} style={{
                     padding: '8px 16px', background: '#3B82F6', color: '#fff',
                     border: 'none', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: 600,
                     opacity: creatingSurvey ? 0.6 : 1,
-                  }}>{creatingSurvey ? '作成中...' : '作成'}</button>
+                  }}>{creatingSurvey ? t.storeKnowledge.creating : t.storeKnowledge.create}</button>
                 </div>
               </>
             ) : (
@@ -566,7 +566,7 @@ export default function StoreKnowledgePage() {
                   background: 'var(--bg-input, #0F172A)', borderRadius: 8, padding: 16, marginBottom: 12,
                 }}>
                   <div style={{ marginBottom: 12 }}>
-                    <label style={{ fontSize: 11, color: 'var(--muted)', display: 'block', marginBottom: 4 }}>URL</label>
+                    <label style={{ fontSize: 11, color: 'var(--muted)', display: 'block', marginBottom: 4 }}>{t.storeKnowledge.urlLabel}</label>
                     <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                       <code style={{ fontSize: 12, flex: 1, wordBreak: 'break-all', color: '#3B82F6' }}>
                         {surveyResult.url}
@@ -574,11 +574,11 @@ export default function StoreKnowledgePage() {
                       <button onClick={() => copyToClipboard(surveyResult.url)} style={{
                         padding: '4px 10px', background: '#334155', color: '#fff', border: 'none',
                         borderRadius: 6, cursor: 'pointer', fontSize: 12, whiteSpace: 'nowrap',
-                      }}>コピー</button>
+                      }}>{t.storeKnowledge.copyBtn}</button>
                     </div>
                   </div>
                   <div>
-                    <label style={{ fontSize: 11, color: 'var(--muted)', display: 'block', marginBottom: 4 }}>パスコード</label>
+                    <label style={{ fontSize: 11, color: 'var(--muted)', display: 'block', marginBottom: 4 }}>{t.storeKnowledge.passcodeLabel}</label>
                     <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                       <code style={{ fontSize: 20, fontWeight: 700, letterSpacing: 4 }}>
                         {surveyResult.passcode}
@@ -586,22 +586,22 @@ export default function StoreKnowledgePage() {
                       <button onClick={() => copyToClipboard(surveyResult.passcode)} style={{
                         padding: '4px 10px', background: '#334155', color: '#fff', border: 'none',
                         borderRadius: 6, cursor: 'pointer', fontSize: 12,
-                      }}>コピー</button>
+                      }}>{t.storeKnowledge.copyBtn}</button>
                     </div>
                   </div>
                 </div>
                 <button onClick={() => {
-                  const msg = `メニュー確認のお願い\n\nURL: ${surveyResult.url}\nパスコード: ${surveyResult.passcode}\n\n上のURLを開いてパスコードを入力すると、メニューの確認ができます。`
+                  const msg = t.storeKnowledge.lineMsgSurvey(surveyResult.url, surveyResult.passcode)
                   copyToClipboard(msg)
                 }} style={{
                   width: '100%', padding: '10px', background: '#16A34A', color: '#fff',
                   border: 'none', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: 600,
                   marginBottom: 8,
-                }}>LINE送信用テキストをコピー</button>
+                }}>{t.storeKnowledge.lineCopyBtn}</button>
                 <button onClick={() => setShowSurveyModal(false)} style={{
                   width: '100%', padding: '8px', background: 'transparent', color: 'var(--muted)',
                   border: '1px solid var(--border)', borderRadius: 8, cursor: 'pointer', fontSize: 13,
-                }}>閉じる</button>
+                }}>{t.storeKnowledge.close}</button>
               </>
             )}
           </div>
@@ -620,14 +620,14 @@ export default function StoreKnowledgePage() {
             padding: 24, width: 400, maxWidth: '90vw',
             border: '1px solid var(--border, #334155)',
           }} onClick={e => e.stopPropagation()}>
-            <h3 style={{ margin: '0 0 16px', fontSize: 16, fontWeight: 600 }}>メニュー収集リンク作成</h3>
+            <h3 style={{ margin: '0 0 16px', fontSize: 16, fontWeight: 600 }}>{t.storeKnowledge.uploadModalTitle}</h3>
             <p style={{ fontSize: 13, color: 'var(--muted, #94A3B8)', marginBottom: 16 }}>
-              {slug} のメニュー収集URLを発行します。店主がスマホで写真を撮ってメニューを登録できます。
+              {t.storeKnowledge.uploadModalDesc(slug)}
             </p>
             {!uploadResult ? (
               <>
                 <div style={{ marginBottom: 16 }}>
-                  <label style={{ fontSize: 13, display: 'block', marginBottom: 4 }}>有効期限（日数）</label>
+                  <label style={{ fontSize: 13, display: 'block', marginBottom: 4 }}>{t.storeKnowledge.fieldExpiresDays}</label>
                   <input type="number" min={1} max={30} value={uploadExpDays}
                     onChange={e => setUploadExpDays(Number(e.target.value))}
                     style={{
@@ -641,12 +641,12 @@ export default function StoreKnowledgePage() {
                   <button onClick={() => setShowUploadModal(false)} style={{
                     padding: '8px 16px', background: 'transparent', color: 'var(--muted)',
                     border: '1px solid var(--border)', borderRadius: 8, cursor: 'pointer', fontSize: 13,
-                  }}>キャンセル</button>
+                  }}>{t.storeKnowledge.cancel}</button>
                   <button onClick={handleCreateUploadLink} disabled={creatingUpload} style={{
                     padding: '8px 16px', background: '#16A34A', color: '#fff',
                     border: 'none', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: 600,
                     opacity: creatingUpload ? 0.6 : 1,
-                  }}>{creatingUpload ? '作成中...' : '作成'}</button>
+                  }}>{creatingUpload ? t.storeKnowledge.creating : t.storeKnowledge.create}</button>
                 </div>
               </>
             ) : (
@@ -655,7 +655,7 @@ export default function StoreKnowledgePage() {
                   background: 'var(--bg-input, #0F172A)', borderRadius: 8, padding: 16, marginBottom: 12,
                 }}>
                   <div style={{ marginBottom: 12 }}>
-                    <label style={{ fontSize: 11, color: 'var(--muted)', display: 'block', marginBottom: 4 }}>URL</label>
+                    <label style={{ fontSize: 11, color: 'var(--muted)', display: 'block', marginBottom: 4 }}>{t.storeKnowledge.urlLabel}</label>
                     <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                       <code style={{ fontSize: 12, flex: 1, wordBreak: 'break-all', color: '#16A34A' }}>
                         {uploadResult.url}
@@ -663,11 +663,11 @@ export default function StoreKnowledgePage() {
                       <button onClick={() => copyToClipboard(uploadResult.url)} style={{
                         padding: '4px 10px', background: '#334155', color: '#fff', border: 'none',
                         borderRadius: 6, cursor: 'pointer', fontSize: 12, whiteSpace: 'nowrap',
-                      }}>コピー</button>
+                      }}>{t.storeKnowledge.copyBtn}</button>
                     </div>
                   </div>
                   <div>
-                    <label style={{ fontSize: 11, color: 'var(--muted)', display: 'block', marginBottom: 4 }}>パスコード</label>
+                    <label style={{ fontSize: 11, color: 'var(--muted)', display: 'block', marginBottom: 4 }}>{t.storeKnowledge.passcodeLabel}</label>
                     <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                       <code style={{ fontSize: 20, fontWeight: 700, letterSpacing: 4 }}>
                         {uploadResult.passcode}
@@ -675,22 +675,22 @@ export default function StoreKnowledgePage() {
                       <button onClick={() => copyToClipboard(uploadResult.passcode)} style={{
                         padding: '4px 10px', background: '#334155', color: '#fff', border: 'none',
                         borderRadius: 6, cursor: 'pointer', fontSize: 12,
-                      }}>コピー</button>
+                      }}>{t.storeKnowledge.copyBtn}</button>
                     </div>
                   </div>
                 </div>
                 <button onClick={() => {
-                  const msg = `メニュー登録のお願い\n\nURL: ${uploadResult.url}\nパスコード: ${uploadResult.passcode}\n\n上のURLを開いてパスコードを入力し、メニュー表の写真を撮影してください。AIが自動でメニューを読み取ります。`
+                  const msg = t.storeKnowledge.lineMsgUpload(uploadResult.url, uploadResult.passcode)
                   copyToClipboard(msg)
                 }} style={{
                   width: '100%', padding: '10px', background: '#16A34A', color: '#fff',
                   border: 'none', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: 600,
                   marginBottom: 8,
-                }}>LINE送信用テキストをコピー</button>
+                }}>{t.storeKnowledge.lineCopyBtn}</button>
                 <button onClick={() => setShowUploadModal(false)} style={{
                   width: '100%', padding: '8px', background: 'transparent', color: 'var(--muted)',
                   border: '1px solid var(--border)', borderRadius: 8, cursor: 'pointer', fontSize: 13,
-                }}>閉じる</button>
+                }}>{t.storeKnowledge.close}</button>
               </>
             )}
           </div>

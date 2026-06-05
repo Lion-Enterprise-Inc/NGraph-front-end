@@ -3,6 +3,7 @@
 import { DISH_CATEGORIES } from '../../../services/api'
 import type { MenuItem } from './page'
 import { getMissingFields } from './menuHelpers'
+import { useAdminLang } from '../../../hooks/useAdminLang'
 
 interface PreviewModalProps {
   isOpen: boolean
@@ -10,21 +11,6 @@ interface PreviewModalProps {
   item: MenuItem | null
   onEdit: (item: MenuItem) => void
   onApprove?: (item: MenuItem) => Promise<void> | void
-}
-
-const NARRATIVE_LABELS: Record<string, string> = {
-  story: '料理のストーリー',
-  chef_note: 'シェフのこだわり',
-  tasting_note: '味わいの特徴',
-  pairing_suggestion: 'おすすめの組み合わせ',
-  seasonal_note: '季節のポイント',
-}
-
-const SERVING_LABELS: Record<string, string> = {
-  size: '量・サイズ',
-  availability: '提供条件',
-  style: '提供スタイル',
-  temperature: '提供温度',
 }
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
@@ -44,12 +30,12 @@ function Tag({ label, color = '#334155' }: { label: string; color?: string }) {
   )
 }
 
-function FieldRow({ label, value, missing }: { label: string; value?: string | null; missing?: boolean }) {
+function FieldRow({ label, value, missing, notSetLabel }: { label: string; value?: string | null; missing?: boolean; notSetLabel: string }) {
   return (
     <div style={{ display: 'flex', gap: 8, marginBottom: 4, fontSize: 13 }}>
       <span style={{ color: '#94A3B8', minWidth: 80, flexShrink: 0 }}>{label}</span>
       {missing ? (
-        <span style={{ color: '#EF4444', fontStyle: 'italic' }}>未設定</span>
+        <span style={{ color: '#EF4444', fontStyle: 'italic' }}>{notSetLabel}</span>
       ) : (
         <span style={{ color: '#E2E8F0' }}>{value}</span>
       )}
@@ -58,20 +44,35 @@ function FieldRow({ label, value, missing }: { label: string; value?: string | n
 }
 
 export default function PreviewModal({ isOpen, onClose, item, onEdit, onApprove }: PreviewModalProps) {
+  const { lang, t } = useAdminLang()
   if (!isOpen || !item) return null
+
+  const NARRATIVE_LABELS: Record<string, string> = {
+    story: t.menuList.pvNarrativeStory,
+    chef_note: t.menuList.pvNarrativeChefNote,
+    tasting_note: t.menuList.pvNarrativeTastingNote,
+    pairing_suggestion: t.menuList.pvNarrativePairing,
+    seasonal_note: t.menuList.pvNarrativeSeasonal,
+  }
+  const SERVING_LABELS: Record<string, string> = {
+    size: t.menuList.pvServingSize,
+    availability: t.menuList.pvServingAvailability,
+    style: t.menuList.pvServingStyle,
+    temperature: t.menuList.pvServingTemperature,
+  }
 
   const confidence = item.confidenceScore
   const confidenceColor = confidence >= 75 ? '#10B981' : confidence >= 50 ? '#F59E0B' : '#EF4444'
   const rank = item.verificationRank
   const rankColor = rank === 'S' ? '#10B981' : rank === 'A' ? '#10B981' : rank === 'B' ? '#3B82F6' : rank === 'C' ? '#F59E0B' : '#64748B'
-  const rankLabel = rank === 'S' ? '店主確認済' : rank === 'A' ? '一次ソース' : rank === 'B' ? '確認推奨' : rank === 'C' ? 'AI推定' : '未判定'
+  const rankLabel = rank === 'S' ? t.menuList.pvRankS : rank === 'A' ? t.menuList.pvRankA : rank === 'B' ? t.menuList.pvRankB : rank === 'C' ? t.menuList.pvRankC : t.menuList.pvRankUnknown
 
   const narrative = item.narrative || {}
   const serving = item.serving || {}
   const narrativeEntries = Object.entries(narrative).filter(([, v]) => v)
   const servingEntries = Object.entries(serving).filter(([, v]) => v)
 
-  const missingFields = getMissingFields(item).map(f => f.label)
+  const missingFields = getMissingFields(item, t).map(f => f.label)
 
   return (
     <div className="modal active">
@@ -112,7 +113,7 @@ export default function PreviewModal({ isOpen, onClose, item, onEdit, onApprove 
           )}
           <div style={{ flex: 1 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-              <span style={{ fontSize: 13, color: '#94A3B8' }} title="フィールド数の埋まり具合。信頼度(S/A/B/C)とは別軸。">データ完成度</span>
+              <span style={{ fontSize: 13, color: '#94A3B8' }} title={t.menuList.pvCompletenessHint}>{t.menuList.pvDataCompleteness}</span>
               <span style={{ fontSize: 15, fontWeight: 700, color: confidenceColor }}>{confidence}%</span>
             </div>
             <div style={{ height: 6, background: '#1E293B', borderRadius: 3, overflow: 'hidden' }}>
@@ -120,22 +121,22 @@ export default function PreviewModal({ isOpen, onClose, item, onEdit, onApprove 
             </div>
             {item.verifiedAt && (
               <div style={{ fontSize: 11, color: '#94A3B8', marginTop: 6 }}>
-                {new Date(item.verifiedAt).toLocaleDateString('ja-JP')} 承認
+                {new Date(item.verifiedAt).toLocaleDateString(lang === 'ja' ? 'ja-JP' : 'en-US')} {t.menuList.pvApprovedAt}
                 {item.verifiedBy && <span style={{ marginLeft: 6 }}>by {item.verifiedBy.slice(0, 8)}…</span>}
               </div>
             )}
           </div>
           <div style={{ fontSize: 11, color: '#94A3B8', textAlign: 'right' }}>
             {item.dataSource === 'owner_verified' ? (
-              <span style={{ color: '#10B981' }}>店主確認済み</span>
+              <span style={{ color: '#10B981' }}>{t.menuList.pvDataSourceOwner}</span>
             ) : item.dataSource === 'official_published' ? (
-              <span style={{ color: '#10B981' }}>公式一次ソース</span>
+              <span style={{ color: '#10B981' }}>{t.menuList.pvDataSourceOfficial}</span>
             ) : item.dataSource === 'ai_inferred' ? (
-              <span style={{ color: '#F59E0B' }}>AI推定</span>
+              <span style={{ color: '#F59E0B' }}>{t.menuList.pvDataSourceAi}</span>
             ) : (
-              <span>{item.dataSource || '未分類'}</span>
+              <span>{item.dataSource || t.menuList.pvDataSourceUncat}</span>
             )}
-            {item.status && <div style={{ color: '#10B981', marginTop: 2 }}>公開中</div>}
+            {item.status && <div style={{ color: '#10B981', marginTop: 2 }}>{t.menuList.pvPublished}</div>}
           </div>
         </div>
 
@@ -143,17 +144,17 @@ export default function PreviewModal({ isOpen, onClose, item, onEdit, onApprove 
         {item.productUrl && (
           <div style={{ marginBottom: 16 }}>
             <a href={item.productUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: 13, color: '#667eea', textDecoration: 'none' }}>
-              商品ページを開く &rarr;
+              {t.menuList.pvOpenProductPage}
             </a>
           </div>
         )}
 
         {/* Description */}
-        <Section title="説明文">
+        <Section title={t.menuList.pvSectionDescription}>
           {item.description ? (
             <div style={{ fontSize: 14, color: '#E2E8F0', lineHeight: 1.6 }}>{item.description}</div>
           ) : (
-            <div style={{ fontSize: 13, color: '#EF4444', fontStyle: 'italic' }}>未設定</div>
+            <div style={{ fontSize: 13, color: '#EF4444', fontStyle: 'italic' }}>{t.menuList.pvNotSet}</div>
           )}
           {item.descriptionEn && (
             <div style={{ fontSize: 13, color: '#94A3B8', marginTop: 6, fontStyle: 'italic' }}>{item.descriptionEn}</div>
@@ -162,54 +163,54 @@ export default function PreviewModal({ isOpen, onClose, item, onEdit, onApprove 
 
         {/* Ingredients & Allergens side by side */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
-          <Section title="原材料">
+          <Section title={t.menuList.pvSectionIngredients}>
             {item.ingredients && item.ingredients.length > 0 ? (
               <div style={{ display: 'flex', flexWrap: 'wrap' }}>
                 {item.ingredients.map(ing => <Tag key={ing.uid || ing.name} label={ing.name} />)}
               </div>
             ) : (
-              <div style={{ fontSize: 13, color: '#EF4444', fontStyle: 'italic' }}>未設定</div>
+              <div style={{ fontSize: 13, color: '#EF4444', fontStyle: 'italic' }}>{t.menuList.pvNotSet}</div>
             )}
           </Section>
-          <Section title="アレルゲン">
+          <Section title={t.menuList.pvSectionAllergens}>
             {item.allergens && item.allergens.length > 0 ? (
               <div style={{ display: 'flex', flexWrap: 'wrap' }}>
                 {item.allergens.map(a => <Tag key={a.uid} label={a.name_jp || a.name_en} color="#7F1D1D" />)}
               </div>
             ) : (
-              <div style={{ fontSize: 13, color: '#EF4444', fontStyle: 'italic' }}>未設定</div>
+              <div style={{ fontSize: 13, color: '#EF4444', fontStyle: 'italic' }}>{t.menuList.pvNotSet}</div>
             )}
           </Section>
         </div>
 
         {/* Cooking Methods & Restrictions */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
-          <Section title="調理法">
+          <Section title={t.menuList.pvSectionCooking}>
             {item.cookingMethods && item.cookingMethods.length > 0 ? (
               <div style={{ display: 'flex', flexWrap: 'wrap' }}>
                 {item.cookingMethods.map(cm => <Tag key={cm.uid} label={cm.name_jp} color="#1E3A5F" />)}
               </div>
             ) : (
-              <div style={{ fontSize: 13, color: '#94A3B8', fontStyle: 'italic' }}>未設定</div>
+              <div style={{ fontSize: 13, color: '#94A3B8', fontStyle: 'italic' }}>{t.menuList.pvNotSet}</div>
             )}
           </Section>
-          <Section title="食事制限">
+          <Section title={t.menuList.pvSectionRestrictions}>
             {item.restrictions && item.restrictions.length > 0 ? (
               <div style={{ display: 'flex', flexWrap: 'wrap' }}>
                 {item.restrictions.map(r => <Tag key={r.uid} label={r.name_jp} color="#4A1D6E" />)}
               </div>
             ) : (
-              <div style={{ fontSize: 13, color: '#94A3B8', fontStyle: 'italic' }}>なし</div>
+              <div style={{ fontSize: 13, color: '#94A3B8', fontStyle: 'italic' }}>{t.menuList.pvNone}</div>
             )}
           </Section>
         </div>
 
         {/* Narrative */}
         {narrativeEntries.length > 0 && (
-          <Section title="ナラティブ（NFG）">
+          <Section title={t.menuList.pvSectionNarrative}>
             <div style={{ background: '#0F172A', borderRadius: 8, padding: 12 }}>
               {narrativeEntries.map(([key, val]) => (
-                <FieldRow key={key} label={NARRATIVE_LABELS[key] || key} value={String(val)} />
+                <FieldRow key={key} label={NARRATIVE_LABELS[key] || key} value={String(val)} notSetLabel={t.menuList.pvNotSet} />
               ))}
             </div>
           </Section>
@@ -217,10 +218,10 @@ export default function PreviewModal({ isOpen, onClose, item, onEdit, onApprove 
 
         {/* Serving */}
         {servingEntries.length > 0 && (
-          <Section title="提供情報">
+          <Section title={t.menuList.pvSectionServing}>
             <div style={{ background: '#0F172A', borderRadius: 8, padding: 12 }}>
               {servingEntries.map(([key, val]) => (
-                <FieldRow key={key} label={SERVING_LABELS[key] || key} value={String(val)} />
+                <FieldRow key={key} label={SERVING_LABELS[key] || key} value={String(val)} notSetLabel={t.menuList.pvNotSet} />
               ))}
             </div>
           </Section>
@@ -228,7 +229,7 @@ export default function PreviewModal({ isOpen, onClose, item, onEdit, onApprove 
 
         {/* Featured Tags */}
         {item.featuredTags && item.featuredTags.length > 0 && (
-          <Section title="特集タグ">
+          <Section title={t.menuList.pvSectionFeaturedTags}>
             <div style={{ display: 'flex', flexWrap: 'wrap' }}>
               {item.featuredTags.map(tag => <Tag key={tag} label={tag} color="#7C3AED" />)}
             </div>
@@ -238,7 +239,7 @@ export default function PreviewModal({ isOpen, onClose, item, onEdit, onApprove 
         {/* Missing fields warning */}
         {missingFields.length > 0 && (
           <div style={{ padding: 12, background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 8, marginBottom: 16 }}>
-            <div style={{ fontSize: 13, fontWeight: 600, color: '#EF4444', marginBottom: 6 }}>未設定の項目 ({missingFields.length})</div>
+            <div style={{ fontSize: 13, fontWeight: 600, color: '#EF4444', marginBottom: 6 }}>{t.menuList.pvMissingFields(missingFields.length)}</div>
             <div style={{ fontSize: 12, color: '#FCA5A5' }}>{missingFields.join(' / ')}</div>
           </div>
         )}
@@ -246,24 +247,24 @@ export default function PreviewModal({ isOpen, onClose, item, onEdit, onApprove 
         {/* Actions */}
         <div style={{ display: 'flex', gap: 8, paddingTop: 16, borderTop: '1px solid var(--border)', flexWrap: 'wrap' }}>
           <button className="btn btn-primary" onClick={() => { onClose(); onEdit(item); }}>
-            ✏️ 編集する
+            {t.menuList.pvEditBtn}
           </button>
           {onApprove && rank !== 'S' && (
             <button
               className="btn btn-approve"
               onClick={async () => {
-                if (confirm(`「${item.name}」を店主確認済みとして承認しますか？`)) {
+                if (confirm(t.menuList.pvVerifyOwnerConfirm(item.name))) {
                   await onApprove(item);
                   onClose();
                 }
               }}
-              title="このデータを店主が確認したものとして verification_rank=S に昇格"
+              title={t.menuList.pvVerifyOwnerTitle}
             >
-              ✅ 店主確認済みにする
+              {t.menuList.pvVerifyOwnerBtn}
             </button>
           )}
           <button className="btn btn-secondary" onClick={onClose}>
-            閉じる
+            {t.menuList.pvCloseBtn}
           </button>
         </div>
       </div>

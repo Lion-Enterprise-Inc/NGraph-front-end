@@ -3,8 +3,10 @@
 import React, { useState, useEffect } from 'react'
 import AdminLayout from '../../../components/admin/AdminLayout'
 import { PhotoReviewApi, PhotoReviewItem, RestaurantApi, TokenService } from '../../../services/api'
+import { useAdminLang } from '../../../hooks/useAdminLang'
 
 export default function PhotoReviewPage() {
+  const { lang, t } = useAdminLang()
   const [items, setItems] = useState<PhotoReviewItem[]>([])
   const [loading, setLoading] = useState(true)
   const [statusFilter, setStatusFilter] = useState<string>('')
@@ -62,7 +64,7 @@ export default function PhotoReviewPage() {
   }
 
   const handleDelete = async (uid: string) => {
-    if (!confirm('この写真を完全に削除しますか？')) return
+    if (!confirm(t.photoReview.confirmDelete)) return
     setActionLoading(uid)
     try {
       await PhotoReviewApi.remove(uid)
@@ -81,7 +83,7 @@ export default function PhotoReviewPage() {
   }
 
   return (
-    <AdminLayout title="写真レビュー">
+    <AdminLayout title={t.photoReview.title}>
       <div style={{ marginBottom: 20, display: 'flex', gap: 12, flexWrap: 'wrap' }}>
         {!isStoreOwner && (
           <select
@@ -89,7 +91,7 @@ export default function PhotoReviewPage() {
             onChange={e => setRestaurantUid(e.target.value)}
             style={{ padding: '8px 12px', borderRadius: 8, background: 'var(--bg-input)', color: 'var(--text)', border: '1px solid var(--border-strong)', fontSize: 14 }}
           >
-            <option value="">全レストラン</option>
+            <option value="">{t.common.allRestaurants}</option>
             {restaurants.map(r => <option key={r.uid} value={r.uid}>{r.name}</option>)}
           </select>
         )}
@@ -98,7 +100,7 @@ export default function PhotoReviewPage() {
           onChange={e => setStatusFilter(e.target.value)}
           style={{ padding: '8px 12px', borderRadius: 8, background: 'var(--bg-input)', color: 'var(--text)', border: '1px solid var(--border-strong)', fontSize: 14 }}
         >
-          <option value="">全ステータス</option>
+          <option value="">{t.common.allStatuses}</option>
           <option value="pending">Pending</option>
           <option value="approved">Approved</option>
           <option value="rejected">Rejected</option>
@@ -106,9 +108,9 @@ export default function PhotoReviewPage() {
       </div>
 
       {loading ? (
-        <div style={{ textAlign: 'center', padding: 40, color: 'var(--muted)' }}>読み込み中...</div>
+        <div style={{ textAlign: 'center', padding: 40, color: 'var(--muted)' }}>{t.layout.loading}</div>
       ) : items.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: 40, color: 'var(--muted)' }}>投稿写真なし</div>
+        <div style={{ textAlign: 'center', padding: 40, color: 'var(--muted)' }}>{t.photoReview.empty}</div>
       ) : (
         <div style={{
           display: 'grid',
@@ -127,11 +129,11 @@ export default function PhotoReviewPage() {
               }}>
                 <div style={{ display: 'flex', gap: 0 }}>
                   <div style={{ width: '50%', aspectRatio: '1', overflow: 'hidden', background: '#0a0a0a' }}>
-                    <img src={item.image_url} alt="投稿写真" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    <img src={item.image_url} alt={t.photoReview.altSubmitted} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   </div>
                   {item.menu_image_url && (
                     <div style={{ width: '50%', aspectRatio: '1', overflow: 'hidden', background: '#0a0a0a' }}>
-                      <img src={item.menu_image_url} alt="現在の画像" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.6 }} />
+                      <img src={item.menu_image_url} alt={t.photoReview.altCurrent} style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.6 }} />
                     </div>
                   )}
                 </div>
@@ -159,7 +161,7 @@ export default function PhotoReviewPage() {
                   )}
                   {item.created_at && (
                     <div style={{ fontSize: 11, color: 'var(--muted)', marginBottom: 10 }}>
-                      {new Date(item.created_at).toLocaleString('ja-JP')}
+                      {new Date(item.created_at).toLocaleString(lang === 'ja' ? 'ja-JP' : 'en-US')}
                     </div>
                   )}
                   <div style={{ display: 'flex', gap: 8 }}>
@@ -173,7 +175,7 @@ export default function PhotoReviewPage() {
                             background: 'rgba(16,185,129,0.15)', color: '#10B981', fontWeight: 600, fontSize: 13,
                           }}
                         >
-                          {isLoading ? '...' : '承認'}
+                          {isLoading ? t.common.ellipsis : t.common.approve}
                         </button>
                         <button
                           onClick={() => handleReject(item.uid)}
@@ -183,7 +185,7 @@ export default function PhotoReviewPage() {
                             background: 'rgba(239,68,68,0.15)', color: '#EF4444', fontWeight: 600, fontSize: 13,
                           }}
                         >
-                          {isLoading ? '...' : '却下'}
+                          {isLoading ? t.common.ellipsis : t.common.reject}
                         </button>
                       </>
                     )}
@@ -195,7 +197,7 @@ export default function PhotoReviewPage() {
                         background: 'transparent', color: 'var(--muted)', fontSize: 13,
                       }}
                     >
-                      削除
+                      {t.common.delete}
                     </button>
                   </div>
                 </div>

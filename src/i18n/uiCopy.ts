@@ -90,7 +90,7 @@ const uiCopy = {
       flipCamera: "Flip camera",
     },
     admin: {
-      brand: "NGraph Admin",
+      brand: "OMISEAI Admin",
       back: "Back",
       closeMenu: "Close menu",
       toggleMenu: "Toggle menu",
@@ -316,7 +316,7 @@ const uiCopy = {
       flipCamera: "カメラ切替",
     },
     admin: {
-      brand: "NGraph Admin",
+      brand: "OMISEAI Admin",
       back: "戻る",
       closeMenu: "メニューを閉じる",
       toggleMenu: "メニュー切替",
@@ -542,7 +542,7 @@ const uiCopy = {
       flipCamera: "카메라 전환",
     },
     admin: {
-      brand: "NGraph Admin",
+      brand: "OMISEAI Admin",
       back: "뒤로",
       closeMenu: "메뉴 닫기",
       toggleMenu: "메뉴 토글",
@@ -754,7 +754,7 @@ const uiCopy = {
       flipCamera: "切换相机",
     },
     admin: {
-      brand: "NGraph Admin",
+      brand: "OMISEAI Admin",
       back: "返回",
       closeMenu: "关闭菜单",
       toggleMenu: "切换菜单",
@@ -953,7 +953,7 @@ const uiCopy = {
       flipCamera: "切換相機",
     },
     admin: {
-      brand: "NGraph Admin",
+      brand: "OMISEAI Admin",
       back: "返回",
       closeMenu: "關閉選單",
       toggleMenu: "切換選單",
@@ -1143,7 +1143,7 @@ const uiCopy = {
       flipCamera: "Cambiar cámara",
     },
     admin: {
-      brand: "NGraph Admin",
+      brand: "OMISEAI Admin",
       back: "Atrás",
       closeMenu: "Cerrar menú",
       toggleMenu: "Alternar menú",
@@ -1325,7 +1325,7 @@ const uiCopy = {
       flipCamera: "Changer de caméra",
     },
     admin: {
-      brand: "NGraph Admin",
+      brand: "OMISEAI Admin",
       back: "Retour",
       closeMenu: "Fermer le menu",
       toggleMenu: "Basculer le menu",
@@ -1507,7 +1507,7 @@ const uiCopy = {
       flipCamera: "Kamera wechseln",
     },
     admin: {
-      brand: "NGraph Admin",
+      brand: "OMISEAI Admin",
       back: "Zurück",
       closeMenu: "Menü schließen",
       toggleMenu: "Menü umschalten",
@@ -1689,7 +1689,7 @@ const uiCopy = {
       flipCamera: "Cambia fotocamera",
     },
     admin: {
-      brand: "NGraph Admin",
+      brand: "OMISEAI Admin",
       back: "Indietro",
       closeMenu: "Chiudi menu",
       toggleMenu: "Alterna menu",
@@ -1871,7 +1871,7 @@ const uiCopy = {
       flipCamera: "Alternar câmera",
     },
     admin: {
-      brand: "NGraph Admin",
+      brand: "OMISEAI Admin",
       back: "Voltar",
       closeMenu: "Fechar menu",
       toggleMenu: "Alternar menu",
@@ -2053,7 +2053,7 @@ const uiCopy = {
       flipCamera: "Переключить камеру",
     },
     admin: {
-      brand: "NGraph Admin",
+      brand: "OMISEAI Admin",
       back: "Назад",
       closeMenu: "Закрыть меню",
       toggleMenu: "Переключить меню",
@@ -2235,7 +2235,7 @@ const uiCopy = {
       flipCamera: "สลับกล้อง",
     },
     admin: {
-      brand: "NGraph Admin",
+      brand: "OMISEAI Admin",
       back: "กลับ",
       closeMenu: "ปิดเมนู",
       toggleMenu: "สลับเมนู",
@@ -2417,7 +2417,7 @@ const uiCopy = {
       flipCamera: "Chuyển camera",
     },
     admin: {
-      brand: "NGraph Admin",
+      brand: "OMISEAI Admin",
       back: "Quay lại",
       closeMenu: "Đóng menu",
       toggleMenu: "Chuyển menu",
@@ -2599,7 +2599,7 @@ const uiCopy = {
       flipCamera: "Ganti kamera",
     },
     admin: {
-      brand: "NGraph Admin",
+      brand: "OMISEAI Admin",
       back: "Kembali",
       closeMenu: "Tutup menu",
       toggleMenu: "Ganti menu",
@@ -2781,7 +2781,7 @@ const uiCopy = {
       flipCamera: "Tukar kamera",
     },
     admin: {
-      brand: "NGraph Admin",
+      brand: "OMISEAI Admin",
       back: "Kembali",
       closeMenu: "Tutup menu",
       toggleMenu: "Tukar menu",
@@ -2963,7 +2963,7 @@ const uiCopy = {
       flipCamera: "تبديل الكاميرا",
     },
     admin: {
-      brand: "NGraph Admin",
+      brand: "OMISEAI Admin",
       back: "رجوع",
       closeMenu: "إغلاق القائمة",
       toggleMenu: "تبديل القائمة",
@@ -3145,7 +3145,7 @@ const uiCopy = {
       flipCamera: "कैमरा बदलें",
     },
     admin: {
-      brand: "NGraph Admin",
+      brand: "OMISEAI Admin",
       back: "वापस",
       closeMenu: "मेनू बंद करें",
       toggleMenu: "मेनू बदलें",
@@ -3327,7 +3327,7 @@ const uiCopy = {
       flipCamera: "Kamerayı değiştir",
     },
     admin: {
-      brand: "NGraph Admin",
+      brand: "OMISEAI Admin",
       back: "Geri",
       closeMenu: "Menüyü kapat",
       toggleMenu: "Menüyü değiştir",
@@ -3509,7 +3509,7 @@ const uiCopy = {
       flipCamera: "ক্যামেরা বদলান",
     },
     admin: {
-      brand: "NGraph Admin",
+      brand: "OMISEAI Admin",
       back: "ফিরে",
       closeMenu: "মেনু বন্ধ করুন",
       toggleMenu: "মেনু বদলান",
@@ -3691,7 +3691,7 @@ const uiCopy = {
       flipCamera: "ကင်မရာပြောင်း",
     },
     admin: {
-      brand: "NGraph Admin",
+      brand: "OMISEAI Admin",
       back: "နောက်သို့",
       closeMenu: "မီနူးပိတ်",
       toggleMenu: "မီနူးပြောင်း",
@@ -3873,7 +3873,7 @@ const uiCopy = {
       flipCamera: "Palitan ang camera",
     },
     admin: {
-      brand: "NGraph Admin",
+      brand: "OMISEAI Admin",
       back: "Bumalik",
       closeMenu: "Isara ang menu",
       toggleMenu: "Palitan ang menu",
@@ -4055,7 +4055,7 @@ const uiCopy = {
       flipCamera: "ສະຫຼັບກ້ອງ",
     },
     admin: {
-      brand: "NGraph Admin",
+      brand: "OMISEAI Admin",
       back: "ກັບ",
       closeMenu: "ປິດເມນູ",
       toggleMenu: "ສະຫຼັບເມນູ",
@@ -4237,7 +4237,7 @@ const uiCopy = {
       flipCamera: "ប្តូរកាមេរ៉ា",
     },
     admin: {
-      brand: "NGraph Admin",
+      brand: "OMISEAI Admin",
       back: "ថយក្រោយ",
       closeMenu: "បិទម៉ឺនុយ",
       toggleMenu: "ប្តូរម៉ឺនុយ",
@@ -4419,7 +4419,7 @@ const uiCopy = {
       flipCamera: "क्यामेरा परिवर्तन",
     },
     admin: {
-      brand: "NGraph Admin",
+      brand: "OMISEAI Admin",
       back: "पछाडि",
       closeMenu: "मेनु बन्द गर्नुहोस्",
       toggleMenu: "मेनु परिवर्तन",
@@ -4601,7 +4601,7 @@ const uiCopy = {
       flipCamera: "Камер солих",
     },
     admin: {
-      brand: "NGraph Admin",
+      brand: "OMISEAI Admin",
       back: "Буцах",
       closeMenu: "Цэс хаах",
       toggleMenu: "Цэс солих",
@@ -4783,7 +4783,7 @@ const uiCopy = {
       flipCamera: "تعویض دوربین",
     },
     admin: {
-      brand: "NGraph Admin",
+      brand: "OMISEAI Admin",
       back: "بازگشت",
       closeMenu: "بستن منو",
       toggleMenu: "تعویض منو",
@@ -4965,7 +4965,7 @@ const uiCopy = {
       flipCamera: "Перемкнути камеру",
     },
     admin: {
-      brand: "NGraph Admin",
+      brand: "OMISEAI Admin",
       back: "Назад",
       closeMenu: "Закрити меню",
       toggleMenu: "Перемкнути меню",
@@ -5147,7 +5147,7 @@ const uiCopy = {
       flipCamera: "Przełącz aparat",
     },
     admin: {
-      brand: "NGraph Admin",
+      brand: "OMISEAI Admin",
       back: "Wstecz",
       closeMenu: "Zamknij menu",
       toggleMenu: "Przełącz menu",

@@ -8,10 +8,12 @@ import { useAppContext } from '../../../components/AppProvider'
 import { useAuth } from '../../../contexts/AuthContext'
 import { getUiCopy } from '../../../i18n/uiCopy'
 import { useToast } from '../../../components/admin/Toast'
+import { useAdminLang } from '../../../hooks/useAdminLang'
 
 export default function QRManagementPage() {
   const { language } = useAppContext()
   const { user, isLoading: authLoading } = useAuth()
+  const { t } = useAdminLang()
   const copy = getUiCopy(language)
   const [restaurantSlug, setRestaurantSlug] = useState('')
   const [shortCode, setShortCode] = useState('')
@@ -111,7 +113,7 @@ export default function QRManagementPage() {
   // Show loading while auth is initializing
   if (authLoading) {
     return (
-      <AdminLayout title="QR Code Management">
+      <AdminLayout title={t.nav.qrManagement}>
         <div className="qr-management-container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '300px' }}>
           <div style={{ textAlign: 'center' }}>
             <div style={{ 
@@ -132,7 +134,7 @@ export default function QRManagementPage() {
   }
 
   return (
-    <AdminLayout title="QR Code Management">
+    <AdminLayout title={t.nav.qrManagement}>
       <div className="qr-management-container">
         <div className="qr-management-header">
           <h1>QR Code Generator</h1>

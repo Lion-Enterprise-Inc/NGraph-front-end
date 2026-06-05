@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation'
 import AdminLayout from '../../components/admin/AdminLayout'
 import { apiClient, MenuApi } from '../../services/api'
 import { useAuth } from '../../contexts/AuthContext'
+import { useAdminLang } from '../../hooks/useAdminLang'
+import { getTopicLabel } from '../../i18n/adminCopy'
 
 const LANG_COLORS: Record<string, string> = {
   ja: '#3B82F6',
@@ -22,7 +24,7 @@ const TOPIC_COLORS: Record<string, string> = {
   'その他': '#94A3B8',
 }
 
-function LangBar({ dist }: { dist: Record<string, number> | null | undefined }) {
+function LangBar({ dist, label }: { dist: Record<string, number> | null | undefined; label: string }) {
   if (!dist) return null
   const entries = Object.entries(dist).sort((a, b) => b[1] - a[1])
   const total = entries.reduce((s, [, v]) => s + v, 0)
@@ -30,7 +32,7 @@ function LangBar({ dist }: { dist: Record<string, number> | null | undefined }) 
 
   return (
     <div style={{ marginTop: 12 }}>
-      <div style={{ fontSize: 12, color: '#94A3B8', marginBottom: 6 }}>言語分布</div>
+      <div style={{ fontSize: 12, color: '#94A3B8', marginBottom: 6 }}>{label}</div>
       <div style={{ display: 'flex', height: 20, borderRadius: 6, overflow: 'hidden', background: '#1E293B' }}>
         {entries.map(([lang, count]) => {
           const pct = (count / total) * 100
@@ -55,7 +57,7 @@ function LangBar({ dist }: { dist: Record<string, number> | null | undefined }) 
   )
 }
 
-function TopicPieChart({ data }: { data: Record<string, number> | null }) {
+function TopicPieChart({ data, labelOf }: { data: Record<string, number> | null; labelOf: (key: string) => string }) {
   if (!data) return null
   const entries = Object.entries(data).filter(([, v]) => v > 0)
   const total = entries.reduce((s, [, v]) => s + v, 0)
@@ -63,6 +65,7 @@ function TopicPieChart({ data }: { data: Record<string, number> | null }) {
 
   const items = entries.map(([topic, count]) => ({
     topic,
+    label: labelOf(topic),
     count,
     pct: (count / total) * 100,
     color: TOPIC_COLORS[topic] || '#64748B',
@@ -86,7 +89,7 @@ function TopicPieChart({ data }: { data: Record<string, number> | null }) {
         {items.map((e) => (
           <div key={e.topic} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13 }}>
             <div style={{ width: 12, height: 12, borderRadius: 3, background: e.color, flexShrink: 0 }} />
-            <span style={{ color: '#E2E8F0' }}>{e.topic}</span>
+            <span style={{ color: '#E2E8F0' }}>{e.label}</span>
             <span style={{ color: '#94A3B8' }}>{e.count} ({e.pct.toFixed(0)}%)</span>
           </div>
         ))}
@@ -96,6 +99,7 @@ function TopicPieChart({ data }: { data: Record<string, number> | null }) {
 }
 
 function StoreDashboard() {
+  const { t } = useAdminLang()
   const restaurantsSetRef = useRef(false)
   const [restaurant, setRestaurant] = useState<any>(null)
   const [restaurantLoading, setRestaurantLoading] = useState(true)
@@ -117,7 +121,7 @@ function StoreDashboard() {
       setRestaurantLoading(true)
       const userStr = sessionStorage.getItem('user')
       if (!userStr) {
-        setRestaurantError('ユーザーデータが見つかりません')
+        setRestaurantError(t.dashboard.errorUserNotFound)
         return
       }
 
@@ -143,12 +147,12 @@ function StoreDashboard() {
         const response = await apiClient.get(`/restaurants/detail-by-user/${user.uid}`) as { result: any }
         setRestaurant(response.result)
       } else {
-        setRestaurantError('レストラン情報が見つかりません')
+        setRestaurantError(t.dashboard.errorRestaurantNotFound)
         return
       }
     } catch (error) {
       console.error('Failed to fetch restaurant:', error)
-      setRestaurantError('レストラン情報の取得に失敗しました')
+      setRestaurantError(t.dashboard.errorRestaurantFetch)
     } finally {
       setRestaurantLoading(false)
     }
@@ -206,7 +210,7 @@ function StoreDashboard() {
       <section className="section">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px', flexWrap: 'wrap', gap: 12 }}>
           <div>
-            <h2 className="section-title" style={{ margin: 0, textAlign: 'left' }}>レストランダッシュボード</h2>
+            <h2 className="section-title" style={{ margin: 0, textAlign: 'left' }}>{t.dashboard.restaurantTitle}</h2>
           </div>
           {userRestaurants.length > 1 && (
             <select
@@ -233,36 +237,36 @@ function StoreDashboard() {
 
         {restaurantLoading ? (
           <div className="card" style={{ textAlign: 'center', padding: '40px' }}>
-            <div style={{ fontSize: '16px', color: '#94A3B8' }}>読み込み中...</div>
+            <div style={{ fontSize: '16px', color: '#94A3B8' }}>{t.layout.loading}</div>
           </div>
         ) : restaurantError ? (
           <div className="card" style={{ textAlign: 'center', padding: '40px' }}>
-            <div style={{ fontSize: '16px', marginBottom: '16px', color: '#dc2626' }}>エラー</div>
+            <div style={{ fontSize: '16px', marginBottom: '16px', color: '#dc2626' }}>{t.dashboard.error}</div>
             <div style={{ color: '#94A3B8' }}>{restaurantError}</div>
           </div>
         ) : restaurant ? (
           <>
             <div className="card" style={{ marginBottom: '16px' }}>
-              <div className="card-title">レストラン情報</div>
+              <div className="card-title">{t.dashboard.restaurantInfo}</div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '16px' }}>
                 <div style={{ padding: '16px', background: '#1E293B', borderRadius: '8px' }}>
-                  <div style={{ fontSize: '14px', color: '#94A3B8', marginBottom: '4px' }}>レストラン名</div>
-                  <div style={{ fontSize: '18px', fontWeight: 600, color: '#F8FAFC' }}>{restaurant.name || '未設定'}</div>
+                  <div style={{ fontSize: '14px', color: '#94A3B8', marginBottom: '4px' }}>{t.dashboard.restaurantName}</div>
+                  <div style={{ fontSize: '18px', fontWeight: 600, color: '#F8FAFC' }}>{restaurant.name || t.dashboard.notSet}</div>
                 </div>
                 <div style={{ padding: '16px', background: '#1E293B', borderRadius: '8px' }}>
-                  <div style={{ fontSize: '14px', color: '#94A3B8', marginBottom: '4px' }}>登録メニュー数</div>
+                  <div style={{ fontSize: '14px', color: '#94A3B8', marginBottom: '4px' }}>{t.dashboard.registeredMenus}</div>
                   <div style={{ fontSize: '18px', fontWeight: 600, color: '#667eea' }}>{menuCount !== null ? menuCount : '-'}</div>
                 </div>
                 <div style={{ padding: '16px', background: '#1E293B', borderRadius: '8px' }}>
-                  <div style={{ fontSize: '14px', color: '#94A3B8', marginBottom: '4px' }}>電話番号</div>
-                  <div style={{ fontSize: '16px', fontWeight: 600, color: '#F8FAFC' }}>{restaurant.phone_number || '未設定'}</div>
+                  <div style={{ fontSize: '14px', color: '#94A3B8', marginBottom: '4px' }}>{t.dashboard.phoneNumber}</div>
+                  <div style={{ fontSize: '16px', fontWeight: 600, color: '#F8FAFC' }}>{restaurant.phone_number || t.dashboard.notSet}</div>
                 </div>
                 <div style={{ padding: '16px', background: '#1E293B', borderRadius: '8px' }}>
-                  <div style={{ fontSize: '14px', color: '#94A3B8', marginBottom: '4px' }}>住所</div>
-                  <div style={{ fontSize: '14px', fontWeight: 600, color: '#F8FAFC', lineHeight: 1.4 }}>{restaurant.address || '未設定'}</div>
+                  <div style={{ fontSize: '14px', color: '#94A3B8', marginBottom: '4px' }}>{t.dashboard.address}</div>
+                  <div style={{ fontSize: '14px', fontWeight: 600, color: '#F8FAFC', lineHeight: 1.4 }}>{restaurant.address || t.dashboard.notSet}</div>
                 </div>
                 <div style={{ padding: '16px', background: '#1E293B', borderRadius: '8px' }}>
-                  <div style={{ fontSize: '14px', color: '#94A3B8', marginBottom: '4px' }}>ステータス</div>
+                  <div style={{ fontSize: '14px', color: '#94A3B8', marginBottom: '4px' }}>{t.dashboard.status}</div>
                   <div style={{ fontSize: '16px', fontWeight: 600 }}>
                     <span style={{
                       background: restaurant.is_active ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)',
@@ -271,7 +275,7 @@ function StoreDashboard() {
                       borderRadius: '12px',
                       fontSize: '12px'
                     }}>
-                      {restaurant.is_active ? '有効' : '無効'}
+                      {restaurant.is_active ? t.dashboard.statusActive : t.dashboard.statusInactive}
                     </span>
                   </div>
                 </div>
@@ -279,7 +283,7 @@ function StoreDashboard() {
             </div>
 
             <div className="card" style={{ width: '100%', maxWidth: 'none' }}>
-              <div className="card-title">イベントログ統計</div>
+              <div className="card-title">{t.dashboard.eventLogStats}</div>
               <div className="dashboard-metrics" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '16px', width: '100%', maxWidth: 'none' }}>
                 {[
                   { label: 'Good', key: 'good', color: '#10B981' },
@@ -306,28 +310,28 @@ function StoreDashboard() {
                   </div>
                 ))}
               </div>
-              <LangBar dist={eventStats?.lang_distribution} />
+              <LangBar dist={eventStats?.lang_distribution} label={t.dashboard.langDistribution} />
             </div>
 
             {messageStats && messageStats.lang_distribution && Object.keys(messageStats.lang_distribution).length > 0 && (
               <div className="card" style={{ marginTop: '16px' }}>
-                <div className="card-title">チャット利用統計（{messageStats.total_messages}メッセージ）</div>
-                <LangBar dist={messageStats.lang_distribution} />
+                <div className="card-title">{t.dashboard.chatStatsLabel(messageStats.total_messages)}</div>
+                <LangBar dist={messageStats.lang_distribution} label={t.dashboard.langDistribution} />
               </div>
             )}
 
             {sessionStats && sessionStats.total_sessions > 0 && (
               <div className="card" style={{ marginTop: '16px' }}>
-                <div className="card-title">セッション統計</div>
+                <div className="card-title">{t.dashboard.sessionStats}</div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '16px' }}>
                   <div style={{ padding: '16px', background: '#1E293B', borderRadius: '8px', textAlign: 'center' }}>
-                    <div style={{ fontSize: '14px', color: '#94A3B8', marginBottom: '4px' }}>セッション数</div>
+                    <div style={{ fontSize: '14px', color: '#94A3B8', marginBottom: '4px' }}>{t.dashboard.sessionCount}</div>
                     <div style={{ fontSize: '24px', fontWeight: 700, color: '#3B82F6' }}>{sessionStats.total_sessions}</div>
                   </div>
                   <div style={{ padding: '16px', background: '#1E293B', borderRadius: '8px', textAlign: 'center' }}>
-                    <div style={{ fontSize: '14px', color: '#94A3B8', marginBottom: '4px' }}>平均滞在</div>
+                    <div style={{ fontSize: '14px', color: '#94A3B8', marginBottom: '4px' }}>{t.dashboard.avgStay}</div>
                     <div style={{ fontSize: '24px', fontWeight: 700, color: '#10B981' }}>
-                      {sessionStats.avg_duration >= 60 ? `${Math.floor(sessionStats.avg_duration / 60)}分` : `${sessionStats.avg_duration}秒`}
+                      {sessionStats.avg_duration >= 60 ? `${Math.floor(sessionStats.avg_duration / 60)}${t.dashboard.minute}` : `${sessionStats.avg_duration}${t.dashboard.second}`}
                     </div>
                   </div>
                 </div>
@@ -394,6 +398,7 @@ function StoreDashboard() {
 }
 
 function AdminDashboard() {
+  const { lang, t } = useAdminLang()
   const [stats, setStats] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -410,7 +415,7 @@ function AdminDashboard() {
         setStats(response.result)
       } catch (err) {
         console.error('Failed to fetch admin stats:', err)
-        setError('統計情報の取得に失敗しました')
+        setError(t.dashboard.errorStats)
       } finally {
         setLoading(false)
       }
@@ -457,7 +462,7 @@ function AdminDashboard() {
   if (loading) {
     return (
       <div style={{ textAlign: 'center', padding: '60px' }}>
-        <div style={{ color: '#94A3B8', fontSize: '16px' }}>統計情報を読み込み中...</div>
+        <div style={{ color: '#94A3B8', fontSize: '16px' }}>{t.dashboard.loadingStats}</div>
       </div>
     )
   }
@@ -465,7 +470,7 @@ function AdminDashboard() {
   if (error) {
     return (
       <div style={{ textAlign: 'center', padding: '60px' }}>
-        <div style={{ color: '#dc2626', fontSize: '16px', marginBottom: '8px' }}>エラー</div>
+        <div style={{ color: '#dc2626', fontSize: '16px', marginBottom: '8px' }}>{t.dashboard.error}</div>
         <div style={{ color: '#94A3B8' }}>{error}</div>
       </div>
     )
@@ -474,30 +479,30 @@ function AdminDashboard() {
   return (
     <>
       <div style={{ marginBottom: '24px' }}>
-        <h2 className="card-title" style={{ fontSize: '24px', margin: 0 }}>プラットフォーム統計</h2>
+        <h2 className="card-title" style={{ fontSize: '24px', margin: 0 }}>{t.dashboard.platformTitle}</h2>
       </div>
 
       <div className="card">
-        <div className="card-title">サービス概要</div>
+        <div className="card-title">{t.dashboard.serviceOverview}</div>
         <div className="stats-grid">
           <div className="stat-card">
-            <div className="stat-label">導入レストラン数</div>
+            <div className="stat-label">{t.dashboard.totalRestaurants}</div>
             <div className="stat-value">{stats?.total_restaurants ?? 0}</div>
           </div>
           <div className="stat-card">
-            <div className="stat-label">登録メニュー数</div>
+            <div className="stat-label">{t.dashboard.totalMenus}</div>
             <div className="stat-value">{stats?.total_menus ?? 0}</div>
           </div>
           <div className="stat-card">
-            <div className="stat-label">承認済メニュー数</div>
+            <div className="stat-label">{t.dashboard.totalVerifiedMenus}</div>
             <div className="stat-value" style={{ color: '#10B981' }}>{stats?.total_verified_menus ?? 0}</div>
           </div>
           <div className="stat-card">
-            <div className="stat-label">ユーザー数</div>
+            <div className="stat-label">{t.dashboard.totalUsers}</div>
             <div className="stat-value">{stats?.total_users ?? 0}</div>
           </div>
           <div className="stat-card">
-            <div className="stat-label">総QRスキャン数</div>
+            <div className="stat-label">{t.dashboard.totalQrScans}</div>
             <div className="stat-value" style={{ color: '#06B6D4' }}>{stats?.total_qr_scans ?? 0}</div>
           </div>
         </div>
@@ -505,29 +510,29 @@ function AdminDashboard() {
 
       {stats?.users_by_role && (
         <div className="card">
-          <div className="card-title">ロール別ユーザー数</div>
+          <div className="card-title">{t.dashboard.usersByRole}</div>
           <div className="stats-grid">
             {stats.users_by_role.superadmin !== undefined && (
               <div className="stat-card">
-                <div className="stat-label">Superadmin</div>
+                <div className="stat-label">{t.dashboard.roleSuperadmin}</div>
                 <div className="stat-value">{stats.users_by_role.superadmin}</div>
               </div>
             )}
             {stats.users_by_role.platform_owner !== undefined && (
               <div className="stat-card">
-                <div className="stat-label">Platform Owner</div>
+                <div className="stat-label">{t.dashboard.rolePlatformOwner}</div>
                 <div className="stat-value">{stats.users_by_role.platform_owner}</div>
               </div>
             )}
             {stats.users_by_role.restaurant_owner !== undefined && (
               <div className="stat-card">
-                <div className="stat-label">Restaurant Owner</div>
+                <div className="stat-label">{t.dashboard.roleRestaurantOwner}</div>
                 <div className="stat-value">{stats.users_by_role.restaurant_owner}</div>
               </div>
             )}
             {stats.users_by_role.consumer !== undefined && (
               <div className="stat-card">
-                <div className="stat-label">Consumer</div>
+                <div className="stat-label">{t.dashboard.roleConsumer}</div>
                 <div className="stat-value">{stats.users_by_role.consumer}</div>
               </div>
             )}
@@ -536,7 +541,7 @@ function AdminDashboard() {
       )}
 
       <div className="card">
-        <div className="card-title">イベントログ統計（全店舗合計）</div>
+        <div className="card-title">{t.dashboard.eventLogStatsAll}</div>
         <div className="stats-grid">
           {[
             { label: 'Good', key: 'good', color: '#10B981' },
@@ -556,30 +561,30 @@ function AdminDashboard() {
 
       {topicData && Object.keys(topicData).length > 0 && (
         <div className="card">
-          <div className="card-title">トピック分布</div>
-          <TopicPieChart data={topicData} />
+          <div className="card-title">{t.dashboard.topicDistribution}</div>
+          <TopicPieChart data={topicData} labelOf={(k) => getTopicLabel(lang, k)} />
         </div>
       )}
 
       {sessionStats && sessionStats.total_sessions > 0 && (
         <div className="card">
-          <div className="card-title">セッション統計</div>
+          <div className="card-title">{t.dashboard.sessionStats}</div>
           <div className="stats-grid">
             <div className="stat-card">
-              <div className="stat-label">総セッション数</div>
+              <div className="stat-label">{t.dashboard.totalSessions}</div>
               <div className="stat-value" style={{ color: '#3B82F6' }}>{sessionStats.total_sessions}</div>
             </div>
             <div className="stat-card">
-              <div className="stat-label">平均滞在時間</div>
+              <div className="stat-label">{t.dashboard.avgStayDuration}</div>
               <div className="stat-value" style={{ color: '#10B981' }}>
-                {sessionStats.avg_duration >= 60 ? `${Math.floor(sessionStats.avg_duration / 60)}分${sessionStats.avg_duration % 60}秒` : `${sessionStats.avg_duration}秒`}
+                {sessionStats.avg_duration >= 60 ? `${Math.floor(sessionStats.avg_duration / 60)}${t.dashboard.minute}${sessionStats.avg_duration % 60}${t.dashboard.second}` : `${sessionStats.avg_duration}${t.dashboard.second}`}
               </div>
             </div>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 24, marginTop: 16 }}>
             {sessionStats.referrer_distribution && Object.keys(sessionStats.referrer_distribution).length > 0 && (
               <div>
-                <div style={{ fontSize: 14, fontWeight: 600, color: '#E2E8F0', marginBottom: 8 }}>流入元</div>
+                <div style={{ fontSize: 14, fontWeight: 600, color: '#E2E8F0', marginBottom: 8 }}>{t.dashboard.referrer}</div>
                 {Object.entries(sessionStats.referrer_distribution as Record<string, number>).sort((a: [string, number], b: [string, number]) => b[1] - a[1]).map(([ref, count]) => (
                   <div key={ref} style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: 13, borderBottom: '1px solid var(--border)' }}>
                     <span style={{ color: '#E2E8F0' }}>{ref}</span>
@@ -590,7 +595,7 @@ function AdminDashboard() {
             )}
             {sessionStats.screen_distribution && Object.keys(sessionStats.screen_distribution).length > 0 && (
               <div>
-                <div style={{ fontSize: 14, fontWeight: 600, color: '#E2E8F0', marginBottom: 8 }}>画面サイズ</div>
+                <div style={{ fontSize: 14, fontWeight: 600, color: '#E2E8F0', marginBottom: 8 }}>{t.dashboard.screenSize}</div>
                 {(() => {
                   const entries = Object.entries(sessionStats.screen_distribution as Record<string, number>).sort((a, b) => b[1] - a[1])
                   const total = entries.reduce((s, [, v]) => s + v, 0)
@@ -618,17 +623,17 @@ function AdminDashboard() {
 
       {messageStats && (messageStats.lang_distribution && Object.keys(messageStats.lang_distribution).length > 0 || messageStats.device_distribution && Object.keys(messageStats.device_distribution).length > 0) && (
         <div className="card">
-          <div className="card-title">チャット利用統計（全{messageStats.total_messages}メッセージ）</div>
+          <div className="card-title">{t.dashboard.chatStatsAllLabel(messageStats.total_messages)}</div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 24 }}>
             {messageStats.lang_distribution && Object.keys(messageStats.lang_distribution).length > 0 && (
               <div>
-                <div style={{ fontSize: 14, fontWeight: 600, color: '#E2E8F0', marginBottom: 12 }}>使用言語分布</div>
-                <LangBar dist={messageStats.lang_distribution} />
+                <div style={{ fontSize: 14, fontWeight: 600, color: '#E2E8F0', marginBottom: 12 }}>{t.dashboard.langUsageDistribution}</div>
+                <LangBar dist={messageStats.lang_distribution} label={t.dashboard.langDistribution} />
               </div>
             )}
             {messageStats.device_distribution && Object.keys(messageStats.device_distribution).length > 0 && (
               <div>
-                <div style={{ fontSize: 14, fontWeight: 600, color: '#E2E8F0', marginBottom: 12 }}>デバイス分布</div>
+                <div style={{ fontSize: 14, fontWeight: 600, color: '#E2E8F0', marginBottom: 12 }}>{t.dashboard.deviceDistribution}</div>
                 {(() => {
                   const entries = Object.entries(messageStats.device_distribution as Record<string, number>).sort((a, b) => b[1] - a[1])
                   const total = entries.reduce((s, [, v]) => s + v, 0)
@@ -717,6 +722,7 @@ function AdminDashboard() {
 export default function AdminDashboardPage() {
   const router = useRouter()
   const { user, isRestaurantOwner } = useAuth()
+  const { t } = useAdminLang()
   const [userType, setUserType] = useState<'store' | 'admin'>('admin')
   const [isLoading, setIsLoading] = useState(true)
 
@@ -768,7 +774,7 @@ export default function AdminDashboardPage() {
           borderRadius: '50%',
           animation: 'spin 1s linear infinite'
         }} />
-        <div style={{ marginTop: '16px', color: '#94A3B8', fontSize: '14px' }}>読み込み中...</div>
+        <div style={{ marginTop: '16px', color: '#94A3B8', fontSize: '14px' }}>{t.layout.loading}</div>
         <style>{`
           @keyframes spin {
             to { transform: rotate(360deg); }
@@ -779,7 +785,7 @@ export default function AdminDashboardPage() {
   }
 
   return (
-    <AdminLayout title={userType === 'store' ? 'NGraph レストラン管理システム' : 'NGraph プラットフォーム管理システム'}>
+    <AdminLayout title={`OMISEAI ${userType === 'store' ? t.layout.restaurantSystemTitle : t.layout.platformSystemTitle}`}>
       <div className="dashboard">
         {userType === 'store' ? <StoreDashboard /> : <AdminDashboard />}
       </div>

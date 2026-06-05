@@ -5,6 +5,7 @@ import AdminLayout from '../../../components/admin/AdminLayout'
 import { DailyMenuApi, TokenService } from '../../../services/api'
 import type { DailyDraftItem, DailyActiveItem } from '../../../services/api'
 import { useToast } from '../../../components/admin/Toast'
+import { useAdminLang } from '../../../hooks/useAdminLang'
 
 function resolveRestaurantUid(): string | undefined {
   if (typeof window === 'undefined') return undefined
@@ -23,6 +24,7 @@ function splitList(value: string): string[] {
 
 export default function DailySpecialsPage() {
   const toast = useToast()
+  const { t } = useAdminLang()
   const [restaurantUid, setRestaurantUid] = useState<string | undefined>(undefined)
 
   const [textInput, setTextInput] = useState('')
@@ -47,10 +49,11 @@ export default function DailySpecialsPage() {
       // ストックは「今アクティブでない」過去品だけ流用候補に出す
       setStock(s.result.items.filter(i => !i.active))
     } catch {
-      toast('error', '本日の献立の読み込みに失敗しました')
+      toast('error', t.dailySpecials.toastLoadFailed)
     } finally {
       setLoadingLists(false)
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [toast])
 
   useEffect(() => {
@@ -74,12 +77,12 @@ export default function DailySpecialsPage() {
       const resp = await DailyMenuApi.draft(input, restaurantUid)
       setDrafts(resp.result.items)
       if (resp.result.items.length === 0) {
-        toast('warning', 'メニューが検出されませんでした')
+        toast('warning', t.dailySpecials.toastNoMenuDetected)
       } else {
-        toast('success', `${resp.result.items.length}品を抽出しました。確認して確定してください`)
+        toast('success', t.dailySpecials.toastExtracted(resp.result.items.length))
       }
     } catch (err) {
-      toast('error', err instanceof Error ? err.message : '抽出に失敗しました')
+      toast('error', err instanceof Error ? err.message : t.dailySpecials.toastExtractFailed)
     } finally {
       setExtracting(false)
     }
@@ -93,7 +96,7 @@ export default function DailySpecialsPage() {
 
   const handleTextExtract = () => {
     if (!textInput.trim()) {
-      toast('warning', 'テキストを入力してください')
+      toast('warning', t.dailySpecials.toastEnterText)
       return
     }
     handleExtract({ text: textInput.trim() })
@@ -111,8 +114,8 @@ export default function DailySpecialsPage() {
   // サーバーの clarification_needed 側で別途表示する。
   const liveWarnings = (d: DailyDraftItem): string[] => {
     const w: string[] = []
-    if (!d.price || d.price <= 0) w.push('価格が未入力です')
-    if (!d.ingredients || d.ingredients.length === 0) w.push('材料が未入力です（多言語説明・アレルゲン精度に影響）')
+    if (!d.price || d.price <= 0) w.push(t.dailySpecials.warnPriceMissing)
+    if (!d.ingredients || d.ingredients.length === 0) w.push(t.dailySpecials.warnIngredientsMissing)
     return w
   }
 
@@ -120,18 +123,18 @@ export default function DailySpecialsPage() {
     if (drafts.length === 0) return
     const missing = drafts.filter(d => !d.name_jp?.trim())
     if (missing.length > 0) {
-      toast('warning', '料理名が空の品があります')
+      toast('warning', t.dailySpecials.toastNameEmpty)
       return
     }
     setConfirming(true)
     try {
       const resp = await DailyMenuApi.confirm(drafts, restaurantUid)
-      toast('success', `本日の献立 ${resp.result.items_saved}品を確定しました`)
+      toast('success', t.dailySpecials.toastConfirmed(resp.result.items_saved))
       setDrafts([])
       setTextInput('')
       await loadLists(restaurantUid)
     } catch (err) {
-      toast('error', err instanceof Error ? err.message : '確定に失敗しました')
+      toast('error', err instanceof Error ? err.message : t.dailySpecials.toastConfirmFailed)
     } finally {
       setConfirming(false)
     }
@@ -148,11 +151,11 @@ export default function DailySpecialsPage() {
     setReusing(true)
     try {
       const resp = await DailyMenuApi.reuse(selectedStock, restaurantUid)
-      toast('success', `${resp.result.reactivated}品を本日の献立に流用しました`)
+      toast('success', t.dailySpecials.toastReused(resp.result.reactivated))
       setSelectedStock([])
       await loadLists(restaurantUid)
     } catch (err) {
-      toast('error', err instanceof Error ? err.message : '流用に失敗しました')
+      toast('error', err instanceof Error ? err.message : t.dailySpecials.toastReuseFailed)
     } finally {
       setReusing(false)
     }
@@ -169,27 +172,25 @@ export default function DailySpecialsPage() {
   } as const
 
   return (
-    <AdminLayout title="本日の献立">
+    <AdminLayout title={t.dailySpecials.title}>
       {/* Header */}
       <div style={card}>
-        <h2 style={{ fontSize: 18, fontWeight: 600, margin: 0 }}>本日の献立</h2>
+        <h2 style={{ fontSize: 18, fontWeight: 600, margin: 0 }}>{t.dailySpecials.title}</h2>
         <p style={{ fontSize: 13, color: 'var(--muted)', marginTop: 6, lineHeight: 1.6 }}>
-          日替わり・本日のおすすめを登録します。撮る/貼ると AI が読み取り、確認・修正して確定。
-          確定すると今日の献立としてお客様に表示され、AI が正しく答えられます。
-          差し替えると前の品はストックに残り、翌週そのまま流用できます。
+          {t.dailySpecials.headerDesc}
         </p>
       </div>
 
       {/* 入力 */}
       <div style={card}>
-        <h3 style={{ fontSize: 16, fontWeight: 600, margin: '0 0 12px' }}>1. 撮る / 貼る</h3>
+        <h3 style={{ fontSize: 16, fontWeight: 600, margin: '0 0 12px' }}>{t.dailySpecials.section1}</h3>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginBottom: 14 }}>
           <label style={{
             padding: '10px 18px', background: '#3B82F6', color: '#fff', borderRadius: 8,
             cursor: extracting ? 'not-allowed' : 'pointer', fontSize: 14, fontWeight: 600,
             opacity: extracting ? 0.6 : 1,
           }}>
-            📷 写真を撮る / 選ぶ
+            {t.dailySpecials.takePhoto}
             <input type="file" accept="image/*" capture="environment"
               onChange={handleFile} disabled={extracting}
               style={{ display: 'none' }} />
@@ -198,7 +199,7 @@ export default function DailySpecialsPage() {
         <textarea
           value={textInput}
           onChange={e => setTextInput(e.target.value)}
-          placeholder="または、本日の献立をテキストで貼り付け（例: 五目焼き 800円 / とば酢の五目 700円 ...）"
+          placeholder={t.dailySpecials.textPlaceholder}
           rows={3}
           disabled={extracting}
           style={{ ...inputStyle, resize: 'vertical', marginBottom: 10 }}
@@ -209,10 +210,10 @@ export default function DailySpecialsPage() {
           cursor: extracting || !textInput.trim() ? 'not-allowed' : 'pointer',
           opacity: extracting || !textInput.trim() ? 0.5 : 1,
         }}>
-          {extracting ? '読み取り中...' : 'テキストから読み取る'}
+          {extracting ? t.dailySpecials.extracting : t.dailySpecials.extractFromText}
         </button>
         {extracting && (
-          <div style={{ fontSize: 12, color: '#F59E0B', marginTop: 10 }}>AI が読み取っています...</div>
+          <div style={{ fontSize: 12, color: '#F59E0B', marginTop: 10 }}>{t.dailySpecials.aiReading}</div>
         )}
       </div>
 
@@ -220,13 +221,13 @@ export default function DailySpecialsPage() {
       {drafts.length > 0 && (
         <div style={card}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-            <h3 style={{ fontSize: 16, fontWeight: 600, margin: 0 }}>2. 確認・修正 ({drafts.length}品)</h3>
+            <h3 style={{ fontSize: 16, fontWeight: 600, margin: 0 }}>{t.dailySpecials.section2(drafts.length)}</h3>
             <button onClick={handleConfirm} disabled={confirming} style={{
               padding: '10px 22px', background: confirming ? '#475569' : '#16A34A', color: '#fff',
               border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 600,
               cursor: confirming ? 'not-allowed' : 'pointer',
             }}>
-              {confirming ? '確定中...' : 'この内容で確定'}
+              {confirming ? t.dailySpecials.confirming : t.dailySpecials.confirmBtn}
             </button>
           </div>
           {active.length > 0 && (
@@ -235,8 +236,7 @@ export default function DailySpecialsPage() {
               border: '1px solid rgba(245,158,11,0.3)', borderRadius: 8,
               padding: '8px 12px', marginBottom: 12, lineHeight: 1.5,
             }}>
-              ⚠ 確定すると、今表示中の本日の献立（{active.length}品）はすべてこの内容に差し替わります。
-              前の品はストックに残るので、あとで流用できます。
+              {t.dailySpecials.replaceWarning(active.length)}
             </div>
           )}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -251,25 +251,25 @@ export default function DailySpecialsPage() {
                   ? '1px solid rgba(245,158,11,0.4)' : '1px solid var(--border)',
               }}>
                 <div style={{ display: 'flex', gap: 10, marginBottom: 10 }}>
-                  <input value={d.name_jp || ''} placeholder="料理名"
+                  <input value={d.name_jp || ''} placeholder={t.dailySpecials.namePlaceholder}
                     onChange={e => updateDraft(idx, { name_jp: e.target.value })}
                     style={{ ...inputStyle, flex: 2 }} />
-                  <input type="number" value={d.price ? d.price : ''} placeholder="価格"
+                  <input type="number" value={d.price ? d.price : ''} placeholder={t.dailySpecials.pricePlaceholder}
                     onChange={e => updateDraft(idx, { price: Number(e.target.value) })}
                     style={{ ...inputStyle, flex: 1 }} />
-                  <input value={d.category || ''} placeholder="カテゴリ"
+                  <input value={d.category || ''} placeholder={t.dailySpecials.categoryPlaceholder}
                     onChange={e => updateDraft(idx, { category: e.target.value })}
                     style={{ ...inputStyle, flex: 1 }} />
                   <button onClick={() => removeDraft(idx)} style={{
                     padding: '0 12px', background: 'transparent', color: 'var(--error)',
                     border: '1px solid var(--border-strong)', borderRadius: 8, cursor: 'pointer', fontSize: 18,
-                  }} title="削除">×</button>
+                  }} title={t.common.delete}>×</button>
                 </div>
                 <div style={{ display: 'flex', gap: 10, marginBottom: 8 }}>
-                  <input value={(d.ingredients || []).join('、')} placeholder="材料（、区切り）"
+                  <input value={(d.ingredients || []).join('、')} placeholder={t.dailySpecials.ingredientsPlaceholder}
                     onChange={e => updateDraft(idx, { ingredients: splitList(e.target.value) })}
                     style={{ ...inputStyle, flex: 1 }} />
-                  <input value={(d.allergens || []).join('、')} placeholder="アレルゲン（、区切り）"
+                  <input value={(d.allergens || []).join('、')} placeholder={t.dailySpecials.allergensPlaceholder}
                     onChange={e => updateDraft(idx, { allergens: splitList(e.target.value) })}
                     style={{ ...inputStyle, flex: 1 }} />
                 </div>
@@ -296,14 +296,14 @@ export default function DailySpecialsPage() {
 
       {/* 今アクティブ */}
       <div style={card}>
-        <h3 style={{ fontSize: 16, fontWeight: 600, margin: '0 0 4px' }}>今出している本日の献立</h3>
+        <h3 style={{ fontSize: 16, fontWeight: 600, margin: '0 0 4px' }}>{t.dailySpecials.sectionActive}</h3>
         <p style={{ fontSize: 12, color: 'var(--muted)', margin: '0 0 12px' }}>
-          お客様に表示中。差し替えるには上で新しく確定してください。
+          {t.dailySpecials.activeDesc}
         </p>
         {loadingLists ? (
-          <div style={{ color: 'var(--muted)', fontSize: 13 }}>読み込み中...</div>
+          <div style={{ color: 'var(--muted)', fontSize: 13 }}>{t.layout.loading}</div>
         ) : active.length === 0 ? (
-          <div style={{ color: 'var(--muted)', fontSize: 13 }}>まだ登録されていません</div>
+          <div style={{ color: 'var(--muted)', fontSize: 13 }}>{t.dailySpecials.notRegistered}</div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             {active.map(m => (
@@ -322,24 +322,24 @@ export default function DailySpecialsPage() {
       {/* ストックから流用 */}
       <div style={{ ...card, marginBottom: 80 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-          <h3 style={{ fontSize: 16, fontWeight: 600, margin: 0 }}>ストックから流用</h3>
+          <h3 style={{ fontSize: 16, fontWeight: 600, margin: 0 }}>{t.dailySpecials.sectionStock}</h3>
           {selectedStock.length > 0 && (
             <button onClick={handleReuse} disabled={reusing} style={{
               padding: '8px 18px', background: reusing ? '#475569' : '#3B82F6', color: '#fff',
               border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600,
               cursor: reusing ? 'not-allowed' : 'pointer',
             }}>
-              {reusing ? '流用中...' : `${selectedStock.length}品を今日に出す`}
+              {reusing ? t.dailySpecials.reusing : t.dailySpecials.reuseToToday(selectedStock.length)}
             </button>
           )}
         </div>
         <p style={{ fontSize: 12, color: 'var(--muted)', margin: '0 0 12px' }}>
-          過去に出した日替わり品。選んで「今日に出す」で再利用（「昨日と同じ」もここから）。
+          {t.dailySpecials.stockDesc}
         </p>
         {loadingLists ? (
-          <div style={{ color: 'var(--muted)', fontSize: 13 }}>読み込み中...</div>
+          <div style={{ color: 'var(--muted)', fontSize: 13 }}>{t.layout.loading}</div>
         ) : stock.length === 0 ? (
-          <div style={{ color: 'var(--muted)', fontSize: 13 }}>流用できるストックがありません</div>
+          <div style={{ color: 'var(--muted)', fontSize: 13 }}>{t.dailySpecials.noStock}</div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             {stock.map(m => {
@@ -355,7 +355,7 @@ export default function DailySpecialsPage() {
                   <span>{sel ? '✓ ' : ''}{m.name_jp}</span>
                   <span style={{ color: 'var(--muted)' }}>
                     ¥{m.price.toLocaleString()}
-                    {m.valid_until ? `  (前回 ${m.valid_until})` : ''}
+                    {m.valid_until ? `  ${t.dailySpecials.lastShown(m.valid_until)}` : ''}
                   </span>
                 </button>
               )

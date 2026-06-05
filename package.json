@@ -7,7 +7,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "sync-i18n": "node scripts/sync-i18n.mjs",
+    "sync-i18n:apply": "node scripts/sync-i18n.mjs --apply"
   },
   "dependencies": {
     "@types/prismjs": "^1.26.5",

@@ -2,6 +2,7 @@
 
 import React from 'react'
 import { DISH_CATEGORIES, VisionMenuItem } from '../../../services/api'
+import { useAdminLang } from '../../../hooks/useAdminLang'
 
 interface UploadSectionProps {
   fileInputRef: React.RefObject<HTMLInputElement>
@@ -44,7 +45,7 @@ export default function UploadSection({
   showApprovalModal, pendingMenus, scrapingUrl, onApproveMenu, onDenyMenu, onApproveAll, onDenyAll, onCloseApprovalModal,
   showFetchModal
 }: UploadSectionProps) {
-  // 解析時にDB照合で既存と判定された品（source==="db"）は登録済み扱い
+  const { t } = useAdminLang()
   const isRegistered = (item: VisionMenuItem): boolean => item.source === 'db'
   const newCount = visionResults.filter(item => !isRegistered(item)).length
   const registeredCount = visionResults.length - newCount
@@ -52,8 +53,8 @@ export default function UploadSection({
     <>
       {/* アップロードカード */}
       <div className="card" style={{ marginTop: '8px' }}>
-        <div className="card-title">📤 メニュー・商品をアップロード</div>
-        <p style={{ marginBottom: '16px', color: '#94A3B8', fontSize: '14px' }}>メニュー情報をアップロードすると、AIが自動で構造化します</p>
+        <div className="card-title">{t.menuList.upCardTitle}</div>
+        <p style={{ marginBottom: '16px', color: '#94A3B8', fontSize: '14px' }}>{t.menuList.upCardDesc}</p>
 
         <input
           ref={fileInputRef}
@@ -74,21 +75,21 @@ export default function UploadSection({
         <div className="upload-grid">
           <button className="upload-btn" onClick={onCameraCapture}>
             <div className="upload-icon">📷</div>
-            カメラで撮影
+            {t.menuList.upCamera}
           </button>
           <button className="upload-btn" onClick={onFileSelect}>
             <div className="upload-icon">📄</div>
-            ファイル選択
-            <span style={{ fontSize: '10px', color: '#94A3B8' }}>画像/PDF/Excel/CSV</span>
+            {t.menuList.upFile}
+            <span style={{ fontSize: '10px', color: '#94A3B8' }}>{t.menuList.upFileFormats}</span>
           </button>
           <button className="upload-btn" onClick={onShowTextModal}>
             <div className="upload-icon">📝</div>
-            テキスト貼り付け
+            {t.menuList.upPaste}
           </button>
           <button className="upload-btn" style={{ opacity: 0.4, cursor: 'not-allowed' }} disabled>
             <div className="upload-icon">☁️</div>
-            Googleドライブ
-            <span style={{ fontSize: '10px', color: '#94A3B8' }}>準備中</span>
+            {t.menuList.upGoogleDrive}
+            <span style={{ fontSize: '10px', color: '#94A3B8' }}>{t.menuList.upComingSoon}</span>
           </button>
         </div>
       </div>
@@ -98,22 +99,22 @@ export default function UploadSection({
         <div className="modal active">
           <div className="modal-content" style={{ maxWidth: '600px' }}>
             <button className="modal-close" onClick={onCloseTextModal}>×</button>
-            <div className="modal-title">📝 メニューテキストを貼り付け</div>
+            <div className="modal-title">{t.menuList.upPasteModalTitle}</div>
             <p style={{ marginBottom: '12px', color: '#94A3B8', fontSize: '14px' }}>
-              メニューの情報をテキストで貼り付けてください。料理名・価格・説明などが含まれていればAIが自動で構造化します。
+              {t.menuList.upPasteDesc}
             </p>
             <textarea
               className="form-input"
               value={pasteText}
               onChange={(e) => onPasteTextChange(e.target.value)}
-              placeholder={"例:\n唐揚げ定食 850円\n鶏もも肉のから揚げ5個、ご飯、味噌汁付き\n\n刺身盛り合わせ 1,500円\nマグロ、サーモン、ブリ、甘エビの4点盛り"}
+              placeholder={t.menuList.upPastePlaceholder}
               rows={10}
               style={{ marginBottom: '16px', fontSize: '14px' }}
             />
             <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
-              <button className="btn btn-secondary" onClick={onCloseTextModal}>キャンセル</button>
+              <button className="btn btn-secondary" onClick={onCloseTextModal}>{t.menuList.upPasteCancel}</button>
               <button className="btn btn-primary" onClick={onTextAnalyze} disabled={!pasteText.trim()}>
-                🤖 AI解析する
+                {t.menuList.upPasteAnalyze}
               </button>
             </div>
           </div>
@@ -124,12 +125,12 @@ export default function UploadSection({
       {isAnalyzing && (
         <div className="modal active">
           <div className="modal-content" style={{ maxWidth: '400px', textAlign: 'center' }}>
-            <div className="modal-title">🤖 AIがメニューを解析中...</div>
+            <div className="modal-title">{t.menuList.upAnalyzingTitle}</div>
             <div className="progress-bar-container">
               <div className="progress-bar-fill" style={{ animation: 'progress 8s ease-in-out forwards' }}></div>
             </div>
             <div style={{ marginTop: '10px', color: '#94A3B8', fontSize: '14px' }}>
-              メニューデータを抽出しています
+              {t.menuList.upAnalyzingDesc}
             </div>
           </div>
         </div>
@@ -139,11 +140,11 @@ export default function UploadSection({
       {showFetchModal && (
         <div className="modal active">
           <div className="modal-content" style={{ maxWidth: '400px', textAlign: 'center' }}>
-            <div className="modal-title">🤖 AIが解析中...</div>
+            <div className="modal-title">{t.menuList.upFetchingTitle}</div>
             <div className="progress-bar-container">
               <div className="progress-bar-fill"></div>
             </div>
-            <div style={{ marginTop: '10px', color: '#94A3B8' }}>基本情報のソースからメニューを取得しています...</div>
+            <div style={{ marginTop: '10px', color: '#94A3B8' }}>{t.menuList.upFetchingDesc}</div>
           </div>
         </div>
       )}
@@ -153,14 +154,14 @@ export default function UploadSection({
         <div className="modal active">
           <div className="modal-content" style={{ maxWidth: '700px' }}>
             <button className="modal-close" onClick={onCloseVisionApproval}>×</button>
-            <div className="modal-title">🤖 AI解析結果の確認</div>
+            <div className="modal-title">{t.menuList.upVisionTitle}</div>
 
             <div style={{ background: '#f0fdf4', padding: '12px 16px', borderRadius: '8px', marginBottom: '16px', fontSize: '14px', color: '#166534' }}>
-              📸 画像から <strong>{visionResults.length}件</strong> のメニューを検出しました。
+              {t.menuList.upVisionDetectedSummary(visionResults.length)}
               {registeredCount > 0 && (
-                <span>うち <strong>{registeredCount}件</strong> は登録済み（自動でスキップされます）。</span>
+                <span>{t.menuList.upVisionRegisteredHint(registeredCount)}</span>
               )}
-              内容を確認して承認してください。
+              {t.menuList.upVisionReviewHint}
             </div>
 
             <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
@@ -170,10 +171,10 @@ export default function UploadSection({
                 disabled={approvingAll || approvingIndex !== null}
                 style={{ background: '#10b981', color: 'white', opacity: (approvingAll || approvingIndex !== null) ? 0.6 : 1 }}
               >
-                {approvingAll ? '⏳ 登録中…' : `✅ すべて承認 (${newCount}件)`}
+                {approvingAll ? t.menuList.upVisionApprovingAll : t.menuList.upVisionApproveAll(newCount)}
               </button>
               <button className="btn btn-danger" onClick={onCloseVisionApproval} disabled={approvingAll}>
-                ❌ すべて破棄
+                {t.menuList.upVisionDiscardAll}
               </button>
             </div>
 
@@ -187,12 +188,12 @@ export default function UploadSection({
                         {item.name_en && <span style={{ fontSize: '13px', color: '#888', marginLeft: '8px' }}>{item.name_en}</span>}
                         {isRegistered(item) && (
                           <span style={{ fontSize: '11px', color: '#92400e', background: '#fef3c7', borderRadius: '6px', padding: '2px 8px', marginLeft: '8px', verticalAlign: 'middle' }}>
-                            登録済み
+                            {t.menuList.upVisionRegistered}
                           </span>
                         )}
                       </div>
                       <div style={{ fontSize: '13px', color: '#94A3B8', marginBottom: '4px' }}>
-                        💰 ¥{(item.price || 0).toLocaleString()} | 📂 {DISH_CATEGORIES[item.category] || item.category || '未分類'}
+                        💰 ¥{(item.price || 0).toLocaleString()} | 📂 {DISH_CATEGORIES[item.category] || item.category || t.menuList.upVisionUncategorized}
                       </div>
                       {item.description && (
                         <div style={{ fontSize: '12px', color: '#888', marginBottom: '4px' }}>{item.description}</div>
@@ -215,7 +216,7 @@ export default function UploadSection({
                           opacity: (approvingAll || (approvingIndex !== null && approvingIndex !== index)) ? 0.6 : 1
                         }}
                       >
-                        {approvingIndex === index ? '⏳ 登録中…' : isRegistered(item) ? '登録済み' : '✅ 承認'}
+                        {approvingIndex === index ? t.menuList.upVisionItemApproving : isRegistered(item) ? t.menuList.upVisionItemRegistered : t.menuList.upVisionApproveItem}
                       </button>
                       <button
                         className="btn btn-small btn-danger"
@@ -231,7 +232,7 @@ export default function UploadSection({
 
               {visionResults.length === 0 && (
                 <div style={{ textAlign: 'center', padding: '20px', color: '#94A3B8' }}>
-                  すべてのメニューが処理されました
+                  {t.menuList.upVisionEmpty}
                 </div>
               )}
             </div>
@@ -244,33 +245,33 @@ export default function UploadSection({
         <div className="modal active">
           <div className="modal-content" style={{ maxWidth: '600px' }}>
             <button className="modal-close" onClick={onCloseApprovalModal}>×</button>
-            <div className="modal-title">🤖 AI取得メニューの承認</div>
+            <div className="modal-title">{t.menuList.upFetchApprovalTitle}</div>
 
             <div style={{ background: '#f8fafc', padding: '16px', borderRadius: '8px', marginBottom: '20px' }}>
               <div style={{ fontSize: '14px', color: '#94A3B8', marginBottom: '8px' }}>
-                ソース: <strong>{scrapingUrl}</strong>
+                {t.menuList.upFetchSourceLabel}: <strong>{scrapingUrl}</strong>
               </div>
               <div style={{ display: 'flex', gap: '16px', fontSize: '13px' }}>
-                <span>🆕 新規メニュー: <strong>{pendingMenus.length}</strong></span>
-                <span>🔄 重複メニュー: <strong>0</strong></span>
+                <span><strong>{t.menuList.upFetchNew(pendingMenus.length)}</strong></span>
+                <span><strong>{t.menuList.upFetchDuplicate(0)}</strong></span>
               </div>
             </div>
 
             <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', flexWrap: 'wrap' }}>
               <button className="btn btn-success" onClick={onApproveAll} style={{ background: '#10b981', color: 'white' }}>
-                ✅ すべて承認
+                {t.menuList.upFetchApproveAll}
               </button>
               <button className="btn btn-danger" onClick={onDenyAll}>
-                ❌ すべて拒否
+                {t.menuList.upFetchDenyAll}
               </button>
               <button className="btn btn-secondary">
-                🔄 重複をすべてマージ
+                {t.menuList.upFetchMergeDup}
               </button>
             </div>
 
             <div style={{ marginBottom: '16px' }}>
               <h4 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '12px', color: '#1f2937' }}>
-                🆕 新規メニュー ({pendingMenus.length}件)
+                {t.menuList.upFetchNewHeading(pendingMenus.length)}
               </h4>
 
               {pendingMenus.map(menu => (
@@ -279,7 +280,7 @@ export default function UploadSection({
                     <div>
                       <div style={{ fontWeight: 600, fontSize: '16px', marginBottom: '4px' }}>{menu.name}</div>
                       <div style={{ fontSize: '13px', color: '#94A3B8' }}>
-                        ¥{menu.price.toLocaleString()} | {menu.category} | 信頼度: {menu.confidence}%
+                        ¥{menu.price.toLocaleString()} | {menu.category} | {t.menuList.upFetchConfidence(menu.confidence)}
                       </div>
                     </div>
                     <div style={{ display: 'flex', gap: '8px' }}>
@@ -288,13 +289,13 @@ export default function UploadSection({
                         onClick={() => onApproveMenu(menu.id)}
                         style={{ background: '#d1fae5', color: '#059669' }}
                       >
-                        ✅ 承認
+                        {t.menuList.upFetchApprove}
                       </button>
                       <button
                         className="btn btn-small btn-danger"
                         onClick={() => onDenyMenu(menu.id)}
                       >
-                        ❌ 拒否
+                        {t.menuList.upFetchDeny}
                       </button>
                     </div>
                   </div>
@@ -303,7 +304,7 @@ export default function UploadSection({
 
               {pendingMenus.length === 0 && (
                 <div style={{ textAlign: 'center', padding: '20px', color: '#94A3B8' }}>
-                  すべてのメニューが処理されました
+                  {t.menuList.upVisionEmpty}
                 </div>
               )}
             </div>

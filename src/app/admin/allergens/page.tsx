@@ -5,11 +5,13 @@ import AdminLayout from '../../../components/admin/AdminLayout'
 import { AllergenApi, Allergen, AllergenCreate, AllergenUpdate, TokenService } from '../../../services/api'
 import { useAuth } from '../../../contexts/AuthContext'
 import { useToast } from '../../../components/admin/Toast'
+import { useAdminLang } from '../../../hooks/useAdminLang'
 
 type AllergenType = 'mandatory' | 'recommended'
 
 export default function AllergensPage() {
   const { user } = useAuth()
+  const { lang, t } = useAdminLang()
   const [allergens, setAllergens] = useState<{ mandatory: Allergen[]; recommended: Allergen[] }>({
     mandatory: [],
     recommended: []
@@ -74,7 +76,7 @@ export default function AllergensPage() {
       setAllergens(transformedAllergens)
     } catch (err: any) {
       console.error('Failed to fetch allergens:', err)
-      setError('アレルゲン情報の取得に失敗しました')
+      setError(t.allergens.fetchFailed)
       setAllergens({ mandatory: [], recommended: [] })
     } finally {
       setLoading(false)
@@ -123,8 +125,8 @@ export default function AllergensPage() {
   const handleCreateAllergen = async () => {
     // Validation
     const errors: { name_en?: string; name_jp?: string } = {}
-    if (!createAllergen.name_en.trim()) errors.name_en = '英語名は必須です'
-    if (!createAllergen.name_jp.trim()) errors.name_jp = '日本語名は必須です'
+    if (!createAllergen.name_en.trim()) errors.name_en = t.allergens.validateEnRequired
+    if (!createAllergen.name_jp.trim()) errors.name_jp = t.allergens.validateJpRequired
 
     setCreateErrors(errors)
     if (Object.keys(errors).length > 0) return
@@ -136,10 +138,10 @@ export default function AllergensPage() {
       setShowCreateModal(false)
       setCreateAllergen({ name_en: '', name_jp: '', allergen_type: 'mandatory' })
       setCreateErrors({})
-      toast('success', 'アレルゲンを追加しました')
+      toast('success', t.allergens.createdMsg)
     } catch (err: any) {
       console.error('Failed to create allergen:', err)
-      toast('error', `アレルゲンの追加に失敗しました: ${err.message || 'Unknown error'}`)
+      toast('error', t.allergens.createFailed(err.message || 'Unknown error'))
     } finally {
       setIsSubmitting(false)
     }
@@ -161,8 +163,8 @@ export default function AllergensPage() {
 
     // Validation
     const errors: { name_en?: string; name_jp?: string } = {}
-    if (!editAllergen.name_en.trim()) errors.name_en = '英語名は必須です'
-    if (!editAllergen.name_jp.trim()) errors.name_jp = '日本語名は必須です'
+    if (!editAllergen.name_en.trim()) errors.name_en = t.allergens.validateEnRequired
+    if (!editAllergen.name_jp.trim()) errors.name_jp = t.allergens.validateJpRequired
 
     setEditErrors(errors)
     if (Object.keys(errors).length > 0) return
@@ -180,10 +182,10 @@ export default function AllergensPage() {
       setEditingAllergen(null)
       setEditAllergen({ name_en: '', name_jp: '', allergen_type: 'mandatory' })
       setEditErrors({})
-      toast('success', 'アレルゲンを更新しました')
+      toast('success', t.allergens.updatedMsg)
     } catch (err: any) {
       console.error('Failed to update allergen:', err)
-      toast('error', `アレルゲンの更新に失敗しました: ${err.message || 'Unknown error'}`)
+      toast('error', t.allergens.updateFailed(err.message || 'Unknown error'))
     } finally {
       setIsSubmitting(false)
     }
@@ -191,22 +193,22 @@ export default function AllergensPage() {
 
   // Handle delete allergen
   const handleDeleteAllergen = async (allergen: Allergen) => {
-    if (!confirm(`「${allergen.name_jp} (${allergen.name_en})」を削除しますか？\n\n注意: このアレルゲンが使用されているメニューがある場合、影響が出る可能性があります。`)) {
+    if (!confirm(t.allergens.confirmDelete(allergen.name_jp, allergen.name_en))) {
       return
     }
 
     try {
       await AllergenApi.delete(allergen.uid)
       await fetchAllergens()
-      toast('success', 'アレルゲンを削除しました')
+      toast('success', t.allergens.deletedMsg)
     } catch (err: any) {
       console.error('Failed to delete allergen:', err)
-      toast('error', `アレルゲンの削除に失敗しました: ${err.message || 'Unknown error'}`)
+      toast('error', t.allergens.deleteFailed(err.message || 'Unknown error'))
     }
   }
 
   const getTypeLabel = (type: AllergenType) => {
-    return type === 'mandatory' ? '表示義務' : '推奨表示'
+    return type === 'mandatory' ? t.allergens.mandatory : t.allergens.recommended
   }
 
   const getTypeColor = (type: AllergenType) => {
@@ -215,30 +217,30 @@ export default function AllergensPage() {
 
   if (!canManageAllergens) {
     return (
-      <AdminLayout title="アレルゲン管理">
+      <AdminLayout title={t.allergens.title}>
         <div className="text-center py-12">
-          <div className="text-red-500 text-lg font-semibold mb-2">アクセス権限がありません</div>
-          <div className="text-gray-600">このページはプラットフォームオーナーのみがアクセスできます。</div>
+          <div className="text-red-500 text-lg font-semibold mb-2">{t.allergens.noAccess}</div>
+          <div className="text-gray-600">{t.allergens.noAccessDetail}</div>
         </div>
       </AdminLayout>
     )
   }
 
   return (
-    <AdminLayout title="アレルゲン管理">
+    <AdminLayout title={t.allergens.title}>
       <div className="allergens-page">
         {/* Header */}
         <div className="page-header">
           <div className="header-left">
-            <h1 className="page-title">アレルゲン管理</h1>
-            <p className="header-description">システム全体のアレルゲン情報を管理します</p>
+            <h1 className="page-title">{t.allergens.title}</h1>
+            <p className="header-description">{t.allergens.description}</p>
           </div>
           <div className="header-actions">
             <button
               className="btn btn-primary"
               onClick={() => setShowCreateModal(true)}
             >
-              + アレルゲン追加
+              {t.allergens.addBtn}
             </button>
           </div>
         </div>
@@ -248,7 +250,7 @@ export default function AllergensPage() {
           <div className="search-box">
             <input
               type="text"
-              placeholder="アレルゲン名で検索..."
+              placeholder={t.allergens.searchPlaceholder}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="search-input"
@@ -259,19 +261,19 @@ export default function AllergensPage() {
               className={`filter-btn ${filter === 'all' ? 'active' : ''}`}
               onClick={() => setFilter('all')}
             >
-              すべて ({allergens.mandatory.length + allergens.recommended.length})
+              {t.allergens.all} ({allergens.mandatory.length + allergens.recommended.length})
             </button>
             <button
               className={`filter-btn ${filter === 'mandatory' ? 'active' : ''}`}
               onClick={() => setFilter('mandatory')}
             >
-              表示義務 ({allergens.mandatory.length})
+              {t.allergens.mandatory} ({allergens.mandatory.length})
             </button>
             <button
               className={`filter-btn ${filter === 'recommended' ? 'active' : ''}`}
               onClick={() => setFilter('recommended')}
             >
-              推奨表示 ({allergens.recommended.length})
+              {t.allergens.recommended} ({allergens.recommended.length})
             </button>
           </div>
         </div>
@@ -286,7 +288,7 @@ export default function AllergensPage() {
         {/* Loading */}
         {loading && (
           <div className="loading">
-            アレルゲン情報を読み込み中...
+            {t.allergens.loadingDetail}
           </div>
         )}
 
@@ -306,7 +308,7 @@ export default function AllergensPage() {
                 </div>
                 <div className="allergen-meta">
                   <span className="allergen-date">
-                    作成日: {new Date(allergen.created_at).toLocaleDateString('ja-JP')}
+                    {t.allergens.createdAt}: {new Date(allergen.created_at).toLocaleDateString(lang === 'ja' ? 'ja-JP' : 'en-US')}
                   </span>
                 </div>
                 <div className="allergen-actions">
@@ -314,20 +316,20 @@ export default function AllergensPage() {
                     className="btn btn-secondary btn-small"
                     onClick={() => handleEditAllergen(allergen)}
                   >
-                    編集
+                    {t.allergens.edit}
                   </button>
                   <button
                     className="btn btn-danger btn-small"
                     onClick={() => handleDeleteAllergen(allergen)}
                   >
-                    削除
+                    {t.allergens.delete}
                   </button>
                 </div>
               </div>
             ))}
             {getFilteredAllergens().length === 0 && (
               <div className="no-data">
-                {searchTerm || filter !== 'all' ? '条件に一致するアレルゲンがありません' : 'アレルゲンが登録されていません'}
+                {searchTerm || filter !== 'all' ? t.allergens.emptyFiltered : t.allergens.empty}
               </div>
             )}
           </div>
@@ -341,12 +343,12 @@ export default function AllergensPage() {
               onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
               disabled={currentPage === 1}
             >
-              ‹ 前へ
+              {t.allergens.pagePrev}
             </button>
 
             <span className="pagination-info">
-              {currentPage} / {getTotalPages()} ページ
-              ({getFilteredAllergens().length} 件中 {(currentPage - 1) * itemsPerPage + 1} - {Math.min(currentPage * itemsPerPage, getFilteredAllergens().length)} 件)
+              {t.allergens.pageInfo(currentPage, getTotalPages())}{' '}
+              {t.allergens.pageRangeInfo(getFilteredAllergens().length, (currentPage - 1) * itemsPerPage + 1, Math.min(currentPage * itemsPerPage, getFilteredAllergens().length))}
             </span>
 
             <button
@@ -354,7 +356,7 @@ export default function AllergensPage() {
               onClick={() => setCurrentPage(prev => Math.min(prev + 1, getTotalPages()))}
               disabled={currentPage === getTotalPages()}
             >
-              次へ ›
+              {t.allergens.pageNext}
             </button>
           </div>
         )}
@@ -373,41 +375,41 @@ export default function AllergensPage() {
               >
                 ×
               </button>
-              <div className="modal-title">アレルゲン追加</div>
+              <div className="modal-title">{t.allergens.createTitle}</div>
 
               <div className="form-group">
-                <label className="form-label">日本語名 *</label>
+                <label className="form-label">{t.allergens.labelJp}</label>
                 <input
                   type="text"
                   className={`form-input ${createErrors.name_jp ? 'error' : ''}`}
                   value={createAllergen.name_jp}
                   onChange={(e) => setCreateAllergen({...createAllergen, name_jp: e.target.value})}
-                  placeholder="例: えび"
+                  placeholder={t.allergens.placeholderJp}
                 />
                 {createErrors.name_jp && <span className="error-text">{createErrors.name_jp}</span>}
               </div>
 
               <div className="form-group">
-                <label className="form-label">英語名 *</label>
+                <label className="form-label">{t.allergens.labelEn}</label>
                 <input
                   type="text"
                   className={`form-input ${createErrors.name_en ? 'error' : ''}`}
                   value={createAllergen.name_en}
                   onChange={(e) => setCreateAllergen({...createAllergen, name_en: e.target.value})}
-                  placeholder="例: Shrimp"
+                  placeholder={t.allergens.placeholderEn}
                 />
                 {createErrors.name_en && <span className="error-text">{createErrors.name_en}</span>}
               </div>
 
               <div className="form-group">
-                <label className="form-label">表示タイプ *</label>
+                <label className="form-label">{t.allergens.labelType}</label>
                 <select
                   className="form-input"
                   value={createAllergen.allergen_type}
                   onChange={(e) => setCreateAllergen({...createAllergen, allergen_type: e.target.value as AllergenType})}
                 >
-                  <option value="mandatory">表示義務 (7品目)</option>
-                  <option value="recommended">推奨表示</option>
+                  <option value="mandatory">{t.allergens.typeMandatoryOption}</option>
+                  <option value="recommended">{t.allergens.typeRecommendedOption}</option>
                 </select>
               </div>
 
@@ -420,14 +422,14 @@ export default function AllergensPage() {
                     setCreateErrors({})
                   }}
                 >
-                  キャンセル
+                  {t.allergens.cancel}
                 </button>
                 <button
                   className="btn btn-primary"
                   onClick={handleCreateAllergen}
                   disabled={isSubmitting}
                 >
-                  {isSubmitting ? '追加中...' : '追加'}
+                  {isSubmitting ? t.allergens.adding : t.allergens.add}
                 </button>
               </div>
             </div>
@@ -449,10 +451,10 @@ export default function AllergensPage() {
               >
                 ×
               </button>
-              <div className="modal-title">アレルゲン編集</div>
+              <div className="modal-title">{t.allergens.editTitle}</div>
 
               <div className="form-group">
-                <label className="form-label">日本語名 *</label>
+                <label className="form-label">{t.allergens.labelJp}</label>
                 <input
                   type="text"
                   className={`form-input ${editErrors.name_jp ? 'error' : ''}`}
@@ -463,7 +465,7 @@ export default function AllergensPage() {
               </div>
 
               <div className="form-group">
-                <label className="form-label">英語名 *</label>
+                <label className="form-label">{t.allergens.labelEn}</label>
                 <input
                   type="text"
                   className={`form-input ${editErrors.name_en ? 'error' : ''}`}
@@ -474,14 +476,14 @@ export default function AllergensPage() {
               </div>
 
               <div className="form-group">
-                <label className="form-label">表示タイプ *</label>
+                <label className="form-label">{t.allergens.labelType}</label>
                 <select
                   className="form-input"
                   value={editAllergen.allergen_type}
                   onChange={(e) => setEditAllergen({...editAllergen, allergen_type: e.target.value as AllergenType})}
                 >
-                  <option value="mandatory">表示義務 (7品目)</option>
-                  <option value="recommended">推奨表示</option>
+                  <option value="mandatory">{t.allergens.typeMandatoryOption}</option>
+                  <option value="recommended">{t.allergens.typeRecommendedOption}</option>
                 </select>
               </div>
 
@@ -495,14 +497,14 @@ export default function AllergensPage() {
                     setEditErrors({})
                   }}
                 >
-                  キャンセル
+                  {t.allergens.cancel}
                 </button>
                 <button
                   className="btn btn-primary"
                   onClick={handleUpdateAllergen}
                   disabled={isSubmitting}
                 >
-                  {isSubmitting ? '更新中...' : '更新'}
+                  {isSubmitting ? t.allergens.updating : t.allergens.update}
                 </button>
               </div>
             </div>
