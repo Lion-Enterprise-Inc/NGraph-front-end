@@ -749,8 +749,13 @@ export default function AdminDashboardPage() {
       return
     }
     const savedUserType = sessionStorage.getItem('admin_user_type')
-    if (savedUserType === 'admin' || savedUserType === 'store') {
-      setUserType(savedUserType)
+    // 店舗オーナーはダッシュボード廃止 → 基本情報をホームに
+    if (savedUserType === 'store') {
+      router.replace('/admin/basic-info')
+      return
+    }
+    if (savedUserType === 'admin') {
+      setUserType('admin')
     }
     setIsLoading(false)
   }, [router])

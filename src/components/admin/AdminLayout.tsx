@@ -78,13 +78,13 @@ export default function AdminLayout({ children, title }: Props) {
   }
 
   const restaurantNavItems: NavItem[] = [
-    { key: 'dashboard', label: t.nav.dashboard, icon: '🏠', to: '/admin' },
+    { key: 'basic-info', label: t.nav.basicInfo, icon: '🧾', to: '/admin/basic-info' },
     { key: 'menu-list', label: t.nav.menuList, icon: '📋', to: '/admin/menu-list' },
     { key: 'daily', label: t.nav.dailySpecials, icon: '🍽️', to: '/admin/daily-specials' },
-    { key: 'basic-info', label: t.nav.basicInfo, icon: '🧾', to: '/admin/basic-info' },
     { key: 'store-knowledge', label: t.nav.storeKnowledge, icon: '🧠', to: '/admin/store-knowledge' },
+    { key: 'menu-analytics', label: t.nav.menuAnalytics, icon: '📊', to: '/admin/menu-analytics' },
     { key: 'qr', label: t.nav.qrManagement, icon: '📱', to: '/admin/qr-management' },
-    { key: 'conversations', label: t.nav.conversations, icon: '💬', to: '/admin/conversations' },
+    { key: 'conversations', label: t.nav.conversations, icon: '📜', to: '/admin/conversations' },
     { key: 'prompts', label: t.nav.prompts, icon: '🤖', to: '/admin/prompts' },
   ]
 

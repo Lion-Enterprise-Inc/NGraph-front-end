@@ -12,6 +12,7 @@ import {
 } from '../../../services/api'
 import { useAdminLang } from '../../../hooks/useAdminLang'
 import { getTopicLabel } from '../../../i18n/adminCopy'
+import UsageSummary from './UsageSummary'
 
 const LANG_LABELS: Record<string, string> = {
   ja: '日本語', en: 'English', zh: '中文', 'zh-Hans': '简体中文', 'zh-TW': '繁體中文',
@@ -370,6 +371,9 @@ export default function ConversationsPage() {
   // List view
   return (
     <AdminLayout title={t.conversations.titleList}>
+      {/* 利用統計サマリー（イベント/チャット/セッション） */}
+      <UsageSummary restaurantUid={selectedRestaurant || undefined} />
+
       {/* Filter */}
       <div style={{
         display: 'flex',
