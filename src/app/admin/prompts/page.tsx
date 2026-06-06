@@ -9,8 +9,26 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://dev-backen
 
 type MenuConfig = { auto: boolean; menu_uids: string[] }
 
+// クリックで自由記述欄に足せる例文（店主が「何を書けばいいか」分かるように）
+const PROMPT_EXAMPLES: Record<'ja' | 'en', { label: string; text: string }[]> = {
+  ja: [
+    { label: 'アレルギー対応', text: 'アレルギーや苦手な食材を聞かれたら、必ず該当メニューを確認してから案内してください。' },
+    { label: 'おすすめの推し方', text: 'おすすめを聞かれたら、当店の看板メニューを理由とともに一押ししてください。' },
+    { label: '予約・営業案内', text: '予約や営業時間について聞かれたら、お電話でのご予約をご案内してください。' },
+    { label: 'NG事項', text: '提供していないメニューや在庫切れの品は、無理に勧めず正直に伝えてください。' },
+    { label: '常連向けの一言', text: 'リピーターの方には感謝を伝え、季節の新メニューを一言添えてください。' },
+  ],
+  en: [
+    { label: 'Allergy handling', text: 'When asked about allergies or ingredients to avoid, always check the relevant menu before answering.' },
+    { label: 'How to recommend', text: 'When asked for recommendations, highlight our signature dishes with reasons.' },
+    { label: 'Reservations / hours', text: 'When asked about reservations or hours, guide guests to call us to reserve.' },
+    { label: 'Things to avoid', text: "Don't push items that are out of stock or not served; be honest." },
+    { label: 'Note for regulars', text: 'Thank returning guests and mention a seasonal new item.' },
+  ],
+}
+
 export default function PromptsPage() {
-  const { t } = useAdminLang()
+  const { t, lang } = useAdminLang()
   const tones = [
     { value: 'standard', label: t.prompts.toneStandard },
     { value: 'formal', label: t.prompts.toneFormal },
@@ -155,6 +173,15 @@ export default function PromptsPage() {
 
   const hasGmb = Boolean(selectedRestaurant?.google_business_profile)
 
+  // 例文を自由記述欄の末尾に追記（重複は足さない）
+  const insertExample = (text: string) => {
+    setCustomPrompt(prev => {
+      if (prev.includes(text)) return prev
+      const sep = prev.trim() ? '\n' : ''
+      return `${prev}${sep}${text}`
+    })
+  }
+
   return (
     <AdminLayout title={t.prompts.title}>
       <div className="breadcrumb-nav">
@@ -205,13 +232,32 @@ export default function PromptsPage() {
               </select>
             </div>
 
-            {/* カスタムプロンプト */}
+            {/* お店からAIへの指示（自由記述・主役） */}
             <div>
               <label style={{ display: 'block', fontWeight: 600, marginBottom: '8px' }}>{t.prompts.additionalInstructions}</label>
+
+              {/* 例文チップ（クリックで挿入） */}
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '10px' }}>
+                {PROMPT_EXAMPLES[lang === 'en' ? 'en' : 'ja'].map((ex) => (
+                  <button
+                    key={ex.label}
+                    type="button"
+                    onClick={() => insertExample(ex.text)}
+                    style={{
+                      padding: '6px 12px', borderRadius: '999px', fontSize: '13px', cursor: 'pointer',
+                      background: 'rgba(59,130,246,0.1)', color: '#60A5FA',
+                      border: '1px solid rgba(59,130,246,0.3)',
+                    }}
+                  >
+                    ＋ {ex.label}
+                  </button>
+                ))}
+              </div>
+
               <textarea
                 className="form-control"
-                rows={6}
-                style={{ fontFamily: 'monospace', fontSize: '13px' }}
+                rows={10}
+                style={{ fontSize: '14px', lineHeight: 1.7 }}
                 value={customPrompt}
                 onChange={(e) => setCustomPrompt(e.target.value)}
                 placeholder={t.prompts.promptPlaceholder}
@@ -293,17 +339,6 @@ export default function PromptsPage() {
               )}
             </div>
 
-            {/* 基礎プロンプト（参考表示） */}
-            <div>
-              <label style={{ display: 'block', fontWeight: 600, marginBottom: '8px', fontSize: '14px' }}>{t.prompts.basePrompt}</label>
-              <textarea
-                className="form-control"
-                rows={7}
-                value={t.prompts.basePromptContent}
-                readOnly
-                style={{ fontFamily: 'monospace', fontSize: '13px', background: '#1E293B', color: '#94A3B8' }}
-              />
-            </div>
           </details>
 
           {/* Googleレビュー誘導 */}
