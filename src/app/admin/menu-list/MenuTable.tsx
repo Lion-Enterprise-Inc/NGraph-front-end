@@ -121,14 +121,14 @@ export default function MenuTable({
       {/* フィルター・ソート・表示件数 */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', flexWrap: 'wrap', gap: '8px' }}>
         <div className="filter-buttons" style={{ display: 'flex', gap: '8px' }}>
-          <button className={`filter-btn ${filter === 'all' ? 'active' : ''}`} onClick={() => onFilterChange('all')} style={{ padding: '6px 12px', fontSize: '13px' }}>
-            {t.menuList.tableFilterAll(countAll)}
+          <button className={`filter-btn ${filter === 'verified' ? 'active' : ''}`} onClick={() => onFilterChange('verified')} style={{ padding: '6px 12px', fontSize: '13px' }}>
+            {t.menuList.tableFilterVerified(countVerified)}
           </button>
           <button className={`filter-btn ${filter === 'warning' ? 'active' : ''}`} onClick={() => onFilterChange('warning')} style={{ padding: '6px 12px', fontSize: '13px' }}>
             {t.menuList.tableFilterWarning(countWarning)}
           </button>
-          <button className={`filter-btn ${filter === 'verified' ? 'active' : ''}`} onClick={() => onFilterChange('verified')} style={{ padding: '6px 12px', fontSize: '13px' }}>
-            {t.menuList.tableFilterVerified(countVerified)}
+          <button className={`filter-btn ${filter === 'all' ? 'active' : ''}`} onClick={() => onFilterChange('all')} style={{ padding: '6px 12px', fontSize: '13px' }}>
+            {t.menuList.tableFilterAll(countAll)}
           </button>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -176,15 +176,15 @@ export default function MenuTable({
         </div>
       )}
 
-      {/* 一括承認ボタン */}
-      {!isLoading && !error && countWarning > 0 && (
+      {/* まとめて提供中にする（アーカイブ表示中のみ・このページ分） */}
+      {!isLoading && !error && filter === 'warning' && items.filter(i => !i.status).length > 0 && (
         <div style={{ marginBottom: '12px' }}>
           <button
             className="btn"
             onClick={onBulkApprove}
             style={{ background: '#10b981', color: 'white', padding: '8px 16px', fontSize: '13px' }}
           >
-            {t.menuList.tableBulkApproveCount(countWarning)}
+            {t.menuList.tableBulkApproveCount(items.filter(i => !i.status).length)}
           </button>
         </div>
       )}

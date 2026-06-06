@@ -154,6 +154,7 @@ export interface PaginatedResult<T> {
   previous: string | null;
   items: T[];
   rank_summary?: { S: number; A: number; B: number; C: number };
+  status_summary?: { active: number; archived: number };
 }
 
 export interface RestaurantListResponse {
@@ -641,13 +642,14 @@ export const MenuApi = {
     return apiClient.post<MenuResponse>('/menus/', data);
   },
 
-  getAll: async (restaurantUid?: string, page: number = 1, size: number = 100, sort?: string, order?: string): Promise<MenuListResponse> => {
+  getAll: async (restaurantUid?: string, page: number = 1, size: number = 100, sort?: string, order?: string, statusFilter?: string): Promise<MenuListResponse> => {
     const params = new URLSearchParams();
     if (restaurantUid) params.append('restaurant_uid', restaurantUid);
     params.append('page', page.toString());
     params.append('size', size.toString());
     if (sort) params.append('sort', sort);
     if (order) params.append('order', order);
+    if (statusFilter) params.append('status_filter', statusFilter);
     return apiClient.get<MenuListResponse>(`/menus/?${params.toString()}`);
   },
 
@@ -1353,6 +1355,7 @@ export const MenuAnalyticsApi = {
 export interface MenuAnalyticsData {
   total_menus: number;
   active_menus: number;
+  archived_menus?: number;
   avg_price: number;
   avg_confidence: number;
   category_distribution: Array<{ category: string; label: string; count: number; avg_price: number }>;

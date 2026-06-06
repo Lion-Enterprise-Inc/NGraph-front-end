@@ -74,7 +74,7 @@ function MenuListContent() {
     return null
   })
   const [searchQuery, setSearchQuery] = useState('')
-  const [filter, setFilter] = useState('all')
+  const [filter, setFilter] = useState('verified')
   const [sortKey, setSortKey] = useState('default')
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc')
   const [itemsPerPage, setItemsPerPage] = useState(30)
@@ -113,6 +113,7 @@ function MenuListContent() {
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [totalItems, setTotalItems] = useState(0)
+  const [statusSummary, setStatusSummary] = useState<{ active: number; archived: number } | null>(null)
   const [editSelectedAllergenUids, setEditSelectedAllergenUids] = useState<string[]>([])
   const [cookingMethods, setCookingMethods] = useState<CookingMethod[]>([])
   const [restrictions, setRestrictions] = useState<Restriction[]>([])
@@ -335,12 +336,15 @@ function MenuListContent() {
 
       if (restaurantData?.uid) {
         try {
-          const menusResponse = await MenuApi.getAll(restaurantData.uid, page, itemsPerPage, sortKey !== 'default' ? sortKey : undefined, sortKey !== 'default' ? sortDir : undefined)
+          const statusParam = filter === 'verified' ? 'active' : filter === 'warning' ? 'archived' : undefined
+          const menusResponse = await MenuApi.getAll(restaurantData.uid, page, itemsPerPage, sortKey !== 'default' ? sortKey : undefined, sortKey !== 'default' ? sortDir : undefined, statusParam)
           const items = menusResponse.result?.items || []
           const total = menusResponse.result?.total || 0
 
           setTotalItems(total)
           setTotalPages(Math.ceil(total / itemsPerPage))
+          const ss = menusResponse.result?.status_summary
+          if (ss) setStatusSummary(ss)
 
           const menus = items.map((menu: Menu) => ({
             uid: menu.uid,
@@ -420,7 +424,7 @@ function MenuListContent() {
     } finally {
       setIsLoading(false)
     }
-  }, [authLoading, user, itemsPerPage, isAdminViewing, uidParam, sortKey, sortDir, selectedStoreUid, userRestaurants])
+  }, [authLoading, user, itemsPerPage, isAdminViewing, uidParam, sortKey, sortDir, selectedStoreUid, userRestaurants, filter])
 
   useEffect(() => {
     fetchData(currentPage)
@@ -439,18 +443,16 @@ function MenuListContent() {
     }
   }
 
+  // 提供中/アーカイブの絞り込みはサーバー側で実施済み。ここは検索のみ。
   const filteredItems = menuItems.filter(item => {
     const ingredientsStr = item.ingredients?.map(ing => ing.name).join(' ') || ''
-    const matchesSearch = item.name.includes(searchQuery) || item.category.includes(searchQuery) || ingredientsStr.includes(searchQuery)
-    const matchesFilter = filter === 'all' ||
-      (filter === 'verified' && item.status === true) ||
-      (filter === 'warning' && item.status === false)
-    return matchesSearch && matchesFilter
+    return item.name.includes(searchQuery) || item.category.includes(searchQuery) || ingredientsStr.includes(searchQuery)
   })
 
-  const countAll = menuItems.length
-  const countVerified = menuItems.filter(i => i.status === true).length
-  const countWarning = menuItems.filter(i => i.status === false).length
+  // タブの件数は全件ベース(status_summary)。未取得時はページから暫定算出。
+  const countVerified = statusSummary ? statusSummary.active : menuItems.filter(i => i.status === true).length
+  const countWarning = statusSummary ? statusSummary.archived : menuItems.filter(i => i.status === false).length
+  const countAll = statusSummary ? statusSummary.active + statusSummary.archived : menuItems.length
 
   const refreshMenus = async () => {
     if (!restaurant?.uid) return
@@ -854,7 +856,7 @@ function MenuListContent() {
           sortDir={sortDir}
           onSortChange={(key, dir) => { setSortKey(key); setSortDir(dir); setCurrentPage(1); }}
           onSearchChange={setSearchQuery}
-          onFilterChange={setFilter}
+          onFilterChange={(f) => { setFilter(f); setCurrentPage(1); }}
           onItemsPerPageChange={(n) => { setItemsPerPage(n); setCurrentPage(1); }}
           onPageChange={handlePageChange}
           onPreview={handlePreview}

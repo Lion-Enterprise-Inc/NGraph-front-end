@@ -419,10 +419,13 @@ export default function MenuAnalyticsSection({ uid }: { uid?: string }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
 
-      {/* Summary Cards（平均完成度は非表示） */}
+      {/* Summary Cards（分析は提供中ベース。平均完成度は非表示） */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 16 }}>
-        <SummaryCard label={t.menuAnalytics.summaryTotal} value={data.total_menus} />
-        <SummaryCard label={t.menuAnalytics.summaryActive} value={data.active_menus} />
+        <SummaryCard
+          label={t.menuAnalytics.summaryActive}
+          value={data.total_menus}
+          sub={data.archived_menus ? t.menuAnalytics.archivedSub(data.archived_menus) : undefined}
+        />
         <SummaryCard label={t.menuAnalytics.summaryAvgPrice} value={`¥${data.avg_price.toLocaleString()}`} />
       </div>
 
