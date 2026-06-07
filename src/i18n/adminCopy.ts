@@ -619,6 +619,11 @@ export type AdminCopy = {
     fieldCookingMethods: string
     fieldRestrictions: string
     fieldDefault: string
+    noteLabel: string
+    notePlaceholder: string
+    noteSaved: string
+    variesPickHint: string
+    variesLoading: string
   }
   menuAnalytics: {
     title: string
@@ -1646,6 +1651,11 @@ const adminCopy: Record<AdminLang, AdminCopy> = {
       fieldCookingMethods: '調理法',
       fieldRestrictions: '対応',
       fieldDefault: '確認',
+      noteLabel: '補足（任意）',
+      notePlaceholder: '選択肢に無い油・出汁など、補足があれば記入',
+      noteSaved: '補足を保存しました',
+      variesPickHint: '品ごとに選んでください',
+      variesLoading: '対象メニューを読み込み中...',
     },
     menuAnalytics: {
       title: 'メニュー分析',
@@ -2683,6 +2693,11 @@ const adminCopy: Record<AdminLang, AdminCopy> = {
       fieldCookingMethods: 'Cooking methods',
       fieldRestrictions: 'Restrictions',
       fieldDefault: 'Verify',
+      noteLabel: 'Note (optional)',
+      notePlaceholder: 'Add a note (oils/stocks not in the list, etc.)',
+      noteSaved: 'Note saved',
+      variesPickHint: 'Choose per item',
+      variesLoading: 'Loading target menus...',
     },
     menuAnalytics: {
       title: 'Menu analytics',

@@ -35,6 +35,10 @@ export default function StoreKnowledgePage() {
   const [slug, setSlug] = useState<string | null>(null)
   const [preview, setPreview] = useState<SurveyPreview | null>(null)
   const [kitchenAnswers, setKitchenAnswers] = useState<Record<string, string | string[]>>({})
+  const [kitchenNotes, setKitchenNotes] = useState<Record<string, string>>({})
+  const [variesMenus, setVariesMenus] = useState<Record<string, { menu_uid: string; menu_name: string }[]>>({})
+  const [variesPicks, setVariesPicks] = useState<Record<string, Record<string, string>>>({})
+  const [variesLoading, setVariesLoading] = useState<Record<string, boolean>>({})
   const [dishTexts, setDishTexts] = useState<Record<number, string>>({})
   const [dishSelects, setDishSelects] = useState<Record<number, string[]>>({})
   const [applyingId, setApplyingId] = useState<string | null>(null)
@@ -81,9 +85,14 @@ export default function StoreKnowledgePage() {
       setPreview(data)
       if (data.existing_answers) {
         const ka: Record<string, string | string[]> = {}
+        const kn: Record<string, string> = {}
         const dt: Record<number, string> = {}
         const ds: Record<number, string[]> = {}
         for (const [key, val] of Object.entries(data.existing_answers)) {
+          if (key.endsWith('_supplement')) {
+            kn[key.replace('_supplement', '')] = val
+            continue
+          }
           if (key.startsWith('dish_')) {
             try {
               const parsed = JSON.parse(val)
@@ -103,6 +112,7 @@ export default function StoreKnowledgePage() {
           }
         }
         setKitchenAnswers(ka)
+        setKitchenNotes(kn)
         setDishTexts(dt)
         setDishSelects(ds)
       }
@@ -121,6 +131,7 @@ export default function StoreKnowledgePage() {
     const newVal = current === value ? '' : value
     setKitchenAnswers(prev => ({ ...prev, [qid]: newVal }))
     if (!newVal) return
+    if (newVal === 'varies') ensureVariesMenus(qid)
 
     setApplyingId(qid)
     try {
@@ -150,6 +161,7 @@ export default function StoreKnowledgePage() {
     const newArr = idx >= 0 ? current.filter(v => v !== value) : [...current, value]
     setKitchenAnswers(prev => ({ ...prev, [qid]: newArr }))
     if (newArr.length === 0) return
+    if (newArr.includes('varies')) ensureVariesMenus(qid)
 
     setApplyingId(qid)
     try {
@@ -187,6 +199,65 @@ export default function StoreKnowledgePage() {
       toast('error', t.storeKnowledge.saveFailed)
     } finally {
       setApplyingId(null)
+    }
+  }
+
+  // varies: 対象メニューを取得（品ごとドリルダウン用）
+  const ensureVariesMenus = async (qid: string) => {
+    if (!slug || variesMenus[qid] || variesLoading[qid]) return
+    setVariesLoading(prev => ({ ...prev, [qid]: true }))
+    try {
+      const resp = await apiClient.get(
+        `/owner-survey/admin/varies-menus/${encodeURIComponent(slug)}/${qid}`
+      ) as any
+      const list = (resp?.result || resp || []) as { menu_uid: string; menu_name: string }[]
+      setVariesMenus(prev => ({ ...prev, [qid]: Array.isArray(list) ? list : [] }))
+    } catch {
+      setVariesMenus(prev => ({ ...prev, [qid]: [] }))
+    } finally {
+      setVariesLoading(prev => ({ ...prev, [qid]: false }))
+    }
+  }
+
+  // varies: 品ごとの選択を保存（per_item_answers で波及）
+  const handleVariesPick = async (qid: string, uid: string, value: string) => {
+    if (!slug) return
+    const cur = variesPicks[qid] || {}
+    const next = cur[uid] === value ? { ...cur } : { ...cur, [uid]: value }
+    if (cur[uid] === value) delete next[uid]
+    setVariesPicks(prev => ({ ...prev, [qid]: next }))
+    if (Object.keys(next).length === 0) return
+    setApplyingId(qid)
+    try {
+      const resp = await apiClient.post(`/owner-survey/admin/kitchen-answer/${encodeURIComponent(slug)}`, {
+        question_id: qid,
+        selected_value: 'varies',
+        per_item_answers: next,
+      }) as any
+      const r = resp?.result || resp
+      toast('success', t.storeKnowledge.propagatedAffected(r.affected_menus ?? Object.keys(next).length))
+    } catch {
+      toast('error', t.storeKnowledge.saveFailed)
+    } finally {
+      setApplyingId(null)
+    }
+  }
+
+  // 補足記述を保存（選択値は維持したまま supplement だけ更新）
+  const saveKitchenNote = async (qid: string) => {
+    if (!slug) return
+    const cur = kitchenAnswers[qid]
+    // 選択がまだ無い場合は補足だけでは保存しない（空値で回答を上書きしないため）
+    if (cur === undefined || cur === '' || (Array.isArray(cur) && cur.length === 0)) return
+    try {
+      await apiClient.post(`/owner-survey/admin/kitchen-answer/${encodeURIComponent(slug)}`, {
+        question_id: qid,
+        selected_value: cur,
+        supplement_text: kitchenNotes[qid] || '',
+      })
+      toast('success', t.storeKnowledge.noteSaved)
+    } catch {
+      toast('error', t.storeKnowledge.saveFailed)
     }
   }
 
@@ -412,6 +483,60 @@ export default function StoreKnowledgePage() {
                     )
                   })}
                 </div>
+                )}
+
+                {/* varies: 品ごとドリルダウン */}
+                {(q.type === 'checkbox'
+                  ? (Array.isArray(currentVal) && currentVal.includes('varies'))
+                  : currentVal === 'varies') && (
+                  <div style={{ marginTop: 12, padding: '10px 12px', background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.25)', borderRadius: 8 }}>
+                    <div style={{ fontSize: 12, color: '#F59E0B', marginBottom: 8 }}>{t.storeKnowledge.variesPickHint}</div>
+                    {variesLoading[q.id] && <div style={{ fontSize: 12, color: 'var(--muted)' }}>{t.storeKnowledge.variesLoading}</div>}
+                    {(variesMenus[q.id] || []).map(m => (
+                      <div key={m.menu_uid} style={{ marginBottom: 10 }}>
+                        <div style={{ fontSize: 13, color: 'var(--text)', marginBottom: 4 }}>{m.menu_name}</div>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                          {(q.options || []).filter(o => !['varies', 'unknown', 'none_above'].includes(o.value)).map(o => {
+                            const picked = (variesPicks[q.id] || {})[m.menu_uid] === o.value
+                            return (
+                              <button
+                                key={o.value}
+                                disabled={isApplying}
+                                onClick={() => handleVariesPick(q.id, m.menu_uid, o.value)}
+                                style={{
+                                  padding: '5px 12px', borderRadius: 6, fontSize: 12, cursor: 'pointer',
+                                  border: picked ? '1px solid #F59E0B' : '1px solid var(--border-strong)',
+                                  background: picked ? 'rgba(245,158,11,0.15)' : 'transparent',
+                                  color: picked ? '#FBBF24' : 'var(--text-body)',
+                                }}
+                              >
+                                {picked ? '✓ ' : ''}{o.label}
+                              </button>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    ))}
+                    {!variesLoading[q.id] && (variesMenus[q.id] || []).length === 0 && (
+                      <div style={{ fontSize: 12, color: 'var(--muted)' }}>{t.storeKnowledge.phase2NoQuestions}</div>
+                    )}
+                  </div>
+                )}
+
+                {/* 補足記述（任意） */}
+                {q.allow_note && q.type !== 'menu_select' && (
+                  <input
+                    type="text"
+                    value={kitchenNotes[q.id] || ''}
+                    onChange={e => setKitchenNotes(prev => ({ ...prev, [q.id]: e.target.value }))}
+                    onBlur={() => saveKitchenNote(q.id)}
+                    placeholder={t.storeKnowledge.notePlaceholder}
+                    style={{
+                      width: '100%', marginTop: 10, padding: '6px 10px', fontSize: 12,
+                      background: 'var(--bg-surface)', color: 'var(--text)',
+                      border: '1px solid var(--border)', borderRadius: 6,
+                    }}
+                  />
                 )}
                 {isApplying && <div style={{ fontSize: 11, color: '#F59E0B', marginTop: 6 }}>{t.storeKnowledge.propagating}</div>}
               </div>
