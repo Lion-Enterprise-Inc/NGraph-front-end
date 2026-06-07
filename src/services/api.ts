@@ -119,6 +119,8 @@ export interface Restaurant {
   google_review_enabled: boolean | null;
   city: string | null;
   menu_count?: number;
+  subscription_plan?: string | null;
+  data_source?: string | null;
   created_at: string;
   updated_at: string;
 }

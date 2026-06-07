@@ -410,6 +410,9 @@ export type AdminCopy = {
     all: string
     onboarded: string
     free: string
+    corpus: string
+    badgeCorpus: string
+    badgeTest: string
     empty: string
     notSet: string
     todayLabel: string
@@ -1432,6 +1435,9 @@ const adminCopy: Record<AdminLang, AdminCopy> = {
       all: 'すべて',
       onboarded: '正規導入',
       free: 'フリー',
+      corpus: '学習データ',
+      badgeCorpus: '学習データ',
+      badgeTest: 'テスト',
       empty: 'レストランが見つかりません',
       notSet: '未設定',
       todayLabel: '今日',
@@ -2464,6 +2470,9 @@ const adminCopy: Record<AdminLang, AdminCopy> = {
       all: 'All',
       onboarded: 'Onboarded',
       free: 'Free',
+      corpus: 'Corpus data',
+      badgeCorpus: 'Corpus',
+      badgeTest: 'Test',
       empty: 'No restaurants found',
       notSet: 'Not set',
       todayLabel: 'today',

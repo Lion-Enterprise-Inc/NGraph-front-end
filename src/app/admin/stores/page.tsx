@@ -19,6 +19,7 @@ interface StoreDisplay {
   plan: string;
   planId: string;
   planPrice: number;
+  dataSource: string;
   menuCount: number;
   lastUpdate: string;
   status: string;
@@ -28,7 +29,7 @@ export default function StoresPage() {
   const router = useRouter()
   const toast = useToast()
   const { lang, t } = useAdminLang()
-  const [filter, setFilter] = useState('all')
+  const [filter, setFilter] = useState('live')
   const [searchQuery, setSearchQuery] = useState('')
   const [stores, setStores] = useState<StoreDisplay[]>([])
   const [loading, setLoading] = useState(true)
@@ -77,9 +78,10 @@ export default function StoresPage() {
         location: extractLocation(restaurant),
         address: restaurant.address || '',
         type: restaurant.business_type ? (BUSINESS_TYPES[restaurant.business_type] || restaurant.business_type) : t.stores.notSet,
-        plan: (restaurant as any).subscription_plan === 'standard' ? t.stores.badgePlanOnboarded : t.stores.badgePlanFree,
-        planId: (restaurant as any).subscription_plan || 'free',
-        planPrice: (restaurant as any).subscription_plan === 'standard' ? 20000 : 0,
+        plan: restaurant.subscription_plan === 'standard' ? t.stores.badgePlanOnboarded : t.stores.badgePlanFree,
+        planId: restaurant.subscription_plan || 'free',
+        planPrice: restaurant.subscription_plan === 'standard' ? 20000 : 0,
+        dataSource: restaurant.data_source || 'live',
         menuCount: restaurant.menu_count || 0,
         lastUpdate: formatDate(restaurant.updated_at),
         status: restaurant.is_active ? 'active' : 'inactive'
@@ -158,9 +160,10 @@ export default function StoresPage() {
   }
 
   const filteredStores = stores.filter(s => {
-    if (filter === 'onboarded' && s.planId !== 'standard') return false
-    if (filter === 'free' && s.planId !== 'free') return false
-    if (filter !== 'all' && filter !== 'onboarded' && filter !== 'free' && s.location !== filter) return false
+    if (filter === 'live' && s.dataSource !== 'live') return false
+    if (filter === 'corpus' && s.dataSource !== 'corpus') return false
+    const axisFilters = ['all', 'live', 'corpus']
+    if (!axisFilters.includes(filter) && s.location !== filter) return false
     if (searchQuery.trim()) {
       const q = searchQuery.trim().toLowerCase()
       return s.name.toLowerCase().includes(q) || s.address.toLowerCase().includes(q) || s.location.toLowerCase().includes(q) || s.storeCode.toLowerCase().includes(q)
@@ -229,6 +232,7 @@ export default function StoresPage() {
           plan: t.stores.badgePlanFree,
           planId: 'free',
           planPrice: 0,
+          dataSource: 'live',
           menuCount: 0,
           lastUpdate: t.stores.nowLabel,
           status: response.result.is_active ? 'active' : 'inactive'
@@ -354,7 +358,7 @@ export default function StoresPage() {
               {t.stores.newStore}
             </button>
             <div>
-              <span style={{ fontSize: '24px', fontWeight: 700, color: '#10a37f' }}>{stores.length}</span>
+              <span style={{ fontSize: '24px', fontWeight: 700, color: '#10a37f' }}>{filteredStores.length}</span>
               <span style={{ color: '#94A3B8', marginLeft: '5px' }}>{t.stores.countSuffix}</span>
             </div>
           </div>
@@ -376,23 +380,23 @@ export default function StoresPage() {
 
         <div style={{ display: 'flex', gap: '10px', marginBottom: '8px', flexWrap: 'wrap' }}>
           <button
+            className={`btn btn-secondary btn-small ${filter === 'live' ? 'active' : ''}`}
+            onClick={() => setFilter('live')}
+            style={filter === 'live' ? { background: '#10B981', borderColor: '#10B981' } : {}}
+          >
+            {t.stores.onboarded} ({stores.filter(s => s.dataSource === 'live').length})
+          </button>
+          <button
+            className={`btn btn-secondary btn-small ${filter === 'corpus' ? 'active' : ''}`}
+            onClick={() => setFilter('corpus')}
+          >
+            {t.stores.corpus} ({stores.filter(s => s.dataSource === 'corpus').length})
+          </button>
+          <button
             className={`btn btn-secondary btn-small ${filter === 'all' ? 'active' : ''}`}
             onClick={() => setFilter('all')}
           >
             {t.stores.all} ({stores.length})
-          </button>
-          <button
-            className={`btn btn-secondary btn-small ${filter === 'onboarded' ? 'active' : ''}`}
-            onClick={() => setFilter('onboarded')}
-            style={filter === 'onboarded' ? { background: '#10B981', borderColor: '#10B981' } : {}}
-          >
-            {t.stores.onboarded} ({stores.filter(s => s.planId === 'standard').length})
-          </button>
-          <button
-            className={`btn btn-secondary btn-small ${filter === 'free' ? 'active' : ''}`}
-            onClick={() => setFilter('free')}
-          >
-            {t.stores.free} ({stores.filter(s => s.planId === 'free').length})
           </button>
           {cityFilters.map(([city, count]) => (
             <button
@@ -422,7 +426,7 @@ export default function StoresPage() {
                 </div>
                 <div className="store-status-compact">
                   {store.storeCode && <div className="store-id-badge">ID: {store.storeCode}</div>}
-                  <div className={`badge ${store.planId === 'standard' ? 'badge-success' : 'badge-secondary'}`} style={store.planId === 'standard' ? { background: '#10B981' } : { background: '#475569' }}>{store.plan}</div>
+                  <div className={`badge ${store.dataSource === 'live' ? 'badge-success' : 'badge-secondary'}`} style={store.dataSource === 'live' ? { background: '#10B981' } : { background: '#475569' }}>{store.dataSource === 'live' ? t.stores.badgePlanOnboarded : store.dataSource === 'test' ? t.stores.badgeTest : t.stores.badgeCorpus}</div>
                   <div className="store-update-compact">{t.stores.updateLabel}: {store.lastUpdate}</div>
                 </div>
               </div>
