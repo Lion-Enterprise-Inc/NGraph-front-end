@@ -1012,6 +1012,8 @@ export type AdminCopy = {
     serviceOverview: string
     totalRestaurants: string
     totalMenus: string
+    corpusRestaurants: string
+    corpusMenus: string
     totalVerifiedMenus: string
     totalUsers: string
     totalQrScans: string
@@ -2041,7 +2043,9 @@ const adminCopy: Record<AdminLang, AdminCopy> = {
       second: '秒',
       serviceOverview: 'サービス概要',
       totalRestaurants: '導入レストラン数',
-      totalMenus: '登録メニュー数',
+      totalMenus: '導入店メニュー数',
+      corpusRestaurants: '学習データ（店舗）',
+      corpusMenus: '学習データ（メニュー）',
       totalVerifiedMenus: '承認済メニュー数',
       totalUsers: 'ユーザー数',
       totalQrScans: '総QRスキャン数',
@@ -3075,8 +3079,10 @@ const adminCopy: Record<AdminLang, AdminCopy> = {
       minute: 'min',
       second: 'sec',
       serviceOverview: 'Service overview',
-      totalRestaurants: 'Restaurants',
-      totalMenus: 'Total menus',
+      totalRestaurants: 'Onboarded restaurants',
+      totalMenus: 'Onboarded menus',
+      corpusRestaurants: 'Corpus (restaurants)',
+      corpusMenus: 'Corpus (menus)',
       totalVerifiedMenus: 'Verified menus',
       totalUsers: 'Users',
       totalQrScans: 'Total QR scans',

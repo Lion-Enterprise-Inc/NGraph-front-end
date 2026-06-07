@@ -503,11 +503,19 @@ function AdminDashboard() {
         <div className="stats-grid">
           <div className="stat-card">
             <div className="stat-label">{t.dashboard.totalRestaurants}</div>
-            <div className="stat-value">{stats?.total_restaurants ?? 0}</div>
+            <div className="stat-value">{stats?.live_restaurants ?? 0}</div>
           </div>
           <div className="stat-card">
             <div className="stat-label">{t.dashboard.totalMenus}</div>
-            <div className="stat-value">{stats?.total_menus ?? 0}</div>
+            <div className="stat-value">{stats?.live_menus ?? 0}</div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-label">{t.dashboard.corpusRestaurants}</div>
+            <div className="stat-value" style={{ color: '#94A3B8' }}>{stats?.corpus_restaurants ?? 0}</div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-label">{t.dashboard.corpusMenus}</div>
+            <div className="stat-value" style={{ color: '#94A3B8' }}>{stats?.corpus_menus ?? 0}</div>
           </div>
           <div className="stat-card">
             <div className="stat-label">{t.dashboard.totalVerifiedMenus}</div>
