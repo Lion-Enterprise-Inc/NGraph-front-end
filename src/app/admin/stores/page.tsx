@@ -162,21 +162,12 @@ export default function StoresPage() {
   const filteredStores = stores.filter(s => {
     if (filter === 'live' && s.dataSource !== 'live') return false
     if (filter === 'corpus' && s.dataSource !== 'corpus') return false
-    const axisFilters = ['all', 'live', 'corpus']
-    if (!axisFilters.includes(filter) && s.location !== filter) return false
     if (searchQuery.trim()) {
       const q = searchQuery.trim().toLowerCase()
       return s.name.toLowerCase().includes(q) || s.address.toLowerCase().includes(q) || s.location.toLowerCase().includes(q) || s.storeCode.toLowerCase().includes(q)
     }
     return true
   })
-
-  // 動的に都市リスト生成（店舗がある都市だけ表示）
-  const locationCounts: Record<string, number> = {}
-  stores.forEach(s => {
-    locationCounts[s.location] = (locationCounts[s.location] || 0) + 1
-  })
-  const cityFilters = Object.entries(locationCounts).sort((a, b) => b[1] - a[1])
 
   const handleCreateStore = async () => {
     if (!newStore.name || !newStore.user_uid) {
@@ -398,15 +389,6 @@ export default function StoresPage() {
           >
             {t.stores.all} ({stores.length})
           </button>
-          {cityFilters.map(([city, count]) => (
-            <button
-              key={city}
-              className={`btn btn-secondary btn-small ${filter === city ? 'active' : ''}`}
-              onClick={() => setFilter(city)}
-            >
-              {city} ({count})
-            </button>
-          ))}
         </div>
 
         {filteredStores.length === 0 ? (
