@@ -9273,7 +9273,7 @@ textarea.form-input {
 }
 
 .menu-list-item.expanded {
-  background: var(--color-surface-input);
+  background: transparent;
 }
 
 .menu-list-item-row {
