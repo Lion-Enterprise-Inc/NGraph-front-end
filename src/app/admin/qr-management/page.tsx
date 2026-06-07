@@ -11,9 +11,8 @@ import { useToast } from '../../../components/admin/Toast'
 import { useAdminLang } from '../../../hooks/useAdminLang'
 
 // OMISEAI ブランドQRデザイン用の定数・ヘルパー
-const BRAND_ORANGE = '#e8642c' // OMISEAI ブランドカラー
-const MODULE_DARK = '#1f2430' // 本体ドット（純黒より柔らかい炭色）
-const OMISEAI_MARK_SRC = '/omiseai-mark.png' // 中央のOMISEAI「お」マーク
+const MODULE_DARK = '#000000' // 黒ベース（色なし）
+const OMISEAI_MARK_SRC = '/omiseai-mark.png' // 中央のOMISEAI「お」マーク（黒モノクロ）
 
 function roundRect(
   ctx: CanvasRenderingContext2D,
@@ -74,30 +73,30 @@ async function renderStyledQR(text: string): Promise<string> {
     return inTL || inTR || inBL
   }
 
-  // 本体モジュールを角丸ドットで描画
+  // 本体モジュールを四角（角をわずかに丸めたクリスプな黒マス）で描画
   ctx.fillStyle = MODULE_DARK
   for (let r = 0; r < count; r++) {
     for (let c = 0; c < count; c++) {
       if (!isDark(r, c) || inFinder(r, c)) continue
       const x = off + c * moduleSize
       const y = off + r * moduleSize
-      roundRect(ctx, x + moduleSize * 0.08, y + moduleSize * 0.08, moduleSize * 0.84, moduleSize * 0.84, moduleSize * 0.4)
+      roundRect(ctx, x, y, moduleSize, moduleSize, moduleSize * 0.12)
       ctx.fill()
     }
   }
 
-  // ファインダーをブランドオレンジの角丸で描画
+  // ファインダー（3隅）を黒の角丸で描画
   const drawEye = (rowStart: number, colStart: number): void => {
     const x = off + colStart * moduleSize
     const y = off + rowStart * moduleSize
     const s = 7 * moduleSize
-    ctx.fillStyle = BRAND_ORANGE
+    ctx.fillStyle = MODULE_DARK
     roundRect(ctx, x, y, s, s, moduleSize * 2)
     ctx.fill()
     ctx.fillStyle = '#ffffff'
     roundRect(ctx, x + moduleSize, y + moduleSize, s - 2 * moduleSize, s - 2 * moduleSize, moduleSize * 1.4)
     ctx.fill()
-    ctx.fillStyle = BRAND_ORANGE
+    ctx.fillStyle = MODULE_DARK
     roundRect(ctx, x + moduleSize * 2, y + moduleSize * 2, moduleSize * 3, moduleSize * 3, moduleSize * 0.9)
     ctx.fill()
   }
@@ -105,21 +104,18 @@ async function renderStyledQR(text: string): Promise<string> {
   drawEye(0, count - 7)
   drawEye(count - 7, 0)
 
-  // 中央の OMISEAI マーク（白い角丸の下地を敷いてから載せる）
+  // 中央の OMISEAI マーク（白い円の下地を敷いてから黒マークを載せる）
   try {
     const logo = await loadImage(OMISEAI_MARK_SRC)
-    const logoSize = px * 0.22
-    const lx = (px - logoSize) / 2
-    const ly = (px - logoSize) / 2
-    const pad = moduleSize * 0.8
+    const logoSize = px * 0.20
+    const cx = px / 2
+    const cy = px / 2
+    const radius = logoSize / 2 + moduleSize * 0.7
     ctx.fillStyle = '#ffffff'
-    roundRect(ctx, lx - pad, ly - pad, logoSize + pad * 2, logoSize + pad * 2, moduleSize * 1.8)
+    ctx.beginPath()
+    ctx.arc(cx, cy, radius, 0, Math.PI * 2)
     ctx.fill()
-    ctx.save()
-    roundRect(ctx, lx, ly, logoSize, logoSize, logoSize * 0.22)
-    ctx.clip()
-    ctx.drawImage(logo, lx, ly, logoSize, logoSize)
-    ctx.restore()
+    ctx.drawImage(logo, cx - logoSize / 2, cy - logoSize / 2, logoSize, logoSize)
   } catch {
     // マーク読み込み失敗時はロゴ無しのQRをそのまま使う
   }
