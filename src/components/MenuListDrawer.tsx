@@ -33,6 +33,47 @@ function getCategoryLabel(cat: string, lang: string): string {
   return labels[cat] || cat
 }
 
+// 詳細展開時のアクションチップ: ラベル（言語別）
+const DETAIL_CHIP_LABELS: Record<string, { more: string; pairing: string; allergen: string }> = {
+  ja: { more: 'もっと知る', pairing: '合う飲み物', allergen: 'アレルゲン' },
+  en: { more: 'Tell me more', pairing: 'Drink pairing', allergen: 'Allergens' },
+  ko: { more: '더 알아보기', pairing: '어울리는 음료', allergen: '알레르겐' },
+  'zh-Hans': { more: '了解更多', pairing: '搭配饮品', allergen: '过敏原' },
+  'zh-Hant': { more: '了解更多', pairing: '搭配飲品', allergen: '過敏原' },
+}
+
+// 詳細チップ → chat に送るクエリ（言語別 + 現地語の料理名を使う）
+function buildAskQuery(lang: string, name: string, kind: 'more' | 'pairing' | 'allergen'): string {
+  const queries: Record<string, Record<string, string>> = {
+    ja: {
+      more: `${name}について教えて`,
+      pairing: `${name}に合う飲み物は？`,
+      allergen: `${name}のアレルゲンを詳しく教えて`,
+    },
+    en: {
+      more: `Tell me more about "${name}"`,
+      pairing: `What drink pairs well with "${name}"?`,
+      allergen: `Tell me about the allergens in "${name}"`,
+    },
+    ko: {
+      more: `${name}에 대해 알려주세요`,
+      pairing: `${name}에 어울리는 음료는?`,
+      allergen: `${name}의 알레르겐을 자세히 알려주세요`,
+    },
+    'zh-Hans': {
+      more: `请详细介绍一下${name}`,
+      pairing: `${name}适合搭配什么饮品？`,
+      allergen: `请详细告诉我${name}的过敏原`,
+    },
+    'zh-Hant': {
+      more: `請詳細介紹一下${name}`,
+      pairing: `${name}適合搭配什麼飲品？`,
+      allergen: `請詳細告訴我${name}的過敏原`,
+    },
+  }
+  return (queries[lang] || queries.en)[kind]
+}
+
 type MenuListDrawerProps = {
   open: boolean
   onClose: () => void
@@ -48,6 +89,7 @@ export default function MenuListDrawer({ open, onClose, restaurantSlug, business
   const { language } = useAppContext()
   const copy = getUiCopy(language)
   const nfgCopy = (copy as any).nfg || {}
+  const chipLabels = DETAIL_CHIP_LABELS[language] || DETAIL_CHIP_LABELS.en
 
   const [menus, setMenus] = useState<MenuNFGCard[]>([])
   const [loading, setLoading] = useState(false)
@@ -354,33 +396,33 @@ export default function MenuListDrawer({ open, onClose, restaurantSlug, business
                               className="menu-list-action-chip"
                               onClick={(e) => {
                                 e.stopPropagation()
-                                sendToChat(`${m.name_jp}について教えて`)
+                                sendToChat(buildAskQuery(language, displayName(m), 'more'))
                               }}
                             >
                               <MessageCircle size={14} />
-                              <span>もっと知る</span>
+                              <span>{chipLabels.more}</span>
                             </button>
                             <button
                               type="button"
                               className="menu-list-action-chip"
                               onClick={(e) => {
                                 e.stopPropagation()
-                                sendToChat(`${m.name_jp}に合う飲み物は？`)
+                                sendToChat(buildAskQuery(language, displayName(m), 'pairing'))
                               }}
                             >
                               <Wine size={14} />
-                              <span>合う飲み物</span>
+                              <span>{chipLabels.pairing}</span>
                             </button>
                             <button
                               type="button"
                               className="menu-list-action-chip"
                               onClick={(e) => {
                                 e.stopPropagation()
-                                sendToChat(`${m.name_jp}のアレルゲンを詳しく教えて`)
+                                sendToChat(buildAskQuery(language, displayName(m), 'allergen'))
                               }}
                             >
                               <AlertTriangle size={14} />
-                              <span>アレルゲン</span>
+                              <span>{chipLabels.allergen}</span>
                             </button>
                           </>
                         )}
