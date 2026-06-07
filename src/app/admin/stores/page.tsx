@@ -167,6 +167,10 @@ export default function StoresPage() {
       return s.name.toLowerCase().includes(q) || s.address.toLowerCase().includes(q) || s.location.toLowerCase().includes(q) || s.storeCode.toLowerCase().includes(q)
     }
     return true
+  }).sort((a, b) => {
+    // 正規導入(live)を常に先頭、次に学習データ(corpus)、最後にテスト
+    const rank = (d: string) => (d === 'live' ? 0 : d === 'corpus' ? 1 : 2)
+    return rank(a.dataSource) - rank(b.dataSource)
   })
 
   const handleCreateStore = async () => {
@@ -399,7 +403,7 @@ export default function StoresPage() {
         ) : (
           <div id="storeListContainer">
             {filteredStores.map((store) => (
-            <div key={store.id} className="store-card-compact">
+            <div key={store.id} className={`store-card-compact ${store.dataSource === 'live' ? 'store-card-live' : ''}`}>
               <div className="store-info-compact">
                 <div className="store-main-info">
                   <div className="store-name-compact">{store.name}</div>
@@ -705,6 +709,11 @@ export default function StoresPage() {
           flex-direction: column;
           gap: 12px;
           min-height: 200px;
+        }
+
+        .store-card-live {
+          border-left: 3px solid #10B981;
+          background: rgba(16, 163, 127, 0.04);
         }
 
         .store-card-compact:hover {
