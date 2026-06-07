@@ -148,7 +148,10 @@ export default function QRManagementPage() {
   // Pre-fill restaurant slug for restaurant owners - only run once when auth is loaded
   useEffect(() => {
     if (!authLoading && !slugInitialized) {
-      if (user?.restaurant_slug) {
+      // 表示はURLと同じ url_slug(英数字) を優先。無ければ日本語の slug にフォールバック
+      if (user?.restaurant_url_slug) {
+        setRestaurantSlug(user.restaurant_url_slug)
+      } else if (user?.restaurant_slug) {
         setRestaurantSlug(user.restaurant_slug)
       }
       if (user?.restaurant_short_code) {
