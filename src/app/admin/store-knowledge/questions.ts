@@ -8,11 +8,14 @@ export interface KitchenQuestionOption {
 export interface KitchenQuestion {
   id: string
   question: string
-  type: 'radio' | 'checkbox'
-  options: KitchenQuestionOption[]
+  type: 'radio' | 'checkbox' | 'menu_select'
+  options: KitchenQuestionOption[] | null
   affected_menu_count: number
   is_branch: boolean
   parent_id: string | null
+  max_select?: number
+  allow_note?: boolean
+  menu_list?: { uid: string; name: string }[]
 }
 
 export interface DishQuestion {

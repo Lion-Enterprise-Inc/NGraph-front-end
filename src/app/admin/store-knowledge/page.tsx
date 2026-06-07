@@ -166,6 +166,30 @@ export default function StoreKnowledgePage() {
     }
   }
 
+  // Phase 1: menu_select（自慢の料理など）immediate save
+  const handleKitchenMenuSelect = async (qid: string, uid: string, maxSelect: number) => {
+    if (!slug) return
+    const current = (kitchenAnswers[qid] as string[]) || []
+    const has = current.includes(uid)
+    if (!has && current.length >= maxSelect) return
+    const newArr = has ? current.filter(v => v !== uid) : [...current, uid]
+    setKitchenAnswers(prev => ({ ...prev, [qid]: newArr }))
+    if (newArr.length === 0) return
+
+    setApplyingId(qid)
+    try {
+      await apiClient.post(`/owner-survey/admin/kitchen-answer/${encodeURIComponent(slug)}`, {
+        question_id: qid,
+        selected_value: newArr,
+      })
+      toast('success', t.storeKnowledge.savedCount(newArr.length))
+    } catch {
+      toast('error', t.storeKnowledge.saveFailed)
+    } finally {
+      setApplyingId(null)
+    }
+  }
+
   // Phase 2: batch save
   const saveDishAnswers = async () => {
     if (!slug || !preview) return
@@ -244,7 +268,9 @@ export default function StoreKnowledgePage() {
   const kitchenTotal = preview?.kitchen_questions?.length || 0
   const kitchenAnswered = preview?.kitchen_questions?.filter(q => {
     const a = kitchenAnswers[q.id]
-    return q.type === 'checkbox' ? (Array.isArray(a) && a.length > 0) : (typeof a === 'string' && a !== '')
+    return (q.type === 'checkbox' || q.type === 'menu_select')
+      ? (Array.isArray(a) && a.length > 0)
+      : (typeof a === 'string' && a !== '')
   }).length || 0
   const dishTotal = preview?.dish_questions?.length || 0
   const dishAnswered = preview?.dish_questions?.filter(q =>
@@ -325,6 +351,41 @@ export default function StoreKnowledgePage() {
                     {t.storeKnowledge.affectedSuffix(q.affected_menu_count)}
                   </span>
                 </div>
+                {q.type === 'menu_select' ? (
+                  <div style={{ maxHeight: 220, overflowY: 'auto' }}>
+                    {(q.menu_list || []).map(m => {
+                      const sel = Array.isArray(currentVal) ? currentVal : []
+                      const isSelected = sel.includes(m.uid)
+                      const maxReached = (q.max_select || 999) <= sel.length && !isSelected
+                      return (
+                        <button
+                          key={m.uid}
+                          disabled={isApplying || maxReached}
+                          onClick={() => handleKitchenMenuSelect(q.id, m.uid, q.max_select || 3)}
+                          style={{
+                            display: 'block', width: '100%', textAlign: 'left',
+                            padding: '8px 12px', marginBottom: 2,
+                            borderRadius: 6, fontSize: 13, cursor: maxReached ? 'not-allowed' : 'pointer',
+                            border: 'none',
+                            background: isSelected ? 'rgba(59,130,246,0.15)' : 'transparent',
+                            color: isSelected ? '#60A5FA' : 'var(--text-body)',
+                            opacity: maxReached ? 0.4 : 1,
+                          }}
+                        >
+                          {isSelected ? '● ' : '○ '}{m.name}
+                        </button>
+                      )
+                    })}
+                    {q.max_select && (
+                      <div style={{ fontSize: 11, color: '#64748B', marginTop: 4 }}>
+                        {t.storeKnowledge.maxSelectHint(q.max_select, Array.isArray(currentVal) ? currentVal.length : 0)}
+                      </div>
+                    )}
+                    {(q.menu_list || []).length === 0 && (
+                      <div style={{ color: 'var(--muted)', fontSize: 13 }}>{t.storeKnowledge.phase2NoQuestions}</div>
+                    )}
+                  </div>
+                ) : (
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                   {(q.options || []).map(opt => {
                     const isSelected = q.type === 'checkbox'
@@ -351,6 +412,7 @@ export default function StoreKnowledgePage() {
                     )
                   })}
                 </div>
+                )}
                 {isApplying && <div style={{ fontSize: 11, color: '#F59E0B', marginTop: 6 }}>{t.storeKnowledge.propagating}</div>}
               </div>
             )
