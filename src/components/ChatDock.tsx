@@ -42,28 +42,28 @@ type HeroChip = {
 // chip query を強化: 「この店の」を明示して AI が generic 郷土料理を提案するのを防止
 const HERO_CHIPS: Record<string, HeroChip[]> = {
   ja: [
-    { label: 'おすすめは？', query: 'この店のおすすめメニューを教えてください (登録されているメニューから)' },
-    { label: '名物は？', query: 'この店の名物・看板メニューを教えてください (登録されているメニューから)' },
+    { label: 'おすすめは？', query: 'この店のおすすめメニューを教えてください' },
+    { label: '名物は？', query: 'この店の名物・看板メニューを教えてください' },
     { label: 'アレルギー・食事制限', query: '', action: 'open-preferences' },
   ],
   en: [
-    { label: "What's recommended?", query: "What do you recommend from this restaurant's menu? (from the registered items)" },
-    { label: 'Specialty?', query: "What is this restaurant's signature dish? (from the registered menu)" },
+    { label: "What's recommended?", query: "What do you recommend from this restaurant's menu?" },
+    { label: 'Specialty?', query: "What is this restaurant's signature dish?" },
     { label: 'Allergies / Diet', query: '', action: 'open-preferences' },
   ],
   ko: [
-    { label: '추천 메뉴는?', query: '이 가게의 추천 메뉴를 알려주세요 (등록된 메뉴 중에서)' },
-    { label: '대표 메뉴는?', query: '이 가게의 대표 메뉴는 무엇인가요? (등록된 메뉴 중에서)' },
+    { label: '추천 메뉴는?', query: '이 가게의 추천 메뉴를 알려주세요' },
+    { label: '대표 메뉴는?', query: '이 가게의 대표 메뉴는 무엇인가요?' },
     { label: '알레르기 · 식이', query: '', action: 'open-preferences' },
   ],
   'zh-Hans': [
-    { label: '推荐什么？', query: '请告诉我这家店的推荐菜（从已登记的菜单中）' },
-    { label: '招牌菜？', query: '这家店的招牌菜是什么？（从已登记的菜单中）' },
+    { label: '推荐什么？', query: '请告诉我这家店的推荐菜' },
+    { label: '招牌菜？', query: '这家店的招牌菜是什么？' },
     { label: '过敏 / 饮食', query: '', action: 'open-preferences' },
   ],
   'zh-Hant': [
-    { label: '推薦什麼？', query: '請告訴我這家店的推薦菜（從已登記的菜單中）' },
-    { label: '招牌菜？', query: '這家店的招牌菜是什麼？（從已登記的菜單中）' },
+    { label: '推薦什麼？', query: '請告訴我這家店的推薦菜' },
+    { label: '招牌菜？', query: '這家店的招牌菜是什麼？' },
     { label: '過敏 / 飲食', query: '', action: 'open-preferences' },
   ],
 };
