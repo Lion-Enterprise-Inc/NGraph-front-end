@@ -9143,7 +9143,8 @@ textarea.form-input {
   bottom: 0;
   left: 0;
   right: 0;
-  height: 85vh;
+  /* ヘッダー直下まで伸ばし、上部に背景チャットが透ける「グレー帯」を出さない */
+  height: calc(100dvh - var(--header-height) - env(safe-area-inset-top, 0px));
   background: var(--color-surface);
   color: var(--color-text);
   border-radius: 16px 16px 0 0;

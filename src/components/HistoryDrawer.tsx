@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
-import { X, SquarePen, UtensilsCrossed, Heart, Flame, MessageSquare, Store, AlertCircle, Star } from 'lucide-react'
+import { X, SquarePen, UtensilsCrossed, MessageSquare, Store, AlertCircle, Star } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useChatHistory } from '../hooks/useChatHistory'
 import { getUiCopy } from '../i18n/uiCopy'
@@ -24,7 +24,7 @@ export default function HistoryDrawer({
   onSelectThread,
 }: HistoryDrawerProps) {
   const router = useRouter()
-  const { language, openMenuList, onOpenLiked, onOpenPopular, openPreferences, googleReviewUrl } = useAppContext()
+  const { language, openMenuList, openPreferences, googleReviewUrl } = useAppContext()
   const copy = getUiCopy(language)
   const { threads, refresh } = useChatHistory(restaurantSlug ?? null)
 
@@ -55,6 +55,16 @@ export default function HistoryDrawer({
             <X size={20} strokeWidth={1.75} color="rgba(255,255,255,0.6)" />
           </button>
         </div>
+
+        {/* ── メニューを見る（一番上の主要動線）── */}
+        {inRestaurantContext && (
+          <div className="sidebar-section">
+            <button className="sidebar-row" onClick={() => { openMenuList(); onClose?.(); }}>
+              <UtensilsCrossed size={16} strokeWidth={1.75} />
+              <span>{(copy as any).webLanding?.exploreMenu || 'メニュー一覧'}</span>
+            </button>
+          </div>
+        )}
 
         {/* ── セクション 1: 会話 ── */}
         <div className="sidebar-section sidebar-section-grow">
@@ -87,28 +97,7 @@ export default function HistoryDrawer({
           </div>
         </div>
 
-        {/* ── セクション 2: メニュー探索 ── */}
-        {inRestaurantContext && (
-          <div className="sidebar-section">
-            <div className="sidebar-section-label">{t('sectionExplore', 'メニュー探索')}</div>
-            <button className="sidebar-row" onClick={() => { openMenuList(); onClose?.(); }}>
-              <UtensilsCrossed size={16} strokeWidth={1.75} />
-              <span>{(copy as any).webLanding?.exploreMenu || 'メニュー一覧'}</span>
-            </button>
-            {onOpenLiked && (
-              <button className="sidebar-row" onClick={() => { onOpenLiked(); onClose?.(); }}>
-                <Heart size={16} strokeWidth={1.75} />
-                <span>{t('favorites', 'お気に入り')}</span>
-              </button>
-            )}
-            {onOpenPopular && (
-              <button className="sidebar-row" onClick={() => { onOpenPopular(); onClose?.(); }}>
-                <Flame size={16} strokeWidth={1.75} />
-                <span>{t('popular', '人気ランキング')}</span>
-              </button>
-            )}
-          </div>
-        )}
+        {/* お気に入り・人気ランキングは利用が少ないため非表示（増えたら再表示） */}
 
         {/* ── セクション 3: 店舗 ── */}
         {inRestaurantContext && (
