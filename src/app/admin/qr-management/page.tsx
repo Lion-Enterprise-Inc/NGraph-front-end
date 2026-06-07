@@ -10,6 +10,123 @@ import { getUiCopy } from '../../../i18n/uiCopy'
 import { useToast } from '../../../components/admin/Toast'
 import { useAdminLang } from '../../../hooks/useAdminLang'
 
+// OMISEAI ブランドQRデザイン用の定数・ヘルパー
+const BRAND_ORANGE = '#e8642c' // OMISEAI ブランドカラー
+const MODULE_DARK = '#1f2430' // 本体ドット（純黒より柔らかい炭色）
+const OMISEAI_MARK_SRC = '/omiseai-mark.png' // 中央のOMISEAI「お」マーク
+
+function roundRect(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  r: number
+): void {
+  const radius = Math.min(r, w / 2, h / 2)
+  ctx.beginPath()
+  ctx.moveTo(x + radius, y)
+  ctx.arcTo(x + w, y, x + w, y + h, radius)
+  ctx.arcTo(x + w, y + h, x, y + h, radius)
+  ctx.arcTo(x, y + h, x, y, radius)
+  ctx.arcTo(x, y, x + w, y, radius)
+  ctx.closePath()
+}
+
+function loadImage(src: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const img = new Image()
+    img.onload = () => resolve(img)
+    img.onerror = reject
+    img.src = src
+  })
+}
+
+// 角丸ドット + オレンジのファインダー + 中央ロゴ の OMISEAI 専用QRを描画
+async function renderStyledQR(text: string): Promise<string> {
+  const qr = QRCode.create(text, { errorCorrectionLevel: 'H' })
+  const count = qr.modules.size
+  const data = qr.modules.data
+  const moduleSize = 16
+  const margin = 4 // 余白（モジュール数）
+  const off = margin * moduleSize
+  const px = (count + margin * 2) * moduleSize
+
+  const canvas = document.createElement('canvas')
+  canvas.width = px
+  canvas.height = px
+  const ctx = canvas.getContext('2d')
+  if (!ctx) throw new Error('canvas context unavailable')
+
+  // 背景（角丸の白）
+  ctx.fillStyle = '#ffffff'
+  roundRect(ctx, 0, 0, px, px, moduleSize * 3)
+  ctx.fill()
+
+  const isDark = (r: number, c: number): boolean =>
+    r >= 0 && c >= 0 && r < count && c < count && !!data[r * count + c]
+
+  // 3隅のファインダー（位置検出パターン）は別描画するので本体ループから除外
+  const inFinder = (r: number, c: number): boolean => {
+    const inTL = r < 7 && c < 7
+    const inTR = r < 7 && c >= count - 7
+    const inBL = r >= count - 7 && c < 7
+    return inTL || inTR || inBL
+  }
+
+  // 本体モジュールを角丸ドットで描画
+  ctx.fillStyle = MODULE_DARK
+  for (let r = 0; r < count; r++) {
+    for (let c = 0; c < count; c++) {
+      if (!isDark(r, c) || inFinder(r, c)) continue
+      const x = off + c * moduleSize
+      const y = off + r * moduleSize
+      roundRect(ctx, x + moduleSize * 0.08, y + moduleSize * 0.08, moduleSize * 0.84, moduleSize * 0.84, moduleSize * 0.4)
+      ctx.fill()
+    }
+  }
+
+  // ファインダーをブランドオレンジの角丸で描画
+  const drawEye = (rowStart: number, colStart: number): void => {
+    const x = off + colStart * moduleSize
+    const y = off + rowStart * moduleSize
+    const s = 7 * moduleSize
+    ctx.fillStyle = BRAND_ORANGE
+    roundRect(ctx, x, y, s, s, moduleSize * 2)
+    ctx.fill()
+    ctx.fillStyle = '#ffffff'
+    roundRect(ctx, x + moduleSize, y + moduleSize, s - 2 * moduleSize, s - 2 * moduleSize, moduleSize * 1.4)
+    ctx.fill()
+    ctx.fillStyle = BRAND_ORANGE
+    roundRect(ctx, x + moduleSize * 2, y + moduleSize * 2, moduleSize * 3, moduleSize * 3, moduleSize * 0.9)
+    ctx.fill()
+  }
+  drawEye(0, 0)
+  drawEye(0, count - 7)
+  drawEye(count - 7, 0)
+
+  // 中央の OMISEAI マーク（白い角丸の下地を敷いてから載せる）
+  try {
+    const logo = await loadImage(OMISEAI_MARK_SRC)
+    const logoSize = px * 0.22
+    const lx = (px - logoSize) / 2
+    const ly = (px - logoSize) / 2
+    const pad = moduleSize * 0.8
+    ctx.fillStyle = '#ffffff'
+    roundRect(ctx, lx - pad, ly - pad, logoSize + pad * 2, logoSize + pad * 2, moduleSize * 1.8)
+    ctx.fill()
+    ctx.save()
+    roundRect(ctx, lx, ly, logoSize, logoSize, logoSize * 0.22)
+    ctx.clip()
+    ctx.drawImage(logo, lx, ly, logoSize, logoSize)
+    ctx.restore()
+  } catch {
+    // マーク読み込み失敗時はロゴ無しのQRをそのまま使う
+  }
+
+  return canvas.toDataURL('image/png')
+}
+
 export default function QRManagementPage() {
   const { language } = useAppContext()
   const { user, isLoading: authLoading } = useAuth()
@@ -68,16 +185,8 @@ export default function QRManagementPage() {
     setQrCodeUrl(url)
 
     try {
-      // Generate QR code as data URL
-      const dataUrl = await QRCode.toDataURL(url, {
-        width: 300,
-        margin: 2,
-        color: {
-          dark: '#000000',
-          light: '#FFFFFF'
-        },
-        errorCorrectionLevel: 'M'
-      })
+      // OMISEAI ブランドQR（角丸ドット + オレンジのファインダー + 中央マーク）
+      const dataUrl = await renderStyledQR(url)
       setQrCodeDataUrl(dataUrl)
     } catch (error) {
       console.error('Error generating QR code:', error)
