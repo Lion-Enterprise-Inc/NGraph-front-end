@@ -345,7 +345,7 @@ export default function NFGCard({
               <div className="nfgcard-header-left">
                 <div className="nfgcard-name">
                   <span className="nfgcard-number">{idx + 1}.</span>
-                  {displayName}
+                  <span className="nfgcard-name-text">{displayName}</span>
                 </div>
                 {subName && <div className="nfgcard-subname">{subName}</div>}
               </div>
