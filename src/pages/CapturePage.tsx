@@ -30,6 +30,8 @@ import QuickExplainCard from "../components/QuickExplainCard";
 import NFGCard from "../components/NFGCard";
 import QRMenuView from "../components/QRMenuView";
 import MenuStrip from "../components/MenuStrip";
+import OwnerQuestionFlow from "../components/OwnerQuestionFlow";
+import OwnerPasscodeModal from "../components/OwnerPasscodeModal";
 
 function visionToQuickExplain(vi: VisionMenuItem): QuickExplainItem {
   return {
@@ -641,6 +643,31 @@ export default function CapturePage({
   const isNfgMode = searchParams?.get("nfg") === "true";
   const isQuickMode = searchParams?.get("mode") === "quick";
   const isWebMode = searchParams?.get("mode") === "web";
+
+  // ── 店主モード: ?owner=TOKEN で入る。初回のみパスコード、以降30日セッション ──
+  const ownerParam = searchParams?.get("owner");
+  const [ownerSession, setOwnerSession] = useState<{
+    sessionToken: string; restaurantName: string;
+  } | null>(null);
+  const [ownerPending, setOwnerPending] = useState(0);
+  const [ownerQAActive, setOwnerQAActive] = useState(false);
+  const [ownerGateOpen, setOwnerGateOpen] = useState(false);
+
+  useEffect(() => {
+    if (!ownerParam) return;
+    try {
+      const raw = localStorage.getItem(`omiseai_owner_${ownerParam}`);
+      if (raw) {
+        const saved = JSON.parse(raw);
+        if (saved?.session_token) {
+          setOwnerSession({ sessionToken: saved.session_token, restaurantName: saved.restaurant_name || "" });
+          if (typeof saved.pending_count === "number") setOwnerPending(saved.pending_count);
+          return;
+        }
+      }
+    } catch {}
+    setOwnerGateOpen(true);
+  }, [ownerParam]);
   
   const selectedRestaurant = restaurantData;
   const nfgParam = searchParams?.get("nfg") || (cleanUrlMatch ? cleanUrlMatch[4] : null);
@@ -1877,7 +1904,7 @@ export default function CapturePage({
     );
   }
 
-  const isHeroLanding = responses.length === 0 && !loading && !attachment;
+  const isHeroLanding = responses.length === 0 && !loading && !attachment && !ownerQAActive;
 
   return (
     <div
@@ -1909,6 +1936,21 @@ export default function CapturePage({
         </div>
       )}
 
+      {ownerSession && (
+        <div className="owner-banner">
+          <span className="owner-banner-label">店主モード</span>
+          {ownerQAActive ? (
+            <button type="button" className="owner-banner-btn" onClick={() => setOwnerQAActive(false)}>
+              終了する
+            </button>
+          ) : (
+            <button type="button" className="owner-banner-btn" onClick={() => setOwnerQAActive(true)}>
+              {ownerPending > 0 ? `質問に答える(${ownerPending}件)` : '確認事項をチェック'}
+            </button>
+          )}
+        </div>
+      )}
+
       <div
         className="capture-body"
         onScroll={handleContentScroll}
@@ -1916,7 +1958,7 @@ export default function CapturePage({
       >
         <main
           className={`capture-main hero-stack${
-            responses.length > 0 || loading ? " is-hidden" : ""
+            responses.length > 0 || loading || ownerQAActive ? " is-hidden" : ""
           }`}
         >
           {!restaurantLoading && !restaurantData && restaurantSlug ? (
@@ -2012,6 +2054,13 @@ export default function CapturePage({
 
 
         <section className="capture-thread" ref={threadRef}>
+          {ownerSession && ownerQAActive && (
+            <OwnerQuestionFlow
+              sessionToken={ownerSession.sessionToken}
+              onClose={() => setOwnerQAActive(false)}
+              onCountChange={(n) => setOwnerPending(n)}
+            />
+          )}
           {responses.map((response, responseIdx) => (
             <div key={response.id} className="chat-thread-item" id={`msg-${response.id}`}>
               <div className="chat-row chat-row-user">
@@ -2713,6 +2762,22 @@ export default function CapturePage({
         menuItem={suggestionTarget || { name_jp: '' }}
         onSubmit={() => setSuggestionTarget(null)}
       />
+
+      {/* 店主モード: 初回パスコード入力 */}
+      {ownerGateOpen && ownerParam && (
+        <OwnerPasscodeModal
+          token={ownerParam}
+          onSuccess={(res) => {
+            try {
+              localStorage.setItem(`omiseai_owner_${ownerParam}`, JSON.stringify(res));
+            } catch {}
+            setOwnerSession({ sessionToken: res.session_token, restaurantName: res.restaurant_name });
+            setOwnerPending(res.pending_count);
+            setOwnerGateOpen(false);
+          }}
+          onCancel={() => setOwnerGateOpen(false)}
+        />
+      )}
 
       {/* ♡ お気に入りモーダル */}
       {likedDrawerOpen && (

@@ -1642,6 +1642,60 @@ export const MenuSearchApi = {
   },
 };
 
+// Owner Chat API (店主モード: 長命トークン+パスコード→30日セッション)
+export interface OwnerQuestion {
+  menu_uid: string;
+  menu_name: string;
+  field: string | null;
+  question: string;
+  options: string[];
+}
+
+export const OwnerChatApi = {
+  auth: async (token: string, passcode: string): Promise<{
+    session_token: string; restaurant_slug: string; restaurant_name: string; pending_count: number;
+  }> => {
+    const resp = await fetch(`${API_BASE_URL}/owner-chat/${encodeURIComponent(token)}/auth`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ passcode }),
+    });
+    if (!resp.ok) throw new Error(resp.status === 401 ? 'passcode' : 'auth');
+    return resp.json();
+  },
+  questions: async (sessionToken: string, limit = 3): Promise<{
+    questions: OwnerQuestion[]; total_remaining: number;
+  }> => {
+    const resp = await fetch(`${API_BASE_URL}/owner-chat/questions?limit=${limit}`, {
+      headers: { 'X-Owner-Token': sessionToken },
+    });
+    if (!resp.ok) throw new Error('questions');
+    return resp.json();
+  },
+  answer: async (sessionToken: string, payload: {
+    menu_uid: string; question: string; selected?: string[]; text_note?: string;
+  }): Promise<{
+    ok: boolean; menu_name: string; menu_rank: string | null; total_remaining: number; promoted_to_a: boolean;
+  }> => {
+    const resp = await fetch(`${API_BASE_URL}/owner-chat/answer`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Owner-Token': sessionToken },
+      body: JSON.stringify(payload),
+    });
+    if (!resp.ok) throw new Error('answer');
+    return resp.json();
+  },
+  comment: async (sessionToken: string, menuUid: string, comment: string): Promise<{ ok: boolean }> => {
+    const resp = await fetch(`${API_BASE_URL}/owner-chat/comment`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Owner-Token': sessionToken },
+      body: JSON.stringify({ menu_uid: menuUid, comment }),
+    });
+    if (!resp.ok) throw new Error('comment');
+    return resp.json();
+  },
+};
+
 // Top menus API (public, no auth)
 export const TopMenusApi = {
   fetch: async (slug: string, limit = 5, lang = 'ja'): Promise<{ result: { menus: VisionMenuItem[]; total: number } }> => {
