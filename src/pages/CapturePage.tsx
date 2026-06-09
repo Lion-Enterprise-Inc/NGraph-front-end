@@ -29,6 +29,7 @@ import ImageViewer from "../components/ImageViewer";
 import QuickExplainCard from "../components/QuickExplainCard";
 import NFGCard from "../components/NFGCard";
 import QRMenuView from "../components/QRMenuView";
+import MenuStrip from "../components/MenuStrip";
 
 function visionToQuickExplain(vi: VisionMenuItem): QuickExplainItem {
   return {
@@ -1993,6 +1994,16 @@ export default function CapturePage({
                 handleSend(reservationMessages[activeLanguage] || reservationMessages.en);
               }}
               onExploreMenuClick={() => openMenuList()}
+              menuStrip={
+                /* テーブルに置いてあるメニュー: 挨拶文の下の写真/品書きミニカード(無言・静的) */
+                !isWebMode && selectedRestaurant ? (
+                  <MenuStrip
+                    restaurantSlug={selectedRestaurant.slug}
+                    onCardTap={(uid) => openMenuList(uid)}
+                    onSeeAll={() => openMenuList()}
+                  />
+                ) : undefined
+              }
             />
           )}
 

@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { Camera, UtensilsCrossed, CalendarCheck, MapPin, Clock } from 'lucide-react'
 import { getUiCopy } from '../i18n/uiCopy'
 import { useAppContext } from './AppProvider'
@@ -53,6 +54,8 @@ type CameraPromptProps = {
   restaurantHolidays?: string | null
   onReservationClick?: () => void
   onExploreMenuClick?: () => void
+  /** 挨拶文の下に置く静的コンテンツ(MenuStrip)。store-home は fixed 下端基準なので中に入れないと dock と重なる */
+  menuStrip?: ReactNode
 }
 
 export default function CameraPrompt({
@@ -72,6 +75,7 @@ export default function CameraPrompt({
   restaurantHolidays,
   onReservationClick,
   onExploreMenuClick,
+  menuStrip,
 }: CameraPromptProps) {
   const { language } = useAppContext()
   const copy = getUiCopy(language)
@@ -172,6 +176,7 @@ export default function CameraPrompt({
       <p className="store-home-sub" style={{ whiteSpace: 'pre-line' }}>
         {restaurantName ? (buildStoreGreeting(language, brandName)) : sub}
       </p>
+      {menuStrip}
     </div>
   )
 }

@@ -81,11 +81,13 @@ type MenuListDrawerProps = {
   businessType?: string | null
   /** chat に質問を投入する callback（CapturePage 提供）。設定時はチップ行表示。 */
   onAskAbout?: (query: string) => void
+  /** 開いた時に展開しておくメニュー uid（MenuStrip のカードタップ用） */
+  initialExpandedUid?: string | null
 }
 
 const BAR_TYPES = ['バー', 'カクテルバー', 'ワインバー', 'ダイニングバー', 'bar', 'cocktail bar', 'wine bar', 'dining bar']
 
-export default function MenuListDrawer({ open, onClose, restaurantSlug, businessType, onAskAbout }: MenuListDrawerProps) {
+export default function MenuListDrawer({ open, onClose, restaurantSlug, businessType, onAskAbout, initialExpandedUid }: MenuListDrawerProps) {
   const { language } = useAppContext()
   const copy = getUiCopy(language)
   const nfgCopy = (copy as any).nfg || {}
@@ -182,6 +184,18 @@ export default function MenuListDrawer({ open, onClose, restaurantSlug, business
     }
   }, [open])
 
+  // MenuStrip のカードタップ: 指定 uid を展開して該当位置までスクロール
+  useEffect(() => {
+    if (!open || !initialExpandedUid || menus.length === 0) return
+    if (!menus.some(m => m.uid === initialExpandedUid)) return
+    setActiveCategory('all')
+    setExpandedUid(initialExpandedUid)
+    requestAnimationFrame(() => {
+      document.getElementById(`menu-list-item-${initialExpandedUid}`)
+        ?.scrollIntoView({ block: 'start', behavior: 'smooth' })
+    })
+  }, [open, initialExpandedUid, menus])
+
   const filtered = activeCategory === 'all'
     ? menus
     : menus.filter(m => (m.category || 'other') === activeCategory)
@@ -269,6 +283,7 @@ export default function MenuListDrawer({ open, onClose, restaurantSlug, business
               return (
                 <div
                   key={m.uid}
+                  id={`menu-list-item-${m.uid}`}
                   className={`menu-list-item${isOpen ? ' expanded' : ''}`}
                   onClick={() => setExpandedUid(isOpen ? null : m.uid)}
                 >

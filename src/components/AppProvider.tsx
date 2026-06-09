@@ -32,7 +32,7 @@ type AppContextValue = {
   openLanguageModal: () => void;
   openHistoryDrawer: () => void;
   closeHistoryDrawer: () => void;
-  openMenuList: () => void;
+  openMenuList: (focusMenuUid?: string) => void;
   closeMenuList: () => void;
   openPreferences: () => void;
   closePreferences: () => void;
@@ -90,6 +90,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [languageModalOpen, setLanguageModalOpen] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [menuListOpen, setMenuListOpen] = useState(false);
+  // MenuStrip 等から特定カードを展開した状態で開くための uid
+  const [menuListFocusUid, setMenuListFocusUid] = useState<string | null>(null);
   const [preferencesOpen, setPreferencesOpen] = useState(false);
   const [pendingAttachment, setPendingAttachment] =
     useState<PendingAttachment | null>(null);
@@ -199,7 +201,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
           openLanguageModal: () => setLanguageModalOpen(true),
           openHistoryDrawer: () => setDrawerOpen(true),
           closeHistoryDrawer: () => setDrawerOpen(false),
-          openMenuList: () => setMenuListOpen(true),
+          openMenuList: (focusMenuUid?: string) => {
+            setMenuListFocusUid(focusMenuUid ?? null);
+            setMenuListOpen(true);
+          },
           closeMenuList: () => setMenuListOpen(false),
           openPreferences: () => setPreferencesOpen(true),
           closePreferences: () => setPreferencesOpen(false),
@@ -256,10 +261,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
             />
             <MenuListDrawer
               open={menuListOpen}
-              onClose={() => setMenuListOpen(false)}
+              onClose={() => {
+                setMenuListOpen(false);
+                setMenuListFocusUid(null);
+              }}
               restaurantSlug={restaurantSlug}
               businessType={businessType}
               onAskAbout={onAskAbout ?? undefined}
+              initialExpandedUid={menuListFocusUid}
             />
             <PreferencesModal
               open={preferencesOpen}
