@@ -9609,7 +9609,11 @@ textarea.form-input {
   padding: 7px 12px;
   background: rgba(16, 163, 127, 0.12);
   border-bottom: 1px solid rgba(16, 163, 127, 0.25);
-  /* ボタンが増えても縦に折らず横スクロール(SPでの3行折れ防止) */
+  /* ボタンが増えても縦に折らず横スクロール(SPでの3行折れ防止)。
+     flex子はmin-width:autoで中身幅まで膨張し親にclipされて
+     スクロール自体が死ぬ(320pxで右端ボタンに届かない実害)→min-width:0必須 */
+  min-width: 0;
+  max-width: 100%;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
@@ -9630,13 +9634,15 @@ textarea.form-input {
   background: #10a37f;
   color: #fff;
   border: none;
-  border-radius: 14px;
-  padding: 5px 14px;
-  font-size: 12px;
+  border-radius: 17px;
+  padding: 8px 14px;
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
   flex-shrink: 0;
+  /* タップ領域確保(計測27px→約36px。指で外しにくく) */
+  min-height: 36px;
 }
 
 /* 質問フロー(チャット風・決定論) */
@@ -9929,6 +9935,14 @@ textarea.form-input {
   background: var(--color-surface);
   border-top: 1px solid var(--color-border-strong);
   box-shadow: 0 -4px 16px rgba(0,0,0,0.12);
+}
+
+/* PCでは入力欄をコンテンツ列(760px)に合わせて中央寄せ(全幅に伸ばさない) */
+@media (min-width: 800px) {
+  .owner-input-bar {
+    padding-left: calc((100vw - 760px) / 2 + 14px);
+    padding-right: calc((100vw - 760px) / 2 + 14px);
+  }
 }
 
 .owner-input-field {

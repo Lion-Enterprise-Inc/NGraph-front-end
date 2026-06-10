@@ -264,7 +264,7 @@ export default function OwnerDailyMenu({ sessionToken, onClose, onSessionExpired
             </div>
             <div className="owner-qa-options">
               <button type="button" className="owner-qa-opt" disabled={submitting || selectedStock.length === 0} onClick={reuse}>
-                <Check size={15} strokeWidth={2.5} /> 選んだ{selectedStock.length}品を今日出す
+                <Check size={15} strokeWidth={2.5} /> {selectedStock.length > 0 ? `選んだ${selectedStock.length}品を今日出す` : '品をタップして選ぶ'}
               </button>
               <button type="button" className="owner-qa-opt owner-qa-opt-sub" disabled={submitting}
                 onClick={() => { setSelectedStock([]); setStep('menu') }}>
