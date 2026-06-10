@@ -187,6 +187,8 @@ type Props = {
   onLike?: (menuUid: string) => void;
   onSuggestEdit?: (info: { name_jp: string; menu_uid?: string }) => void;
   onAskAbout?: (item: QuickExplainItem) => void;
+  /** 店主モード時のみ: カードから直接この料理の編集パネルを開く */
+  onOwnerEdit?: (menuUid: string) => void;
   onPhotoUpload?: (menuUid: string, file: File) => void;
   photoUploading?: string | null;
   userPhoto?: string;
@@ -288,7 +290,7 @@ function TasteChart({ values, labels }: { values: Record<string, number>; labels
 }
 
 export default function NFGCard({
-  items, language, likedMenus, onLike, onSuggestEdit, onAskAbout, onPhotoUpload,
+  items, language, likedMenus, onLike, onSuggestEdit, onAskAbout, onOwnerEdit, onPhotoUpload,
   photoUploading, userPhoto, restaurantName, restaurantCity, showRestaurantInfo, copy,
 }: Props) {
   const [expandedIdx, setExpandedIdx] = useState<Set<number>>(new Set());
@@ -387,16 +389,29 @@ export default function NFGCard({
                 <span className="nfgcard-badge nfgcard-badge-new">{copy.newItem}</span>
               )}
             </div>
-            {onAskAbout && (
+            {(onAskAbout || (onOwnerEdit && item.menu_uid)) && (
               <div className="nfgcard-action-row">
-                <button
-                  type="button"
-                  className="nfgcard-ask-btn"
-                  onClick={(e) => handleAskAbout(e, item)}
-                >
-                  <span aria-hidden="true">{'\ud83d\udcac'}</span>
-                  {getAskLabel(language)}
-                </button>
+                {onAskAbout && (
+                  <button
+                    type="button"
+                    className="nfgcard-ask-btn"
+                    onClick={(e) => handleAskAbout(e, item)}
+                  >
+                    <span aria-hidden="true">{'\ud83d\udcac'}</span>
+                    {getAskLabel(language)}
+                  </button>
+                )}
+                {/* \u5e97\u4e3b\u30e2\u30fc\u30c9: \u5ba2\u306e\u898b\u3048\u65b9\u3092\u898b\u306a\u304c\u3089\u305d\u306e\u5834\u3067\u76f4\u3059\u5c0e\u7dda(\u30c1\u30e3\u30c3\u30c8\u3067\u7de8\u96c6\u3092\u63a2\u3055\u306a\u304f\u3066\u3044\u3044) */}
+                {onOwnerEdit && item.menu_uid && (
+                  <button
+                    type="button"
+                    className="nfgcard-owner-edit-btn"
+                    onClick={(e) => { e.stopPropagation(); onOwnerEdit(item.menu_uid!); }}
+                  >
+                    <span aria-hidden="true">{'\u270f\ufe0f'}</span>
+                    \u3053\u306e\u6599\u7406\u3092\u76f4\u3059
+                  </button>
+                )}
               </div>
             )}
 

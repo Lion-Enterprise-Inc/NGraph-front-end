@@ -12,7 +12,7 @@ import {
 import { useRouter, useSearchParams } from "next/navigation";
 import { mockRestaurants, mockScanResponse, type Restaurant } from "../api/mockApi";
 import Tesseract from "tesseract.js";
-import { FeedbackApi, EventApi, type VisionMenuItem, PhotoContributionApi, NfgFeedbackApi, LikedMenusApi, type LikedMenuItem, QuickExplainApi, type QuickExplainItem, MenuSearchApi, type MenuNFGCard, TopMenusApi } from "../services/api";
+import { FeedbackApi, EventApi, type VisionMenuItem, PhotoContributionApi, NfgFeedbackApi, LikedMenusApi, type LikedMenuItem, QuickExplainApi, type QuickExplainItem, MenuSearchApi, type MenuNFGCard, TopMenusApi, OwnerChatApi, type OwnerAllergen } from "../services/api";
 import { toggleMenuLike } from "../services/menuLikes";
 import SuggestionModal from "../components/SuggestionModal";
 import ReactMarkdown from "react-markdown";
@@ -34,6 +34,7 @@ import MenuStrip from "../components/MenuStrip";
 import OwnerQuestionFlow from "../components/OwnerQuestionFlow";
 import OwnerDailyMenu from "../components/OwnerDailyMenu";
 import OwnerBulkEdit from "../components/OwnerBulkEdit";
+import OwnerMenuEdit from "../components/OwnerMenuEdit";
 import OwnerPasscodeModal from "../components/OwnerPasscodeModal";
 
 function visionToQuickExplain(vi: VisionMenuItem): QuickExplainItem {
@@ -662,6 +663,9 @@ export default function CapturePage({
   // 店主の専用フロー(QA/献立/編集)のどれかが開いているか。客向けUIの隠蔽は全部これで判定
   const ownerFlowActive = ownerQAActive || ownerDailyActive || ownerEditActive;
   const [ownerGateOpen, setOwnerGateOpen] = useState(false);
+  // NFGカードの「✏️この料理を直す」で開く個別編集パネルの対象menu_uid
+  const [ownerEditMenuUid, setOwnerEditMenuUid] = useState<string | null>(null);
+  const [ownerAllergenMaster, setOwnerAllergenMaster] = useState<OwnerAllergen[]>([]);
 
   // 店主モードに入る: 保存済みセッションがあればパスコードなしで復元、無ければゲートを出す
   const enterOwnerMode = useCallback(() => {
@@ -686,6 +690,14 @@ export default function CapturePage({
   useEffect(() => {
     setOwnerSessionToken(ownerSession?.sessionToken ?? null);
   }, [ownerSession, setOwnerSessionToken]);
+
+  // アレルゲンマスタは編集パネルの選択肢。店主セッション確立時に1回だけ取得
+  useEffect(() => {
+    if (!ownerSession?.sessionToken || ownerAllergenMaster.length > 0) return;
+    OwnerChatApi.allergenMaster(ownerSession.sessionToken)
+      .then(setOwnerAllergenMaster)
+      .catch(() => {});
+  }, [ownerSession, ownerAllergenMaster.length]);
   
   const selectedRestaurant = restaurantData;
   const nfgParam = searchParams?.get("nfg") || (cleanUrlMatch ? cleanUrlMatch[4] : null);
@@ -2196,6 +2208,7 @@ export default function CapturePage({
                           });
                         }}
                         onAskAbout={handleAskAbout}
+                        onOwnerEdit={ownerSession ? (uid) => setOwnerEditMenuUid(uid) : undefined}
                         onPhotoUpload={handlePhotoUpload}
                         photoUploading={photoUploading}
                         cleanUrlBase={cleanUrlBase || undefined}
@@ -2394,6 +2407,7 @@ export default function CapturePage({
                           });
                         }}
                         onAskAbout={handleAskAbout}
+                        onOwnerEdit={ownerSession ? (uid) => setOwnerEditMenuUid(uid) : undefined}
                         onPhotoUpload={handlePhotoUpload}
                         photoUploading={photoUploading}
                         cleanUrlBase={cleanUrlBase || undefined}
@@ -2862,6 +2876,29 @@ export default function CapturePage({
         <button type="button" className="owner-reentry-fab" onClick={enterOwnerMode}>
           店主モードに入る
         </button>
+      )}
+
+      {/* 店主モード: NFGカードの「✏️この料理を直す」で開く個別編集パネル(オーバーレイ) */}
+      {ownerSession && ownerEditMenuUid && (
+        <div className="owner-edit-overlay" onClick={() => setOwnerEditMenuUid(null)}>
+          <div className="owner-edit-overlay-panel" onClick={(e) => e.stopPropagation()}>
+            <OwnerMenuEdit
+              sessionToken={ownerSession.sessionToken}
+              menuUid={ownerEditMenuUid}
+              allergens={ownerAllergenMaster}
+              onSaved={() => {}}
+              onClose={() => setOwnerEditMenuUid(null)}
+              onSessionExpired={() => {
+                try {
+                  if (ownerParam) localStorage.removeItem(`omiseai_owner_${ownerParam}`);
+                } catch {}
+                setOwnerSession(null);
+                setOwnerEditMenuUid(null);
+                setOwnerGateOpen(true);
+              }}
+            />
+          </div>
+        </div>
       )}
 
       {/* 店主モード: 初回パスコード入力 */}
