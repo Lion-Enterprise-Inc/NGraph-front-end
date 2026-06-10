@@ -2104,7 +2104,8 @@ export default function CapturePage({
                 !isWebMode && selectedRestaurant ? (
                   <MenuStrip
                     restaurantSlug={selectedRestaurant.slug}
-                    onCardTap={(uid) => openMenuList(uid)}
+                    businessType={selectedRestaurant.business_type}
+                    onCategoryTap={(cat) => openMenuList(undefined, cat)}
                     onSeeAll={() => openMenuList()}
                   />
                 ) : undefined

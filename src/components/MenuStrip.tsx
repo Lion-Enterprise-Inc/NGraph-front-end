@@ -2,11 +2,13 @@
 
 import { useEffect, useState } from 'react'
 import { ChevronRight } from 'lucide-react'
-import { TopMenusApi } from '../services/api'
+import { MenuSearchApi, type MenuNFGCard } from '../services/api'
 import { useAppContext } from './AppProvider'
+import { getCategoryLabel } from '../i18n/categoryLabels'
 
-// hero に静かに置く「テーブルの上のメニュー」: 写真ミニカードの横スクロール
-// AI からは喋らない。タップで MenuListDrawer の該当カードが開く。
+// hero に静かに置く「テーブルの上のメニュー」: カテゴリーチップの横スクロール。
+// 長い商品名を並べると窮屈で読みにくい(写真未登録店で顕著)ため、まずカテゴリーで全体像を見せ、
+// タップで該当カテゴリーの一覧(MenuListDrawer)を開く。AI からは喋らない静的UI。
 
 const STRIP_LABELS: Record<string, { menu: string; seeAll: string }> = {
   ja: { menu: 'メニュー', seeAll: 'すべて見る' },
@@ -18,50 +20,56 @@ const STRIP_LABELS: Record<string, { menu: string; seeAll: string }> = {
   fr: { menu: 'Menu', seeAll: 'Tout voir' },
 }
 
-type StripItem = {
-  uid: string
-  name: string
-  price: number
-  imageUrl: string | null
-}
+// MenuListDrawer と同じ並び・判定(カテゴリーの表示順を揃える)
+const BAR_TYPES = ['バー', 'カクテルバー', 'ワインバー', 'ダイニングバー', 'bar', 'cocktail bar', 'wine bar', 'dining bar']
+const ORDER_BAR = ['drink', 'cocktail', 'main', 'appetizer', 'sashimi', 'sushi', 'tempura', 'nabe',
+  'rice', 'ramen', 'soba', 'yakitori', 'steamed', 'vinegared', 'chinmi', 'salad', 'soup', 'side',
+  'dessert', 'course', 'bento', 'bread', 'other']
+const ORDER_DEFAULT = ['main', 'appetizer', 'sashimi', 'sushi', 'tempura', 'nabe', 'rice', 'ramen',
+  'soba', 'yakitori', 'steamed', 'vinegared', 'chinmi', 'salad', 'soup', 'side', 'dessert', 'course',
+  'bento', 'bread', 'drink', 'other']
+
+type CategoryChip = { cat: string; count: number }
 
 type MenuStripProps = {
   restaurantSlug: string | null
-  onCardTap: (menuUid: string) => void
+  businessType?: string | null
+  onCategoryTap: (category: string) => void
   onSeeAll: () => void
 }
 
-export default function MenuStrip({ restaurantSlug, onCardTap, onSeeAll }: MenuStripProps) {
+export default function MenuStrip({ restaurantSlug, businessType, onCategoryTap, onSeeAll }: MenuStripProps) {
   const { language } = useAppContext()
   const labels = STRIP_LABELS[language] || STRIP_LABELS.en
-  const [items, setItems] = useState<StripItem[]>([])
+  const [chips, setChips] = useState<CategoryChip[]>([])
 
   useEffect(() => {
     if (!restaurantSlug) return
     let cancelled = false
-    TopMenusApi.fetch(restaurantSlug, 12, language)
-      .then((data) => {
+    MenuSearchApi.search({ restaurant_slug: restaurantSlug, nfg: true, size: 100, lang: language })
+      .then((res) => {
         if (cancelled) return
-        const menus = Array.isArray(data?.result?.menus) ? data.result.menus : []
-        // 写真があれば写真カード、無ければ品書き風の文字タイル(導入店の写真登録はまだ疎ら)
-        const mapped: StripItem[] = menus
-          .filter((m: any) => m.menu_uid && m.name_jp)
-          .slice(0, 10)
-          .map((m: any) => ({
-            uid: m.menu_uid,
-            name: language !== 'ja' && m.name_en ? m.name_en : m.name_jp,
-            price: m.price || 0,
-            imageUrl: m.image_url || null,
-          }))
-        setItems(mapped)
+        const menus = (res?.result?.menus as MenuNFGCard[]) || []
+        // 提供中のみカウント(停止品はホームに出さない)
+        const counts = new Map<string, number>()
+        for (const m of menus) {
+          const cat = m.category || 'other'
+          counts.set(cat, (counts.get(cat) || 0) + 1)
+        }
+        const isBar = BAR_TYPES.some(t => (businessType || '').toLowerCase().includes(t.toLowerCase()))
+        const order = isBar ? ORDER_BAR : ORDER_DEFAULT
+        const sorted: CategoryChip[] = order
+          .filter(c => counts.has(c))
+          .map(c => ({ cat: c, count: counts.get(c)! }))
+        setChips(sorted)
       })
       .catch(() => {
         // 取得失敗時は何も出さない(hero を汚さない)
       })
     return () => { cancelled = true }
-  }, [restaurantSlug, language])
+  }, [restaurantSlug, language, businessType])
 
-  if (items.length < 2) return null
+  if (chips.length < 2) return null
 
   return (
     <div className="menu-strip">
@@ -72,32 +80,16 @@ export default function MenuStrip({ restaurantSlug, onCardTap, onSeeAll }: MenuS
           <ChevronRight size={13} strokeWidth={2} />
         </button>
       </div>
-      <div className="menu-strip-row">
-        {items.map((item) => (
+      <div className="menu-strip-cats">
+        {chips.map((c) => (
           <button
-            key={item.uid}
+            key={c.cat}
             type="button"
-            className="menu-strip-card"
-            onClick={() => onCardTap(item.uid)}
+            className="menu-strip-cat"
+            onClick={() => onCategoryTap(c.cat)}
           >
-            {item.imageUrl ? (
-              <>
-                <img
-                  className="menu-strip-img"
-                  src={item.imageUrl}
-                  alt={item.name}
-                  loading="lazy"
-                />
-                <span className="menu-strip-name">{item.name}</span>
-              </>
-            ) : (
-              <span className="menu-strip-tile">
-                <span className="menu-strip-tile-name">{item.name}</span>
-              </span>
-            )}
-            {item.price > 0 && (
-              <span className="menu-strip-price">¥{item.price.toLocaleString()}</span>
-            )}
+            <span className="menu-strip-cat-name">{getCategoryLabel(c.cat, language)}</span>
+            <span className="menu-strip-cat-count">{c.count}</span>
           </button>
         ))}
       </div>

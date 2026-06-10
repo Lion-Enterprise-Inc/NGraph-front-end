@@ -84,13 +84,14 @@ type MenuListDrawerProps = {
   onAskAbout?: (query: string) => void
   /** 開いた時に展開しておくメニュー uid（MenuStrip のカードタップ用） */
   initialExpandedUid?: string | null
+  initialCategory?: string | null
   /** 店主モードのセッショントークン。設定時は各メニューに編集UIを出す。 */
   ownerSessionToken?: string | null
 }
 
 const BAR_TYPES = ['バー', 'カクテルバー', 'ワインバー', 'ダイニングバー', 'bar', 'cocktail bar', 'wine bar', 'dining bar']
 
-export default function MenuListDrawer({ open, onClose, restaurantSlug, businessType, onAskAbout, initialExpandedUid, ownerSessionToken }: MenuListDrawerProps) {
+export default function MenuListDrawer({ open, onClose, restaurantSlug, businessType, onAskAbout, initialExpandedUid, initialCategory, ownerSessionToken }: MenuListDrawerProps) {
   const { language } = useAppContext()
   const copy = getUiCopy(language)
   const nfgCopy = (copy as any).nfg || {}
@@ -205,6 +206,17 @@ export default function MenuListDrawer({ open, onClose, restaurantSlug, business
         ?.scrollIntoView({ block: 'start', behavior: 'smooth' })
     })
   }, [open, initialExpandedUid, menus])
+
+  // MenuStrip のカテゴリーチップタップ: そのカテゴリーで絞った状態で開く
+  useEffect(() => {
+    if (!open || !initialCategory) return
+    setActiveCategory(initialCategory)
+  }, [open, initialCategory])
+
+  // 閉じたらカテゴリー選択をリセット(次回 all で開く)
+  useEffect(() => {
+    if (!open) setActiveCategory('all')
+  }, [open])
 
   const filtered = activeCategory === 'all'
     ? menus

@@ -32,7 +32,7 @@ type AppContextValue = {
   openLanguageModal: () => void;
   openHistoryDrawer: () => void;
   closeHistoryDrawer: () => void;
-  openMenuList: (focusMenuUid?: string) => void;
+  openMenuList: (focusMenuUid?: string, category?: string) => void;
   closeMenuList: () => void;
   openPreferences: () => void;
   closePreferences: () => void;
@@ -95,6 +95,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [menuListOpen, setMenuListOpen] = useState(false);
   // MenuStrip 等から特定カードを展開した状態で開くための uid
   const [menuListFocusUid, setMenuListFocusUid] = useState<string | null>(null);
+  // MenuStrip のカテゴリーチップから、そのカテゴリーで絞った状態で開くための初期カテゴリー
+  const [menuListInitialCategory, setMenuListInitialCategory] = useState<string | null>(null);
   const [preferencesOpen, setPreferencesOpen] = useState(false);
   const [pendingAttachment, setPendingAttachment] =
     useState<PendingAttachment | null>(null);
@@ -205,8 +207,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
           openLanguageModal: () => setLanguageModalOpen(true),
           openHistoryDrawer: () => setDrawerOpen(true),
           closeHistoryDrawer: () => setDrawerOpen(false),
-          openMenuList: (focusMenuUid?: string) => {
+          openMenuList: (focusMenuUid?: string, category?: string) => {
             setMenuListFocusUid(focusMenuUid ?? null);
+            setMenuListInitialCategory(category ?? null);
             setMenuListOpen(true);
           },
           closeMenuList: () => setMenuListOpen(false),
@@ -270,11 +273,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
               onClose={() => {
                 setMenuListOpen(false);
                 setMenuListFocusUid(null);
+                setMenuListInitialCategory(null);
               }}
               restaurantSlug={restaurantSlug}
               businessType={businessType}
               onAskAbout={onAskAbout ?? undefined}
               initialExpandedUid={menuListFocusUid}
+              initialCategory={menuListInitialCategory}
               ownerSessionToken={ownerSessionToken}
             />
             <PreferencesModal
