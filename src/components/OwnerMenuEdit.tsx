@@ -74,8 +74,8 @@ export default function OwnerMenuEdit({ sessionToken, menuUid, allergens, onSave
         allergen_uids: Array.from(allergenUids),
       })
       setSaved(true)
-      onSaved()
-      setTimeout(onClose, 900)
+      // 「保存しました」を見せてから一覧リフレッシュ+クローズ(一覧再取得で即閉じると表示が一瞬で消える)
+      setTimeout(() => { onSaved(); onClose() }, 1100)
     } catch (e: unknown) {
       if (isUnauthorized(e)) { onSessionExpired?.(); return }
       setError('保存に失敗しました。もう一度お試しください')
