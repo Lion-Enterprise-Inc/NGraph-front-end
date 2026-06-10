@@ -231,8 +231,15 @@ const logFeedback = (entry: FeedbackEntry) => {
   console.log("feedback_log", entry);
 };
 
-const generateChatResponse = async (message: string, restaurant?: ApiRestaurant | null): Promise<string> => {
-  return "Sorry, there was a connection issue. Please try again.";
+// 全フォールバックが尽きた時の最終メッセージ(正直に失敗を伝えて再試行を促す)
+const generateChatResponse = async (
+  message: string,
+  restaurant?: ApiRestaurant | null,
+  lang?: string,
+): Promise<string> => {
+  return lang === 'ja'
+    ? '応答を受け取れませんでした。電波状況をご確認のうえ、もう一度お試しください。'
+    : 'We could not get a response. Please check your connection and try again.';
 };
 
 export default function CapturePage({
@@ -288,23 +295,10 @@ export default function CapturePage({
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const appliedAttachmentRef = useRef(false);
   const threadUidRef = useRef<string | null>(null);
-  const [responses, setResponses] = useState<ResponseItem[]>(() => {
-    // localStorageから復元（ページ遷移しても残る）
-    if (typeof window === 'undefined') return [];
-    try {
-      const key = `ngraph_responses_${restaurantSlug || 'default'}`;
-      const saved = localStorage.getItem(key);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        // blob URLは復元できないのでnullに
-        return parsed.map((r: ResponseItem) => ({
-          ...r,
-          input: { ...r.input, imageUrl: null },
-        }));
-      }
-    } catch {}
-    return [];
-  });
+  // ⚠ useState初期化関数でlocalStorageを読むとSSRとクライアント初回描画が食い違い、
+  // hydrationエラー→全体再描画→初回タップ喪失・レイアウト崩れになる(2026-06-11実機)。
+  // 必ず空で初期化し、マウント後のeffectで復元する。
+  const [responses, setResponses] = useState<ResponseItem[]>([]);
   const [loading, setLoading] = useState(false);
   const loadingTimerRef = useRef<number | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -317,22 +311,43 @@ export default function CapturePage({
     Record<string, { title: string; intro: string; body: string[] }>
   >({});
   const [typingComplete, setTypingComplete] = useState<Set<string>>(new Set());
-  // 復元されたレスポンスはタイピングアニメーションをスキップ
-  const restoredIdsRef = useRef<Set<string>>(new Set(responses.map(r => r.id)));
+  // 復元されたレスポンスはタイピングアニメーションをスキップ(復元effectで充填)
+  const restoredIdsRef = useRef<Set<string>>(new Set());
+
+  // 会話履歴・♡・味キャッシュのlocalStorage復元(マウント後=hydration完了後)
+  useEffect(() => {
+    try {
+      const key = `ngraph_responses_${restaurantSlug || 'default'}`;
+      const saved = localStorage.getItem(key);
+      if (saved) {
+        const parsed = JSON.parse(saved) as ResponseItem[];
+        // blob URLは復元できないのでnullに
+        const restored = parsed.map((r) => ({
+          ...r,
+          input: { ...r.input, imageUrl: null },
+        }));
+        restored.forEach((r) => restoredIdsRef.current.add(r.id));
+        // 既に会話が始まっていたら上書きしない
+        setResponses((prev) => (prev.length === 0 ? restored : prev));
+      }
+    } catch {}
+    try {
+      setLikedMenus(new Set(JSON.parse(localStorage.getItem('ngraph_liked_menus') || '[]')));
+    } catch {}
+    try {
+      setTasteCache(JSON.parse(localStorage.getItem('ngraph_taste_cache') || '{}'));
+    } catch {}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [restaurantSlug]);
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
   const [showScrollButton, setShowScrollButton] = useState(false);
   const [userScrolledUp, setUserScrolledUp] = useState(false);
   const [expandedCards, setExpandedCards] = useState<Record<string, Set<number>>>({});
   const [expandedDetails, setExpandedDetails] = useState<Record<string, Set<number>>>({});
   const [suggestionTarget, setSuggestionTarget] = useState<{ name_jp: string; menu_uid?: string; restaurant_uid?: string } | null>(null);
-  const [likedMenus, setLikedMenus] = useState<Set<string>>(() => {
-    if (typeof window === 'undefined') return new Set();
-    try { return new Set(JSON.parse(localStorage.getItem('ngraph_liked_menus') || '[]')); } catch { return new Set(); }
-  });
-  const [tasteCache, setTasteCache] = useState<Record<string, Record<string, number>>>(() => {
-    if (typeof window === 'undefined') return {};
-    try { return JSON.parse(localStorage.getItem('ngraph_taste_cache') || '{}'); } catch { return {}; }
-  });
+  // responses同様、hydration不一致を避けるため空で初期化→マウント後に復元
+  const [likedMenus, setLikedMenus] = useState<Set<string>>(new Set());
+  const [tasteCache, setTasteCache] = useState<Record<string, Record<string, number>>>({});
   const [photoAdoptedCount, setPhotoAdoptedCount] = useState(0);
   const [nfgFeedback, setNfgFeedback] = useState<Record<string, 'good' | 'bad'>>({});
   const [likedDrawerOpen, setLikedDrawerOpen] = useState(false);
@@ -1372,7 +1387,7 @@ export default function CapturePage({
             console.log("ocr_error", e);
           }
           const requestText = trimmedMessage || ocrText.trim() || "メニュー画像を送信しました";
-          const fallbackResponse = await generateChatResponse(requestText, selectedRestaurant);
+          const fallbackResponse = await generateChatResponse(requestText, selectedRestaurant, activeLanguage);
           output = { title: '', intro: fallbackResponse, body: [] };
         }
       } else {
@@ -1551,7 +1566,7 @@ export default function CapturePage({
             );
             setTypingComplete((prev) => new Set(prev).add(responseId));
           } else {
-            const fallbackResponse = await generateChatResponse(requestText, selectedRestaurant);
+            const fallbackResponse = await generateChatResponse(requestText, selectedRestaurant, activeLanguage);
             output = { title: '', intro: fallbackResponse, body: [] };
             setTypingState((prev) => ({
               ...prev,
