@@ -3,6 +3,7 @@
 import { useState, useRef } from "react";
 import type { QuickExplainItem } from "../services/api";
 import { getCategoryLabel } from "../i18n/categoryLabels";
+import { getOwnerCommentLabel, getAllergenTrustNote, isAllergensVerified } from "../i18n/trustCopy";
 
 // レーダーチャート表示フラグ（機能成熟後にtrueに戻す）
 const SHOW_TASTE_RADAR = false;
@@ -415,6 +416,20 @@ export default function NFGCard({
               </div>
             )}
 
+            {/* 店主のひとこと: 店主モードで入力された生の声を引用スタイルで最上部に。
+                原文のまま表示(機械翻訳しない=店主の声の真正性優先) */}
+            {(() => {
+              const oc = item.narrative as Record<string, unknown> | undefined;
+              const comment = typeof oc?.owner_comment === "string" ? oc.owner_comment.trim() : "";
+              if (!comment) return null;
+              return (
+                <div className="nfgcard-owner-comment">
+                  <span className="nfgcard-owner-comment-label">{getOwnerCommentLabel(language)}</span>
+                  <p className="nfgcard-owner-comment-text">{comment}</p>
+                </div>
+              );
+            })()}
+
             {/* Restaurant info (for search results) */}
             {showRestaurantInfo && restaurantName && (
               <div className="nfgcard-restaurant">
@@ -443,9 +458,15 @@ export default function NFGCard({
 
             {/* Always visible: allergens, ingredients, restrictions, image */}
             {item.allergens && item.allergens.length > 0 && (
-              <div className={`nfgcard-allergens${item.restriction_match ? ' nfgcard-tags-emphasized' : ''}`}>
-                {item.allergens.map((a, i) => <span key={i} className="nfgcard-allergen-tag">{a}</span>)}
-              </div>
+              <>
+                <div className={`nfgcard-allergens${item.restriction_match ? ' nfgcard-tags-emphasized' : ''}`}>
+                  {item.allergens.map((a, i) => <span key={i} className="nfgcard-allergen-tag">{a}</span>)}
+                </div>
+                {/* アレルゲン信頼度: 店主確認済み(✓緑)かAI推定(免責)かを常時明示 */}
+                <div className={`nfgcard-allergen-trust${isAllergensVerified(item) ? ' nfgcard-allergen-trust-verified' : ''}`}>
+                  {isAllergensVerified(item) ? '✓ ' : ''}{getAllergenTrustNote(language, isAllergensVerified(item))}
+                </div>
+              </>
             )}
             {item.ingredients && item.ingredients.length > 0 && (
               <div className="nfgcard-ingredients">

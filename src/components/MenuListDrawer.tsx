@@ -5,6 +5,7 @@ import { X, ChevronDown, ChevronUp, Heart, MessageCircle, Wine, AlertTriangle, P
 import { MenuSearchApi, OwnerChatApi, type MenuNFGCard, type OwnerAllergen } from '../services/api'
 import { useAppContext } from './AppProvider'
 import { getUiCopy } from '../i18n/uiCopy'
+import { getOwnerCommentLabel, getAllergenTrustNote, isAllergensVerified } from '../i18n/trustCopy'
 import { getLikedMenuUids, toggleMenuLike } from '../services/menuLikes'
 import OwnerMenuEdit from './OwnerMenuEdit'
 
@@ -343,6 +344,14 @@ export default function MenuListDrawer({ open, onClose, restaurantSlug, business
                         </div>
                       )}
 
+                      {/* 店主のひとこと: 原文のまま引用スタイル(機械翻訳しない) */}
+                      {typeof m.narrative_full?.owner_comment === 'string' && m.narrative_full.owner_comment.trim() && (
+                        <div className="nfgcard-owner-comment">
+                          <span className="nfgcard-owner-comment-label">{getOwnerCommentLabel(language)}</span>
+                          <p className="nfgcard-owner-comment-text">{m.narrative_full.owner_comment.trim()}</p>
+                        </div>
+                      )}
+
                       {m.description && (
                         <p className="menu-list-detail-desc">{m.description}</p>
                       )}
@@ -358,6 +367,10 @@ export default function MenuListDrawer({ open, onClose, restaurantSlug, business
                             {m.allergens.map((a, i) => (
                               <span key={i} className="menu-list-tag allergen">{a}</span>
                             ))}
+                          </div>
+                          {/* アレルゲン信頼度: 店主確認済み(✓)かAI推定(免責)か */}
+                          <div className={`nfgcard-allergen-trust${isAllergensVerified(m) ? ' nfgcard-allergen-trust-verified' : ''}`}>
+                            {isAllergensVerified(m) ? '✓ ' : ''}{getAllergenTrustNote(language, isAllergensVerified(m))}
                           </div>
                         </div>
                       )}

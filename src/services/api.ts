@@ -853,6 +853,8 @@ export interface QuickExplainItem {
   description: string;
   description_local?: string;
   allergens?: string[];
+  // アレルゲンが店主確認済みか(rank S/A or 店主直接修正)。undefined=旧レスポンス
+  allergens_verified?: boolean;
   ingredients?: string[];
   source: "db" | "ai";
   verified?: boolean;
@@ -1581,6 +1583,8 @@ export interface MenuSearchItem {
 export interface MenuNFGCard extends MenuSearchItem {
   ingredients: string[];
   allergens: string[];
+  // アレルゲンが店主確認済みか(rank S/A or 店主直接修正)
+  allergens_verified?: boolean;
   restrictions: string[];
   verification_rank: string | null;
   taste_values: Record<string, number> | null;
