@@ -1,12 +1,14 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { Check, ChevronRight, RotateCcw } from 'lucide-react'
+import { Check, RotateCcw, X } from 'lucide-react'
 import { OwnerChatApi, type OwnerQuestion } from '../services/api'
 
 // 店主モードの質問キュー消化フロー。チャット風の見た目だが LLM は介在せず、
 // 質問提示→番号選択肢タップ→反映、を FE が決定論的に進める(LLM任せにしない)。
 // 店主は日本語前提なので ja 固定。
+// 自由入力(その他/店主のひとこと)は画面下固定の共通入力バーで受ける
+// (インライン textarea だとキーボードが上がった瞬間に入力欄が画面外へ飛ぶため)。
 
 const BATCH_SIZE = 3
 
@@ -24,6 +26,11 @@ type HistoryItem = {
   }
 }
 
+// 下部入力バーが何を受けているか
+type InputMode =
+  | { kind: 'other' }                 // 現在の質問への自由入力回答
+  | { kind: 'comment'; idx: number }  // 履歴 idx の料理への店主のひとこと
+
 type OwnerQuestionFlowProps = {
   sessionToken: string
   onClose: () => void
@@ -38,14 +45,22 @@ export default function OwnerQuestionFlow({ sessionToken, onClose, onCountChange
   const [totalRemaining, setTotalRemaining] = useState(0)
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
-  const [otherText, setOtherText] = useState('')
-  const [otherMode, setOtherMode] = useState(false)
-  const [commentTarget, setCommentTarget] = useState<number | null>(null)
-  const [commentText, setCommentText] = useState('')
+  const [inputMode, setInputMode] = useState<InputMode | null>(null)
+  const [inputText, setInputText] = useState('')
   const [error, setError] = useState<string | null>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLTextAreaElement>(null)
 
   const isUnauthorized = (e: unknown) => e instanceof Error && e.message === 'unauthorized'
+
+  const openInput = (mode: InputMode) => {
+    setInputText('')
+    setInputMode(mode)
+  }
+  const closeInput = () => {
+    setInputMode(null)
+    setInputText('')
+  }
 
   const fetchQuestions = async () => {
     setLoading(true)
@@ -69,7 +84,12 @@ export default function OwnerQuestionFlow({ sessionToken, onClose, onCountChange
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' })
-  }, [queue, history, otherMode, commentTarget, loading])
+  }, [queue, history, loading])
+
+  // 入力バーが開いたらフォーカス(キーボードを即出す)
+  useEffect(() => {
+    if (inputMode) inputRef.current?.focus()
+  }, [inputMode])
 
   const current = queue[0] ?? null
   const batchDone = !loading && !current && totalRemaining > 0
@@ -100,8 +120,7 @@ export default function OwnerQuestionFlow({ sessionToken, onClose, onCountChange
       setQueue(prev => prev.slice(1))
       setTotalRemaining(res.total_remaining)
       onCountChange?.(res.total_remaining)
-      setOtherMode(false)
-      setOtherText('')
+      closeInput()
     } catch (e: unknown) {
       if (isUnauthorized(e)) {
         onSessionExpired?.()
@@ -110,8 +129,7 @@ export default function OwnerQuestionFlow({ sessionToken, onClose, onCountChange
       if (e instanceof Error && e.message === 'conflict') {
         // 既に回答済み(応答ロスト後の再送 or 別端末で回答済み) → 成功扱いでキューを進めて同期し直す
         setQueue(prev => prev.slice(1))
-        setOtherMode(false)
-        setOtherText('')
+        closeInput()
         fetchQuestions()
         return
       }
@@ -121,16 +139,14 @@ export default function OwnerQuestionFlow({ sessionToken, onClose, onCountChange
     }
   }
 
-  const submitComment = async (historyIdx: number) => {
+  const submitComment = async (historyIdx: number, text: string) => {
     const item = history[historyIdx]
-    const text = commentText.trim()
-    if (!item || !text || submitting) return
+    if (!item || !text.trim() || submitting) return
     setSubmitting(true)
     try {
-      await OwnerChatApi.comment(sessionToken, item.q.menu_uid, text)
+      await OwnerChatApi.comment(sessionToken, item.q.menu_uid, text.trim())
       setHistory(prev => prev.map((h, i) => i === historyIdx ? { ...h, commentSaved: true } : h))
-      setCommentTarget(null)
-      setCommentText('')
+      closeInput()
     } catch (e: unknown) {
       if (isUnauthorized(e)) {
         onSessionExpired?.()
@@ -140,6 +156,13 @@ export default function OwnerQuestionFlow({ sessionToken, onClose, onCountChange
     } finally {
       setSubmitting(false)
     }
+  }
+
+  const submitInput = () => {
+    const text = inputText.trim()
+    if (!text || !inputMode) return
+    if (inputMode.kind === 'other') submitAnswer(undefined, text)
+    else submitComment(inputMode.idx, text)
   }
 
   const continueBatch = () => {
@@ -164,6 +187,7 @@ export default function OwnerQuestionFlow({ sessionToken, onClose, onCountChange
       setHistory(prev => prev.slice(0, -1))
       setTotalRemaining(res.total_remaining)
       onCountChange?.(res.total_remaining)
+      closeInput()
     } catch (e: unknown) {
       if (isUnauthorized(e)) {
         onSessionExpired?.()
@@ -175,115 +199,123 @@ export default function OwnerQuestionFlow({ sessionToken, onClose, onCountChange
     }
   }
 
+  const inputPlaceholder = inputMode?.kind === 'comment'
+    ? 'お客様への一言を入力(200字まで)'
+    : '答えを入力してください'
+  const inputMax = inputMode?.kind === 'comment' ? 200 : 120
+
   return (
-    <div className="owner-qa">
-      {history.map((h, idx) => (
-        <div key={`${h.q.menu_uid}-${idx}`} className="owner-qa-item">
-          <div className="owner-qa-bubble owner-qa-bubble-ai">
-            <span className="owner-qa-menu">「{h.q.menu_name}」</span>
-            {h.q.question}
-          </div>
-          <div className="owner-qa-bubble owner-qa-bubble-owner">{h.answerLabel}</div>
-          <div className="owner-qa-applied">
-            <span className="owner-qa-applied-label"><Check size={13} strokeWidth={2.5} /> 反映しました</span>
-            {h.promoted && <span className="owner-qa-promoted">この料理は店主確認済みになりました</span>}
-            {/* 直前の回答だけ取り消せる(誤タップの即修正) */}
-            {idx === history.length - 1 && (
-              <button type="button" className="owner-qa-undo" disabled={submitting} onClick={undoLast}>
-                <RotateCcw size={12} strokeWidth={2} /> 取り消す
+    <>
+      <div className="owner-qa">
+        {history.map((h, idx) => (
+          <div key={`${h.q.menu_uid}-${idx}`} className="owner-qa-item">
+            <div className="owner-qa-bubble owner-qa-bubble-ai">
+              <span className="owner-qa-menu">「{h.q.menu_name}」</span>
+              {h.q.question}
+            </div>
+            <div className="owner-qa-bubble owner-qa-bubble-owner">{h.answerLabel}</div>
+            <div className="owner-qa-applied">
+              <span className="owner-qa-applied-label"><Check size={13} strokeWidth={2.5} /> 反映しました</span>
+              {h.promoted && <span className="owner-qa-promoted">この料理は店主確認済みになりました</span>}
+              {/* 直前の回答だけ取り消せる(誤タップの即修正) */}
+              {idx === history.length - 1 && (
+                <button type="button" className="owner-qa-undo" disabled={submitting} onClick={undoLast}>
+                  <RotateCcw size={12} strokeWidth={2} /> 取り消す
+                </button>
+              )}
+            </div>
+            {h.commentSaved ? (
+              <div className="owner-qa-applied"><Check size={13} strokeWidth={2.5} /> ひとことを保存しました</div>
+            ) : (
+              <button
+                type="button"
+                className="owner-qa-comment-link"
+                onClick={() => openInput({ kind: 'comment', idx })}
+              >
+                ＋ この料理に店主のひとことを添える
               </button>
             )}
           </div>
-          {h.commentSaved ? (
-            <div className="owner-qa-applied"><Check size={13} strokeWidth={2.5} /> ひとことを保存しました</div>
-          ) : commentTarget === idx ? (
-            <div className="owner-qa-comment">
-              <textarea
-                className="owner-qa-comment-input"
-                value={commentText}
-                onChange={e => setCommentText(e.target.value)}
-                placeholder={`「${h.q.menu_name}」のこだわりをお客様に一言(200字まで)`}
-                maxLength={200}
-                rows={2}
-              />
-              <div className="owner-qa-comment-actions">
-                <button type="button" className="owner-qa-opt" disabled={submitting || !commentText.trim()} onClick={() => submitComment(idx)}>保存</button>
-                <button type="button" className="owner-qa-opt owner-qa-opt-sub" onClick={() => { setCommentTarget(null); setCommentText('') }}>やめる</button>
-              </div>
-            </div>
-          ) : (
-            <button type="button" className="owner-qa-comment-link" onClick={() => { setCommentTarget(idx); setCommentText('') }}>
-              ＋ この料理に店主のひとことを添える
-            </button>
-          )}
-        </div>
-      ))}
+        ))}
 
-      {loading ? (
-        <div className="owner-qa-bubble owner-qa-bubble-ai">確認したいことを調べています…</div>
-      ) : current ? (
-        <div className="owner-qa-item">
-          <div className="owner-qa-bubble owner-qa-bubble-ai">
-            <span className="owner-qa-menu">「{current.menu_name}」</span>
-            {current.question}
-          </div>
-          <div className="owner-qa-options">
-            {current.options.map((opt, i) => (
+        {loading ? (
+          <div className="owner-qa-bubble owner-qa-bubble-ai">確認したいことを調べています…</div>
+        ) : current ? (
+          <div className="owner-qa-item">
+            <div className="owner-qa-bubble owner-qa-bubble-ai">
+              <span className="owner-qa-menu">「{current.menu_name}」</span>
+              {current.question}
+            </div>
+            <div className="owner-qa-options">
+              {current.options.map((opt, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  className="owner-qa-opt"
+                  disabled={submitting}
+                  onClick={() => submitAnswer([opt])}
+                >
+                  <span className="owner-qa-opt-num">{i + 1}</span>{opt}
+                </button>
+              ))}
               <button
-                key={i}
                 type="button"
-                className="owner-qa-opt"
+                className={`owner-qa-opt owner-qa-opt-sub${inputMode?.kind === 'other' ? ' active' : ''}`}
                 disabled={submitting}
-                onClick={() => submitAnswer([opt])}
+                onClick={() => openInput({ kind: 'other' })}
               >
-                <span className="owner-qa-opt-num">{i + 1}</span>{opt}
-              </button>
-            ))}
-            {!otherMode && (
-              <button type="button" className="owner-qa-opt owner-qa-opt-sub" disabled={submitting} onClick={() => setOtherMode(true)}>
                 <span className="owner-qa-opt-num">{current.options.length + 1}</span>その他(入力する)
               </button>
-            )}
-          </div>
-          {otherMode && (
-            <div className="owner-qa-comment">
-              <textarea
-                className="owner-qa-comment-input"
-                value={otherText}
-                onChange={e => setOtherText(e.target.value)}
-                placeholder="例: 昆布とかつおの合わせ出汁です"
-                rows={2}
-              />
-              <div className="owner-qa-comment-actions">
-                <button type="button" className="owner-qa-opt" disabled={submitting || !otherText.trim()} onClick={() => submitAnswer(undefined, otherText.trim())}>送信</button>
-                <button type="button" className="owner-qa-opt owner-qa-opt-sub" onClick={() => { setOtherMode(false); setOtherText('') }}>やめる</button>
-              </div>
             </div>
-          )}
-        </div>
-      ) : batchDone ? (
-        <div className="owner-qa-item">
-          <div className="owner-qa-bubble owner-qa-bubble-ai">
-            ありがとうございます。あと{totalRemaining}件の確認があります。続けますか？
           </div>
-          <div className="owner-qa-options">
-            <button type="button" className="owner-qa-opt" onClick={continueBatch}><span className="owner-qa-opt-num">1</span>続ける</button>
-            <button type="button" className="owner-qa-opt owner-qa-opt-sub" onClick={onClose}><span className="owner-qa-opt-num">2</span>また今度</button>
+        ) : batchDone ? (
+          <div className="owner-qa-item">
+            <div className="owner-qa-bubble owner-qa-bubble-ai">
+              ありがとうございます。あと{totalRemaining}件の確認があります。続けますか？
+            </div>
+            <div className="owner-qa-options">
+              <button type="button" className="owner-qa-opt" onClick={continueBatch}><span className="owner-qa-opt-num">1</span>続ける</button>
+              <button type="button" className="owner-qa-opt owner-qa-opt-sub" onClick={onClose}><span className="owner-qa-opt-num">2</span>また今度</button>
+            </div>
           </div>
-        </div>
-      ) : allDone ? (
-        <div className="owner-qa-item">
-          <div className="owner-qa-bubble owner-qa-bubble-ai">
-            確認したいことは今のところありません。お疲れ様でした。
+        ) : allDone ? (
+          <div className="owner-qa-item">
+            <div className="owner-qa-bubble owner-qa-bubble-ai">
+              確認したいことは今のところありません。お疲れ様でした。
+            </div>
+            <div className="owner-qa-options">
+              <button type="button" className="owner-qa-opt owner-qa-opt-sub" onClick={onClose}>閉じる</button>
+            </div>
           </div>
-          <div className="owner-qa-options">
-            <button type="button" className="owner-qa-opt owner-qa-opt-sub" onClick={onClose}>閉じる</button>
-          </div>
-        </div>
-      ) : null}
+        ) : null}
 
-      {error && <div className="owner-qa-error">{error}</div>}
-      <div ref={bottomRef} />
-    </div>
+        {error && <div className="owner-qa-error">{error}</div>}
+        <div ref={bottomRef} />
+      </div>
+
+      {/* 自由入力は画面下固定バー(キーボードの上に張り付く・通常チャットと同じ操作感) */}
+      {inputMode && (
+        <div className="owner-input-bar">
+          <textarea
+            ref={inputRef}
+            className="owner-input-field"
+            value={inputText}
+            onChange={e => setInputText(e.target.value)}
+            onKeyDown={e => {
+              if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submitInput() }
+            }}
+            placeholder={inputPlaceholder}
+            maxLength={inputMax}
+            rows={1}
+          />
+          <button type="button" className="owner-input-cancel" onClick={closeInput} aria-label="閉じる">
+            <X size={18} strokeWidth={2} />
+          </button>
+          <button type="button" className="owner-input-send" disabled={submitting || !inputText.trim()} onClick={submitInput}>
+            送信
+          </button>
+        </div>
+      )}
+    </>
   )
 }
