@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  useCallback,
   useEffect,
   useMemo,
   useRef,
@@ -653,7 +654,8 @@ export default function CapturePage({
   const [ownerQAActive, setOwnerQAActive] = useState(false);
   const [ownerGateOpen, setOwnerGateOpen] = useState(false);
 
-  useEffect(() => {
+  // 店主モードに入る: 保存済みセッションがあればパスコードなしで復元、無ければゲートを出す
+  const enterOwnerMode = useCallback(() => {
     if (!ownerParam) return;
     try {
       const raw = localStorage.getItem(`omiseai_owner_${ownerParam}`);
@@ -668,6 +670,8 @@ export default function CapturePage({
     } catch {}
     setOwnerGateOpen(true);
   }, [ownerParam]);
+
+  useEffect(() => { enterOwnerMode(); }, [enterOwnerMode]);
   
   const selectedRestaurant = restaurantData;
   const nfgParam = searchParams?.get("nfg") || (cleanUrlMatch ? cleanUrlMatch[4] : null);
@@ -1939,15 +1943,25 @@ export default function CapturePage({
       {ownerSession && (
         <div className="owner-banner">
           <span className="owner-banner-label">店主モード</span>
-          {ownerQAActive ? (
-            <button type="button" className="owner-banner-btn" onClick={() => setOwnerQAActive(false)}>
-              終了する
+          <div className="owner-banner-actions">
+            {ownerQAActive ? (
+              <button type="button" className="owner-banner-btn owner-banner-btn-ghost" onClick={() => setOwnerQAActive(false)}>
+                質問を閉じる
+              </button>
+            ) : (
+              <button type="button" className="owner-banner-btn" onClick={() => setOwnerQAActive(true)}>
+                {ownerPending > 0 ? `質問に答える(${ownerPending}件)` : '確認事項をチェック'}
+              </button>
+            )}
+            {/* 店主モードごと抜けて客画面へ(セッションは保持、右下や再タップで戻れる) */}
+            <button
+              type="button"
+              className="owner-banner-exit"
+              onClick={() => { setOwnerQAActive(false); setOwnerSession(null); }}
+            >
+              店主モードを終了
             </button>
-          ) : (
-            <button type="button" className="owner-banner-btn" onClick={() => setOwnerQAActive(true)}>
-              {ownerPending > 0 ? `質問に答える(${ownerPending}件)` : '確認事項をチェック'}
-            </button>
-          )}
+          </div>
         </div>
       )}
 
@@ -2778,9 +2792,9 @@ export default function CapturePage({
         onSubmit={() => setSuggestionTarget(null)}
       />
 
-      {/* 「お客様として見る」後の控えめな店主モード戻り導線(客画面を邪魔しないよう右下に小さく) */}
+      {/* 客画面中の控えめな店主モード戻り導線(右下)。保存セッションがあればパスコードなしで復帰 */}
       {!ownerSession && ownerParam && !ownerGateOpen && (
-        <button type="button" className="owner-reentry-fab" onClick={() => setOwnerGateOpen(true)}>
+        <button type="button" className="owner-reentry-fab" onClick={enterOwnerMode}>
           店主モードに入る
         </button>
       )}
