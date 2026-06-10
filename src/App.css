@@ -9604,18 +9604,26 @@ textarea.form-input {
 .owner-banner {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 10px;
   padding: 7px 12px;
   background: rgba(16, 163, 127, 0.12);
   border-bottom: 1px solid rgba(16, 163, 127, 0.25);
+  /* ボタンが増えても縦に折らず横スクロール(SPでの3行折れ防止) */
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
 }
+
+.owner-banner::-webkit-scrollbar { display: none; }
 
 .owner-banner-label {
   font-size: 12px;
   font-weight: 700;
   color: #10a37f;
   letter-spacing: 0.04em;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .owner-banner-btn {
@@ -9627,6 +9635,8 @@ textarea.form-input {
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 /* 質問フロー(チャット風・決定論) */
@@ -9992,6 +10002,8 @@ textarea.form-input {
   color: var(--color-text-half);
   cursor: pointer;
   text-decoration: underline;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 /* 店主モード: メニュー修正ボタン(一覧詳細内) */
@@ -10088,3 +10100,49 @@ textarea.form-input {
   background: none; border: none; padding: 0 8px;
   font-size: 13px; color: var(--color-text-half); cursor: pointer;
 }
+
+/* ── 店主モード: 今日の献立(OwnerDailyMenu) ── */
+.owner-daily-active-list {
+  display: block; margin: 6px 0; font-size: 13px; color: var(--color-text-half);
+  word-break: keep-all;
+}
+.owner-daily-note {
+  display: block; margin-top: 8px; font-size: 12px; color: var(--color-text-half);
+}
+.owner-daily-drafts {
+  display: flex; flex-direction: column; gap: 8px; margin: 10px 0;
+}
+.owner-daily-draft {
+  background: var(--color-surface-chip);
+  border: 1px solid var(--color-border-strong);
+  border-radius: 12px; padding: 10px 12px;
+}
+.owner-daily-draft-row {
+  display: flex; gap: 8px; align-items: center;
+}
+.owner-daily-input {
+  border: 1px solid var(--color-border-strong);
+  border-radius: 8px; padding: 8px 10px; font-size: 16px; /* 16px未満はiOSでフォーカス時ズームする */
+  background: var(--color-surface, #fff); color: var(--color-text);
+  min-width: 0;
+}
+.owner-daily-input-name { flex: 2; }
+.owner-daily-input-price { flex: 1; max-width: 96px; }
+.owner-daily-remove {
+  flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center;
+  width: 32px; height: 32px; border-radius: 8px;
+  background: none; border: 1px solid var(--color-border-strong);
+  color: var(--color-text-half); cursor: pointer;
+}
+.owner-daily-warn { margin-top: 6px; font-size: 12px; color: #b45309; }
+.owner-daily-stock {
+  display: flex; justify-content: space-between; align-items: center; gap: 8px;
+  padding: 10px 12px; border-radius: 10px; font-size: 14px; cursor: pointer;
+  background: var(--color-surface-chip);
+  border: 1px solid var(--color-border-strong);
+  color: var(--color-text); text-align: left; word-break: keep-all;
+}
+.owner-daily-stock.selected {
+  border-color: #16a34a; background: rgba(22, 163, 74, 0.08); color: #15803d;
+}
+.owner-daily-stock-price { color: var(--color-text-half); flex-shrink: 0; }

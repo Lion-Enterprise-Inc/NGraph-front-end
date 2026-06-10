@@ -1740,6 +1740,62 @@ export const OwnerChatApi = {
     if (!resp.ok) throw new Error('update_menu');
     return resp.json();
   },
+  // ── 本日の献立(店主トークンで完結。店舗はセッション側で決まる) ──
+  dailyDraft: async (sessionToken: string, input: { image?: File; text?: string }): Promise<{
+    items_count: number; items: DailyDraftItem[];
+  }> => {
+    const formData = new FormData();
+    if (input.image) formData.append('image', input.image);
+    if (input.text) formData.append('text', input.text);
+    const resp = await fetch(`${API_BASE_URL}/owner-chat/daily/draft`, {
+      method: 'POST',
+      headers: { 'X-Owner-Token': sessionToken },
+      body: formData,
+    });
+    if (resp.status === 401) throw new Error('unauthorized');
+    if (!resp.ok) throw new Error('daily_draft');
+    return resp.json();
+  },
+  dailyConfirm: async (sessionToken: string, items: DailyDraftItem[]): Promise<{
+    items_saved: number; deactivated: number; menus: { uid: string; name_jp: string; price: number }[];
+  }> => {
+    const resp = await fetch(`${API_BASE_URL}/owner-chat/daily/confirm`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Owner-Token': sessionToken },
+      body: JSON.stringify({ items }),
+    });
+    if (resp.status === 401) throw new Error('unauthorized');
+    if (!resp.ok) throw new Error('daily_confirm');
+    return resp.json();
+  },
+  dailyActive: async (sessionToken: string): Promise<{ items_count: number; items: DailyActiveItem[] }> => {
+    const resp = await fetch(`${API_BASE_URL}/owner-chat/daily/active`, {
+      headers: { 'X-Owner-Token': sessionToken },
+    });
+    if (resp.status === 401) throw new Error('unauthorized');
+    if (!resp.ok) throw new Error('daily_active');
+    return resp.json();
+  },
+  dailyStock: async (sessionToken: string): Promise<{ items_count: number; items: DailyActiveItem[] }> => {
+    const resp = await fetch(`${API_BASE_URL}/owner-chat/daily/stock`, {
+      headers: { 'X-Owner-Token': sessionToken },
+    });
+    if (resp.status === 401) throw new Error('unauthorized');
+    if (!resp.ok) throw new Error('daily_stock');
+    return resp.json();
+  },
+  dailyReuse: async (sessionToken: string, menuUids: string[]): Promise<{
+    reactivated: number; deactivated: number;
+  }> => {
+    const resp = await fetch(`${API_BASE_URL}/owner-chat/daily/reuse`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Owner-Token': sessionToken },
+      body: JSON.stringify({ menu_uids: menuUids }),
+    });
+    if (resp.status === 401) throw new Error('unauthorized');
+    if (!resp.ok) throw new Error('daily_reuse');
+    return resp.json();
+  },
 };
 
 export interface OwnerAllergen {
