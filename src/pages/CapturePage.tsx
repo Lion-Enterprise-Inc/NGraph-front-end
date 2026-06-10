@@ -2078,7 +2078,9 @@ export default function CapturePage({
               }}
             />
           )}
-          {responses.map((response, responseIdx) => (
+          {/* 店主モードのQ&A中は通常チャットのスレッドを隠す
+             (質問に答えるフローと客向け会話が混ざらないように) */}
+          {!(ownerSession && ownerQAActive) && responses.map((response, responseIdx) => (
             <div key={response.id} className="chat-thread-item" id={`msg-${response.id}`}>
               <div className="chat-row chat-row-user">
                 <div className="chat-content">
@@ -2744,31 +2746,35 @@ export default function CapturePage({
         )}
       </div>
 
-      <ChatDock
-        textareaRef={textareaRef}
-        message={message}
-        suggestion={currentSuggestions.guide}
-        attachment={attachment}
-        onFocus={() => {}}
-        onChange={(event: ChangeEvent<HTMLTextAreaElement>) =>
-          setMessage(event.target.value)
-        }
-        onSend={handleSend}
-        isStreaming={loading || isTypingActive}
-        isHero={isHeroLanding}
-        onStop={() => abortControllerRef.current?.abort()}
-        onAttachment={(file) => handleAttachment(file ?? null, "library")}
-        onAttachmentCamera={(file) => handleAttachment(file ?? null, "camera")}
-        onOpenCamera={() => {
-          if (onOpenCamera) {
-            onOpenCamera();
-            return;
+      {/* 店主モードのQ&A中は通常チャットの入力欄を隠す。
+         選択肢タップだけが唯一の操作になり、入力欄に逃げて客向け会話に落ちる事故を防ぐ */}
+      {!(ownerSession && ownerQAActive) && (
+        <ChatDock
+          textareaRef={textareaRef}
+          message={message}
+          suggestion={currentSuggestions.guide}
+          attachment={attachment}
+          onFocus={() => {}}
+          onChange={(event: ChangeEvent<HTMLTextAreaElement>) =>
+            setMessage(event.target.value)
           }
-          const cameraUrl = selectedRestaurant ? `/camera?restaurant=${selectedRestaurant.slug}` : "/camera";
-          router.push(cameraUrl);
-        }}
-        onRemoveAttachment={() => setAttachment(null)}
-      />
+          onSend={handleSend}
+          isStreaming={loading || isTypingActive}
+          isHero={isHeroLanding}
+          onStop={() => abortControllerRef.current?.abort()}
+          onAttachment={(file) => handleAttachment(file ?? null, "library")}
+          onAttachmentCamera={(file) => handleAttachment(file ?? null, "camera")}
+          onOpenCamera={() => {
+            if (onOpenCamera) {
+              onOpenCamera();
+              return;
+            }
+            const cameraUrl = selectedRestaurant ? `/camera?restaurant=${selectedRestaurant.slug}` : "/camera";
+            router.push(cameraUrl);
+          }}
+          onRemoveAttachment={() => setAttachment(null)}
+        />
+      )}
 
       <div onClick={(event) => event.stopPropagation()}>
       </div>

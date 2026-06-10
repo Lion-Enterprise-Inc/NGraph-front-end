@@ -1677,6 +1677,7 @@ export const OwnerChatApi = {
     menu_uid: string; question: string; selected?: string[]; text_note?: string;
   }): Promise<{
     ok: boolean; menu_name: string; menu_rank: string | null; total_remaining: number; promoted_to_a: boolean;
+    question_obj: Record<string, unknown>; added_allergens: string[]; added_ingredients: string[]; prev_rank: string | null;
   }> => {
     const resp = await fetch(`${API_BASE_URL}/owner-chat/answer`, {
       method: 'POST',
@@ -1686,6 +1687,19 @@ export const OwnerChatApi = {
     if (resp.status === 401) throw new Error('unauthorized');
     if (resp.status === 409) throw new Error('conflict');
     if (!resp.ok) throw new Error('answer');
+    return resp.json();
+  },
+  undo: async (sessionToken: string, payload: {
+    menu_uid: string; question_obj: Record<string, unknown>;
+    added_allergens: string[]; added_ingredients: string[]; prev_rank: string | null;
+  }): Promise<{ ok: boolean; total_remaining: number }> => {
+    const resp = await fetch(`${API_BASE_URL}/owner-chat/undo`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Owner-Token': sessionToken },
+      body: JSON.stringify(payload),
+    });
+    if (resp.status === 401) throw new Error('unauthorized');
+    if (!resp.ok) throw new Error('undo');
     return resp.json();
   },
   comment: async (sessionToken: string, menuUid: string, comment: string): Promise<{ ok: boolean }> => {

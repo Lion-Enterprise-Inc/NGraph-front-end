@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { Check, ChevronRight } from 'lucide-react'
+import { Check, ChevronRight, RotateCcw } from 'lucide-react'
 import { OwnerChatApi, type OwnerQuestion } from '../services/api'
 
 // 店主モードの質問キュー消化フロー。チャット風の見た目だが LLM は介在せず、
@@ -15,6 +15,13 @@ type HistoryItem = {
   answerLabel: string
   promoted: boolean
   commentSaved?: boolean
+  // 取り消し(undo)用にサーバーが返した逆操作情報
+  undo: {
+    question_obj: Record<string, unknown>
+    added_allergens: string[]
+    added_ingredients: string[]
+    prev_rank: string | null
+  }
 }
 
 type OwnerQuestionFlowProps = {
@@ -83,6 +90,12 @@ export default function OwnerQuestionFlow({ sessionToken, onClose, onCountChange
         q: current,
         answerLabel: selected?.join('、') || textNote || '',
         promoted: res.promoted_to_a,
+        undo: {
+          question_obj: res.question_obj,
+          added_allergens: res.added_allergens,
+          added_ingredients: res.added_ingredients,
+          prev_rank: res.prev_rank,
+        },
       }])
       setQueue(prev => prev.slice(1))
       setTotalRemaining(res.total_remaining)
@@ -133,6 +146,35 @@ export default function OwnerQuestionFlow({ sessionToken, onClose, onCountChange
     fetchQuestions()
   }
 
+  const undoLast = async () => {
+    const last = history[history.length - 1]
+    if (!last || submitting) return
+    setSubmitting(true)
+    setError(null)
+    try {
+      const res = await OwnerChatApi.undo(sessionToken, {
+        menu_uid: last.q.menu_uid,
+        question_obj: last.undo.question_obj,
+        added_allergens: last.undo.added_allergens,
+        added_ingredients: last.undo.added_ingredients,
+        prev_rank: last.undo.prev_rank,
+      })
+      // 取り消した質問を queue の先頭に戻し、履歴から落とす
+      setQueue(prev => [last.q, ...prev])
+      setHistory(prev => prev.slice(0, -1))
+      setTotalRemaining(res.total_remaining)
+      onCountChange?.(res.total_remaining)
+    } catch (e: unknown) {
+      if (isUnauthorized(e)) {
+        onSessionExpired?.()
+        return
+      }
+      setError('取り消しに失敗しました。もう一度お試しください。')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
   return (
     <div className="owner-qa">
       {history.map((h, idx) => (
@@ -145,6 +187,12 @@ export default function OwnerQuestionFlow({ sessionToken, onClose, onCountChange
           <div className="owner-qa-applied">
             <span className="owner-qa-applied-label"><Check size={13} strokeWidth={2.5} /> 反映しました</span>
             {h.promoted && <span className="owner-qa-promoted">この料理は店主確認済みになりました</span>}
+            {/* 直前の回答だけ取り消せる(誤タップの即修正) */}
+            {idx === history.length - 1 && (
+              <button type="button" className="owner-qa-undo" disabled={submitting} onClick={undoLast}>
+                <RotateCcw size={12} strokeWidth={2} /> 取り消す
+              </button>
+            )}
           </div>
           {h.commentSaved ? (
             <div className="owner-qa-applied"><Check size={13} strokeWidth={2.5} /> ひとことを保存しました</div>
