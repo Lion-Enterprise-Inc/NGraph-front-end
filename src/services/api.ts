@@ -1669,6 +1669,7 @@ export const OwnerChatApi = {
     const resp = await fetch(`${API_BASE_URL}/owner-chat/questions?limit=${limit}`, {
       headers: { 'X-Owner-Token': sessionToken },
     });
+    if (resp.status === 401) throw new Error('unauthorized');
     if (!resp.ok) throw new Error('questions');
     return resp.json();
   },
@@ -1682,6 +1683,8 @@ export const OwnerChatApi = {
       headers: { 'Content-Type': 'application/json', 'X-Owner-Token': sessionToken },
       body: JSON.stringify(payload),
     });
+    if (resp.status === 401) throw new Error('unauthorized');
+    if (resp.status === 409) throw new Error('conflict');
     if (!resp.ok) throw new Error('answer');
     return resp.json();
   },
@@ -1691,6 +1694,7 @@ export const OwnerChatApi = {
       headers: { 'Content-Type': 'application/json', 'X-Owner-Token': sessionToken },
       body: JSON.stringify({ menu_uid: menuUid, comment }),
     });
+    if (resp.status === 401) throw new Error('unauthorized');
     if (!resp.ok) throw new Error('comment');
     return resp.json();
   },

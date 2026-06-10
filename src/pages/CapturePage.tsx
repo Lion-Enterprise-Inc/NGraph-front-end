@@ -1936,7 +1936,7 @@ export default function CapturePage({
         </div>
       )}
 
-      {ownerSession && (
+      {ownerSession ? (
         <div className="owner-banner">
           <span className="owner-banner-label">店主モード</span>
           {ownerQAActive ? (
@@ -1949,7 +1949,15 @@ export default function CapturePage({
             </button>
           )}
         </div>
-      )}
+      ) : ownerParam && !ownerGateOpen ? (
+        /* 「お客様として見る」で閉じた後の再入口(リロード不要) */
+        <div className="owner-banner">
+          <span className="owner-banner-label">店主の方</span>
+          <button type="button" className="owner-banner-btn" onClick={() => setOwnerGateOpen(true)}>
+            店主モードに入る
+          </button>
+        </div>
+      ) : null}
 
       <div
         className="capture-body"
@@ -2059,6 +2067,15 @@ export default function CapturePage({
               sessionToken={ownerSession.sessionToken}
               onClose={() => setOwnerQAActive(false)}
               onCountChange={(n) => setOwnerPending(n)}
+              onSessionExpired={() => {
+                // 30日失効 or revoke: 保存セッションを破棄してパスコード再入力へ
+                try {
+                  if (ownerParam) localStorage.removeItem(`omiseai_owner_${ownerParam}`);
+                } catch {}
+                setOwnerSession(null);
+                setOwnerQAActive(false);
+                setOwnerGateOpen(true);
+              }}
             />
           )}
           {responses.map((response, responseIdx) => (

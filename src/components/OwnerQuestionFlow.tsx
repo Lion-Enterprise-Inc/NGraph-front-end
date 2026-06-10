@@ -21,13 +21,14 @@ type OwnerQuestionFlowProps = {
   sessionToken: string
   onClose: () => void
   onCountChange?: (remaining: number) => void
+  /** 401(30日セッション失効/トークンrevoke)時に親へ通知 → 保存セッション破棄+再認証 */
+  onSessionExpired?: () => void
 }
 
-export default function OwnerQuestionFlow({ sessionToken, onClose, onCountChange }: OwnerQuestionFlowProps) {
+export default function OwnerQuestionFlow({ sessionToken, onClose, onCountChange, onSessionExpired }: OwnerQuestionFlowProps) {
   const [queue, setQueue] = useState<OwnerQuestion[]>([])
   const [history, setHistory] = useState<HistoryItem[]>([])
   const [totalRemaining, setTotalRemaining] = useState(0)
-  const [answeredInBatch, setAnsweredInBatch] = useState(0)
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [otherText, setOtherText] = useState('')
@@ -37,6 +38,8 @@ export default function OwnerQuestionFlow({ sessionToken, onClose, onCountChange
   const [error, setError] = useState<string | null>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
 
+  const isUnauthorized = (e: unknown) => e instanceof Error && e.message === 'unauthorized'
+
   const fetchQuestions = async () => {
     setLoading(true)
     try {
@@ -44,7 +47,11 @@ export default function OwnerQuestionFlow({ sessionToken, onClose, onCountChange
       setQueue(res.questions)
       setTotalRemaining(res.total_remaining)
       onCountChange?.(res.total_remaining)
-    } catch {
+    } catch (e: unknown) {
+      if (isUnauthorized(e)) {
+        onSessionExpired?.()
+        return
+      }
       setError('質問の取得に失敗しました。通信環境をご確認ください。')
     } finally {
       setLoading(false)
@@ -58,7 +65,7 @@ export default function OwnerQuestionFlow({ sessionToken, onClose, onCountChange
   }, [queue, history, otherMode, commentTarget, loading])
 
   const current = queue[0] ?? null
-  const batchDone = !current && answeredInBatch > 0 && totalRemaining > 0
+  const batchDone = !loading && !current && totalRemaining > 0
   const allDone = !loading && !current && totalRemaining === 0
 
   const submitAnswer = async (selected: string[] | undefined, textNote?: string) => {
@@ -79,11 +86,22 @@ export default function OwnerQuestionFlow({ sessionToken, onClose, onCountChange
       }])
       setQueue(prev => prev.slice(1))
       setTotalRemaining(res.total_remaining)
-      setAnsweredInBatch(n => n + 1)
       onCountChange?.(res.total_remaining)
       setOtherMode(false)
       setOtherText('')
-    } catch {
+    } catch (e: unknown) {
+      if (isUnauthorized(e)) {
+        onSessionExpired?.()
+        return
+      }
+      if (e instanceof Error && e.message === 'conflict') {
+        // 既に回答済み(応答ロスト後の再送 or 別端末で回答済み) → 成功扱いでキューを進めて同期し直す
+        setQueue(prev => prev.slice(1))
+        setOtherMode(false)
+        setOtherText('')
+        fetchQuestions()
+        return
+      }
       setError('反映に失敗しました。もう一度お試しください。')
     } finally {
       setSubmitting(false)
@@ -100,7 +118,11 @@ export default function OwnerQuestionFlow({ sessionToken, onClose, onCountChange
       setHistory(prev => prev.map((h, i) => i === historyIdx ? { ...h, commentSaved: true } : h))
       setCommentTarget(null)
       setCommentText('')
-    } catch {
+    } catch (e: unknown) {
+      if (isUnauthorized(e)) {
+        onSessionExpired?.()
+        return
+      }
       setError('ひとことの保存に失敗しました。')
     } finally {
       setSubmitting(false)
@@ -108,7 +130,6 @@ export default function OwnerQuestionFlow({ sessionToken, onClose, onCountChange
   }
 
   const continueBatch = () => {
-    setAnsweredInBatch(0)
     fetchQuestions()
   }
 
@@ -123,7 +144,7 @@ export default function OwnerQuestionFlow({ sessionToken, onClose, onCountChange
           <div className="owner-qa-bubble owner-qa-bubble-owner">{h.answerLabel}</div>
           <div className="owner-qa-applied">
             <span className="owner-qa-applied-label"><Check size={13} strokeWidth={2.5} /> 反映しました</span>
-            {h.promoted && <span className="owner-qa-promoted">すべての確認が完了し、店主確認済みデータになりました</span>}
+            {h.promoted && <span className="owner-qa-promoted">この料理は店主確認済みになりました</span>}
           </div>
           {h.commentSaved ? (
             <div className="owner-qa-applied"><Check size={13} strokeWidth={2.5} /> ひとことを保存しました</div>
