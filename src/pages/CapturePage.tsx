@@ -14,6 +14,7 @@ import { mockRestaurants, mockScanResponse, type Restaurant } from "../api/mockA
 import Tesseract from "tesseract.js";
 import { FeedbackApi, EventApi, type VisionMenuItem, PhotoContributionApi, NfgFeedbackApi, LikedMenusApi, type LikedMenuItem, QuickExplainApi, type QuickExplainItem, MenuSearchApi, type MenuNFGCard, TopMenusApi, OwnerChatApi, type OwnerAllergen } from "../services/api";
 import { toggleMenuLike } from "../services/menuLikes";
+import { downscaleImage } from "../utils/image";
 import SuggestionModal from "../components/SuggestionModal";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -1263,13 +1264,16 @@ export default function CapturePage({
       const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://dev-backend.ngraph.jp/api';
 
       if (attachmentSnapshot?.file) {
+        // スマホ原寸(数MB)のまま投げると4G+LINE内ブラウザ等でアップロード+解析の合計が
+        // fetchの忍耐を超えて接続エラーになる(2026-06-11 acoya実機)→送信前に縮小
+        const uploadFile = await downscaleImage(attachmentSnapshot.file);
         // Image attached → use Vision API for menu analysis
         try {
           if (isQuickMode) {
             // Quick Explain モード: 軽量API
             const qeCopy = (copy as any).quickExplain || { title: "Quick Explain ({n} items)" };
             const qeResponse = await QuickExplainApi.analyze(
-              attachmentSnapshot.file,
+              uploadFile,
               selectedRestaurant?.slug,
               activeLanguage,
             );
@@ -1288,7 +1292,7 @@ export default function CapturePage({
             setTypingComplete((prev) => new Set(prev).add(responseId));
           } else {
           const formData = new FormData();
-          formData.append('image', attachmentSnapshot.file);
+          formData.append('image', uploadFile);
           if (selectedRestaurant?.slug) {
             formData.append('restaurant_slug', selectedRestaurant.slug);
           }
@@ -1362,7 +1366,7 @@ export default function CapturePage({
           let ocrText = "";
           try {
             const langCode = activeLanguage === "ja" ? "jpn" : activeLanguage === "ko" ? "kor" : "eng";
-            const result = await Tesseract.recognize(attachmentSnapshot.file, langCode);
+            const result = await Tesseract.recognize(uploadFile, langCode);
             ocrText = result?.data?.text ?? "";
           } catch (e) {
             console.log("ocr_error", e);
