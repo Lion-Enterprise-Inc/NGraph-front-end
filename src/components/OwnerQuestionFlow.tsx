@@ -239,7 +239,10 @@ export default function OwnerQuestionFlow({ sessionToken, onClose, onCountChange
         ))}
 
         {loading ? (
-          <div className="owner-qa-bubble owner-qa-bubble-ai">確認したいことを調べています…</div>
+          <div className="owner-qa-bubble owner-qa-bubble-ai owner-qa-loading">
+            確認したいことを調べています
+            <span className="typing-indicator"><span /><span /><span /></span>
+          </div>
         ) : current ? (
           <div className="owner-qa-item">
             <div className="owner-qa-bubble owner-qa-bubble-ai">

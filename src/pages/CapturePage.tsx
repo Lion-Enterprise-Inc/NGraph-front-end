@@ -33,6 +33,7 @@ import QRMenuView from "../components/QRMenuView";
 import MenuStrip from "../components/MenuStrip";
 import OwnerQuestionFlow from "../components/OwnerQuestionFlow";
 import OwnerDailyMenu from "../components/OwnerDailyMenu";
+import OwnerBulkEdit from "../components/OwnerBulkEdit";
 import OwnerPasscodeModal from "../components/OwnerPasscodeModal";
 
 function visionToQuickExplain(vi: VisionMenuItem): QuickExplainItem {
@@ -656,6 +657,10 @@ export default function CapturePage({
   const [ownerQAActive, setOwnerQAActive] = useState(false);
   // 「今日の献立」登録フロー(QAと同時には開かない)
   const [ownerDailyActive, setOwnerDailyActive] = useState(false);
+  // チャットベース一括編集フロー(同上)
+  const [ownerEditActive, setOwnerEditActive] = useState(false);
+  // 店主の専用フロー(QA/献立/編集)のどれかが開いているか。客向けUIの隠蔽は全部これで判定
+  const ownerFlowActive = ownerQAActive || ownerDailyActive || ownerEditActive;
   const [ownerGateOpen, setOwnerGateOpen] = useState(false);
 
   // 店主モードに入る: 保存済みセッションがあればパスコードなしで復元、無ければゲートを出す
@@ -1917,7 +1922,7 @@ export default function CapturePage({
     );
   }
 
-  const isHeroLanding = responses.length === 0 && !loading && !attachment && !ownerQAActive && !ownerDailyActive;
+  const isHeroLanding = responses.length === 0 && !loading && !attachment && !ownerFlowActive;
 
   return (
     <div
@@ -1953,33 +1958,43 @@ export default function CapturePage({
         <div className="owner-banner">
           <span className="owner-banner-label">店主モード</span>
           <div className="owner-banner-actions">
-            {ownerDailyActive ? (
-              <button type="button" className="owner-banner-btn owner-banner-btn-ghost" onClick={() => setOwnerDailyActive(false)}>
-                献立を閉じる
+            {/* 開いてるフローのボタンだけ濃い緑(active)。他の入口はゴースト化して「どれが開いてるか」を一目で分かるように */}
+            {ownerEditActive ? (
+              <button type="button" className="owner-banner-btn" onClick={() => setOwnerEditActive(false)}>
+                ✕ 編集を閉じる
               </button>
             ) : (
-              <button type="button" className="owner-banner-btn" onClick={() => { setOwnerQAActive(false); setOwnerDailyActive(true); }}>
+              <button type="button" className={`owner-banner-btn${ownerFlowActive ? ' owner-banner-btn-ghost' : ''}`} onClick={() => { setOwnerQAActive(false); setOwnerDailyActive(false); setOwnerEditActive(true); }}>
+                チャットで編集
+              </button>
+            )}
+            {ownerDailyActive ? (
+              <button type="button" className="owner-banner-btn" onClick={() => setOwnerDailyActive(false)}>
+                ✕ 献立を閉じる
+              </button>
+            ) : (
+              <button type="button" className={`owner-banner-btn${ownerFlowActive ? ' owner-banner-btn-ghost' : ''}`} onClick={() => { setOwnerQAActive(false); setOwnerEditActive(false); setOwnerDailyActive(true); }}>
                 今日の献立
               </button>
             )}
             {ownerQAActive ? (
-              <button type="button" className="owner-banner-btn owner-banner-btn-ghost" onClick={() => setOwnerQAActive(false)}>
-                質問を閉じる
+              <button type="button" className="owner-banner-btn" onClick={() => setOwnerQAActive(false)}>
+                ✕ 質問を閉じる
               </button>
             ) : (
-              <button type="button" className="owner-banner-btn" onClick={() => { setOwnerDailyActive(false); setOwnerQAActive(true); }}>
+              <button type="button" className={`owner-banner-btn${ownerFlowActive ? ' owner-banner-btn-ghost' : ''}`} onClick={() => { setOwnerDailyActive(false); setOwnerEditActive(false); setOwnerQAActive(true); }}>
                 {ownerPending > 0 ? `質問に答える(${ownerPending}件)` : '確認事項をチェック'}
               </button>
             )}
             {/* メニュー一覧→各品を修正(店主モードでは編集UIが出る) */}
-            <button type="button" className="owner-banner-btn owner-banner-btn-ghost" onClick={() => { setOwnerQAActive(false); setOwnerDailyActive(false); openMenuList(); }}>
+            <button type="button" className="owner-banner-btn owner-banner-btn-ghost" onClick={() => { setOwnerQAActive(false); setOwnerDailyActive(false); setOwnerEditActive(false); openMenuList(); }}>
               メニューを修正
             </button>
             {/* 店主モードごと抜けて客画面へ(セッションは保持、右下や再タップで戻れる) */}
             <button
               type="button"
               className="owner-banner-exit"
-              onClick={() => { setOwnerQAActive(false); setOwnerDailyActive(false); setOwnerSession(null); }}
+              onClick={() => { setOwnerQAActive(false); setOwnerDailyActive(false); setOwnerEditActive(false); setOwnerSession(null); }}
             >
               店主モードを終了
             </button>
@@ -1994,7 +2009,7 @@ export default function CapturePage({
       >
         <main
           className={`capture-main hero-stack${
-            responses.length > 0 || loading || ownerQAActive || ownerDailyActive ? " is-hidden" : ""
+            responses.length > 0 || loading || ownerFlowActive ? " is-hidden" : ""
           }`}
         >
           {!restaurantLoading && !restaurantData && restaurantSlug ? (
@@ -2120,9 +2135,23 @@ export default function CapturePage({
               }}
             />
           )}
-          {/* 店主モードのQ&A/献立登録中は通常チャットのスレッドを隠す
+          {ownerSession && ownerEditActive && !ownerQAActive && !ownerDailyActive && (
+            <OwnerBulkEdit
+              sessionToken={ownerSession.sessionToken}
+              onClose={() => setOwnerEditActive(false)}
+              onSessionExpired={() => {
+                try {
+                  if (ownerParam) localStorage.removeItem(`omiseai_owner_${ownerParam}`);
+                } catch {}
+                setOwnerSession(null);
+                setOwnerEditActive(false);
+                setOwnerGateOpen(true);
+              }}
+            />
+          )}
+          {/* 店主モードの専用フロー中は通常チャットのスレッドを隠す
              (店主フローと客向け会話が混ざらないように) */}
-          {!(ownerSession && (ownerQAActive || ownerDailyActive)) && responses.map((response, responseIdx) => (
+          {!(ownerSession && ownerFlowActive) && responses.map((response, responseIdx) => (
             <div key={response.id} className="chat-thread-item" id={`msg-${response.id}`}>
               <div className="chat-row chat-row-user">
                 <div className="chat-content">
@@ -2788,9 +2817,9 @@ export default function CapturePage({
         )}
       </div>
 
-      {/* 店主モードのQ&A/献立登録中は通常チャットの入力欄を隠す。
+      {/* 店主モードの専用フロー中は通常チャットの入力欄を隠す。
          選択肢タップだけが唯一の操作になり、入力欄に逃げて客向け会話に落ちる事故を防ぐ */}
-      {!(ownerSession && (ownerQAActive || ownerDailyActive)) && (
+      {!(ownerSession && ownerFlowActive) && (
         <ChatDock
           textareaRef={textareaRef}
           message={message}

@@ -10101,6 +10101,35 @@ textarea.form-input {
   font-size: 13px; color: var(--color-text-half); cursor: pointer;
 }
 
+/* ローディングバブル(「調べています/読み取っています」)に動くドットを付ける。
+   静止テキストだけだとフリーズと区別がつかない(2026-06-10実機フィードバック) */
+.owner-qa-loading {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ヒーロー中央浮きの入力欄は、キーボード表示中(フォーカス中)は画面下ベタ付けに切替。
+   fixed+bottom:28dvh のままだと iOS キーボードのビジュアルビューポートのパンで
+   ヘッダー/店主バナーに重なって崩れる(2026-06-10実機)。owner-input-bar と同じ方式 */
+.capture-page.is-hero-landing .chat-dock.chat-dock-floating:focus-within {
+  bottom: 0;
+  left: 0;
+  right: 0;
+  transform: none;
+  max-width: 100%;
+  padding: 10px 14px calc(env(safe-area-inset-bottom, 0px) + 10px);
+  background: var(--color-surface);
+  border-top: 1px solid var(--color-border-strong);
+  z-index: 60;
+}
+
+.capture-page.is-hero-landing:has(.chat-dock-floating textarea:focus) .store-home {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease;
+}
+
 /* ── 店主モード: 今日の献立(OwnerDailyMenu) ── */
 .owner-daily-active-list {
   display: block; margin: 6px 0; font-size: 13px; color: var(--color-text-half);
@@ -10146,3 +10175,16 @@ textarea.form-input {
   border-color: #16a34a; background: rgba(22, 163, 74, 0.08); color: #15803d;
 }
 .owner-daily-stock-price { color: var(--color-text-half); flex-shrink: 0; }
+
+/* ── 店主モード: チャットベース一括編集(OwnerBulkEdit)の変更カード ── */
+.owner-edit-card-name {
+  font-size: 14px; font-weight: 700; color: var(--color-text);
+  margin-bottom: 4px; word-break: keep-all;
+}
+.owner-edit-card-line {
+  font-size: 13px; color: var(--color-text); padding: 2px 0 2px 12px;
+  position: relative;
+}
+.owner-edit-card-line::before {
+  content: '・'; position: absolute; left: 0; color: #10a37f;
+}

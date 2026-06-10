@@ -1796,7 +1796,50 @@ export const OwnerChatApi = {
     if (!resp.ok) throw new Error('daily_reuse');
     return resp.json();
   },
+  // ── チャットベース一括編集(①解釈は書込なし ③反映は決定論) ──
+  editInterpret: async (sessionToken: string, instruction: string, answers?: { question: string; answer: string }[]): Promise<OwnerEditProposal> => {
+    const resp = await fetch(`${API_BASE_URL}/owner-chat/edit/interpret`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Owner-Token': sessionToken },
+      body: JSON.stringify({ instruction, answers }),
+    });
+    if (resp.status === 401) throw new Error('unauthorized');
+    if (!resp.ok) throw new Error('edit_interpret');
+    return resp.json();
+  },
+  editApply: async (sessionToken: string, changes: OwnerEditChange[]): Promise<{
+    applied_count: number;
+    results: { menu_uid: string; menu_name: string; ok: boolean; applied?: string[]; error?: string }[];
+  }> => {
+    const resp = await fetch(`${API_BASE_URL}/owner-chat/edit/apply`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Owner-Token': sessionToken },
+      body: JSON.stringify({ changes }),
+    });
+    if (resp.status === 401) throw new Error('unauthorized');
+    if (!resp.ok) throw new Error('edit_apply');
+    return resp.json();
+  },
 };
+
+export interface OwnerEditChange {
+  menu_uid: string;
+  menu_name: string;
+  set_price?: number;
+  set_status?: boolean;
+  set_description?: string;
+  add_ingredients?: string[];
+  add_allergens?: string[];
+  remove_allergens?: string[];
+  reason?: string;
+}
+
+export interface OwnerEditProposal {
+  changes: OwnerEditChange[];
+  questions: { question: string; options: string[] }[];
+  unmatched: string[];
+  summary: string;
+}
 
 export interface OwnerAllergen {
   uid: string;

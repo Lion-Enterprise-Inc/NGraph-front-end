@@ -187,7 +187,10 @@ export default function OwnerDailyMenu({ sessionToken, onClose, onSessionExpired
         )}
 
         {step === 'extracting' && (
-          <div className="owner-qa-bubble owner-qa-bubble-ai">読み取っています…そのままお待ちください</div>
+          <div className="owner-qa-bubble owner-qa-bubble-ai owner-qa-loading">
+            読み取っています。10秒ほどお待ちください
+            <span className="typing-indicator"><span /><span /><span /></span>
+          </div>
         )}
 
         {step === 'review' && (
