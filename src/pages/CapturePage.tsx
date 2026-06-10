@@ -1936,7 +1936,7 @@ export default function CapturePage({
         </div>
       )}
 
-      {ownerSession ? (
+      {ownerSession && (
         <div className="owner-banner">
           <span className="owner-banner-label">店主モード</span>
           {ownerQAActive ? (
@@ -1949,15 +1949,7 @@ export default function CapturePage({
             </button>
           )}
         </div>
-      ) : ownerParam && !ownerGateOpen ? (
-        /* 「お客様として見る」で閉じた後の再入口(リロード不要) */
-        <div className="owner-banner">
-          <span className="owner-banner-label">店主の方</span>
-          <button type="button" className="owner-banner-btn" onClick={() => setOwnerGateOpen(true)}>
-            店主モードに入る
-          </button>
-        </div>
-      ) : null}
+      )}
 
       <div
         className="capture-body"
@@ -2785,6 +2777,13 @@ export default function CapturePage({
         menuItem={suggestionTarget || { name_jp: '' }}
         onSubmit={() => setSuggestionTarget(null)}
       />
+
+      {/* 「お客様として見る」後の控えめな店主モード戻り導線(客画面を邪魔しないよう右下に小さく) */}
+      {!ownerSession && ownerParam && !ownerGateOpen && (
+        <button type="button" className="owner-reentry-fab" onClick={() => setOwnerGateOpen(true)}>
+          店主モードに入る
+        </button>
+      )}
 
       {/* 店主モード: 初回パスコード入力 */}
       {ownerGateOpen && ownerParam && (
