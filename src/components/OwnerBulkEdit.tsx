@@ -42,6 +42,8 @@ export default function OwnerBulkEdit({ sessionToken, onClose, onSessionExpired 
   // 確認質問ラリーの文脈(指示+これまでの回答)
   const [pendingInstruction, setPendingInstruction] = useState<string | null>(null)
   const [answers, setAnswers] = useState<{ question: string; answer: string }[]>([])
+  // 反映済みの変更案(反映ボタンを消して二重タップを防ぐ)
+  const [appliedProposals, setAppliedProposals] = useState<OwnerEditProposal[]>([])
   const bottomRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
 
@@ -114,6 +116,7 @@ export default function OwnerBulkEdit({ sessionToken, onClose, onSessionExpired 
           : `${r.menu_name || r.menu_uid}: 失敗(${r.error})`
       )
       setMessages(prev => [...prev, { kind: 'result', lines, count: res.applied_count }])
+      setAppliedProposals(prev => [...prev, proposal])
       setPendingInstruction(null)
       setAnswers([])
     } catch (e: unknown) {
@@ -189,7 +192,7 @@ export default function OwnerBulkEdit({ sessionToken, onClose, onSessionExpired 
                   ))}
                 </div>
               )}
-              {isLast && p.questions.length === 0 && p.changes.length > 0 && (
+              {isLast && !appliedProposals.includes(p) && p.questions.length === 0 && p.changes.length > 0 && (
                 <div className="owner-qa-options">
                   <button type="button" className="owner-qa-opt" disabled={busy} onClick={() => applyChanges(p)}>
                     <Check size={15} strokeWidth={2.5} /> この内容で反映する({p.changes.length}品)
