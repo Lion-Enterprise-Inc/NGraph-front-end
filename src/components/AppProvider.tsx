@@ -56,6 +56,9 @@ type AppContextValue = {
   // MenuListDrawer 内チップから chat に質問投入する callback
   onAskAbout: ((query: string) => void) | null;
   setOnAskAbout: (fn: ((query: string) => void) | null) => void;
+  // 店主モードのセッショントークン(MenuListDrawer で編集UIを出すか判定)
+  ownerSessionToken: string | null;
+  setOwnerSessionToken: (token: string | null) => void;
   geoLocation: { lat: number; lng: number } | null;
   setGeoLocation: (loc: { lat: number; lng: number } | null) => void;
   theme: Theme;
@@ -103,6 +106,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [onOpenLiked, setOnOpenLiked] = useState<(() => void) | null>(null);
   const [onOpenPopular, setOnOpenPopular] = useState<(() => void) | null>(null);
   const [onAskAbout, setOnAskAbout] = useState<((query: string) => void) | null>(null);
+  const [ownerSessionToken, setOwnerSessionToken] = useState<string | null>(null);
 
   // オンボーディング: 初回訪問 (店舗 context あり) で表示
   const [onboardingOpen, setOnboardingOpen] = useState(false);
@@ -226,6 +230,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
           setOnOpenPopular,
           onAskAbout,
           setOnAskAbout,
+          ownerSessionToken,
+          setOwnerSessionToken,
           geoLocation,
           setGeoLocation,
           theme,
@@ -269,6 +275,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
               businessType={businessType}
               onAskAbout={onAskAbout ?? undefined}
               initialExpandedUid={menuListFocusUid}
+              ownerSessionToken={ownerSessionToken}
             />
             <PreferencesModal
               open={preferencesOpen}

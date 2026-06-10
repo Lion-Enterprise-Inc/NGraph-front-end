@@ -1,11 +1,12 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { X, ChevronDown, ChevronUp, Heart, MessageCircle, Wine, AlertTriangle } from 'lucide-react'
-import { MenuSearchApi, type MenuNFGCard } from '../services/api'
+import { X, ChevronDown, ChevronUp, Heart, MessageCircle, Wine, AlertTriangle, Pencil } from 'lucide-react'
+import { MenuSearchApi, OwnerChatApi, type MenuNFGCard, type OwnerAllergen } from '../services/api'
 import { useAppContext } from './AppProvider'
 import { getUiCopy } from '../i18n/uiCopy'
 import { getLikedMenuUids, toggleMenuLike } from '../services/menuLikes'
+import OwnerMenuEdit from './OwnerMenuEdit'
 
 const CATEGORY_LABELS: Record<string, Record<string, string>> = {
   ja: {
@@ -83,11 +84,13 @@ type MenuListDrawerProps = {
   onAskAbout?: (query: string) => void
   /** 開いた時に展開しておくメニュー uid（MenuStrip のカードタップ用） */
   initialExpandedUid?: string | null
+  /** 店主モードのセッショントークン。設定時は各メニューに編集UIを出す。 */
+  ownerSessionToken?: string | null
 }
 
 const BAR_TYPES = ['バー', 'カクテルバー', 'ワインバー', 'ダイニングバー', 'bar', 'cocktail bar', 'wine bar', 'dining bar']
 
-export default function MenuListDrawer({ open, onClose, restaurantSlug, businessType, onAskAbout, initialExpandedUid }: MenuListDrawerProps) {
+export default function MenuListDrawer({ open, onClose, restaurantSlug, businessType, onAskAbout, initialExpandedUid, ownerSessionToken }: MenuListDrawerProps) {
   const { language } = useAppContext()
   const copy = getUiCopy(language)
   const nfgCopy = (copy as any).nfg || {}
@@ -98,6 +101,13 @@ export default function MenuListDrawer({ open, onClose, restaurantSlug, business
   const [activeCategory, setActiveCategory] = useState('all')
   const [expandedUid, setExpandedUid] = useState<string | null>(null)
   const [categories, setCategories] = useState<string[]>([])
+  // 店主モード: 編集中のメニュー uid とアレルゲンマスタ
+  const [editingUid, setEditingUid] = useState<string | null>(null)
+  const [allergenMaster, setAllergenMaster] = useState<OwnerAllergen[]>([])
+  useEffect(() => {
+    if (!open || !ownerSessionToken || allergenMaster.length > 0) return
+    OwnerChatApi.allergenMaster(ownerSessionToken).then(setAllergenMaster).catch(() => {})
+  }, [open, ownerSessionToken])  // eslint-disable-line react-hooks/exhaustive-deps
   // ♡ 状態（NFGCard と同じ localStorage を読み書き）
   const [likedMenus, setLikedMenus] = useState<Set<string>>(new Set())
   const [likeCounts, setLikeCounts] = useState<Record<string, number>>({})
@@ -441,7 +451,29 @@ export default function MenuListDrawer({ open, onClose, restaurantSlug, business
                             </button>
                           </>
                         )}
+                        {/* 店主モード: このメニューを修正する */}
+                        {ownerSessionToken && editingUid !== m.uid && (
+                          <button
+                            type="button"
+                            className="menu-list-action-chip menu-list-action-edit-owner"
+                            onClick={(e) => { e.stopPropagation(); setEditingUid(m.uid) }}
+                          >
+                            <Pencil size={14} />
+                            <span>修正する</span>
+                          </button>
+                        )}
                       </div>
+
+                      {/* 店主モード: 編集フォーム */}
+                      {ownerSessionToken && editingUid === m.uid && (
+                        <OwnerMenuEdit
+                          sessionToken={ownerSessionToken}
+                          menuUid={m.uid}
+                          allergens={allergenMaster}
+                          onSaved={() => fetchMenus()}
+                          onClose={() => setEditingUid(null)}
+                        />
+                      )}
                     </div>
                   )}
                 </div>

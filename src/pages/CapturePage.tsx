@@ -274,6 +274,7 @@ export default function CapturePage({
     setOnOpenLiked,
     setOnOpenPopular,
     setOnAskAbout,
+    setOwnerSessionToken,
     geoLocation,
   } = useAppContext();
   const activeLanguage = contextLanguage ?? language ?? "ja";
@@ -672,6 +673,11 @@ export default function CapturePage({
   }, [ownerParam]);
 
   useEffect(() => { enterOwnerMode(); }, [enterOwnerMode]);
+
+  // 店主セッションを context に同期(MenuListDrawer が編集UIを出すか判定する)
+  useEffect(() => {
+    setOwnerSessionToken(ownerSession?.sessionToken ?? null);
+  }, [ownerSession, setOwnerSessionToken]);
   
   const selectedRestaurant = restaurantData;
   const nfgParam = searchParams?.get("nfg") || (cleanUrlMatch ? cleanUrlMatch[4] : null);
@@ -1953,6 +1959,10 @@ export default function CapturePage({
                 {ownerPending > 0 ? `質問に答える(${ownerPending}件)` : '確認事項をチェック'}
               </button>
             )}
+            {/* メニュー一覧→各品を修正(店主モードでは編集UIが出る) */}
+            <button type="button" className="owner-banner-btn owner-banner-btn-ghost" onClick={() => { setOwnerQAActive(false); openMenuList(); }}>
+              メニューを修正
+            </button>
             {/* 店主モードごと抜けて客画面へ(セッションは保持、右下や再タップで戻れる) */}
             <button
               type="button"

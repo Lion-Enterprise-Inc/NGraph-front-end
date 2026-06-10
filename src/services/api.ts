@@ -1712,7 +1712,53 @@ export const OwnerChatApi = {
     if (!resp.ok) throw new Error('comment');
     return resp.json();
   },
+  allergenMaster: async (sessionToken: string): Promise<OwnerAllergen[]> => {
+    const resp = await fetch(`${API_BASE_URL}/owner-chat/allergens`, {
+      headers: { 'X-Owner-Token': sessionToken },
+    });
+    if (resp.status === 401) throw new Error('unauthorized');
+    if (!resp.ok) throw new Error('allergens');
+    return resp.json();
+  },
+  menuDetail: async (sessionToken: string, menuUid: string): Promise<OwnerMenuDetail> => {
+    const resp = await fetch(`${API_BASE_URL}/owner-chat/menu/${encodeURIComponent(menuUid)}`, {
+      headers: { 'X-Owner-Token': sessionToken },
+    });
+    if (resp.status === 401) throw new Error('unauthorized');
+    if (!resp.ok) throw new Error('menu_detail');
+    return resp.json();
+  },
+  updateMenu: async (sessionToken: string, payload: {
+    menu_uid: string; status?: boolean; price?: number; description?: string; allergen_uids?: string[];
+  }): Promise<{ ok: boolean; menu_uid: string; status: boolean; price: number; allergens: string[] }> => {
+    const resp = await fetch(`${API_BASE_URL}/owner-chat/menu/update`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Owner-Token': sessionToken },
+      body: JSON.stringify(payload),
+    });
+    if (resp.status === 401) throw new Error('unauthorized');
+    if (!resp.ok) throw new Error('update_menu');
+    return resp.json();
+  },
 };
+
+export interface OwnerAllergen {
+  uid: string;
+  name_jp: string;
+  name_en: string;
+}
+
+export interface OwnerMenuDetail {
+  menu_uid: string;
+  name_jp: string;
+  name_en: string | null;
+  status: boolean;
+  price: number;
+  description: string | null;
+  category: string | null;
+  allergen_uids: string[];
+  owner_comment: string | null;
+}
 
 // Top menus API (public, no auth)
 export const TopMenusApi = {
