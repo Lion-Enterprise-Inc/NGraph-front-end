@@ -1,7 +1,7 @@
 import { useRouter } from 'next/navigation'
 import { useState, useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
-import { Menu, X, MapPin, Clock, Phone, Instagram, ExternalLink, Sun, Moon, SquarePen, Globe, Share2 } from 'lucide-react'
+import { Menu, X, MapPin, Clock, Phone, Instagram, ExternalLink, Sun, Moon, SquarePen, Globe, Share2, CalendarCheck } from 'lucide-react'
 import { getUiCopy } from '../i18n/uiCopy'
 import { useAppContext } from './AppProvider'
 
@@ -25,6 +25,7 @@ interface RestaurantInfo {
   budget?: string | null
   instagram_url?: string | null
   business_type?: string | null
+  reservation_url?: string | null
 }
 
 interface CaptureHeaderProps {
@@ -234,8 +235,19 @@ export default function CaptureHeader({ onMenu, onLanguage, onNewChat, restauran
           )}
         </div>
 
-        {/* ── Quick actions: Map / 電話 / 共有 ── */}
+        {/* ── Quick actions: 予約 / Map / 電話 / 共有 ── */}
         <div className="store-info-actions">
+          {restaurantData.reservation_url && (
+            <a
+              className="store-info-action"
+              href={restaurantData.reservation_url}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <CalendarCheck size={16} strokeWidth={1.75} />
+              <span>{isJa ? '予約' : 'Reserve'}</span>
+            </a>
+          )}
           {restaurantData.address && (
             <a
               className="store-info-action"

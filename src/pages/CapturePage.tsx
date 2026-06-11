@@ -83,6 +83,7 @@ type ApiRestaurant = {
   budget?: string | null
   instagram_url?: string | null
   business_type?: string | null
+  reservation_url?: string | null
   url_slug?: string | null
   prefecture_slug?: string | null
   city_slug?: string | null
@@ -758,6 +759,7 @@ export default function CapturePage({
                 access_info: data.result.access_info || null,
                 budget: data.result.budget || null,
                 instagram_url: data.result.instagram_url || null,
+                reservation_url: data.result.reservation_url || null,
                 url_slug: data.result.url_slug || null,
                 prefecture_slug: data.result.prefecture_slug || null,
                 city_slug: data.result.city_slug || null,
@@ -2106,6 +2108,11 @@ export default function CapturePage({
               restaurantHours={selectedRestaurant?.opening_hours}
               restaurantHolidays={selectedRestaurant?.holidays}
               onReservationClick={() => {
+                // 予約導線: 店の既存予約システム(トレタ等)があれば直接渡す。無い店は従来のAIチャットへ
+                if (selectedRestaurant?.reservation_url) {
+                  window.open(selectedRestaurant.reservation_url, '_blank', 'noopener');
+                  return;
+                }
                 const reservationMessages: Record<string, string> = {
                   ja: '予約をしたいのですが',
                   en: "I'd like to make a reservation",
