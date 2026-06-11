@@ -232,6 +232,18 @@ export default function OwnerDailyMenu({ sessionToken, onClose, onSessionExpired
                 )
               })}
             </div>
+            {/* 読み取られなかった品の追記(2026-06-11店主フィードバック: 修正・追記の導線がない) */}
+            <button
+              type="button"
+              className="owner-daily-add"
+              disabled={submitting}
+              onClick={() => setDrafts(prev => [...prev, {
+                name_jp: '', name_en: '', price: 0, description: '',
+                category: 'other', ingredients: [], allergens: [],
+              }])}
+            >
+              ＋ 品を追加（読み取られなかった品）
+            </button>
             <div className="owner-qa-options">
               <button type="button" className="owner-qa-opt" disabled={submitting || drafts.length === 0} onClick={confirm}>
                 <Check size={15} strokeWidth={2.5} /> この内容で今日の献立にする
