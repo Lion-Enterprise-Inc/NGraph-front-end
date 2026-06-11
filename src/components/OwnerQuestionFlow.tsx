@@ -17,6 +17,8 @@ type HistoryItem = {
   answerLabel: string
   promoted: boolean
   commentSaved?: boolean
+  // 厨房共通質問: この回答で整理された(冗長になって消えた)単品質問の数
+  purged?: number
   // 取り消し(undo)用にサーバーが返した逆操作情報
   undo: {
     question_obj: Record<string, unknown>
@@ -49,6 +51,8 @@ export default function OwnerQuestionFlow({ sessionToken, onClose, onCountChange
   const [submitting, setSubmitting] = useState(false)
   const [inputMode, setInputMode] = useState<InputMode | null>(null)
   const [inputText, setInputText] = useState('')
+  // 複数選択可の質問(厨房のcheckbox)用: トグル選択→「決定」で送信
+  const [multiSel, setMultiSel] = useState<string[]>([])
   const [error, setError] = useState<string | null>(null)
   // 「分からない(あとで答える)」のスキップ記憶。タブを閉じるまで有効(sessionStorage)、
   // 次の来訪では再び聞く=回答データは作らない(分からないものを推測で埋めさせない)
@@ -111,6 +115,13 @@ export default function OwnerQuestionFlow({ sessionToken, onClose, onCountChange
   }, [inputMode])
 
   const current = queue[0] ?? null
+  const isKitchen = current?.kind === 'kitchen'
+
+  // 質問が変わったら複数選択をリセット
+  useEffect(() => {
+    setMultiSel([])
+  }, [current?.menu_uid, current?.question])
+
   // スキップ分を除いた「今answerできる残り」(表示・続行判定用)
   const answerableRemaining = Math.max(totalRemaining - skippedCount, 0)
   const batchDone = !loading && !current && answerableRemaining > 0
@@ -141,10 +152,14 @@ export default function OwnerQuestionFlow({ sessionToken, onClose, onCountChange
         selected,
         text_note: textNote,
       })
+      const purged = current.kind === 'kitchen'
+        ? Number((res.question_obj as Record<string, unknown>)?.purged_questions) || 0
+        : 0
       setHistory(prev => [...prev, {
         q: current,
         answerLabel: selected?.join('、') || textNote || '',
         promoted: res.promoted_to_a,
+        purged,
         undo: {
           question_obj: res.question_obj,
           added_allergens: res.added_allergens,
@@ -250,16 +265,22 @@ export default function OwnerQuestionFlow({ sessionToken, onClose, onCountChange
             </div>
             <div className="owner-qa-bubble owner-qa-bubble-owner">{h.answerLabel}</div>
             <div className="owner-qa-applied">
-              <span className="owner-qa-applied-label"><Check size={13} strokeWidth={2.5} /> 反映しました</span>
+              <span className="owner-qa-applied-label">
+                <Check size={13} strokeWidth={2.5} />
+                {h.q.kind === 'kitchen' ? ' 関係する料理すべてに反映しました' : ' 反映しました'}
+              </span>
+              {(h.purged ?? 0) > 0 && (
+                <span className="owner-qa-promoted">この回答で{h.purged}問が不要になりました</span>
+              )}
               {h.promoted && <span className="owner-qa-promoted">この料理は店主確認済みになりました</span>}
-              {/* 直前の回答だけ取り消せる(誤タップの即修正) */}
-              {idx === history.length - 1 && (
+              {/* 直前の回答だけ取り消せる(誤タップの即修正)。厨房共通質問は波及が広く逆操作未対応 */}
+              {idx === history.length - 1 && h.q.kind !== 'kitchen' && (
                 <button type="button" className="owner-qa-undo" disabled={submitting} onClick={undoLast}>
                   <RotateCcw size={12} strokeWidth={2} /> 取り消す
                 </button>
               )}
             </div>
-            {h.commentSaved ? (
+            {h.q.kind === 'kitchen' ? null : h.commentSaved ? (
               <div className="owner-qa-applied"><Check size={13} strokeWidth={2.5} /> ひとことを保存しました</div>
             ) : (
               <button
@@ -289,19 +310,42 @@ export default function OwnerQuestionFlow({ sessionToken, onClose, onCountChange
             <div className="owner-qa-bubble owner-qa-bubble-ai">
               <span className="owner-qa-menu">「{current.menu_name}」</span>
               {current.question}
+              {isKitchen && (
+                <div className="owner-qa-kitchen-note">
+                  お店全体の質問です。回答は関係する料理すべてに反映されます
+                  {current.multi ? '（複数選べます）' : ''}
+                </div>
+              )}
             </div>
             <div className="owner-qa-options">
               {current.options.map((opt, i) => (
                 <button
                   key={i}
                   type="button"
-                  className="owner-qa-opt"
+                  className={`owner-qa-opt${current.multi && multiSel.includes(opt) ? ' active' : ''}`}
                   disabled={submitting}
-                  onClick={() => submitAnswer([opt])}
+                  onClick={() => {
+                    if (current.multi) {
+                      // 複数選択: タップでトグル→「決定」で送信
+                      setMultiSel(prev => prev.includes(opt) ? prev.filter(o => o !== opt) : [...prev, opt])
+                    } else {
+                      submitAnswer([opt])
+                    }
+                  }}
                 >
                   <span className="owner-qa-opt-num">{i + 1}</span>{opt}
                 </button>
               ))}
+              {current.multi && (
+                <button
+                  type="button"
+                  className="owner-qa-opt"
+                  disabled={submitting || multiSel.length === 0}
+                  onClick={() => submitAnswer(multiSel)}
+                >
+                  <Check size={14} strokeWidth={2.5} /> 決定{multiSel.length > 0 ? `(${multiSel.length}件)` : ''}
+                </button>
+              )}
               <button
                 type="button"
                 className={`owner-qa-opt owner-qa-opt-sub${inputMode?.kind === 'other' ? ' active' : ''}`}

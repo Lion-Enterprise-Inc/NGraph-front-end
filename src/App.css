@@ -10084,6 +10084,13 @@ textarea.form-input {
   color: #10a37f;
 }
 
+/* 厨房共通質問(お店全体)の注記 */
+.owner-qa-kitchen-note {
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--color-text-half);
+}
+
 /* 店主バナー: アクション横並び + 終了ボタン */
 .owner-banner-actions {
   display: flex;
