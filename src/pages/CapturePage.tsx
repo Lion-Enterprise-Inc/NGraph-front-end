@@ -2933,7 +2933,15 @@ export default function CapturePage({
             setOwnerPending(res.pending_count);
             setOwnerGateOpen(false);
           }}
-          onCancel={() => setOwnerGateOpen(false)}
+          onCancel={() => {
+            // お客様として見る = 店主トークンをURLごと捨てて客のクリーンURLへ。
+            // owner=を残したまま閉じるだけだと、リロードでモーダル再表示+
+            // そのURLを共有/ブックマークすると店主の鍵ごと配ってしまう(2026-06-11指摘)
+            const params = new URLSearchParams(window.location.search);
+            params.delete('owner');
+            const qs = params.toString();
+            window.location.replace(`${window.location.pathname}${qs ? `?${qs}` : ''}`);
+          }}
         />
       )}
 
