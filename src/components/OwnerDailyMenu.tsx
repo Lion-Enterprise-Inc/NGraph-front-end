@@ -246,7 +246,11 @@ export default function OwnerDailyMenu({ sessionToken, onClose, onSessionExpired
             </button>
             <div className="owner-qa-options">
               <button type="button" className="owner-qa-opt" disabled={submitting || drafts.length === 0} onClick={confirm}>
-                <Check size={15} strokeWidth={2.5} /> この内容で今日の献立にする
+                {submitting ? (
+                  <>登録しています<span className="typing-indicator"><span /><span /><span /></span></>
+                ) : (
+                  <><Check size={15} strokeWidth={2.5} /> この内容で今日の献立にする</>
+                )}
               </button>
               <button type="button" className="owner-qa-opt owner-qa-opt-sub" disabled={submitting}
                 onClick={() => { setDrafts([]); setStep('menu') }}>
