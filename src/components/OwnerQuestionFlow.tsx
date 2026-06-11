@@ -39,6 +39,8 @@ type OwnerQuestionFlowProps = {
   onSessionExpired?: () => void
 }
 
+const SKIP_STORE_KEY = 'omiseai_owner_qa_skipped'
+
 export default function OwnerQuestionFlow({ sessionToken, onClose, onCountChange, onSessionExpired }: OwnerQuestionFlowProps) {
   const [queue, setQueue] = useState<OwnerQuestion[]>([])
   const [history, setHistory] = useState<HistoryItem[]>([])
@@ -48,8 +50,14 @@ export default function OwnerQuestionFlow({ sessionToken, onClose, onCountChange
   const [inputMode, setInputMode] = useState<InputMode | null>(null)
   const [inputText, setInputText] = useState('')
   const [error, setError] = useState<string | null>(null)
+  // 「分からない(あとで答える)」のスキップ記憶。タブを閉じるまで有効(sessionStorage)、
+  // 次の来訪では再び聞く=回答データは作らない(分からないものを推測で埋めさせない)
+  const skippedKeysRef = useRef<Set<string>>(new Set())
+  const [skippedCount, setSkippedCount] = useState(0)
   const bottomRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
+
+  const skipKey = (q: OwnerQuestion) => `${q.menu_uid}::${q.question}`
 
   const isUnauthorized = (e: unknown) => e instanceof Error && e.message === 'unauthorized'
 
@@ -65,8 +73,9 @@ export default function OwnerQuestionFlow({ sessionToken, onClose, onCountChange
   const fetchQuestions = async () => {
     setLoading(true)
     try {
-      const res = await OwnerChatApi.questions(sessionToken, BATCH_SIZE)
-      setQueue(res.questions)
+      // スキップ分が配信枠を塞がないよう、スキップ数ぶん多めに取ってFEで除外する
+      const res = await OwnerChatApi.questions(sessionToken, BATCH_SIZE + skippedKeysRef.current.size)
+      setQueue(res.questions.filter(q => !skippedKeysRef.current.has(skipKey(q))).slice(0, BATCH_SIZE))
       setTotalRemaining(res.total_remaining)
       onCountChange?.(res.total_remaining)
     } catch (e: unknown) {
@@ -80,7 +89,17 @@ export default function OwnerQuestionFlow({ sessionToken, onClose, onCountChange
     }
   }
 
-  useEffect(() => { fetchQuestions() }, [])  // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    // スキップ記憶の復元(マウント後=hydration安全)
+    try {
+      const saved = sessionStorage.getItem(SKIP_STORE_KEY)
+      if (saved) {
+        skippedKeysRef.current = new Set(JSON.parse(saved) as string[])
+        setSkippedCount(skippedKeysRef.current.size)
+      }
+    } catch {}
+    fetchQuestions()
+  }, [])  // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' })
@@ -92,8 +111,24 @@ export default function OwnerQuestionFlow({ sessionToken, onClose, onCountChange
   }, [inputMode])
 
   const current = queue[0] ?? null
-  const batchDone = !loading && !current && totalRemaining > 0
-  const allDone = !loading && !current && totalRemaining === 0
+  // スキップ分を除いた「今answerできる残り」(表示・続行判定用)
+  const answerableRemaining = Math.max(totalRemaining - skippedCount, 0)
+  const batchDone = !loading && !current && answerableRemaining > 0
+  const allDone = !loading && !current && answerableRemaining === 0
+
+  const skipCurrent = () => {
+    if (!current || submitting) return
+    skippedKeysRef.current.add(skipKey(current))
+    setSkippedCount(skippedKeysRef.current.size)
+    try {
+      sessionStorage.setItem(SKIP_STORE_KEY, JSON.stringify([...skippedKeysRef.current]))
+    } catch {}
+    // サーバ側でも質問を末尾に回す(同じ品の次の質問が配信されるようになる)。失敗しても
+    // FE側スキップは成立するので待たない(次回また聞かれるだけ)
+    OwnerChatApi.skip(sessionToken, { menu_uid: current.menu_uid, question: current.question }).catch(() => {})
+    setQueue(prev => prev.slice(1))
+    closeInput()
+  }
 
   const submitAnswer = async (selected: string[] | undefined, textNote?: string) => {
     if (!current || submitting) return
@@ -245,6 +280,12 @@ export default function OwnerQuestionFlow({ sessionToken, onClose, onCountChange
           </div>
         ) : current ? (
           <div className="owner-qa-item">
+            {/* 残り問数+自動保存の明示(中断への安心感) */}
+            <div className="owner-qa-progress">
+              残り {answerableRemaining} 問
+              {skippedCount > 0 && ` ・ あとで答える ${skippedCount} 問`}
+              <span className="owner-qa-progress-note">回答は1問ごとに自動保存。いつでも中断できます</span>
+            </div>
             <div className="owner-qa-bubble owner-qa-bubble-ai">
               <span className="owner-qa-menu">「{current.menu_name}」</span>
               {current.question}
@@ -269,22 +310,33 @@ export default function OwnerQuestionFlow({ sessionToken, onClose, onCountChange
               >
                 <span className="owner-qa-opt-num">{current.options.length + 1}</span>その他(入力する)
               </button>
+              {/* 分からない=推測で答えさせない。データは作らず次回また聞く */}
+              <button
+                type="button"
+                className="owner-qa-opt owner-qa-opt-sub"
+                disabled={submitting}
+                onClick={skipCurrent}
+              >
+                <span className="owner-qa-opt-num">{current.options.length + 2}</span>分からない(あとで答える)
+              </button>
             </div>
           </div>
         ) : batchDone ? (
           <div className="owner-qa-item">
             <div className="owner-qa-bubble owner-qa-bubble-ai">
-              ありがとうございます。あと{totalRemaining}件の確認があります。続けますか？
+              ありがとうございます。ここまでの回答は保存済みです。あと{answerableRemaining}問あります。続けますか？
             </div>
             <div className="owner-qa-options">
               <button type="button" className="owner-qa-opt" onClick={continueBatch}><span className="owner-qa-opt-num">1</span>続ける</button>
-              <button type="button" className="owner-qa-opt owner-qa-opt-sub" onClick={onClose}><span className="owner-qa-opt-num">2</span>また今度</button>
+              <button type="button" className="owner-qa-opt owner-qa-opt-sub" onClick={onClose}><span className="owner-qa-opt-num">2</span>また今度(保存済み)</button>
             </div>
           </div>
         ) : allDone ? (
           <div className="owner-qa-item">
             <div className="owner-qa-bubble owner-qa-bubble-ai">
-              確認したいことは今のところありません。お疲れ様でした。
+              {skippedCount > 0
+                ? `今答えられる確認は以上です。お疲れ様でした。「あとで答える」にした${skippedCount}問は、次に開いた時にまた聞きます。`
+                : '確認したいことは今のところありません。お疲れ様でした。'}
             </div>
             <div className="owner-qa-options">
               <button type="button" className="owner-qa-opt owner-qa-opt-sub" onClick={onClose}>閉じる</button>

@@ -9876,6 +9876,23 @@ textarea.form-input {
   text-align: center;
 }
 
+/* 残り問数+自動保存の明示(2026-06-11店主フィードバック) */
+.owner-qa-progress {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-secondary, rgba(0, 0, 0, 0.55));
+  margin: 2px 0 8px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+}
+.owner-qa-progress-note {
+  font-weight: 400;
+  font-size: 11px;
+  opacity: 0.75;
+}
+
 /* パスコードゲート */
 .owner-gate-overlay {
   position: fixed;

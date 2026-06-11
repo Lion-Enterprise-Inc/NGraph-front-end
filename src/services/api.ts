@@ -1706,6 +1706,17 @@ export const OwnerChatApi = {
     if (!resp.ok) throw new Error('undo');
     return resp.json();
   },
+  skip: async (sessionToken: string, payload: { menu_uid: string; question: string }): Promise<{ ok: boolean }> => {
+    // 「分からない(あとで答える)」: サーバ側で質問を配列末尾に回す(次の質問が表に出る)
+    const resp = await fetch(`${API_BASE_URL}/owner-chat/question/skip`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Owner-Token': sessionToken },
+      body: JSON.stringify(payload),
+    });
+    if (resp.status === 401) throw new Error('unauthorized');
+    if (!resp.ok) throw new Error('skip');
+    return resp.json();
+  },
   comment: async (sessionToken: string, menuUid: string, comment: string): Promise<{ ok: boolean }> => {
     const resp = await fetch(`${API_BASE_URL}/owner-chat/comment`, {
       method: 'POST',
