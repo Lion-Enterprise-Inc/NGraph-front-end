@@ -10195,23 +10195,28 @@ textarea.form-input {
 
 /* ヒーロー中央浮きの入力欄は、キーボード表示中(フォーカス中)は画面下ベタ付けに切替。
    fixed+bottom:28dvh のままだと iOS キーボードのビジュアルビューポートのパンで
-   ヘッダー/店主バナーに重なって崩れる(2026-06-10実機)。owner-input-bar と同じ方式 */
-.capture-page.is-hero-landing .chat-dock.chat-dock-floating:focus-within {
-  bottom: 0;
-  left: 0;
-  right: 0;
-  transform: none;
-  max-width: 100%;
-  padding: 10px 14px calc(env(safe-area-inset-bottom, 0px) + 10px);
-  background: var(--color-surface);
-  border-top: 1px solid var(--color-border-strong);
-  z-index: 60;
-}
+   ヘッダー/店主バナーに重なって崩れる(2026-06-10実機)。owner-input-bar と同じ方式。
+   ⚠ タッチ端末限定: PCでも発動すると入力クリックのたびにバーが画面下へ飛んで
+   崩れて見える(2026-06-11実機指摘)。キーボード問題はソフトキーボードの話なので
+   pointer:coarse に限定する */
+@media (pointer: coarse) {
+  .capture-page.is-hero-landing .chat-dock.chat-dock-floating:focus-within {
+    bottom: 0;
+    left: 0;
+    right: 0;
+    transform: none;
+    max-width: 100%;
+    padding: 10px 14px calc(env(safe-area-inset-bottom, 0px) + 10px);
+    background: var(--color-surface);
+    border-top: 1px solid var(--color-border-strong);
+    z-index: 60;
+  }
 
-.capture-page.is-hero-landing:has(.chat-dock-floating textarea:focus) .store-home {
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.15s ease;
+  .capture-page.is-hero-landing:has(.chat-dock-floating textarea:focus) .store-home {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.15s ease;
+  }
 }
 
 /* ── 店主モード: 今日の献立(OwnerDailyMenu) ── */
