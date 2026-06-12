@@ -10149,6 +10149,18 @@ textarea.form-input {
 /* 入力バー表示中はスレッド下部に余白(バーで隠れないように) */
 .owner-qa { padding-bottom: 24px; }
 
+/* チャット風の入場アニメ: 新しい質問/回答が下からスッと入る
+   (無アニメだと同じ位置で中身が差し替わるだけに見える。髙橋さん実機FB 2026-06-12) */
+.owner-qa-item,
+.owner-qa-bubble-owner,
+.owner-qa-applied {
+  animation: ownerQaIn 0.28s ease both;
+}
+@keyframes ownerQaIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+
 .owner-qa-opt.active {
   border-color: #10a37f;
   color: #10a37f;

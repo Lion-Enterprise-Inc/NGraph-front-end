@@ -1711,6 +1711,9 @@ export const OwnerChatApi = {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'X-Owner-Token': sessionToken },
       body: JSON.stringify(payload),
+      // 波及処理で数秒かかるが、万一ハングしたら自動エラー→リトライ可能に
+      // (無期限待ちだとUIが「反映中…」のまま固まり、止まってるのか分からない)
+      signal: AbortSignal.timeout(25000),
     });
     if (resp.status === 401) throw new Error('unauthorized');
     if (resp.status === 409) throw new Error('conflict');
@@ -1751,6 +1754,7 @@ export const OwnerChatApi = {
       method: 'POST',
       headers: { 'X-Owner-Token': sessionToken },
       body: form,
+      signal: AbortSignal.timeout(60000),  // vision読み取りは数秒〜十数秒
     });
     if (resp.status === 401) throw new Error('unauthorized');
     if (resp.status === 409) throw new Error('conflict');
@@ -1765,6 +1769,7 @@ export const OwnerChatApi = {
       method: 'POST',
       headers: { 'X-Owner-Token': sessionToken },
       body: form,
+      signal: AbortSignal.timeout(60000),  // vision読み取りは数秒〜十数秒
     });
     if (resp.status === 401) throw new Error('unauthorized');
     if (!resp.ok) throw new Error('procurement_photo');

@@ -356,7 +356,9 @@ export default function OwnerQuestionFlow({ sessionToken, onClose, onCountChange
             <span className="typing-indicator"><span /><span /><span /></span>
           </div>
         ) : current ? (
-          <div className="owner-qa-item">
+          // key=質問単位: 次の質問でDOMを作り直し、チャット風の入場アニメを毎回再生する
+          // (同じDOMの中身だけ差し替わると「その場で項目が変わるだけ」に見える)
+          <div className="owner-qa-item" key={`${current.menu_uid}::${current.question}`}>
             {/* 残り問数+自動保存の明示(中断への安心感) */}
             <div className="owner-qa-progress">
               残り {answerableRemaining} 問
@@ -467,7 +469,8 @@ export default function OwnerQuestionFlow({ sessionToken, onClose, onCountChange
                       onClick={() => submitAnswer(multiSel)}
                     >
                       <Check size={15} strokeWidth={2.5} />
-                      {multiSel.length > 0 ? ` 選んだ${multiSel.length}件で決定` : ' 選んでから決定'}
+                      {submitting ? ' 反映中…'
+                        : multiSel.length > 0 ? ` 選んだ${multiSel.length}件で決定` : ' 選んでから決定'}
                     </button>
                   )}
                   <button
@@ -494,6 +497,13 @@ export default function OwnerQuestionFlow({ sessionToken, onClose, onCountChange
                 分からない(あとで答える)
               </button>
             </div>
+            {/* 送信中の明示(波及処理で数秒かかる。無表示だと「止まってる?」と不安にさせる) */}
+            {submitting && (
+              <div className="owner-qa-bubble owner-qa-bubble-ai owner-qa-loading">
+                反映しています
+                <span className="typing-indicator"><span /><span /><span /></span>
+              </div>
+            )}
           </div>
         ) : batchDone ? (
           <div className="owner-qa-item">
