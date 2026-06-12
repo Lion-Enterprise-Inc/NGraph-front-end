@@ -312,8 +312,8 @@ export default function OwnerQuestionFlow({ sessionToken, onClose, onCountChange
         {history.map((h, idx) => (
           <div key={`${h.q.menu_uid}-${idx}`} className="owner-qa-item">
             <div className="owner-qa-bubble owner-qa-bubble-ai">
-              <span className="owner-qa-menu">「{h.q.menu_name}」</span>
-              {h.q.question}
+              <span className="owner-qa-menu">{h.q.menu_name}</span>
+              <span className="owner-qa-question">{h.q.question}</span>
             </div>
             <div className="owner-qa-bubble owner-qa-bubble-owner">{h.answerLabel}</div>
             <div className="owner-qa-applied">
@@ -364,8 +364,8 @@ export default function OwnerQuestionFlow({ sessionToken, onClose, onCountChange
               <span className="owner-qa-progress-note">回答は1問ごとに自動保存。いつでも中断できます</span>
             </div>
             <div className="owner-qa-bubble owner-qa-bubble-ai">
-              <span className="owner-qa-menu">「{current.menu_name}」</span>
-              {current.question}
+              <span className="owner-qa-menu">{current.menu_name}</span>
+              <span className="owner-qa-question">{current.question}</span>
               {isStoreLevel && (
                 <div className="owner-qa-kitchen-note">
                   {current.kind === 'kitchen'
@@ -462,11 +462,12 @@ export default function OwnerQuestionFlow({ sessionToken, onClose, onCountChange
                   {current.multi && (
                     <button
                       type="button"
-                      className="owner-qa-opt"
+                      className="owner-qa-opt owner-qa-decide"
                       disabled={submitting || multiSel.length === 0}
                       onClick={() => submitAnswer(multiSel)}
                     >
-                      <Check size={14} strokeWidth={2.5} /> 決定{multiSel.length > 0 ? `(${multiSel.length}件)` : ''}
+                      <Check size={15} strokeWidth={2.5} />
+                      {multiSel.length > 0 ? ` 選んだ${multiSel.length}件で決定` : ' 選んでから決定'}
                     </button>
                   )}
                   <button
