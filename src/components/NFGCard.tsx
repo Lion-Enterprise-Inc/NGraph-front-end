@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
+import { ThumbsUp, ThumbsDown } from "lucide-react";
 import type { QuickExplainItem } from "../services/api";
 import { getCategoryLabel } from "../i18n/categoryLabels";
 import { getOwnerCommentLabel, getAllergenTrustNote, isAllergensVerified } from "../i18n/trustCopy";
@@ -187,6 +188,9 @@ type Props = {
   likedMenus?: Set<string>;
   onLike?: (menuUid: string) => void;
   onSuggestEdit?: (info: { name_jp: string; menu_uid?: string }) => void;
+  /** 料理単位の解説品質フィードバック(good/bad)。解説精度の学習ループに使う */
+  onNfgFeedback?: (menuUid: string, type: 'good' | 'bad') => void;
+  nfgFeedback?: Record<string, 'good' | 'bad'>;
   onAskAbout?: (item: QuickExplainItem) => void;
   /** 店主モード時のみ: カードから直接この料理の編集パネルを開く */
   onOwnerEdit?: (menuUid: string) => void;
@@ -291,7 +295,8 @@ function TasteChart({ values, labels }: { values: Record<string, number>; labels
 }
 
 export default function NFGCard({
-  items, language, likedMenus, onLike, onSuggestEdit, onAskAbout, onOwnerEdit, onPhotoUpload,
+  items, language, likedMenus, onLike, onSuggestEdit, onNfgFeedback, nfgFeedback,
+  onAskAbout, onOwnerEdit, onPhotoUpload,
   photoUploading, userPhoto, restaurantName, restaurantCity, showRestaurantInfo, copy,
 }: Props) {
   const [expandedIdx, setExpandedIdx] = useState<Set<number>>(new Set());
@@ -592,6 +597,38 @@ export default function NFGCard({
                       >
                         {copy.suggestEdit}
                       </button>
+                    )}
+                  </div>
+                )}
+                {/* 解説品質フィードバック(料理単位)。解説精度の学習ループのデータ源 */}
+                {item.menu_uid && onNfgFeedback && (
+                  <div className="nfgcard-feedback">
+                    {nfgFeedback?.[item.menu_uid] ? (
+                      <span className="nfgcard-feedback-thanks">
+                        {(({ ja: 'フィードバックありがとうございます', en: 'Thanks for your feedback!', ko: '피드백 감사합니다', 'zh-Hans': '感谢您的反馈', 'zh-Hant': '感謝您的反饋' } as Record<string, string>)[language] || 'Thanks for your feedback!')}
+                      </span>
+                    ) : (
+                      <>
+                        <span className="nfgcard-feedback-label">
+                          {(({ ja: 'この解説は役に立ちましたか？', en: 'Was this helpful?', ko: '이 설명이 도움이 되었나요?', 'zh-Hans': '这些介绍有帮助吗？', 'zh-Hant': '這些介紹有幫助嗎？' } as Record<string, string>)[language] || 'Was this helpful?')}
+                        </span>
+                        <button
+                          type="button"
+                          className="nfgcard-feedback-btn"
+                          aria-label="Good"
+                          onClick={(e) => { e.stopPropagation(); onNfgFeedback(item.menu_uid!, 'good'); }}
+                        >
+                          <ThumbsUp size={14} />
+                        </button>
+                        <button
+                          type="button"
+                          className="nfgcard-feedback-btn"
+                          aria-label="Bad"
+                          onClick={(e) => { e.stopPropagation(); onNfgFeedback(item.menu_uid!, 'bad'); }}
+                        >
+                          <ThumbsDown size={14} />
+                        </button>
+                      </>
                     )}
                   </div>
                 )}

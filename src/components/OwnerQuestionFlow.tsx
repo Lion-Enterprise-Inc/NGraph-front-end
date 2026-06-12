@@ -115,7 +115,8 @@ export default function OwnerQuestionFlow({ sessionToken, onClose, onCountChange
   }, [inputMode])
 
   const current = queue[0] ?? null
-  const isKitchen = current?.kind === 'kitchen'
+  // 店全体質問(kitchen=厨房共通/store=店舗プロフィール)。undo・ひとこと非対象
+  const isStoreLevel = current?.kind === 'kitchen' || current?.kind === 'store'
 
   // 質問が変わったら複数選択をリセット
   useEffect(() => {
@@ -152,7 +153,7 @@ export default function OwnerQuestionFlow({ sessionToken, onClose, onCountChange
         selected,
         text_note: textNote,
       })
-      const purged = current.kind === 'kitchen'
+      const purged = current.kind === 'kitchen' || current.kind === 'store'
         ? Number((res.question_obj as Record<string, unknown>)?.purged_questions) || 0
         : 0
       setHistory(prev => [...prev, {
@@ -267,20 +268,21 @@ export default function OwnerQuestionFlow({ sessionToken, onClose, onCountChange
             <div className="owner-qa-applied">
               <span className="owner-qa-applied-label">
                 <Check size={13} strokeWidth={2.5} />
-                {h.q.kind === 'kitchen' ? ' 関係する料理すべてに反映しました' : ' 反映しました'}
+                {h.q.kind === 'kitchen' ? ' 関係する料理すべてに反映しました'
+                  : h.q.kind === 'store' ? ' お店の案内に反映しました' : ' 反映しました'}
               </span>
               {(h.purged ?? 0) > 0 && (
                 <span className="owner-qa-promoted">この回答で{h.purged}問が不要になりました</span>
               )}
               {h.promoted && <span className="owner-qa-promoted">この料理は店主確認済みになりました</span>}
-              {/* 直前の回答だけ取り消せる(誤タップの即修正)。厨房共通質問は波及が広く逆操作未対応 */}
-              {idx === history.length - 1 && h.q.kind !== 'kitchen' && (
+              {/* 直前の回答だけ取り消せる(誤タップの即修正)。店全体質問は波及が広く逆操作未対応 */}
+              {idx === history.length - 1 && (h.q.kind ?? 'menu') === 'menu' && (
                 <button type="button" className="owner-qa-undo" disabled={submitting} onClick={undoLast}>
                   <RotateCcw size={12} strokeWidth={2} /> 取り消す
                 </button>
               )}
             </div>
-            {h.q.kind === 'kitchen' ? null : h.commentSaved ? (
+            {(h.q.kind ?? 'menu') !== 'menu' ? null : h.commentSaved ? (
               <div className="owner-qa-applied"><Check size={13} strokeWidth={2.5} /> ひとことを保存しました</div>
             ) : (
               <button
@@ -310,9 +312,11 @@ export default function OwnerQuestionFlow({ sessionToken, onClose, onCountChange
             <div className="owner-qa-bubble owner-qa-bubble-ai">
               <span className="owner-qa-menu">「{current.menu_name}」</span>
               {current.question}
-              {isKitchen && (
+              {isStoreLevel && (
                 <div className="owner-qa-kitchen-note">
-                  お店全体の質問です。回答は関係する料理すべてに反映されます
+                  {current.kind === 'kitchen'
+                    ? 'お店全体の質問です。回答は関係する料理すべてに反映されます'
+                    : 'お店全体の質問です。回答はお客様への案内にそのまま使われます'}
                   {current.multi ? '（複数選べます）' : ''}
                 </div>
               )}
@@ -352,7 +356,8 @@ export default function OwnerQuestionFlow({ sessionToken, onClose, onCountChange
                 disabled={submitting}
                 onClick={() => openInput({ kind: 'other' })}
               >
-                <span className="owner-qa-opt-num">{current.options.length + 1}</span>その他(入力する)
+                <span className="owner-qa-opt-num">{current.options.length + 1}</span>
+                {current.options.length === 0 ? '入力する' : 'その他(入力する)'}
               </button>
               {/* 分からない=推測で答えさせない。データは作らず次回また聞く */}
               <button

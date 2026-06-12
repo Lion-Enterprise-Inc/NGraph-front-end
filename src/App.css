@@ -9136,6 +9136,40 @@ textarea.form-input {
   cursor: pointer;
   color: var(--color-text-secondary);
 }
+/* 解説品質フィードバック(料理単位): 軽いワンタップ導線、回答後はお礼に置き換え */
+.nfgcard-feedback {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  padding-top: 6px;
+  border-top: 1px solid var(--color-border, rgba(255,255,255,0.06));
+}
+.nfgcard-feedback-label {
+  font-size: 11px;
+  color: var(--color-text-secondary);
+}
+.nfgcard-feedback-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-surface-chip, rgba(255,255,255,0.06));
+  border: 1px solid var(--color-border, rgba(255,255,255,0.08));
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  cursor: pointer;
+  color: var(--color-text-secondary);
+}
+.nfgcard-feedback-btn:active {
+  color: #10a37f;
+  border-color: #10a37f;
+}
+.nfgcard-feedback-thanks {
+  font-size: 11px;
+  color: #10a37f;
+}
+
 .nfgcard-action-edit {
   margin-left: auto;
   background: rgba(79, 140, 255, 0.15);

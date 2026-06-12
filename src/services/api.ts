@@ -1653,8 +1653,9 @@ export interface OwnerQuestion {
   field: string | null;
   question: string;
   options: string[];
-  // kitchen = 厨房共通質問(お店全体。回答が該当メニュー全部に波及、undo/ひとこと対象外)
-  kind?: 'menu' | 'kitchen';
+  // kitchen = 厨房共通質問(回答が該当メニュー全部に波及) / store = 店舗プロフィール質問
+  // (回答が店の記録フィールドに直接入る)。どちらも「お店全体」表示でundo/ひとこと対象外
+  kind?: 'menu' | 'kitchen' | 'store';
   // 複数選択可(トグル+決定ボタンで回答)
   multi?: boolean;
 }

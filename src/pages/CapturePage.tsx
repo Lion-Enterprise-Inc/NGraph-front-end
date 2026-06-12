@@ -2236,6 +2236,8 @@ export default function CapturePage({
                         }}
                         onAskAbout={handleAskAbout}
                         onOwnerEdit={ownerSession ? (uid) => setOwnerEditMenuUid(uid) : undefined}
+                        onNfgFeedback={handleNfgFeedback}
+                        nfgFeedback={nfgFeedback}
                         onPhotoUpload={handlePhotoUpload}
                         photoUploading={photoUploading}
                         cleanUrlBase={cleanUrlBase || undefined}
@@ -2435,6 +2437,8 @@ export default function CapturePage({
                         }}
                         onAskAbout={handleAskAbout}
                         onOwnerEdit={ownerSession ? (uid) => setOwnerEditMenuUid(uid) : undefined}
+                        onNfgFeedback={handleNfgFeedback}
+                        nfgFeedback={nfgFeedback}
                         onPhotoUpload={handlePhotoUpload}
                         photoUploading={photoUploading}
                         cleanUrlBase={cleanUrlBase || undefined}
