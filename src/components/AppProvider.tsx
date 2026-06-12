@@ -116,6 +116,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (typeof window === "undefined") return;
     if (!restaurantSlug) return;  // 店舗未確定なら出さない
+    // 店主リンク(owner=)から入った端末には客向けオンボを出さない。
+    // 出すと店主ゲート(パスコード)や質問フローの上に言語選択が被って初回体験を壊す
+    if (new URLSearchParams(window.location.search).has("owner")) {
+      try { localStorage.setItem("omiseai_onboarded", "true"); } catch {}
+      return;
+    }
     if (localStorage.getItem("omiseai_onboarded") === "true") return;
     // 既に何度か言語選択した実績がある場合は出さない
     if (localStorage.getItem("appLanguage")) {
