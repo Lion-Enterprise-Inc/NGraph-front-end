@@ -683,6 +683,25 @@ export default function CapturePage({
   // NFGカードの「✏️この料理を直す」で開く個別編集パネルの対象menu_uid
   const [ownerEditMenuUid, setOwnerEditMenuUid] = useState<string | null>(null);
   const [ownerAllergenMaster, setOwnerAllergenMaster] = useState<OwnerAllergen[]>([]);
+  // 納品書・発注書の撮影(仕入れ語彙の蓄積。金額は読み取らない)
+  const [procurementBusy, setProcurementBusy] = useState(false);
+  const [procurementMsg, setProcurementMsg] = useState<string | null>(null);
+  const procurementInputRef = useRef<HTMLInputElement | null>(null);
+  const handleProcurementPhoto = async (file: File) => {
+    if (!ownerSession || procurementBusy) return;
+    setProcurementBusy(true);
+    setProcurementMsg(null);
+    try {
+      const res = await OwnerChatApi.procurementPhoto(ownerSession.sessionToken, file);
+      setProcurementMsg(res.readable
+        ? `${res.products.length}商品を読み取りました（金額は読み取っていません）。仕入れリスト累計${res.total_products}件`
+        : '納品書を読み取れませんでした。商品名がはっきり写るように撮ってください');
+    } catch {
+      setProcurementMsg('読み取りに失敗しました。もう一度お試しください');
+    } finally {
+      setProcurementBusy(false);
+    }
+  };
 
   // 店主モードに入る: 保存済みセッションがあればパスコードなしで復元、無ければゲートを出す
   const enterOwnerMode = useCallback(() => {
@@ -2031,6 +2050,27 @@ export default function CapturePage({
             <button type="button" className="owner-banner-btn owner-banner-btn-ghost" onClick={() => { setOwnerQAActive(false); setOwnerDailyActive(false); setOwnerEditActive(false); openMenuList(); }}>
               メニューを修正
             </button>
+            {/* 納品書・発注書の撮影: 仕入れ語彙を蓄積→AIの質問が店の現実に寄る(金額は読み取らない) */}
+            <input
+              ref={procurementInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              capture="environment"
+              style={{ display: 'none' }}
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) handleProcurementPhoto(f);
+                e.target.value = '';
+              }}
+            />
+            <button
+              type="button"
+              className="owner-banner-btn owner-banner-btn-ghost"
+              disabled={procurementBusy}
+              onClick={() => procurementInputRef.current?.click()}
+            >
+              {procurementBusy ? '読み取り中…' : '納品書を撮る'}
+            </button>
             {/* 店主モードごと抜けて客画面へ(セッションは保持、右下や再タップで戻れる) */}
             <button
               type="button"
@@ -2040,6 +2080,13 @@ export default function CapturePage({
               店主モードを終了
             </button>
           </div>
+        </div>
+      )}
+      {/* 納品書読み取りの結果(バナーの横スクロール行の外に出す) */}
+      {ownerSession && procurementMsg && (
+        <div className="owner-banner-note">
+          {procurementMsg}
+          <button type="button" className="owner-banner-note-close" onClick={() => setProcurementMsg(null)} aria-label="閉じる">✕</button>
         </div>
       )}
 

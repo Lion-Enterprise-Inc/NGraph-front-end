@@ -1,8 +1,8 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { Check, RotateCcw, X } from 'lucide-react'
-import { OwnerChatApi, type OwnerQuestion } from '../services/api'
+import { Camera, Check, RotateCcw, X } from 'lucide-react'
+import { OwnerChatApi, type OwnerQuestion, type PhotoAnalyzeResult } from '../services/api'
 
 // 店主モードの質問キュー消化フロー。チャット風の見た目だが LLM は介在せず、
 // 質問提示→番号選択肢タップ→反映、を FE が決定論的に進める(LLM任せにしない)。
@@ -60,6 +60,10 @@ export default function OwnerQuestionFlow({ sessionToken, onClose, onCountChange
   const [inputText, setInputText] = useState('')
   // 複数選択可の質問(厨房のcheckbox)用: トグル選択→「決定」で送信
   const [multiSel, setMultiSel] = useState<string[]>([])
+  // photo質問用: 撮影→読み取り結果→店主が確認して反映(3段原則)
+  const [photoBusy, setPhotoBusy] = useState(false)
+  const [photoResult, setPhotoResult] = useState<PhotoAnalyzeResult | null>(null)
+  const photoInputRef = useRef<HTMLInputElement>(null)
   const [error, setError] = useState<string | null>(null)
   // 「分からない(あとで答える)」のスキップ記憶。タブを閉じるまで有効(sessionStorage)、
   // 次の来訪では再び聞く=回答データは作らない(分からないものを推測で埋めさせない)
@@ -124,10 +128,35 @@ export default function OwnerQuestionFlow({ sessionToken, onClose, onCountChange
   const current = queue[0] ?? null
   const isStoreLevel = isStoreLevelKind(current)
 
-  // 質問が変わったら複数選択をリセット
+  // 質問が変わったら複数選択・撮影結果をリセット
   useEffect(() => {
     setMultiSel([])
+    setPhotoResult(null)
+    setPhotoBusy(false)
   }, [current?.menu_uid, current?.question])
+
+  const handlePhotoSelected = async (file: File) => {
+    if (!current || photoBusy) return
+    setPhotoBusy(true)
+    setError(null)
+    try {
+      const res = await OwnerChatApi.photoAnalyze(sessionToken, current.menu_uid, current.question, file)
+      setPhotoResult(res)
+    } catch (e: unknown) {
+      if (isUnauthorized(e)) {
+        onSessionExpired?.()
+        return
+      }
+      if (e instanceof Error && e.message === 'conflict') {
+        setQueue(prev => prev.slice(1))
+        fetchQuestions()
+        return
+      }
+      setError('読み取りに失敗しました。もう一度お試しください。')
+    } finally {
+      setPhotoBusy(false)
+    }
+  }
 
   // スキップ分を除いた「今answerできる残り」(表示・続行判定用)
   const answerableRemaining = Math.max(totalRemaining - skippedCount, 0)
@@ -347,43 +376,110 @@ export default function OwnerQuestionFlow({ sessionToken, onClose, onCountChange
               )}
             </div>
             <div className="owner-qa-options">
-              {current.options.map((opt, i) => (
-                <button
-                  key={i}
-                  type="button"
-                  className={`owner-qa-opt${current.multi && multiSel.includes(opt) ? ' active' : ''}`}
-                  disabled={submitting}
-                  onClick={() => {
-                    if (current.multi) {
-                      // 複数選択: タップでトグル→「決定」で送信
-                      setMultiSel(prev => prev.includes(opt) ? prev.filter(o => o !== opt) : [...prev, opt])
-                    } else {
-                      submitAnswer([opt])
-                    }
-                  }}
-                >
-                  <span className="owner-qa-opt-num">{i + 1}</span>{opt}
-                </button>
-              ))}
-              {current.multi && (
-                <button
-                  type="button"
-                  className="owner-qa-opt"
-                  disabled={submitting || multiSel.length === 0}
-                  onClick={() => submitAnswer(multiSel)}
-                >
-                  <Check size={14} strokeWidth={2.5} /> 決定{multiSel.length > 0 ? `(${multiSel.length}件)` : ''}
-                </button>
+              {current.qtype === 'photo' ? (
+                <>
+                  {/* 撮影で答える質問: 撮る→読み取り結果を確認→反映(3段原則) */}
+                  <input
+                    ref={photoInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    capture="environment"
+                    style={{ display: 'none' }}
+                    onChange={(e) => {
+                      const f = e.target.files?.[0]
+                      if (f) handlePhotoSelected(f)
+                      e.target.value = ''
+                    }}
+                  />
+                  {photoResult?.readable ? (
+                    <div className="owner-qa-photo-result">
+                      <div className="owner-qa-photo-read">
+                        読み取れた原材料{photoResult.product_name ? `（${photoResult.product_name}）` : ''}:
+                      </div>
+                      <div className="owner-qa-photo-chips">
+                        {photoResult.ingredients.map((ing, i) => (
+                          <span key={i} className="owner-qa-photo-chip">{ing}</span>
+                        ))}
+                      </div>
+                      <button
+                        type="button"
+                        className="owner-qa-opt"
+                        disabled={submitting}
+                        onClick={() => submitAnswer(
+                          photoResult.ingredients,
+                          `📷 ${photoResult.product_name || 'パッケージ'}の原材料表示より`,
+                        )}
+                      >
+                        <Check size={14} strokeWidth={2.5} /> この内容で反映
+                      </button>
+                      <button
+                        type="button"
+                        className="owner-qa-opt owner-qa-opt-sub"
+                        disabled={submitting || photoBusy}
+                        onClick={() => { setPhotoResult(null); photoInputRef.current?.click() }}
+                      >
+                        撮り直す
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      {photoResult && !photoResult.readable && (
+                        <div className="owner-qa-photo-read">
+                          原材料表示を読み取れませんでした。表示部分がはっきり写るように撮ってください
+                        </div>
+                      )}
+                      <button
+                        type="button"
+                        className="owner-qa-opt"
+                        disabled={photoBusy || submitting}
+                        onClick={() => photoInputRef.current?.click()}
+                      >
+                        <Camera size={15} strokeWidth={2} /> {photoBusy ? '読み取り中…' : 'パッケージ裏を撮影する'}
+                      </button>
+                    </>
+                  )}
+                </>
+              ) : (
+                <>
+                  {current.options.map((opt, i) => (
+                    <button
+                      key={i}
+                      type="button"
+                      className={`owner-qa-opt${current.multi && multiSel.includes(opt) ? ' active' : ''}`}
+                      disabled={submitting}
+                      onClick={() => {
+                        if (current.multi) {
+                          // 複数選択: タップでトグル→「決定」で送信
+                          setMultiSel(prev => prev.includes(opt) ? prev.filter(o => o !== opt) : [...prev, opt])
+                        } else {
+                          submitAnswer([opt])
+                        }
+                      }}
+                    >
+                      <span className="owner-qa-opt-num">{i + 1}</span>{opt}
+                    </button>
+                  ))}
+                  {current.multi && (
+                    <button
+                      type="button"
+                      className="owner-qa-opt"
+                      disabled={submitting || multiSel.length === 0}
+                      onClick={() => submitAnswer(multiSel)}
+                    >
+                      <Check size={14} strokeWidth={2.5} /> 決定{multiSel.length > 0 ? `(${multiSel.length}件)` : ''}
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    className={`owner-qa-opt owner-qa-opt-sub${inputMode?.kind === 'other' ? ' active' : ''}`}
+                    disabled={submitting}
+                    onClick={() => openInput({ kind: 'other' })}
+                  >
+                    <span className="owner-qa-opt-num">{current.options.length + 1}</span>
+                    {current.options.length === 0 ? '入力する' : 'その他(入力する)'}
+                  </button>
+                </>
               )}
-              <button
-                type="button"
-                className={`owner-qa-opt owner-qa-opt-sub${inputMode?.kind === 'other' ? ' active' : ''}`}
-                disabled={submitting}
-                onClick={() => openInput({ kind: 'other' })}
-              >
-                <span className="owner-qa-opt-num">{current.options.length + 1}</span>
-                {current.options.length === 0 ? '入力する' : 'その他(入力する)'}
-              </button>
               {/* 分からない=推測で答えさせない。データは作らず次回また聞く */}
               <button
                 type="button"
@@ -391,7 +487,10 @@ export default function OwnerQuestionFlow({ sessionToken, onClose, onCountChange
                 disabled={submitting}
                 onClick={skipCurrent}
               >
-                <span className="owner-qa-opt-num">{current.options.length + 2}</span>分からない(あとで答える)
+                {current.qtype !== 'photo' && (
+                  <span className="owner-qa-opt-num">{current.options.length + 2}</span>
+                )}
+                分からない(あとで答える)
               </button>
             </div>
           </div>

@@ -1660,6 +1660,23 @@ export interface OwnerQuestion {
   multi?: boolean;
   // 自由入力の文字数上限(書込先フィールドのカラム長。BEの無言切り捨て防止)
   max_input?: number | null;
+  // 回答形式: select(選択肢タップ) / photo(パッケージ裏の撮影で回答)
+  qtype?: 'select' | 'photo';
+}
+
+export interface PhotoAnalyzeResult {
+  ok: boolean;
+  readable: boolean;
+  product_name: string | null;
+  ingredients: string[];
+  photo_url: string | null;
+}
+
+export interface ProcurementPhotoResult {
+  ok: boolean;
+  readable: boolean;
+  products: string[];
+  total_products: number;
 }
 
 export const OwnerChatApi = {
@@ -1722,6 +1739,35 @@ export const OwnerChatApi = {
     });
     if (resp.status === 401) throw new Error('unauthorized');
     if (!resp.ok) throw new Error('skip');
+    return resp.json();
+  },
+  photoAnalyze: async (sessionToken: string, menuUid: string, question: string, image: File): Promise<PhotoAnalyzeResult> => {
+    // photo質問への撮影回答(読み取りのみ)。反映は店主が内容確認後に answer で行う(3段原則)
+    const form = new FormData();
+    form.append('menu_uid', menuUid);
+    form.append('question', question);
+    form.append('image', image);
+    const resp = await fetch(`${API_BASE_URL}/owner-chat/photo-analyze`, {
+      method: 'POST',
+      headers: { 'X-Owner-Token': sessionToken },
+      body: form,
+    });
+    if (resp.status === 401) throw new Error('unauthorized');
+    if (resp.status === 409) throw new Error('conflict');
+    if (!resp.ok) throw new Error('photo_analyze');
+    return resp.json();
+  },
+  procurementPhoto: async (sessionToken: string, image: File): Promise<ProcurementPhotoResult> => {
+    // 納品書・発注書の撮影(商品名のみ読み取り。金額・仕入先は読み取らない)
+    const form = new FormData();
+    form.append('image', image);
+    const resp = await fetch(`${API_BASE_URL}/owner-chat/procurement-photo`, {
+      method: 'POST',
+      headers: { 'X-Owner-Token': sessionToken },
+      body: form,
+    });
+    if (resp.status === 401) throw new Error('unauthorized');
+    if (!resp.ok) throw new Error('procurement_photo');
     return resp.json();
   },
   comment: async (sessionToken: string, menuUid: string, comment: string): Promise<{ ok: boolean }> => {

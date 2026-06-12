@@ -9725,6 +9725,27 @@ textarea.form-input {
 
 .owner-banner::-webkit-scrollbar { display: none; }
 
+/* 納品書読み取り結果(バナー直下の1行通知) */
+.owner-banner-note {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  font-size: 12px;
+  color: var(--color-text);
+  background: rgba(16, 163, 127, 0.08);
+  border-bottom: 1px solid rgba(16, 163, 127, 0.2);
+}
+.owner-banner-note-close {
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: var(--color-text-half);
+  cursor: pointer;
+  font-size: 12px;
+  flex: none;
+}
+
 .owner-banner-label {
   font-size: 12px;
   font-weight: 700;
@@ -10123,6 +10144,31 @@ textarea.form-input {
   margin-top: 6px;
   font-size: 12px;
   color: var(--color-text-half);
+}
+
+/* photo質問: 読み取り結果の確認カード */
+.owner-qa-photo-result {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+.owner-qa-photo-read {
+  font-size: 13px;
+  color: var(--color-text);
+}
+.owner-qa-photo-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.owner-qa-photo-chip {
+  background: rgba(16, 163, 127, 0.12);
+  border: 1px solid rgba(16, 163, 127, 0.35);
+  color: var(--color-text);
+  border-radius: 12px;
+  padding: 3px 10px;
+  font-size: 12px;
 }
 
 /* 店主バナー: アクション横並び + 終了ボタン */
