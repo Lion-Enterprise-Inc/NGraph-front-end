@@ -1848,7 +1848,15 @@ export default function CapturePage({
     setNfgFeedback(prev => ({ ...prev, [menuUid]: type }));
     try {
       await NfgFeedbackApi.submit(menuUid, type, threadUidRef.current || undefined);
-    } catch {}
+    } catch {
+      // 送信失敗を「ありがとうございます」のまま放置すると記録ゼロが無音で確定する。
+      // 状態を戻してボタンを復活させる(客は再タップで再送できる)
+      setNfgFeedback(prev => {
+        const next = { ...prev };
+        delete next[menuUid];
+        return next;
+      });
+    }
   };
 
   const openLikedDrawer = async () => {

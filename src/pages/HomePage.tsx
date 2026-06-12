@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { Search, Loader2 } from 'lucide-react'
-import { ExploreApi, SemanticSearchApi, MenuSearchApi, SearchRestaurant, NfgSearchRestaurant, SemanticSearchRestaurant, CityCount, PlatformStats, MenuNFGCard, QuickExplainItem } from '../services/api'
+import { ExploreApi, SemanticSearchApi, MenuSearchApi, NfgFeedbackApi, SearchRestaurant, NfgSearchRestaurant, SemanticSearchRestaurant, CityCount, PlatformStats, MenuNFGCard, QuickExplainItem } from '../services/api'
 import { useAppContext } from '../components/AppProvider'
 import NFGCard from '../components/NFGCard'
 import { getUiCopy } from '../i18n/uiCopy'
@@ -875,6 +875,22 @@ export default function HomePage() {
   const [recoFallback, setRecoFallback] = useState(false)
   const composingRef = useRef(false)
   const [menuResults, setMenuResults] = useState<MenuNFGCard[]>([])
+  // 解説品質フィードバック(料理単位)。CapturePageと同じ収集導線を検索結果カードにも
+  const [nfgFeedback, setNfgFeedback] = useState<Record<string, 'good' | 'bad'>>({})
+  const handleNfgFeedback = async (menuUid: string, type: 'good' | 'bad') => {
+    if (nfgFeedback[menuUid] === type) return
+    setNfgFeedback(prev => ({ ...prev, [menuUid]: type }))
+    try {
+      await NfgFeedbackApi.submit(menuUid, type)
+    } catch {
+      // 失敗したら状態を戻してボタンを復活(無音の記録ゼロを防ぐ)
+      setNfgFeedback(prev => {
+        const next = { ...prev }
+        delete next[menuUid]
+        return next
+      })
+    }
+  }
 
   // Pulse binary particles toward count bar when count changes
   useEffect(() => {
@@ -1718,6 +1734,8 @@ export default function HomePage() {
                       showRestaurantInfo
                       restaurantName={m.restaurant_name}
                       restaurantCity={m.restaurant_city || undefined}
+                      onNfgFeedback={handleNfgFeedback}
+                      nfgFeedback={nfgFeedback}
                       copy={{
                         verified: copy.nfg.vadBadge,
                         pending: (copy.nfg as any).pendingBadge || 'On file',

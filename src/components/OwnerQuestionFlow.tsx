@@ -19,6 +19,8 @@ type HistoryItem = {
   commentSaved?: boolean
   // 厨房共通質問: この回答で整理された(冗長になって消えた)単品質問の数
   purged?: number
+  // 「商品によって違う」回答: 品ごとに分解して追加された質問の数
+  expanded?: number
   // 取り消し(undo)用にサーバーが返した逆操作情報
   undo: {
     question_obj: Record<string, unknown>
@@ -42,6 +44,11 @@ type OwnerQuestionFlowProps = {
 }
 
 const SKIP_STORE_KEY = 'omiseai_owner_qa_skipped'
+
+// 店全体質問(kitchen=厨房共通/store=店舗プロフィール)か。undo・店主のひとこと非対象。
+// kind判定はこの1関数に集約する(新kind追加時に分岐の直し漏れを作らない)
+const isStoreLevelKind = (q?: Pick<OwnerQuestion, 'kind'> | null) =>
+  q?.kind === 'kitchen' || q?.kind === 'store'
 
 export default function OwnerQuestionFlow({ sessionToken, onClose, onCountChange, onSessionExpired }: OwnerQuestionFlowProps) {
   const [queue, setQueue] = useState<OwnerQuestion[]>([])
@@ -115,8 +122,7 @@ export default function OwnerQuestionFlow({ sessionToken, onClose, onCountChange
   }, [inputMode])
 
   const current = queue[0] ?? null
-  // 店全体質問(kitchen=厨房共通/store=店舗プロフィール)。undo・ひとこと非対象
-  const isStoreLevel = current?.kind === 'kitchen' || current?.kind === 'store'
+  const isStoreLevel = isStoreLevelKind(current)
 
   // 質問が変わったら複数選択をリセット
   useEffect(() => {
@@ -153,14 +159,15 @@ export default function OwnerQuestionFlow({ sessionToken, onClose, onCountChange
         selected,
         text_note: textNote,
       })
-      const purged = current.kind === 'kitchen' || current.kind === 'store'
-        ? Number((res.question_obj as Record<string, unknown>)?.purged_questions) || 0
-        : 0
+      const qobj = (res.question_obj ?? {}) as Record<string, unknown>
+      const purged = isStoreLevelKind(current) ? Number(qobj.purged_questions) || 0 : 0
+      const expanded = isStoreLevelKind(current) ? Number(qobj.expanded_questions) || 0 : 0
       setHistory(prev => [...prev, {
         q: current,
         answerLabel: selected?.join('、') || textNote || '',
         promoted: res.promoted_to_a,
         purged,
+        expanded,
         undo: {
           question_obj: res.question_obj,
           added_allergens: res.added_allergens,
@@ -171,6 +178,18 @@ export default function OwnerQuestionFlow({ sessionToken, onClose, onCountChange
       setQueue(prev => prev.slice(1))
       setTotalRemaining(res.total_remaining)
       onCountChange?.(res.total_remaining)
+      // 厨房回答のパージはスキップ済みの単品質問もサーバ側から消すことがある。
+      // skippedCountに残すと残数の二重減算(実残数より少なく表示→偽の「以上です」)に
+      // なるため、単品スキップの記憶をリセットする(消えてない質問はまた出る=正しい挙動)
+      if (purged > 0 && skippedKeysRef.current.size > 0) {
+        const keep = new Set([...skippedKeysRef.current].filter(
+          k => k.startsWith('kitchen:') || k.startsWith('store:')))
+        skippedKeysRef.current = keep
+        setSkippedCount(keep.size)
+        try {
+          sessionStorage.setItem(SKIP_STORE_KEY, JSON.stringify([...keep]))
+        } catch {}
+      }
       closeInput()
     } catch (e: unknown) {
       if (isUnauthorized(e)) {
@@ -250,10 +269,13 @@ export default function OwnerQuestionFlow({ sessionToken, onClose, onCountChange
     }
   }
 
+  // 回答入力の上限は書込先フィールドのカラム長(max_input)に揃える
+  // (BE側で無言切り捨てされると文末欠けの案内が客に出るため、入力時点で制限する)
+  const answerMax = current?.max_input ?? 120
   const inputPlaceholder = inputMode?.kind === 'comment'
     ? 'お客様への一言を入力(200字まで)'
-    : '答えを入力してください'
-  const inputMax = inputMode?.kind === 'comment' ? 200 : 120
+    : `答えを入力してください(${answerMax}字まで)`
+  const inputMax = inputMode?.kind === 'comment' ? 200 : answerMax
 
   return (
     <>
@@ -274,15 +296,18 @@ export default function OwnerQuestionFlow({ sessionToken, onClose, onCountChange
               {(h.purged ?? 0) > 0 && (
                 <span className="owner-qa-promoted">この回答で{h.purged}問が不要になりました</span>
               )}
+              {(h.expanded ?? 0) > 0 && (
+                <span className="owner-qa-promoted">品ごとに{h.expanded}問に分けて聞き直します</span>
+              )}
               {h.promoted && <span className="owner-qa-promoted">この料理は店主確認済みになりました</span>}
               {/* 直前の回答だけ取り消せる(誤タップの即修正)。店全体質問は波及が広く逆操作未対応 */}
-              {idx === history.length - 1 && (h.q.kind ?? 'menu') === 'menu' && (
+              {idx === history.length - 1 && !isStoreLevelKind(h.q) && (
                 <button type="button" className="owner-qa-undo" disabled={submitting} onClick={undoLast}>
                   <RotateCcw size={12} strokeWidth={2} /> 取り消す
                 </button>
               )}
             </div>
-            {(h.q.kind ?? 'menu') !== 'menu' ? null : h.commentSaved ? (
+            {isStoreLevelKind(h.q) ? null : h.commentSaved ? (
               <div className="owner-qa-applied"><Check size={13} strokeWidth={2.5} /> ひとことを保存しました</div>
             ) : (
               <button

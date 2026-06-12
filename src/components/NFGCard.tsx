@@ -9,6 +9,27 @@ import { getOwnerCommentLabel, getAllergenTrustNote, isAllergensVerified } from 
 // レーダーチャート表示フラグ（機能成熟後にtrueに戻す）
 const SHOW_TASTE_RADAR = false;
 
+// 解説品質フィードバックの文言。
+// ⚠ uiCopy.ts に統合しない理由: getUiCopy のフォールバックはセクション単位で、
+// feedback セクションを ko/zh に部分追加すると既存キー(copy/share)が undefined になる。
+// 5言語(ja/en/ko/zh-Hans/zh-Hant)+en フォールバック。翻訳追加はここに足す
+const NFG_FEEDBACK_COPY: Record<'label' | 'thanks', Record<string, string>> = {
+  label: {
+    ja: 'この解説は役に立ちましたか？',
+    en: 'Was this helpful?',
+    ko: '이 설명이 도움이 되었나요?',
+    'zh-Hans': '这些介绍有帮助吗？',
+    'zh-Hant': '這些介紹有幫助嗎？',
+  },
+  thanks: {
+    ja: 'フィードバックありがとうございます',
+    en: 'Thanks for your feedback!',
+    ko: '피드백 감사합니다',
+    'zh-Hans': '感谢您的反馈',
+    'zh-Hant': '感謝您的反饋',
+  },
+};
+
 // 客が申告済みの食事制約に該当するメニューに出す context-specific 警告。
 // 汎用免責(選択時に1回)とは別物で、「この品があなたの制約に該当する」という
 // その場限りの新情報。SYSTEM_SPEC §6.2.1 の閲覧経路「タグ強調」の文言。
@@ -605,12 +626,12 @@ export default function NFGCard({
                   <div className="nfgcard-feedback">
                     {nfgFeedback?.[item.menu_uid] ? (
                       <span className="nfgcard-feedback-thanks">
-                        {(({ ja: 'フィードバックありがとうございます', en: 'Thanks for your feedback!', ko: '피드백 감사합니다', 'zh-Hans': '感谢您的反馈', 'zh-Hant': '感謝您的反饋' } as Record<string, string>)[language] || 'Thanks for your feedback!')}
+                        {NFG_FEEDBACK_COPY.thanks[language] || NFG_FEEDBACK_COPY.thanks.en}
                       </span>
                     ) : (
                       <>
                         <span className="nfgcard-feedback-label">
-                          {(({ ja: 'この解説は役に立ちましたか？', en: 'Was this helpful?', ko: '이 설명이 도움이 되었나요?', 'zh-Hans': '这些介绍有帮助吗？', 'zh-Hant': '這些介紹有幫助嗎？' } as Record<string, string>)[language] || 'Was this helpful?')}
+                          {NFG_FEEDBACK_COPY.label[language] || NFG_FEEDBACK_COPY.label.en}
                         </span>
                         <button
                           type="button"

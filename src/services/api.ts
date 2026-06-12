@@ -1658,6 +1658,8 @@ export interface OwnerQuestion {
   kind?: 'menu' | 'kitchen' | 'store';
   // 複数選択可(トグル+決定ボタンで回答)
   multi?: boolean;
+  // 自由入力の文字数上限(書込先フィールドのカラム長。BEの無言切り捨て防止)
+  max_input?: number | null;
 }
 
 export const OwnerChatApi = {
