@@ -11,8 +11,8 @@ const SHOW_TASTE_RADAR = false;
 
 // 解説品質フィードバックの文言。
 // ⚠ uiCopy.ts に統合しない理由: getUiCopy のフォールバックはセクション単位で、
-// feedback セクションを ko/zh に部分追加すると既存キー(copy/share)が undefined になる。
-// 5言語(ja/en/ko/zh-Hans/zh-Hant)+en フォールバック。翻訳追加はここに足す
+// feedback セクションを各言語に部分追加すると既存キー(copy/share)が undefined になる。
+// 対応言語は languageOptions の15言語フル(RESTRICTION_MATCH_NOTICE と同じ慣例)+enフォールバック
 const NFG_FEEDBACK_COPY: Record<'label' | 'thanks', Record<string, string>> = {
   label: {
     ja: 'この解説は役に立ちましたか？',
@@ -20,6 +20,16 @@ const NFG_FEEDBACK_COPY: Record<'label' | 'thanks', Record<string, string>> = {
     ko: '이 설명이 도움이 되었나요?',
     'zh-Hans': '这些介绍有帮助吗？',
     'zh-Hant': '這些介紹有幫助嗎？',
+    es: '¿Te resultó útil esta descripción?',
+    fr: 'Cette description vous a-t-elle été utile ?',
+    de: 'War diese Beschreibung hilfreich?',
+    it: 'Questa descrizione ti è stata utile?',
+    pt: 'Esta descrição foi útil?',
+    ru: 'Было ли это описание полезным?',
+    th: 'คำอธิบายนี้มีประโยชน์ไหม?',
+    vi: 'Phần giới thiệu này có hữu ích không?',
+    id: 'Apakah penjelasan ini membantu?',
+    tl: 'Nakatulong ba ang paliwanag na ito?',
   },
   thanks: {
     ja: 'フィードバックありがとうございます',
@@ -27,12 +37,29 @@ const NFG_FEEDBACK_COPY: Record<'label' | 'thanks', Record<string, string>> = {
     ko: '피드백 감사합니다',
     'zh-Hans': '感谢您的反馈',
     'zh-Hant': '感謝您的反饋',
+    es: '¡Gracias por tu opinión!',
+    fr: 'Merci pour votre retour !',
+    de: 'Danke für dein Feedback!',
+    it: 'Grazie per il feedback!',
+    pt: 'Obrigado pelo feedback!',
+    ru: 'Спасибо за отзыв!',
+    th: 'ขอบคุณสำหรับความคิดเห็น',
+    vi: 'Cảm ơn phản hồi của bạn!',
+    id: 'Terima kasih atas masukannya!',
+    tl: 'Salamat sa iyong feedback!',
   },
 };
 
 // 客が申告済みの食事制約に該当するメニューに出す context-specific 警告。
 // 汎用免責(選択時に1回)とは別物で、「この品があなたの制約に該当する」という
 // その場限りの新情報。SYSTEM_SPEC §6.2.1 の閲覧経路「タグ強調」の文言。
+// カード展開ヒント(languageOptions 15言語+enフォールバック)
+const EXPAND_HINT: Record<string, string> = {
+  ja: '詳しく', en: 'Details', ko: '자세히', 'zh-Hans': '详情', 'zh-Hant': '詳情',
+  es: 'Detalles', fr: 'Détails', de: 'Details', it: 'Dettagli', pt: 'Detalhes',
+  ru: 'Подробнее', th: 'รายละเอียด', vi: 'Chi tiết', id: 'Detail', tl: 'Detalye',
+};
+
 const RESTRICTION_MATCH_NOTICE: Record<string, string> = {
   ja: '申告された制約に該当する可能性があります。スタッフにご確認ください',
   en: 'May not match your declared dietary needs. Please confirm with staff.',
@@ -657,7 +684,7 @@ export default function NFGCard({
             )}
             {!open && hasDetails && (
               <div className="nfgcard-expand-hint">
-                {(({ ja: '詳しく', en: 'Details', ko: '자세히', 'zh-Hans': '详情', 'zh-Hant': '詳情' } as Record<string, string>)[language] || 'Details')} ▼
+                {(EXPAND_HINT[language] || EXPAND_HINT.en)} ▼
               </div>
             )}
           </div>
