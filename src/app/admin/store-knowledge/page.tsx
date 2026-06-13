@@ -24,7 +24,7 @@ function ProgressBar({ filled, total }: { filled: number; total: number }) {
 }
 
 export default function StoreKnowledgePage() {
-  const { t } = useAdminLang()
+  const { t, lang } = useAdminLang()
   const FIELD_LABELS: Record<string, string> = {
     allergens: t.storeKnowledge.fieldAllergens,
     ingredients: t.storeKnowledge.fieldIngredients,
@@ -75,8 +75,7 @@ export default function StoreKnowledgePage() {
             const r = (resp as { result?: Record<string, unknown> })?.result || resp as Record<string, unknown>
             const resolved = (r.url_slug as string) || (r.slug as string) || ''
             if (resolved) {
-              setSlug(resolved)
-              loadPreview(resolved)
+              setSlug(resolved) // 質問プレビューの取得は [slug, lang] effect が担当
             } else {
               setLoading(false)
             }
@@ -86,16 +85,21 @@ export default function StoreKnowledgePage() {
       }
     }
     if (rs) {
-      setSlug(rs)
-      loadPreview(rs)
+      setSlug(rs) // 質問プレビューの取得は [slug, lang] effect が担当
     } else {
       setLoading(false)
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const loadPreview = async (s: string) => {
+  // slug 確定後・admin言語切替時に質問プレビューを(再)取得する。
+  // lang を渡すと BE が質問文・選択肢を該当言語に差し替えて返す(訳が無ければ JP)。
+  useEffect(() => {
+    if (slug) loadPreview(slug, lang)
+  }, [slug, lang]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const loadPreview = async (s: string, langArg: string) => {
     try {
-      const resp = await apiClient.get(`/owner-survey/admin/preview/${encodeURIComponent(s)}`) as any
+      const resp = await apiClient.get(`/owner-survey/admin/preview/${encodeURIComponent(s)}?lang=${encodeURIComponent(langArg)}`) as any
       const raw = resp?.result || resp
       const data: SurveyPreview = {
         restaurant_name: raw.restaurant_name || '',

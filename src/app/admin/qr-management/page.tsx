@@ -287,7 +287,7 @@ export default function QRManagementPage() {
                 background: 'rgba(59,130,246,0.12)', border: '1px solid #3B82F6',
                 color: '#93C5FD', fontSize: 13, fontWeight: 600,
               }}>
-                操作中: {adminStoreName}
+                {t.layout.operatingOnStore(adminStoreName)}
               </div>
             )}
             <label htmlFor="restaurant-slug" className="qr-input-label">

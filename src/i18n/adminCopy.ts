@@ -979,6 +979,7 @@ export type AdminCopy = {
     more: string
     planLockedToast: string
     langToggleAria: string
+    operatingOnStore: (name: string) => string
   }
   nav: {
     menuList: string
@@ -2027,6 +2028,7 @@ const adminCopy: Record<AdminLang, AdminCopy> = {
       more: 'その他',
       planLockedToast: 'この機能はビジネスプラン以上で利用可能です',
       langToggleAria: '言語を切り替え',
+      operatingOnStore: (name) => `操作中: ${name}`,
     },
     nav: {
       menuList: 'メニュー管理',
@@ -3080,6 +3082,7 @@ const adminCopy: Record<AdminLang, AdminCopy> = {
       more: 'More',
       planLockedToast: 'This feature requires the Business plan or higher',
       langToggleAria: 'Toggle language',
+      operatingOnStore: (name) => `Operating on: ${name}`,
     },
     nav: {
       menuList: 'Menus',
