@@ -56,6 +56,10 @@ export default function StoreKnowledgePage() {
   const [creatingUpload, setCreatingUpload] = useState(false)
   const [uploadResult, setUploadResult] = useState<{ url: string; passcode: string } | null>(null)
 
+  const [showOwnerLinkModal, setShowOwnerLinkModal] = useState(false)
+  const [creatingOwnerLink, setCreatingOwnerLink] = useState(false)
+  const [ownerLinkResult, setOwnerLinkResult] = useState<{ url: string; passcode: string } | null>(null)
+
   useEffect(() => {
     const user = TokenService.getUser()
     if (!user) return
@@ -63,6 +67,23 @@ export default function StoreKnowledgePage() {
     if (!rs && (user.role === 'superadmin' || user.role === 'platform_owner')) {
       const params = new URLSearchParams(window.location.search)
       rs = params.get('slug') || ''
+      // stores一覧からの遷移は ?uid= で来る。uid を店舗 slug に解決する
+      const uid = params.get('uid')
+      if (!rs && uid) {
+        apiClient.get(`/restaurants/${uid}`)
+          .then((resp) => {
+            const r = (resp as { result?: Record<string, unknown> })?.result || resp as Record<string, unknown>
+            const resolved = (r.url_slug as string) || (r.slug as string) || ''
+            if (resolved) {
+              setSlug(resolved)
+              loadPreview(resolved)
+            } else {
+              setLoading(false)
+            }
+          })
+          .catch(() => setLoading(false))
+        return
+      }
     }
     if (rs) {
       setSlug(rs)
@@ -330,6 +351,24 @@ export default function StoreKnowledgePage() {
     }
   }
 
+  // 店主モードリンク発行（店舗につき常設1本を使い回す。BEが完全なURLを返す）
+  const handleCreateOwnerLink = async () => {
+    if (!slug) return
+    setCreatingOwnerLink(true)
+    try {
+      const data = await apiClient.post('/owner-chat/create', {
+        restaurant_slug: slug,
+      }) as any
+      const r = data?.result || data
+      setOwnerLinkResult({ url: r.url, passcode: r.passcode })
+      toast('success', t.storeKnowledge.ownerLinkCreated)
+    } catch {
+      toast('error', t.storeKnowledge.ownerLinkFailed)
+    } finally {
+      setCreatingOwnerLink(false)
+    }
+  }
+
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text)
     toast('success', t.storeKnowledge.copied)
@@ -379,6 +418,10 @@ export default function StoreKnowledgePage() {
             </p>
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
+            <button onClick={() => { setOwnerLinkResult(null); setShowOwnerLinkModal(true) }} style={{
+              padding: '10px 16px', background: '#3B82F6', color: '#fff',
+              border: '1px solid #3B82F6', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: 600,
+            }}>{t.storeKnowledge.ownerLinkBtn}</button>
             <button onClick={() => { setUploadResult(null); setShowUploadModal(true) }} style={{
               padding: '10px 16px', background: 'transparent', color: '#16A34A',
               border: '1px solid #16A34A', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: 600,
@@ -875,6 +918,87 @@ export default function StoreKnowledgePage() {
                   marginBottom: 8,
                 }}>{t.storeKnowledge.lineCopyBtn}</button>
                 <button onClick={() => setShowUploadModal(false)} style={{
+                  width: '100%', padding: '8px', background: 'transparent', color: 'var(--muted)',
+                  border: '1px solid var(--border)', borderRadius: 8, cursor: 'pointer', fontSize: 13,
+                }}>{t.storeKnowledge.close}</button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Owner mode link modal */}
+      {showOwnerLinkModal && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(0,0,0,0.6)', zIndex: 100,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }} onClick={() => setShowOwnerLinkModal(false)}>
+          <div style={{
+            background: 'var(--bg-surface, #1E293B)', borderRadius: 12,
+            padding: 24, width: 400, maxWidth: '90vw',
+            border: '1px solid var(--border, #334155)',
+          }} onClick={e => e.stopPropagation()}>
+            <h3 style={{ margin: '0 0 16px', fontSize: 16, fontWeight: 600 }}>{t.storeKnowledge.ownerLinkModalTitle}</h3>
+            <p style={{ fontSize: 13, color: 'var(--muted, #94A3B8)', marginBottom: 16 }}>
+              {t.storeKnowledge.ownerLinkModalDesc(slug)}
+            </p>
+            {!ownerLinkResult ? (
+              <>
+                <p style={{ fontSize: 12, color: 'var(--muted, #94A3B8)', marginBottom: 16, lineHeight: 1.6 }}>
+                  {t.storeKnowledge.ownerLinkHint}
+                </p>
+                <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+                  <button onClick={() => setShowOwnerLinkModal(false)} style={{
+                    padding: '8px 16px', background: 'transparent', color: 'var(--muted)',
+                    border: '1px solid var(--border)', borderRadius: 8, cursor: 'pointer', fontSize: 13,
+                  }}>{t.storeKnowledge.cancel}</button>
+                  <button onClick={handleCreateOwnerLink} disabled={creatingOwnerLink} style={{
+                    padding: '8px 16px', background: '#3B82F6', color: '#fff',
+                    border: 'none', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: 600,
+                    opacity: creatingOwnerLink ? 0.6 : 1,
+                  }}>{creatingOwnerLink ? t.storeKnowledge.creating : t.storeKnowledge.create}</button>
+                </div>
+              </>
+            ) : (
+              <>
+                <div style={{
+                  background: 'var(--bg-input, #0F172A)', borderRadius: 8, padding: 16, marginBottom: 12,
+                }}>
+                  <div style={{ marginBottom: 12 }}>
+                    <label style={{ fontSize: 11, color: 'var(--muted)', display: 'block', marginBottom: 4 }}>{t.storeKnowledge.urlLabel}</label>
+                    <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                      <code style={{ fontSize: 12, flex: 1, wordBreak: 'break-all', color: '#3B82F6' }}>
+                        {ownerLinkResult.url}
+                      </code>
+                      <button onClick={() => copyToClipboard(ownerLinkResult.url)} style={{
+                        padding: '4px 10px', background: '#334155', color: '#fff', border: 'none',
+                        borderRadius: 6, cursor: 'pointer', fontSize: 12, whiteSpace: 'nowrap',
+                      }}>{t.storeKnowledge.copyBtn}</button>
+                    </div>
+                  </div>
+                  <div>
+                    <label style={{ fontSize: 11, color: 'var(--muted)', display: 'block', marginBottom: 4 }}>{t.storeKnowledge.passcodeLabel}</label>
+                    <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                      <code style={{ fontSize: 20, fontWeight: 700, letterSpacing: 4 }}>
+                        {ownerLinkResult.passcode}
+                      </code>
+                      <button onClick={() => copyToClipboard(ownerLinkResult.passcode)} style={{
+                        padding: '4px 10px', background: '#334155', color: '#fff', border: 'none',
+                        borderRadius: 6, cursor: 'pointer', fontSize: 12,
+                      }}>{t.storeKnowledge.copyBtn}</button>
+                    </div>
+                  </div>
+                </div>
+                <button onClick={() => {
+                  const msg = t.storeKnowledge.lineMsgOwner(ownerLinkResult.url, ownerLinkResult.passcode)
+                  copyToClipboard(msg)
+                }} style={{
+                  width: '100%', padding: '10px', background: '#16A34A', color: '#fff',
+                  border: 'none', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: 600,
+                  marginBottom: 8,
+                }}>{t.storeKnowledge.lineCopyBtn}</button>
+                <button onClick={() => setShowOwnerLinkModal(false)} style={{
                   width: '100%', padding: '8px', background: 'transparent', color: 'var(--muted)',
                   border: '1px solid var(--border)', borderRadius: 8, cursor: 'pointer', fontSize: 13,
                 }}>{t.storeKnowledge.close}</button>

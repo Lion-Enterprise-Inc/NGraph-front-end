@@ -463,6 +463,12 @@ export default function StoresPage() {
                 <button className="btn btn-secondary btn-small" onClick={() => router.push(`/admin/menu-list?uid=${store.uid}`)} title={t.stores.titleMenu}>
                   {t.stores.btnMenu}
                 </button>
+                <button className="btn btn-secondary btn-small" onClick={() => router.push(`/admin/store-knowledge?uid=${store.uid}`)} title={t.stores.titleKnowledge}>
+                  {t.stores.btnKnowledge}
+                </button>
+                <button className="btn btn-secondary btn-small" onClick={() => router.push(`/admin/qr-management?uid=${store.uid}`)} title={t.stores.titleQr}>
+                  {t.stores.btnQr}
+                </button>
                 <button
                   className="btn btn-danger btn-small"
                   onClick={() => handleDeleteStore(store.uid, store.name)}

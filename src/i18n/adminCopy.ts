@@ -427,9 +427,13 @@ export type AdminCopy = {
     metricScan: string
     btnManage: string
     btnMenu: string
+    btnKnowledge: string
+    btnQr: string
     btnDelete: string
     titleManage: string
     titleMenu: string
+    titleKnowledge: string
+    titleQr: string
     titleDelete: string
     modalTitle: string
     fieldName: string
@@ -587,6 +591,13 @@ export type AdminCopy = {
     maxSelectHint: (max: number, selected: number) => string
     uploadLinkBtn: string
     surveyBtn: string
+    ownerLinkBtn: string
+    ownerLinkModalTitle: string
+    ownerLinkModalDesc: (slug: string) => string
+    ownerLinkHint: string
+    lineMsgOwner: (url: string, passcode: string) => string
+    ownerLinkCreated: string
+    ownerLinkFailed: string
     surveyModalTitle: string
     surveyModalDesc: (slug: string) => string
     fieldQuestionLimit: string
@@ -1459,9 +1470,13 @@ const adminCopy: Record<AdminLang, AdminCopy> = {
       metricScan: 'QRスキャン',
       btnManage: '管理',
       btnMenu: 'メニュー',
+      btnKnowledge: '店舗知識',
+      btnQr: 'QR',
       btnDelete: '削除',
       titleManage: '基本情報を管理',
       titleMenu: 'メニュー一覧を表示',
+      titleKnowledge: '店舗知識・店主モードリンク',
+      titleQr: 'QRコード・URLを発行',
       titleDelete: 'レストランを削除',
       modalTitle: '新規レストランを登録',
       fieldName: 'レストラン名 *',
@@ -1619,6 +1634,13 @@ const adminCopy: Record<AdminLang, AdminCopy> = {
       maxSelectHint: (max, selected) => `最大${max}品選択（${selected}品選択中）`,
       uploadLinkBtn: 'メニュー収集リンク',
       surveyBtn: 'オーナーサーベイ作成',
+      ownerLinkBtn: '店主モードリンク',
+      ownerLinkModalTitle: '店主モードリンク発行',
+      ownerLinkModalDesc: (slug) => `${slug} の店主モード常設リンクを発行します。店主はこのリンクで、客と同じチャット画面に入って質問への回答・今日の献立登録・メニュー編集をいつでも行えます。`,
+      ownerLinkHint: '店舗につき常設1本を使い回します（発行し直しても同じリンク）。LINEで店主に送ってピン留めしてもらってください。',
+      lineMsgOwner: (url, passcode) => `店主モードのご案内\n\nURL: ${url}\nパスコード: ${passcode}\n\n上のURLを開いてパスコードを入力すると店主モードに入れます。メニューの確認・修正、今日の献立の登録ができます。このメッセージはトークにピン留めしておくと便利です。`,
+      ownerLinkCreated: '店主モードリンクを発行しました',
+      ownerLinkFailed: '店主モードリンクの発行に失敗しました',
       surveyModalTitle: 'オーナーサーベイ作成',
       surveyModalDesc: (slug) => `${slug} のメニュー確認URLを発行します`,
       fieldQuestionLimit: '質問数',
@@ -2501,9 +2523,13 @@ const adminCopy: Record<AdminLang, AdminCopy> = {
       metricScan: 'QR scans',
       btnManage: 'Manage',
       btnMenu: 'Menus',
+      btnKnowledge: 'Knowledge',
+      btnQr: 'QR',
       btnDelete: 'Delete',
       titleManage: 'Manage basic info',
       titleMenu: 'View menus',
+      titleKnowledge: 'Store knowledge & owner mode link',
+      titleQr: 'Issue QR code & URL',
       titleDelete: 'Delete restaurant',
       modalTitle: 'Add new restaurant',
       fieldName: 'Restaurant name *',
@@ -2661,6 +2687,13 @@ const adminCopy: Record<AdminLang, AdminCopy> = {
       maxSelectHint: (max, selected) => `Pick up to ${max} (${selected} selected)`,
       uploadLinkBtn: 'Menu collection link',
       surveyBtn: 'Create owner survey',
+      ownerLinkBtn: 'Owner mode link',
+      ownerLinkModalTitle: 'Issue owner mode link',
+      ownerLinkModalDesc: (slug) => `Issue a permanent owner-mode link for ${slug}. With this link the owner enters the same chat screen as customers and can answer questions, register daily specials, and edit menus anytime.`,
+      ownerLinkHint: 'One permanent link is reused per restaurant (re-issuing returns the same link). Send it to the owner on LINE and have them pin it.',
+      lineMsgOwner: (url, passcode) => `Owner mode access\n\nURL: ${url}\nPasscode: ${passcode}\n\nOpen the URL and enter the passcode to enter owner mode, where you can verify and edit menus and register daily specials. Pin this message in your chat for easy access.`,
+      ownerLinkCreated: 'Owner mode link issued',
+      ownerLinkFailed: 'Failed to issue owner mode link',
       surveyModalTitle: 'Create owner survey',
       surveyModalDesc: (slug) => `Issue a menu verification URL for ${slug}`,
       fieldQuestionLimit: 'Question limit',

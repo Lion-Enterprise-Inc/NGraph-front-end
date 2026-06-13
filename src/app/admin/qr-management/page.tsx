@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
+import { useSearchParams } from 'next/navigation'
 import QRCode from 'qrcode'
 import { Download, Copy, Check } from 'lucide-react'
 import AdminLayout from '../../../components/admin/AdminLayout'
@@ -9,6 +10,7 @@ import { useAuth } from '../../../contexts/AuthContext'
 import { getUiCopy } from '../../../i18n/uiCopy'
 import { useToast } from '../../../components/admin/Toast'
 import { useAdminLang } from '../../../hooks/useAdminLang'
+import { apiClient } from '../../../services/api'
 
 // OMISEAI ブランドQRデザイン用の定数・ヘルパー
 const MODULE_DARK = '#000000' // 黒ベース（色なし）
@@ -128,11 +130,16 @@ export default function QRManagementPage() {
   const { user, isLoading: authLoading } = useAuth()
   const { t } = useAdminLang()
   const copy = getUiCopy(language)
+  const searchParams = useSearchParams()
+  const uidParam = searchParams?.get('uid') ?? null
+  // プラットフォーム/superadmin が ?uid= で特定店を代行操作しているか
+  const isAdminViewing = !!(uidParam && user && (user.role === 'superadmin' || user.role === 'platform_owner'))
   const [restaurantSlug, setRestaurantSlug] = useState('')
   const [shortCode, setShortCode] = useState('')
   const [urlSlug, setUrlSlug] = useState('')
   const [prefectureSlug, setPrefectureSlug] = useState('')
   const [citySlug, setCitySlug] = useState('')
+  const [adminStoreName, setAdminStoreName] = useState('')
   const [qrCodeUrl, setQrCodeUrl] = useState('')
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState('')
   const [isGenerating, setIsGenerating] = useState(false)
@@ -141,24 +148,47 @@ export default function QRManagementPage() {
   const toast = useToast()
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
-  // Pre-fill restaurant slug for restaurant owners - only run once when auth is loaded
+  // Pre-fill restaurant slug - only run once when auth is loaded.
+  // プラットフォーム/superadmin が ?uid= で来た場合は対象店を取得して埋める。
+  // それ以外は店主自身の店(user.restaurant_*)を埋める。
   useEffect(() => {
-    if (!authLoading && !slugInitialized) {
-      // 表示はURLと同じ url_slug(英数字) を優先。無ければ日本語の slug にフォールバック
-      if (user?.restaurant_url_slug) {
-        setRestaurantSlug(user.restaurant_url_slug)
-      } else if (user?.restaurant_slug) {
-        setRestaurantSlug(user.restaurant_slug)
-      }
-      if (user?.restaurant_short_code) {
-        setShortCode(user.restaurant_short_code)
-      }
-      if (user?.restaurant_url_slug) setUrlSlug(user.restaurant_url_slug)
-      if (user?.restaurant_prefecture_slug) setPrefectureSlug(user.restaurant_prefecture_slug)
-      if (user?.restaurant_city_slug) setCitySlug(user.restaurant_city_slug)
-      setSlugInitialized(true)
+    if (authLoading || slugInitialized) return
+
+    // プラットフォーム代行: ?uid= から対象店を解決
+    if (isAdminViewing && uidParam) {
+      apiClient.get(`/restaurants/${uidParam}`)
+        .then((resp) => {
+          const r = (resp as { result?: Record<string, unknown> })?.result || resp as Record<string, unknown>
+          const urlSlugVal = (r.url_slug as string) || ''
+          const slugVal = (r.slug as string) || ''
+          setRestaurantSlug(urlSlugVal || slugVal)
+          if (r.short_code) setShortCode(r.short_code as string)
+          if (urlSlugVal) setUrlSlug(urlSlugVal)
+          if (r.prefecture_slug) setPrefectureSlug(r.prefecture_slug as string)
+          if (r.city_slug) setCitySlug(r.city_slug as string)
+          if (r.name) setAdminStoreName(r.name as string)
+        })
+        .catch(() => {
+          toast('error', 'Failed to load restaurant')
+        })
+        .finally(() => setSlugInitialized(true))
+      return
     }
-  }, [authLoading, user?.restaurant_slug, user?.restaurant_short_code, slugInitialized])
+
+    // 店主自身: 表示はURLと同じ url_slug(英数字) を優先。無ければ日本語の slug にフォールバック
+    if (user?.restaurant_url_slug) {
+      setRestaurantSlug(user.restaurant_url_slug)
+    } else if (user?.restaurant_slug) {
+      setRestaurantSlug(user.restaurant_slug)
+    }
+    if (user?.restaurant_short_code) {
+      setShortCode(user.restaurant_short_code)
+    }
+    if (user?.restaurant_url_slug) setUrlSlug(user.restaurant_url_slug)
+    if (user?.restaurant_prefecture_slug) setPrefectureSlug(user.restaurant_prefecture_slug)
+    if (user?.restaurant_city_slug) setCitySlug(user.restaurant_city_slug)
+    setSlugInitialized(true)
+  }, [authLoading, user?.restaurant_slug, user?.restaurant_short_code, slugInitialized, isAdminViewing, uidParam]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const generateQRCode = async () => {
     if (!restaurantSlug.trim()) {
@@ -251,6 +281,15 @@ export default function QRManagementPage() {
 
         <div className="qr-generator-section">
           <div className="qr-input-section">
+            {isAdminViewing && adminStoreName && (
+              <div style={{
+                marginBottom: 12, padding: '8px 12px', borderRadius: 8,
+                background: 'rgba(59,130,246,0.12)', border: '1px solid #3B82F6',
+                color: '#93C5FD', fontSize: 13, fontWeight: 600,
+              }}>
+                操作中: {adminStoreName}
+              </div>
+            )}
             <label htmlFor="restaurant-slug" className="qr-input-label">
               Restaurant Slug
             </label>
@@ -262,8 +301,8 @@ export default function QRManagementPage() {
                 onChange={(e) => setRestaurantSlug(e.target.value)}
                 placeholder="e.g., fc-restaurant"
                 className="qr-input"
-                readOnly={!!user?.restaurant_slug}
-                style={user?.restaurant_slug ? { backgroundColor: '#1E293B', cursor: 'not-allowed' } : {}}
+                readOnly={!!user?.restaurant_slug || isAdminViewing}
+                style={(!!user?.restaurant_slug || isAdminViewing) ? { backgroundColor: '#1E293B', cursor: 'not-allowed' } : {}}
               />
               <button
                 onClick={generateQRCode}
@@ -274,8 +313,8 @@ export default function QRManagementPage() {
               </button>
             </div>
             <p className="qr-input-help">
-              {user?.restaurant_slug
-                ? `Your restaurant slug "${restaurantSlug}" is automatically set. Click Generate to create your QR code.`
+              {(user?.restaurant_slug || isAdminViewing)
+                ? `Restaurant slug "${restaurantSlug}" is automatically set. Click Generate to create the QR code.`
                 : 'Enter the restaurant slug (e.g., fc-restaurant) to generate a QR code'
               }
             </p>
