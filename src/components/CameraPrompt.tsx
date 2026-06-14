@@ -4,35 +4,37 @@ import { getUiCopy } from '../i18n/uiCopy'
 import { useAppContext } from './AppProvider'
 
 const buildStoreGreeting = (lang: string, store: string): string => {
+  // JP は店名込みの「店の声」を維持(日本人は読めるので冗長感なし)。
+  if (lang === 'ja') return `いらっしゃいませ。\n${store} AI が何でもお答えします。`
+  // 多言語は店名を繰り返さない(店名は上に大きく表示済み)。AI への導線だけ残す。
   const templates: Record<string, string> = {
-    ja: `いらっしゃいませ。\n${store} AI が何でもお答えします。`,
-    en: `Welcome.\nAsk ${store} AI anything.`,
-    ko: `어서 오세요.\n${store} AI가 무엇이든 답해드립니다.`,
-    'zh-Hans': `欢迎光临。\n请向 ${store} AI 询问任何问题。`,
-    'zh-Hant': `歡迎光臨。\n請向 ${store} AI 詢問任何問題。`,
-    es: `Bienvenido.\nPregunta a ${store} AI lo que quieras.`,
-    fr: `Bienvenue.\nPosez à ${store} AI toutes vos questions.`,
-    de: `Willkommen.\nFragen Sie ${store} AI alles.`,
-    it: `Benvenuto.\nChiedi a ${store} AI qualsiasi cosa.`,
-    pt: `Bem-vindo.\nPergunte a ${store} AI qualquer coisa.`,
-    ru: `Добро пожаловать.\nЗадавайте любые вопросы ${store} AI.`,
-    th: `ยินดีต้อนรับ\nสอบถาม ${store} AI ได้ทุกเรื่อง`,
-    vi: `Xin chào.\nHỏi ${store} AI bất cứ điều gì.`,
-    id: `Selamat datang.\nTanyakan apa saja kepada ${store} AI.`,
-    ms: `Selamat datang.\nTanya ${store} AI apa sahaja.`,
-    ar: `أهلاً وسهلاً\nاسأل ${store} AI عن أي شيء`,
-    hi: `स्वागत है।\n${store} AI से कुछ भी पूछें।`,
-    tr: `Hoş geldiniz.\n${store} AI'ya her şeyi sorabilirsiniz.`,
-    bn: `স্বাগতম।\n${store} AI-কে যেকোনো কিছু জিজ্ঞাসা করুন।`,
-    my: `ကြိုဆိုပါသည်။\n${store} AI ကို မေးနိုင်ပါသည်။`,
-    tl: `Maligayang pagdating.\nMagtanong sa ${store} AI ng kahit ano.`,
-    lo: `ຍິນດີຕ້ອນຮັບ\nຖາມ ${store} AI ໄດ້ທຸກເລື່ອງ`,
-    km: `សូមស្វាគមន៍។\nសួរ ${store} AI អំពីអ្វីក៏បាន។`,
-    ne: `स्वागत छ।\n${store} AI लाई जे पनि सोध्नुहोस्।`,
-    mn: `Тавтай морил.\n${store} AI-аас юу ч асуугаарай.`,
-    fa: `خوش آمدید.\nاز ${store} AI هر سوالی بپرسید.`,
-    uk: `Ласкаво просимо.\nЗапитайте ${store} AI про що завгодно.`,
-    pl: `Witamy.\nZapytaj ${store} AI o cokolwiek.`,
+    en: `Welcome.\nAsk our AI anything.`,
+    ko: `어서 오세요.\nAI에게 무엇이든 물어보세요.`,
+    'zh-Hans': `欢迎光临。\n有任何问题都可以问 AI。`,
+    'zh-Hant': `歡迎光臨。\n有任何問題都可以問 AI。`,
+    es: `Bienvenido.\nPregunta lo que quieras a nuestra IA.`,
+    fr: `Bienvenue.\nPosez toutes vos questions à notre IA.`,
+    de: `Willkommen.\nFragen Sie unsere KI alles.`,
+    it: `Benvenuto.\nChiedi qualsiasi cosa alla nostra IA.`,
+    pt: `Bem-vindo.\nPergunte qualquer coisa à nossa IA.`,
+    ru: `Добро пожаловать.\nСпрашивайте у нашего ИИ что угодно.`,
+    th: `ยินดีต้อนรับ\nสอบถาม AI ได้ทุกเรื่อง`,
+    vi: `Xin chào.\nHỏi AI bất cứ điều gì.`,
+    id: `Selamat datang.\nTanyakan apa saja kepada AI kami.`,
+    ms: `Selamat datang.\nTanya AI kami apa sahaja.`,
+    ar: `أهلاً وسهلاً\nاسأل الذكاء الاصطناعي عن أي شيء`,
+    hi: `स्वागत है।\nहमारे AI से कुछ भी पूछें।`,
+    tr: `Hoş geldiniz.\nYapay zekâmıza her şeyi sorun.`,
+    bn: `স্বাগতম।\nআমাদের AI-কে যেকোনো কিছু জিজ্ঞাসা করুন।`,
+    my: `ကြိုဆိုပါသည်။\nAI ကို မေးနိုင်ပါသည်။`,
+    tl: `Maligayang pagdating.\nMagtanong sa aming AI ng kahit ano.`,
+    lo: `ຍິນດີຕ້ອນຮັບ\nຖາມ AI ໄດ້ທຸກເລື່ອງ`,
+    km: `សូមស្វាគមន៍។\nសួរ AI អំពីអ្វីក៏បាន។`,
+    ne: `स्वागत छ।\nहाम्रो AI लाई जे पनि सोध्नुहोस्।`,
+    mn: `Тавтай морил.\nМаний AI-аас юу ч асуугаарай.`,
+    fa: `خوش آمدید.\nاز هوش مصنوعی ما هر سوالی بپرسید.`,
+    uk: `Ласкаво просимо.\nЗапитайте наш ШІ про що завгодно.`,
+    pl: `Witamy.\nZapytaj naszą SI o cokolwiek.`,
   }
   return templates[lang] || templates.en
 }
@@ -91,18 +93,23 @@ export default function CameraPrompt({
   const brandName = nameParts[0] || heading;
   const branchName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : null;
 
+  // 多言語(非ja)では romaji を主役の見出しに、JP名+支店は照合用の小さい1行に。
+  // 日本語表示では従来どおり JP名(大)+支店。
+  const useRomajiPrimary = language !== 'ja' && !!restaurantNameRomaji;
+  const primaryName = useRomajiPrimary ? (restaurantNameRomaji as string) : brandName;
+  const altLine = useRomajiPrimary
+    ? [brandName, branchName].filter(Boolean).join(' · ')
+    : null;
+
   if (isWebMode && restaurantName) {
     return (
       <div className="store-home">
         <h1 className="store-home-name">
-          {brandName}
+          {primaryName}
         </h1>
-        {branchName && (
-          <p className="store-home-branch">{branchName}</p>
-        )}
-        {restaurantNameRomaji && (
-          <p className="store-home-romaji">{restaurantNameRomaji}</p>
-        )}
+        {useRomajiPrimary
+          ? (altLine && <p className="store-home-altname">{altLine}</p>)
+          : (branchName && <p className="store-home-branch">{branchName}</p>)}
         <p className="store-home-sub" style={{ whiteSpace: 'pre-line' }}>
           {buildStoreGreeting(language, brandName)}
         </p>
@@ -165,14 +172,11 @@ export default function CameraPrompt({
   return (
     <div className="store-home">
       <h1 className="store-home-name">
-        {brandName}
+        {primaryName}
       </h1>
-      {branchName && (
-        <p className="store-home-branch">{branchName}</p>
-      )}
-      {restaurantNameRomaji && (
-        <p className="store-home-romaji">{restaurantNameRomaji}</p>
-      )}
+      {useRomajiPrimary
+        ? (altLine && <p className="store-home-altname">{altLine}</p>)
+        : (branchName && <p className="store-home-branch">{branchName}</p>)}
       <p className="store-home-sub" style={{ whiteSpace: 'pre-line' }}>
         {restaurantName ? (buildStoreGreeting(language, brandName)) : sub}
       </p>

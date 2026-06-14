@@ -864,6 +864,21 @@ body {
   display: none;
 }
 
+/* デスクトップ(>=769px)はヒーロー(店名+入力欄)を画面の縦中央に。
+   ベースの 28dvh はモバイル基準で、PC では下余白が残り上寄りになる。
+   dvh 固定だと画面高でズレるため、中央化の式 50dvh - (cluster高/2) で
+   どの高さでも中央に来るようにする。258px ≒ (header42 + 店名235 + 余白32 + dock207)/2。
+   max(24px, …) で極端に低い窓でも下端から離れすぎない。
+   (モバイル <=768px は別途 22dvh で調整済み・不変) */
+@media (min-width: 769px) {
+  .capture-page.is-hero-landing .chat-dock.chat-dock-floating {
+    bottom: max(24px, calc(50dvh - 258px));
+  }
+  .capture-page.is-hero-landing .store-home {
+    bottom: calc(max(24px, calc(50dvh - 258px)) + var(--chat-dock-height, 100px) + 32px);
+  }
+}
+
 /* Claude 風 2段 card: 上段 textarea / 下段 アクション */
 .chat-dock-hero {
   display: flex;
@@ -5973,6 +5988,15 @@ textarea.form-input {
   margin: 4px 0 0;
   letter-spacing: 0.01em;
   font-weight: 600;
+}
+
+/* 多言語表示で romaji を主役にした時の、JP名+支店の照合用サブライン */
+.store-home-altname {
+  font-size: 13px;
+  color: var(--color-text-dim);
+  margin: 4px 0 0;
+  font-weight: 400;
+  letter-spacing: 0.01em;
 }
 
 .store-home-sub {
