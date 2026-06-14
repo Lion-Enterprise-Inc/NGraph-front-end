@@ -1,12 +1,22 @@
 'use client'
 
 import { useEffect } from 'react'
-import { X, SquarePen, UtensilsCrossed, MessageSquare, Store, AlertCircle, Star } from 'lucide-react'
+import { X, SquarePen, UtensilsCrossed, MessageSquare, Store, AlertCircle, Star, ClipboardCheck, CalendarDays, Pencil, Receipt, Eye } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useChatHistory } from '../hooks/useChatHistory'
 import { getUiCopy } from '../i18n/uiCopy'
 import { useAppContext } from './AppProvider'
 import { EventApi } from '../services/api'
+
+type StaffMenuProp = {
+  pending: number
+  onQuestions: () => void
+  onDailyMenu: () => void
+  onBulkEdit: () => void
+  onMenuFix: () => void
+  onProcurement: () => void
+  onPreviewAsCustomer: () => void
+} | null
 
 type HistoryDrawerProps = {
   open: boolean
@@ -14,6 +24,7 @@ type HistoryDrawerProps = {
   restaurantSlug?: string | null
   onNewChat?: () => void
   onSelectThread?: (threadUid: string) => void
+  staffMenu?: StaffMenuProp
 }
 
 export default function HistoryDrawer({
@@ -22,6 +33,7 @@ export default function HistoryDrawer({
   restaurantSlug,
   onNewChat,
   onSelectThread,
+  staffMenu,
 }: HistoryDrawerProps) {
   const router = useRouter()
   const { language, openMenuList, openPreferences, googleReviewUrl } = useAppContext()
@@ -55,6 +67,47 @@ export default function HistoryDrawer({
             <X size={20} strokeWidth={1.75} color="rgba(255,255,255,0.6)" />
           </button>
         </div>
+
+        {/* ── スタッフ（owner token がある時だけ。客には一切出ない）── */}
+        {staffMenu && (
+          <div className="sidebar-section">
+            <div
+              className="sidebar-section-label"
+              style={{
+                fontWeight: 700,
+                background: 'linear-gradient(90deg, #3B82F6, #06B6D4)',
+                WebkitBackgroundClip: 'text', backgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+              }}
+            >
+              スタッフ
+            </div>
+            <button className="sidebar-row" onClick={() => { staffMenu.onQuestions(); onClose?.(); }}>
+              <ClipboardCheck size={16} strokeWidth={1.75} />
+              <span>{staffMenu.pending > 0 ? `質問に答える（${staffMenu.pending}件）` : '確認事項をチェック'}</span>
+            </button>
+            <button className="sidebar-row" onClick={() => { staffMenu.onDailyMenu(); onClose?.(); }}>
+              <CalendarDays size={16} strokeWidth={1.75} />
+              <span>今日の献立</span>
+            </button>
+            <button className="sidebar-row" onClick={() => { staffMenu.onBulkEdit(); onClose?.(); }}>
+              <MessageSquare size={16} strokeWidth={1.75} />
+              <span>まとめて直す（チャット）</span>
+            </button>
+            <button className="sidebar-row" onClick={() => { staffMenu.onMenuFix(); onClose?.(); }}>
+              <Pencil size={16} strokeWidth={1.75} />
+              <span>メニューを修正</span>
+            </button>
+            <button className="sidebar-row" onClick={() => { staffMenu.onProcurement(); onClose?.(); }}>
+              <Receipt size={16} strokeWidth={1.75} />
+              <span>納品書を撮る</span>
+            </button>
+            <button className="sidebar-row" onClick={() => { staffMenu.onPreviewAsCustomer(); onClose?.(); }}>
+              <Eye size={16} strokeWidth={1.75} />
+              <span>お客様画面で確認</span>
+            </button>
+          </div>
+        )}
 
         {/* ── メニューを見る（一番上の主要動線）── */}
         {inRestaurantContext && (

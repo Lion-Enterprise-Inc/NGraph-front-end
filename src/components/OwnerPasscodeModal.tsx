@@ -43,7 +43,7 @@ export default function OwnerPasscodeModal({ token, onSuccess, onCancel }: Owner
   return (
     <div className="owner-gate-overlay">
       <div className="owner-gate-panel" role="dialog" aria-modal="true">
-        <div className="owner-gate-title">店主モード</div>
+        <div className="owner-gate-title">スタッフモード</div>
         <p className="owner-gate-sub">お送りした4桁のパスコードを入力してください(この端末では初回のみ)</p>
         <input
           className="owner-gate-input"

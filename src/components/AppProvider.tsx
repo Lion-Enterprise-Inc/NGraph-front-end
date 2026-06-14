@@ -26,6 +26,19 @@ type PendingAttachment = {
 
 type Theme = "dark" | "light";
 
+// スタッフモードのハンバーガー項目。CapturePage が ownerSession 確立時に登録し、
+// HistoryDrawer(ハンバーガー)がこれを読んで「スタッフ」セクションを描画する。
+// 客 or プレビュー中は null(=スタッフ項目を出さない)。
+type StaffMenu = {
+  pending: number;            // 未回答質問数(②のバッジ)
+  onQuestions: () => void;    // ② 質問に答える
+  onDailyMenu: () => void;    // ③ 今日の献立
+  onBulkEdit: () => void;     // ④ まとめて直す
+  onMenuFix: () => void;      // メニューを修正(一覧)
+  onProcurement: () => void;  // ⑤ 納品書を撮る
+  onPreviewAsCustomer: () => void; // ⑧ お客様画面で確認
+} | null;
+
 type AppContextValue = {
   language: string;
   setLanguage: (code: string, source?: string) => void;
@@ -59,6 +72,9 @@ type AppContextValue = {
   // 店主モードのセッショントークン(MenuListDrawer で編集UIを出すか判定)
   ownerSessionToken: string | null;
   setOwnerSessionToken: (token: string | null) => void;
+  // スタッフモードのハンバーガー項目(CapturePage が登録、HistoryDrawer が描画)
+  staffMenu: StaffMenu;
+  setStaffMenu: (menu: StaffMenu) => void;
   geoLocation: { lat: number; lng: number } | null;
   setGeoLocation: (loc: { lat: number; lng: number } | null) => void;
   theme: Theme;
@@ -109,6 +125,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [onOpenPopular, setOnOpenPopular] = useState<(() => void) | null>(null);
   const [onAskAbout, setOnAskAbout] = useState<((query: string) => void) | null>(null);
   const [ownerSessionToken, setOwnerSessionToken] = useState<string | null>(null);
+  const [staffMenu, setStaffMenu] = useState<StaffMenu>(null);
 
   // オンボーディング: 初回訪問 (店舗 context あり) で表示
   const [onboardingOpen, setOnboardingOpen] = useState(false);
@@ -241,6 +258,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
           setOnAskAbout,
           ownerSessionToken,
           setOwnerSessionToken,
+          staffMenu,
+          setStaffMenu,
           geoLocation,
           setGeoLocation,
           theme,
@@ -273,6 +292,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
               restaurantSlug={restaurantSlug}
               onNewChat={onNewChat ?? undefined}
               onSelectThread={onSelectThread ?? undefined}
+              staffMenu={staffMenu}
             />
             <MenuListDrawer
               open={menuListOpen}

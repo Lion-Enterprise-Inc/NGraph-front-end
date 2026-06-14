@@ -287,6 +287,7 @@ export default function CapturePage({
     setOnOpenPopular,
     setOnAskAbout,
     setOwnerSessionToken,
+    setStaffMenu,
     geoLocation,
   } = useAppContext();
   const activeLanguage = contextLanguage ?? language ?? "ja";
@@ -680,6 +681,11 @@ export default function CapturePage({
   // 店主の専用フロー(QA/献立/編集)のどれかが開いているか。客向けUIの隠蔽は全部これで判定
   const ownerFlowActive = ownerQAActive || ownerDailyActive || ownerEditActive;
   const [ownerGateOpen, setOwnerGateOpen] = useState(false);
+  // ⑧お客様画面で確認: スタッフUIを一時的に隠して客の見え方を確認(tokenは保持)
+  const [previewAsCustomer, setPreviewAsCustomer] = useState(false);
+  // スタッフUI(バッジ・カード編集ボタン・ハンバーガーのスタッフ項目)を出すか。
+  // ownerSession があり、かつプレビュー中でない時だけ。
+  const staffUiActive = !!ownerSession && !previewAsCustomer;
   // NFGカードの「✏️この料理を直す」で開く個別編集パネルの対象menu_uid
   const [ownerEditMenuUid, setOwnerEditMenuUid] = useState<string | null>(null);
   const [ownerAllergenMaster, setOwnerAllergenMaster] = useState<OwnerAllergen[]>([]);
@@ -734,6 +740,21 @@ export default function CapturePage({
       .then(setOwnerAllergenMaster)
       .catch(() => {});
   }, [ownerSession, ownerAllergenMaster.length]);
+
+  // スタッフ項目をハンバーガー(HistoryDrawer)に登録。客/プレビュー中は null=出さない。
+  useEffect(() => {
+    if (!staffUiActive) { setStaffMenu(null); return; }
+    setStaffMenu({
+      pending: ownerPending,
+      onQuestions: () => { setOwnerDailyActive(false); setOwnerEditActive(false); setOwnerQAActive(true); },
+      onDailyMenu: () => { setOwnerQAActive(false); setOwnerEditActive(false); setOwnerDailyActive(true); },
+      onBulkEdit: () => { setOwnerQAActive(false); setOwnerDailyActive(false); setOwnerEditActive(true); },
+      onMenuFix: () => { setOwnerQAActive(false); setOwnerDailyActive(false); setOwnerEditActive(false); openMenuList(); },
+      onProcurement: () => { procurementInputRef.current?.click(); },
+      onPreviewAsCustomer: () => { setOwnerQAActive(false); setOwnerDailyActive(false); setOwnerEditActive(false); setPreviewAsCustomer(true); },
+    });
+    return () => setStaffMenu(null);
+  }, [staffUiActive, ownerPending, setStaffMenu, openMenuList]);
   
   const selectedRestaurant = restaurantData;
   const nfgParam = searchParams?.get("nfg") || (cleanUrlMatch ? cleanUrlMatch[4] : null);
@@ -2014,83 +2035,48 @@ export default function CapturePage({
         </div>
       )}
 
-      {ownerSession && (
-        <div className="owner-banner">
-          <span className="owner-banner-label">店主モード</span>
-          <div className="owner-banner-actions">
-            {/* 開いてるフローのボタンだけ濃い緑(active)。他の入口はゴースト化して「どれが開いてるか」を一目で分かるように */}
-            {ownerEditActive ? (
-              <button type="button" className="owner-banner-btn" onClick={() => setOwnerEditActive(false)}>
-                ✕ 編集を閉じる
-              </button>
-            ) : (
-              <button type="button" className={`owner-banner-btn${ownerFlowActive ? ' owner-banner-btn-ghost' : ''}`} onClick={() => { setOwnerQAActive(false); setOwnerDailyActive(false); setOwnerEditActive(true); }}>
-                チャットで編集
-              </button>
-            )}
-            {ownerDailyActive ? (
-              <button type="button" className="owner-banner-btn" onClick={() => setOwnerDailyActive(false)}>
-                ✕ 献立を閉じる
-              </button>
-            ) : (
-              <button type="button" className={`owner-banner-btn${ownerFlowActive ? ' owner-banner-btn-ghost' : ''}`} onClick={() => { setOwnerQAActive(false); setOwnerEditActive(false); setOwnerDailyActive(true); }}>
-                今日の献立
-              </button>
-            )}
-            {ownerQAActive ? (
-              <button type="button" className="owner-banner-btn" onClick={() => setOwnerQAActive(false)}>
-                ✕ 質問を閉じる
-              </button>
-            ) : (
-              <button type="button" className={`owner-banner-btn${ownerFlowActive ? ' owner-banner-btn-ghost' : ''}`} onClick={() => { setOwnerDailyActive(false); setOwnerEditActive(false); setOwnerQAActive(true); }}>
-                {ownerPending > 0 ? `質問に答える(${ownerPending}件)` : '確認事項をチェック'}
-              </button>
-            )}
-            {/* メニュー一覧→各品を修正(店主モードでは編集UIが出る) */}
-            <button type="button" className="owner-banner-btn owner-banner-btn-ghost" onClick={() => { setOwnerQAActive(false); setOwnerDailyActive(false); setOwnerEditActive(false); openMenuList(); }}>
-              メニューを修正
-            </button>
-            {/* 納品書・発注書の撮影: 仕入れ語彙を蓄積→AIの質問が店の現実に寄る(金額は読み取らない) */}
-            <input
-              ref={procurementInputRef}
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              capture="environment"
-              style={{ display: 'none' }}
-              onChange={(e) => {
-                const f = e.target.files?.[0];
-                if (f) handleProcurementPhoto(f);
-                e.target.value = '';
-              }}
-            />
-            <button
-              type="button"
-              className="owner-banner-btn owner-banner-btn-ghost"
-              disabled={procurementBusy}
-              onClick={() => procurementInputRef.current?.click()}
-            >
-              {procurementBusy ? '読み取り中…' : '納品書を撮る'}
-            </button>
-            {/* 店主モードを終了 = owner= をURLごと外してクリーンな客URLへ。
-                トークンをURL/履歴に残さない(パスコードのキャンセルと同じ挙動)。
-                再入店は店主リンクを開き直せばOK(localStorageのセッションで復元)。 */}
-            <button
-              type="button"
-              className="owner-banner-exit"
-              onClick={() => {
-                const params = new URLSearchParams(window.location.search);
-                params.delete('owner');
-                const qs = params.toString();
-                window.location.replace(`${window.location.pathname}${qs ? `?${qs}` : ''}`);
-              }}
-            >
-              店主モードを終了
-            </button>
+      {/* スタッフモードのインジケータ(常時)。操作はハンバーガー ≡ のスタッフセクションから。 */}
+      {staffUiActive && (
+        <>
+          <div className="owner-banner">
+            <span className="owner-banner-label" style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+              <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'linear-gradient(90deg, #3B82F6, #06B6D4)' }} />
+              <span style={{ fontWeight: 700, background: 'linear-gradient(90deg, #3B82F6, #06B6D4)', WebkitBackgroundClip: 'text', backgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                スタッフモード
+              </span>
+            </span>
+            <span style={{ fontSize: 12, opacity: 0.7, marginLeft: 'auto' }}>
+              ≡ から操作{ownerPending > 0 ? `・未回答 ${ownerPending}件` : ''}
+            </span>
           </div>
+          {/* 納品書入力(ハンバーガーの「納品書を撮る」から発火。金額は読み取らない) */}
+          <input
+            ref={procurementInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            capture="environment"
+            style={{ display: 'none' }}
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) handleProcurementPhoto(f);
+              e.target.value = '';
+            }}
+          />
+        </>
+      )}
+      {/* ⑧お客様プレビュー中: スタッフUIを隠して客の見え方を確認中。タップでスタッフに戻る(tokenは保持) */}
+      {ownerSession && previewAsCustomer && (
+        <div
+          className="owner-banner"
+          style={{ cursor: 'pointer', justifyContent: 'center', gap: 8 }}
+          onClick={() => setPreviewAsCustomer(false)}
+        >
+          <span className="owner-banner-label">👁 お客様プレビュー中</span>
+          <span style={{ fontSize: 12, textDecoration: 'underline' }}>タップでスタッフに戻る</span>
         </div>
       )}
       {/* 納品書読み取りの結果(バナーの横スクロール行の外に出す) */}
-      {ownerSession && procurementMsg && (
+      {staffUiActive && procurementMsg && (
         <div className="owner-banner-note">
           {procurementMsg}
           <button type="button" className="owner-banner-note-close" onClick={() => setProcurementMsg(null)} aria-label="閉じる">✕</button>
@@ -2297,7 +2283,7 @@ export default function CapturePage({
                           });
                         }}
                         onAskAbout={handleAskAbout}
-                        onOwnerEdit={ownerSession ? (uid) => setOwnerEditMenuUid(uid) : undefined}
+                        onOwnerEdit={staffUiActive ? (uid) => setOwnerEditMenuUid(uid) : undefined}
                         onNfgFeedback={handleNfgFeedback}
                         nfgFeedback={nfgFeedback}
                         onPhotoUpload={handlePhotoUpload}
@@ -2498,7 +2484,7 @@ export default function CapturePage({
                           });
                         }}
                         onAskAbout={handleAskAbout}
-                        onOwnerEdit={ownerSession ? (uid) => setOwnerEditMenuUid(uid) : undefined}
+                        onOwnerEdit={staffUiActive ? (uid) => setOwnerEditMenuUid(uid) : undefined}
                         onNfgFeedback={handleNfgFeedback}
                         nfgFeedback={nfgFeedback}
                         onPhotoUpload={handlePhotoUpload}
