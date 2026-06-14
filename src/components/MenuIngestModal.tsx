@@ -60,12 +60,15 @@ export default function MenuIngestModal({ open, onClose, sessionToken, onOpenMen
     marginTop: 10, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8,
   }
 
+  // 送信中はクローズを抑止(途中で閉じてアップロードを取りこぼさない)
+  const closeIfIdle = () => { if (!busy) onClose() }
+
   return (
-    <div style={overlay} onClick={onClose}>
+    <div style={overlay} onClick={closeIfIdle}>
       <div style={panel} onClick={(e) => e.stopPropagation()}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
           <span style={{ fontSize: 16, fontWeight: 700 }}>メニューを登録</span>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit' }}>
+          <button onClick={closeIfIdle} disabled={busy} style={{ background: 'none', border: 'none', cursor: busy ? 'not-allowed' : 'pointer', color: 'inherit', opacity: busy ? 0.4 : 1 }}>
             <X size={20} />
           </button>
         </div>

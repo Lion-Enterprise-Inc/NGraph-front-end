@@ -2988,19 +2988,20 @@ export default function CapturePage({
         </div>
       )}
 
-      {/* スタッフモード: リンク共有(お客様用QR/スタッフ招待) */}
-      {ownerSession && (
+      {/* スタッフモード: リンク共有(お客様用QR/スタッフ招待)。
+          open ごとアンマウントして毎回フレッシュな状態で開く(再オープン時の古い状態残り防止) */}
+      {ownerSession && shareOpen && (
         <StaffShareModal
-          open={shareOpen}
+          open
           onClose={() => setShareOpen(false)}
           sessionToken={ownerSession.sessionToken}
         />
       )}
 
-      {/* スタッフモード: メニュー登録(写真→AI取込) */}
-      {ownerSession && (
+      {/* スタッフモード: メニュー登録(写真→AI取込)。同上、open ごとアンマウント */}
+      {ownerSession && menuIngestOpen && (
         <MenuIngestModal
-          open={menuIngestOpen}
+          open
           onClose={() => setMenuIngestOpen(false)}
           sessionToken={ownerSession.sessionToken}
           onOpenMenuList={() => openMenuList()}
@@ -3018,6 +3019,7 @@ export default function CapturePage({
             setOwnerSession({ sessionToken: res.session_token, restaurantName: res.restaurant_name });
             setOwnerPending(res.pending_count);
             setOwnerGateOpen(false);
+            setPreviewAsCustomer(false); // 再認証直後は必ずスタッフUIを出す(プレビュー残り防止)
           }}
           onCancel={() => {
             // お客様として見る = 店主トークンをURLごと捨てて客のクリーンURLへ。
