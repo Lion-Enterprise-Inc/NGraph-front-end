@@ -8908,11 +8908,21 @@ textarea.form-input {
   margin-top: 8px;
 }
 .nfgcard-allergen-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   font-size: 12px;
-  padding: 3px 9px;
+  padding: 3px 9px 3px 6px;
   border-radius: 10px;
   background: rgba(220, 38, 38, 0.2);
   color: #f87171;
+}
+/* アレルゲンのカラーピクト(OpenMoji)。テキストは残しつつ一目の認識を足す */
+.nfgcard-allergen-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  display: block;
 }
 .nfgcard-ingredients {
   display: flex;

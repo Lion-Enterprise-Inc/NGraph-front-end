@@ -5,6 +5,7 @@ import { ThumbsUp, ThumbsDown } from "lucide-react";
 import type { QuickExplainItem } from "../services/api";
 import { getCategoryLabel } from "../i18n/categoryLabels";
 import { getOwnerCommentLabel, getAllergenTrustNote, isAllergensVerified } from "../i18n/trustCopy";
+import { AllergenIcon } from "./AllergenIcon";
 
 // レーダーチャート表示フラグ（機能成熟後にtrueに戻す）
 const SHOW_TASTE_RADAR = false;
@@ -513,7 +514,12 @@ export default function NFGCard({
             {item.allergens && item.allergens.length > 0 && (
               <>
                 <div className={`nfgcard-allergens${item.restriction_match ? ' nfgcard-tags-emphasized' : ''}`}>
-                  {item.allergens.map((a, i) => <span key={i} className="nfgcard-allergen-tag">{a}</span>)}
+                  {item.allergens.map((a, i) => (
+                    <span key={i} className="nfgcard-allergen-tag">
+                      <AllergenIcon label={a} />
+                      {a}
+                    </span>
+                  ))}
                 </div>
                 {/* アレルゲン信頼度: 店主確認済み(✓緑)かAI推定(免責)かを常時明示 */}
                 <div className={`nfgcard-allergen-trust${isAllergensVerified(item) ? ' nfgcard-allergen-trust-verified' : ''}`}>
