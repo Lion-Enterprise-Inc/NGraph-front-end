@@ -31,6 +31,7 @@ type Theme = "dark" | "light";
 // 客 or プレビュー中は null(=スタッフ項目を出さない)。
 type StaffMenu = {
   pending: number;            // 未回答質問数(②のバッジ)
+  onRegisterMenu: () => void; // ① メニューを登録(写真)
   onQuestions: () => void;    // ② 質問に答える
   onDailyMenu: () => void;    // ③ 今日の献立
   onBulkEdit: () => void;     // ④ まとめて直す

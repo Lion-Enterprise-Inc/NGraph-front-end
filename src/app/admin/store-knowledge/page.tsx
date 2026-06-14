@@ -46,10 +46,6 @@ export default function StoreKnowledgePage() {
   const toast = useToast()
 
 
-  const [showUploadModal, setShowUploadModal] = useState(false)
-  const [uploadExpDays, setUploadExpDays] = useState(7)
-  const [creatingUpload, setCreatingUpload] = useState(false)
-  const [uploadResult, setUploadResult] = useState<{ url: string; passcode: string } | null>(null)
 
   const [showOwnerLinkModal, setShowOwnerLinkModal] = useState(false)
   const [creatingOwnerLink, setCreatingOwnerLink] = useState(false)
@@ -311,26 +307,6 @@ export default function StoreKnowledgePage() {
     }
   }
 
-  // Upload handler
-  const handleCreateUploadLink = async () => {
-    if (!slug) return
-    setCreatingUpload(true)
-    try {
-      const data = await apiClient.post('/owner-upload/create', {
-        restaurant_slug: slug,
-        expires_in_days: uploadExpDays,
-      }) as any
-      const r = data?.result || data
-      const baseUrl = typeof window !== 'undefined' ? window.location.origin : ''
-      setUploadResult({ url: `${baseUrl}/upload?token=${r.token}`, passcode: r.passcode })
-      toast('success', t.storeKnowledge.uploadCreated)
-    } catch {
-      toast('error', t.storeKnowledge.uploadFailed)
-    } finally {
-      setCreatingUpload(false)
-    }
-  }
-
   // 店主モードリンク発行（店舗につき常設1本を使い回す。BEが完全なURLを返す）
   const handleCreateOwnerLink = async () => {
     if (!slug) return
@@ -418,10 +394,6 @@ export default function StoreKnowledgePage() {
               padding: '10px 16px', background: '#3B82F6', color: '#fff',
               border: '1px solid #3B82F6', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: 600,
             }}>{t.storeKnowledge.ownerLinkBtn}</button>
-            <button onClick={() => { setUploadResult(null); setShowUploadModal(true) }} style={{
-              padding: '10px 16px', background: 'transparent', color: '#16A34A',
-              border: '1px solid #16A34A', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: 600,
-            }}>{t.storeKnowledge.uploadLinkBtn}</button>
           </div>
         </div>
         <ProgressBar filled={answered} total={total} />
@@ -730,95 +702,6 @@ export default function StoreKnowledgePage() {
           >
             {savingDish ? t.storeKnowledge.saving : t.storeKnowledge.phase2FloatingSave(dishAnswered)}
           </button>
-        </div>
-      )}
-
-      {/* Upload modal */}
-      {showUploadModal && (
-        <div style={{
-          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-          background: 'rgba(0,0,0,0.6)', zIndex: 100,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-        }} onClick={() => setShowUploadModal(false)}>
-          <div style={{
-            background: 'var(--bg-surface, #1E293B)', borderRadius: 12,
-            padding: 24, width: 400, maxWidth: '90vw',
-            border: '1px solid var(--border, #334155)',
-          }} onClick={e => e.stopPropagation()}>
-            <h3 style={{ margin: '0 0 16px', fontSize: 16, fontWeight: 600 }}>{t.storeKnowledge.uploadModalTitle}</h3>
-            <p style={{ fontSize: 13, color: 'var(--muted, #94A3B8)', marginBottom: 16 }}>
-              {t.storeKnowledge.uploadModalDesc(slug)}
-            </p>
-            {!uploadResult ? (
-              <>
-                <div style={{ marginBottom: 16 }}>
-                  <label style={{ fontSize: 13, display: 'block', marginBottom: 4 }}>{t.storeKnowledge.fieldExpiresDays}</label>
-                  <input type="number" min={1} max={30} value={uploadExpDays}
-                    onChange={e => setUploadExpDays(Number(e.target.value))}
-                    style={{
-                      width: '100%', padding: '8px 12px',
-                      background: 'var(--bg-input, #0F172A)', color: 'var(--text, #fff)',
-                      border: '1px solid var(--border-strong, #475569)', borderRadius: 8, fontSize: 14,
-                    }}
-                  />
-                </div>
-                <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
-                  <button onClick={() => setShowUploadModal(false)} style={{
-                    padding: '8px 16px', background: 'transparent', color: 'var(--muted)',
-                    border: '1px solid var(--border)', borderRadius: 8, cursor: 'pointer', fontSize: 13,
-                  }}>{t.storeKnowledge.cancel}</button>
-                  <button onClick={handleCreateUploadLink} disabled={creatingUpload} style={{
-                    padding: '8px 16px', background: '#16A34A', color: '#fff',
-                    border: 'none', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: 600,
-                    opacity: creatingUpload ? 0.6 : 1,
-                  }}>{creatingUpload ? t.storeKnowledge.creating : t.storeKnowledge.create}</button>
-                </div>
-              </>
-            ) : (
-              <>
-                <div style={{
-                  background: 'var(--bg-input, #0F172A)', borderRadius: 8, padding: 16, marginBottom: 12,
-                }}>
-                  <div style={{ marginBottom: 12 }}>
-                    <label style={{ fontSize: 11, color: 'var(--muted)', display: 'block', marginBottom: 4 }}>{t.storeKnowledge.urlLabel}</label>
-                    <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                      <code style={{ fontSize: 12, flex: 1, wordBreak: 'break-all', color: '#16A34A' }}>
-                        {uploadResult.url}
-                      </code>
-                      <button onClick={() => copyToClipboard(uploadResult.url)} style={{
-                        padding: '4px 10px', background: '#334155', color: '#fff', border: 'none',
-                        borderRadius: 6, cursor: 'pointer', fontSize: 12, whiteSpace: 'nowrap',
-                      }}>{t.storeKnowledge.copyBtn}</button>
-                    </div>
-                  </div>
-                  <div>
-                    <label style={{ fontSize: 11, color: 'var(--muted)', display: 'block', marginBottom: 4 }}>{t.storeKnowledge.passcodeLabel}</label>
-                    <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                      <code style={{ fontSize: 20, fontWeight: 700, letterSpacing: 4 }}>
-                        {uploadResult.passcode}
-                      </code>
-                      <button onClick={() => copyToClipboard(uploadResult.passcode)} style={{
-                        padding: '4px 10px', background: '#334155', color: '#fff', border: 'none',
-                        borderRadius: 6, cursor: 'pointer', fontSize: 12,
-                      }}>{t.storeKnowledge.copyBtn}</button>
-                    </div>
-                  </div>
-                </div>
-                <button onClick={() => {
-                  const msg = t.storeKnowledge.lineMsgUpload(uploadResult.url, uploadResult.passcode)
-                  copyToClipboard(msg)
-                }} style={{
-                  width: '100%', padding: '10px', background: '#16A34A', color: '#fff',
-                  border: 'none', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: 600,
-                  marginBottom: 8,
-                }}>{t.storeKnowledge.lineCopyBtn}</button>
-                <button onClick={() => setShowUploadModal(false)} style={{
-                  width: '100%', padding: '8px', background: 'transparent', color: 'var(--muted)',
-                  border: '1px solid var(--border)', borderRadius: 8, cursor: 'pointer', fontSize: 13,
-                }}>{t.storeKnowledge.close}</button>
-              </>
-            )}
-          </div>
         </div>
       )}
 

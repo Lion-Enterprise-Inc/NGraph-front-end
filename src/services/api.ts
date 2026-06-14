@@ -1772,6 +1772,20 @@ export const OwnerChatApi = {
     if (!resp.ok) throw new Error('photo_analyze');
     return resp.json();
   },
+  // スタッフモードからメニュー表写真を取り込む(解析は非同期・既存パイプライン流用)
+  ingestMenuPhoto: async (sessionToken: string, image: File): Promise<{ item_uid: string; image_url: string }> => {
+    const form = new FormData();
+    form.append('image', image);
+    const resp = await fetch(`${API_BASE_URL}/owner-chat/menu/ingest-photo`, {
+      method: 'POST',
+      headers: { 'X-Owner-Token': sessionToken },
+      body: form,
+      signal: AbortSignal.timeout(60000),
+    });
+    if (resp.status === 401) throw new Error('unauthorized');
+    if (!resp.ok) throw new Error('ingest_menu_photo');
+    return resp.json();
+  },
   procurementPhoto: async (sessionToken: string, image: File): Promise<ProcurementPhotoResult> => {
     // 納品書・発注書の撮影(商品名のみ読み取り。金額・仕入先は読み取らない)
     const form = new FormData();

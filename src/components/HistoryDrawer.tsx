@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
-import { X, SquarePen, UtensilsCrossed, MessageSquare, Store, AlertCircle, Star, ClipboardCheck, CalendarDays, Pencil, Receipt, Eye, Share2 } from 'lucide-react'
+import { X, SquarePen, UtensilsCrossed, MessageSquare, Store, AlertCircle, Star, ClipboardCheck, CalendarDays, Pencil, Receipt, Eye, Share2, Camera } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useChatHistory } from '../hooks/useChatHistory'
 import { getUiCopy } from '../i18n/uiCopy'
@@ -10,6 +10,7 @@ import { EventApi } from '../services/api'
 
 type StaffMenuProp = {
   pending: number
+  onRegisterMenu: () => void
   onQuestions: () => void
   onDailyMenu: () => void
   onBulkEdit: () => void
@@ -83,6 +84,10 @@ export default function HistoryDrawer({
             >
               スタッフ
             </div>
+            <button className="sidebar-row" onClick={() => { staffMenu.onRegisterMenu(); onClose?.(); }}>
+              <Camera size={16} strokeWidth={1.75} />
+              <span>メニューを登録（写真）</span>
+            </button>
             <button className="sidebar-row" onClick={() => { staffMenu.onQuestions(); onClose?.(); }}>
               <ClipboardCheck size={16} strokeWidth={1.75} />
               <span>{staffMenu.pending > 0 ? `質問に答える（${staffMenu.pending}件）` : '確認事項をチェック'}</span>

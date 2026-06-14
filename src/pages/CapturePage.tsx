@@ -38,6 +38,7 @@ import OwnerBulkEdit from "../components/OwnerBulkEdit";
 import OwnerMenuEdit from "../components/OwnerMenuEdit";
 import OwnerPasscodeModal from "../components/OwnerPasscodeModal";
 import StaffShareModal from "../components/StaffShareModal";
+import MenuIngestModal from "../components/MenuIngestModal";
 
 function visionToQuickExplain(vi: VisionMenuItem): QuickExplainItem {
   return {
@@ -686,6 +687,8 @@ export default function CapturePage({
   const [previewAsCustomer, setPreviewAsCustomer] = useState(false);
   // ⑥⑦リンク共有モーダル(お客様用QR/スタッフ招待)
   const [shareOpen, setShareOpen] = useState(false);
+  // ①メニュー登録モーダル(写真→AI取込)
+  const [menuIngestOpen, setMenuIngestOpen] = useState(false);
   // スタッフUI(バッジ・カード編集ボタン・ハンバーガーのスタッフ項目)を出すか。
   // ownerSession があり、かつプレビュー中でない時だけ。
   const staffUiActive = !!ownerSession && !previewAsCustomer;
@@ -749,6 +752,7 @@ export default function CapturePage({
     if (!staffUiActive) { setStaffMenu(null); return; }
     setStaffMenu({
       pending: ownerPending,
+      onRegisterMenu: () => { setMenuIngestOpen(true); },
       onQuestions: () => { setOwnerDailyActive(false); setOwnerEditActive(false); setOwnerQAActive(true); },
       onDailyMenu: () => { setOwnerQAActive(false); setOwnerEditActive(false); setOwnerDailyActive(true); },
       onBulkEdit: () => { setOwnerQAActive(false); setOwnerDailyActive(false); setOwnerEditActive(true); },
@@ -2990,6 +2994,16 @@ export default function CapturePage({
           open={shareOpen}
           onClose={() => setShareOpen(false)}
           sessionToken={ownerSession.sessionToken}
+        />
+      )}
+
+      {/* スタッフモード: メニュー登録(写真→AI取込) */}
+      {ownerSession && (
+        <MenuIngestModal
+          open={menuIngestOpen}
+          onClose={() => setMenuIngestOpen(false)}
+          sessionToken={ownerSession.sessionToken}
+          onOpenMenuList={() => openMenuList()}
         />
       )}
 
