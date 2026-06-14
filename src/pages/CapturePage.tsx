@@ -2071,11 +2071,18 @@ export default function CapturePage({
             >
               {procurementBusy ? '読み取り中…' : '納品書を撮る'}
             </button>
-            {/* 店主モードごと抜けて客画面へ(セッションは保持、右下や再タップで戻れる) */}
+            {/* 店主モードを終了 = owner= をURLごと外してクリーンな客URLへ。
+                トークンをURL/履歴に残さない(パスコードのキャンセルと同じ挙動)。
+                再入店は店主リンクを開き直せばOK(localStorageのセッションで復元)。 */}
             <button
               type="button"
               className="owner-banner-exit"
-              onClick={() => { setOwnerQAActive(false); setOwnerDailyActive(false); setOwnerEditActive(false); setOwnerSession(null); }}
+              onClick={() => {
+                const params = new URLSearchParams(window.location.search);
+                params.delete('owner');
+                const qs = params.toString();
+                window.location.replace(`${window.location.pathname}${qs ? `?${qs}` : ''}`);
+              }}
             >
               店主モードを終了
             </button>
