@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
-import { X, SquarePen, UtensilsCrossed, MessageSquare, Store, AlertCircle, Star, ClipboardCheck, CalendarDays, Pencil, Receipt, Eye } from 'lucide-react'
+import { X, SquarePen, UtensilsCrossed, MessageSquare, Store, AlertCircle, Star, ClipboardCheck, CalendarDays, Pencil, Receipt, Eye, Share2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useChatHistory } from '../hooks/useChatHistory'
 import { getUiCopy } from '../i18n/uiCopy'
@@ -15,6 +15,7 @@ type StaffMenuProp = {
   onBulkEdit: () => void
   onMenuFix: () => void
   onProcurement: () => void
+  onShareLinks: () => void
   onPreviewAsCustomer: () => void
 } | null
 
@@ -101,6 +102,10 @@ export default function HistoryDrawer({
             <button className="sidebar-row" onClick={() => { staffMenu.onProcurement(); onClose?.(); }}>
               <Receipt size={16} strokeWidth={1.75} />
               <span>納品書を撮る</span>
+            </button>
+            <button className="sidebar-row" onClick={() => { staffMenu.onShareLinks(); onClose?.(); }}>
+              <Share2 size={16} strokeWidth={1.75} />
+              <span>リンクを共有</span>
             </button>
             <button className="sidebar-row" onClick={() => { staffMenu.onPreviewAsCustomer(); onClose?.(); }}>
               <Eye size={16} strokeWidth={1.75} />

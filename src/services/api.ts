@@ -1691,6 +1691,17 @@ export const OwnerChatApi = {
     if (!resp.ok) throw new Error(resp.status === 401 ? 'passcode' : 'auth');
     return resp.json();
   },
+  // スタッフモードから共有用リンク(お客様用/スタッフ招待+パスコード)を取得
+  share: async (sessionToken: string): Promise<{
+    customer_url: string; staff_url: string; passcode: string;
+  }> => {
+    const resp = await fetch(`${API_BASE_URL}/owner-chat/share`, {
+      headers: { 'X-Owner-Token': sessionToken },
+    });
+    if (resp.status === 401) throw new Error('unauthorized');
+    if (!resp.ok) throw new Error('share');
+    return resp.json();
+  },
   questions: async (sessionToken: string, limit = 3): Promise<{
     questions: OwnerQuestion[]; total_remaining: number;
   }> => {

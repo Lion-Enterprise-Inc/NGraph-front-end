@@ -36,6 +36,7 @@ type StaffMenu = {
   onBulkEdit: () => void;     // ④ まとめて直す
   onMenuFix: () => void;      // メニューを修正(一覧)
   onProcurement: () => void;  // ⑤ 納品書を撮る
+  onShareLinks: () => void;   // ⑥⑦ リンク共有(お客様用QR/スタッフ招待)
   onPreviewAsCustomer: () => void; // ⑧ お客様画面で確認
 } | null;
 
