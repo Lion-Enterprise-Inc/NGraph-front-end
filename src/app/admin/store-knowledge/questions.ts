@@ -30,9 +30,15 @@ export interface DishQuestion {
   target_field?: string
 }
 
+export interface AnswerProvenance {
+  via: string  // owner_mode | owner_survey | admin_owner | admin_platform
+  by_user_id: number | null
+}
+
 export interface SurveyPreview {
   restaurant_name: string
   kitchen_questions: KitchenQuestion[]
   dish_questions: DishQuestion[]
   existing_answers: Record<string, string>
+  answer_provenance?: Record<string, AnswerProvenance>
 }

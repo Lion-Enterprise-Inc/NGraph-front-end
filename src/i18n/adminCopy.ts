@@ -586,6 +586,7 @@ export type AdminCopy = {
     saving: string
     phase2FloatingSave: (n: number) => string
     affectedSuffix: (n: number) => string
+    provenanceLabel: (via: string) => string
     propagating: string
     answerInputPlaceholder: string
     maxSelectHint: (max: number, selected: number) => string
@@ -1630,6 +1631,10 @@ const adminCopy: Record<AdminLang, AdminCopy> = {
       saving: '保存中...',
       phase2FloatingSave: (n) => `Phase 2 保存 (${n}件)`,
       affectedSuffix: (n) => `${n}品対象`,
+      provenanceLabel: (via) => ({
+        owner_mode: '店主モード', owner_survey: '店主(アンケート)',
+        admin_owner: '店主(管理)', admin_platform: 'プラットフォーム代行',
+      } as Record<string, string>)[via] || via,
       propagating: '波及処理中...',
       answerInputPlaceholder: '回答を入力',
       maxSelectHint: (max, selected) => `最大${max}品選択（${selected}品選択中）`,
@@ -2684,6 +2689,10 @@ const adminCopy: Record<AdminLang, AdminCopy> = {
       saving: 'Saving...',
       phase2FloatingSave: (n) => `Save Phase 2 (${n})`,
       affectedSuffix: (n) => `${n} items`,
+      provenanceLabel: (via) => ({
+        owner_mode: 'Owner mode', owner_survey: 'Owner (survey)',
+        admin_owner: 'Owner (admin)', admin_platform: 'Platform (proxy)',
+      } as Record<string, string>)[via] || via,
       propagating: 'Propagating...',
       answerInputPlaceholder: 'Enter answer',
       maxSelectHint: (max, selected) => `Pick up to ${max} (${selected} selected)`,

@@ -106,6 +106,7 @@ export default function StoreKnowledgePage() {
         kitchen_questions: raw.kitchen_questions || [],
         dish_questions: raw.dish_questions || [],
         existing_answers: raw.existing_answers || {},
+        answer_provenance: raw.answer_provenance || {},
       }
       setPreview(data)
       if (data.existing_answers) {
@@ -400,6 +401,22 @@ export default function StoreKnowledgePage() {
     return typeof parentVal === 'string' && parentVal !== '' && parentVal !== 'unknown'
   }
 
+  // 出所バッジ: その回答を店主本人が入れたか、プラットフォームが代行入力したか
+  const renderProvenanceBadge = (questionId: string) => {
+    const prov = preview?.answer_provenance?.[questionId]
+    if (!prov?.via) return null
+    const isPlatform = prov.via === 'admin_platform'
+    return (
+      <span style={{
+        fontSize: 10, fontWeight: 600, padding: '2px 6px', borderRadius: 4, whiteSpace: 'nowrap',
+        background: isPlatform ? 'rgba(245,158,11,0.15)' : 'rgba(34,197,94,0.15)',
+        color: isPlatform ? '#F59E0B' : '#22C55E',
+      }}>
+        {t.storeKnowledge.provenanceLabel(prov.via)}
+      </span>
+    )
+  }
+
   if (loading) {
     return <AdminLayout title={t.storeKnowledge.title}><div style={{ textAlign: 'center', padding: 60, color: 'var(--muted)' }}>{t.layout.loading}</div></AdminLayout>
   }
@@ -465,8 +482,11 @@ export default function StoreKnowledgePage() {
                   <span style={{ fontSize: 14, color: 'var(--text)', fontWeight: 500 }}>
                     {q.is_branch && '↳ '}{q.question}
                   </span>
-                  <span style={{ fontSize: 11, color: '#64748B', whiteSpace: 'nowrap', marginLeft: 8 }}>
-                    {t.storeKnowledge.affectedSuffix(q.affected_menu_count)}
+                  <span style={{ display: 'flex', gap: 6, alignItems: 'center', marginLeft: 8, whiteSpace: 'nowrap' }}>
+                    {renderProvenanceBadge(q.id)}
+                    <span style={{ fontSize: 11, color: '#64748B' }}>
+                      {t.storeKnowledge.affectedSuffix(q.affected_menu_count)}
+                    </span>
                   </span>
                 </div>
                 {q.type === 'menu_select' ? (
