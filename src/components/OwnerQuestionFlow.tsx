@@ -13,6 +13,8 @@ import { OwnerChatApi, type OwnerQuestion, type PhotoAnalyzeResult } from '../se
 const BATCH_SIZE = 3
 
 type HistoryItem = {
+  _id: number          // 楽観更新の同定用(応答が裏で返ったとき該当履歴を特定)
+  saving?: boolean     // 保存中(波及POSTが裏で進行中。完了で false)
   q: OwnerQuestion
   answerLabel: string
   promoted: boolean
@@ -21,13 +23,13 @@ type HistoryItem = {
   purged?: number
   // 「商品によって違う」回答: 品ごとに分解して追加された質問の数
   expanded?: number
-  // 取り消し(undo)用にサーバーが返した逆操作情報
+  // 取り消し(undo)用にサーバーが返した逆操作情報(保存完了まで null)
   undo: {
     question_obj: Record<string, unknown>
     added_allergens: string[]
     added_ingredients: string[]
     prev_rank: string | null
-  }
+  } | null
 }
 
 // 下部入力バーが何を受けているか
@@ -68,6 +70,8 @@ export default function OwnerQuestionFlow({ sessionToken, onClose, onCountChange
   // 「分からない(あとで答える)」のスキップ記憶。タブを閉じるまで有効(sessionStorage)、
   // 次の来訪では再び聞く=回答データは作らない(分からないものを推測で埋めさせない)
   const skippedKeysRef = useRef<Set<string>>(new Set())
+  const histIdRef = useRef(0)                       // 楽観履歴の連番id
+  const inFlightRef = useRef<Set<string>>(new Set()) // 送信中の質問キー(同一質問の二重送信防止)
   const [skippedCount, setSkippedCount] = useState(0)
   const bottomRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
@@ -177,23 +181,46 @@ export default function OwnerQuestionFlow({ sessionToken, onClose, onCountChange
     closeInput()
   }
 
-  const submitAnswer = async (selected: string[] | undefined, textNote?: string) => {
-    if (!current || submitting) return
-    setSubmitting(true)
+  // 楽観更新: タップ→待たずに即・次の質問へ進む。波及POSTは裏で実行し、
+  // 応答が返ったら該当履歴に確定情報(波及件数・undo情報)を後追いで埋める。
+  // 「回答の値」による分岐は手元のキューで成立済みなので、重いメニュー波及を
+  // UIブロックの理由にしない(店主を待たせない=離脱防止)。
+  const submitAnswer = (selected: string[] | undefined, textNote?: string) => {
+    if (!current) return
+    const answered = current
+    const key = skipKey(answered)
+    if (inFlightRef.current.has(key)) return  // 同一質問の二重送信防止
+    inFlightRef.current.add(key)
+    const id = ++histIdRef.current
+
+    // 1) 即座に履歴へ積み、次の質問へ進める(保存中表示)
+    setHistory(prev => [...prev, {
+      _id: id,
+      saving: true,
+      q: answered,
+      answerLabel: selected?.join('、') || textNote || '',
+      promoted: false,
+      purged: 0,
+      expanded: 0,
+      undo: null,
+    }])
+    setQueue(prev => prev.slice(1))
     setError(null)
-    try {
-      const res = await OwnerChatApi.answer(sessionToken, {
-        menu_uid: current.menu_uid,
-        question: current.question,
-        selected,
-        text_note: textNote,
-      })
+    closeInput()
+
+    // 2) 裏で保存+波及。完了したら該当履歴を確定。
+    OwnerChatApi.answer(sessionToken, {
+      menu_uid: answered.menu_uid,
+      question: answered.question,
+      selected,
+      text_note: textNote,
+    }).then(res => {
       const qobj = (res.question_obj ?? {}) as Record<string, unknown>
-      const purged = isStoreLevelKind(current) ? Number(qobj.purged_questions) || 0 : 0
-      const expanded = isStoreLevelKind(current) ? Number(qobj.expanded_questions) || 0 : 0
-      setHistory(prev => [...prev, {
-        q: current,
-        answerLabel: selected?.join('、') || textNote || '',
+      const purged = isStoreLevelKind(answered) ? Number(qobj.purged_questions) || 0 : 0
+      const expanded = isStoreLevelKind(answered) ? Number(qobj.expanded_questions) || 0 : 0
+      setHistory(prev => prev.map(h => h._id === id ? {
+        ...h,
+        saving: false,
         promoted: res.promoted_to_a,
         purged,
         expanded,
@@ -203,13 +230,11 @@ export default function OwnerQuestionFlow({ sessionToken, onClose, onCountChange
           added_ingredients: res.added_ingredients,
           prev_rank: res.prev_rank,
         },
-      }])
-      setQueue(prev => prev.slice(1))
+      } : h))
       setTotalRemaining(res.total_remaining)
       onCountChange?.(res.total_remaining)
       // 厨房回答のパージはスキップ済みの単品質問もサーバ側から消すことがある。
-      // skippedCountに残すと残数の二重減算(実残数より少なく表示→偽の「以上です」)に
-      // なるため、単品スキップの記憶をリセットする(消えてない質問はまた出る=正しい挙動)
+      // skippedCountに残すと残数の二重減算→偽の「以上です」になるためリセット。
       if (purged > 0 && skippedKeysRef.current.size > 0) {
         const keep = new Set([...skippedKeysRef.current].filter(
           k => k.startsWith('kitchen:') || k.startsWith('store:')))
@@ -219,23 +244,21 @@ export default function OwnerQuestionFlow({ sessionToken, onClose, onCountChange
           sessionStorage.setItem(SKIP_STORE_KEY, JSON.stringify([...keep]))
         } catch {}
       }
-      closeInput()
-    } catch (e: unknown) {
-      if (isUnauthorized(e)) {
-        onSessionExpired?.()
-        return
-      }
+    }).catch((e: unknown) => {
+      if (isUnauthorized(e)) { onSessionExpired?.(); return }
       if (e instanceof Error && e.message === 'conflict') {
-        // 既に回答済み(応答ロスト後の再送 or 別端末で回答済み) → 成功扱いでキューを進めて同期し直す
-        setQueue(prev => prev.slice(1))
-        closeInput()
+        // 既に回答済み(再送 or 別端末) → 楽観エントリを確定扱いにして同期し直す
+        setHistory(prev => prev.map(h => h._id === id ? { ...h, saving: false } : h))
         fetchQuestions()
         return
       }
+      // 失敗: 楽観エントリを取り消し、質問をキュー先頭に戻す
+      setHistory(prev => prev.filter(h => h._id !== id))
+      setQueue(prev => [answered, ...prev])
       setError('反映に失敗しました。もう一度お試しください。')
-    } finally {
-      setSubmitting(false)
-    }
+    }).finally(() => {
+      inFlightRef.current.delete(key)
+    })
   }
 
   const submitComment = async (historyIdx: number, text: string) => {
@@ -270,7 +293,7 @@ export default function OwnerQuestionFlow({ sessionToken, onClose, onCountChange
 
   const undoLast = async () => {
     const last = history[history.length - 1]
-    if (!last || submitting) return
+    if (!last || submitting || last.saving || !last.undo) return  // 保存中(undo情報未確定)は取消不可
     setSubmitting(true)
     setError(null)
     try {
@@ -317,23 +340,29 @@ export default function OwnerQuestionFlow({ sessionToken, onClose, onCountChange
             </div>
             <div className="owner-qa-bubble owner-qa-bubble-owner">{h.answerLabel}</div>
             <div className="owner-qa-applied">
-              <span className="owner-qa-applied-label">
-                <Check size={13} strokeWidth={2.5} />
-                {h.q.kind === 'kitchen' ? ' 関係する料理すべてに反映しました'
-                  : h.q.kind === 'store' ? ' お店の案内に反映しました' : ' 反映しました'}
-              </span>
-              {(h.purged ?? 0) > 0 && (
-                <span className="owner-qa-promoted">この回答で{h.purged}問が不要になりました</span>
-              )}
-              {(h.expanded ?? 0) > 0 && (
-                <span className="owner-qa-promoted">品ごとに{h.expanded}問に分けて聞き直します</span>
-              )}
-              {h.promoted && <span className="owner-qa-promoted">この料理は店主確認済みになりました</span>}
-              {/* 直前の回答だけ取り消せる(誤タップの即修正)。店全体質問は波及が広く逆操作未対応 */}
-              {idx === history.length - 1 && !isStoreLevelKind(h.q) && (
-                <button type="button" className="owner-qa-undo" disabled={submitting} onClick={undoLast}>
-                  <RotateCcw size={12} strokeWidth={2} /> 取り消す
-                </button>
+              {h.saving ? (
+                <span className="owner-qa-applied-label" style={{ opacity: 0.7 }}>保存中…</span>
+              ) : (
+                <>
+                  <span className="owner-qa-applied-label">
+                    <Check size={13} strokeWidth={2.5} />
+                    {h.q.kind === 'kitchen' ? ' 関係する料理すべてに反映しました'
+                      : h.q.kind === 'store' ? ' お店の案内に反映しました' : ' 反映しました'}
+                  </span>
+                  {(h.purged ?? 0) > 0 && (
+                    <span className="owner-qa-promoted">この回答で{h.purged}問が不要になりました</span>
+                  )}
+                  {(h.expanded ?? 0) > 0 && (
+                    <span className="owner-qa-promoted">品ごとに{h.expanded}問に分けて聞き直します</span>
+                  )}
+                  {h.promoted && <span className="owner-qa-promoted">この料理は店主確認済みになりました</span>}
+                  {/* 直前の回答だけ取り消せる(誤タップの即修正)。店全体質問は波及が広く逆操作未対応 */}
+                  {idx === history.length - 1 && !isStoreLevelKind(h.q) && (
+                    <button type="button" className="owner-qa-undo" disabled={submitting} onClick={undoLast}>
+                      <RotateCcw size={12} strokeWidth={2} /> 取り消す
+                    </button>
+                  )}
+                </>
               )}
             </div>
             {isStoreLevelKind(h.q) ? null : h.commentSaved ? (
