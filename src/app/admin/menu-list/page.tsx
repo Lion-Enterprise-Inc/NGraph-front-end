@@ -11,6 +11,7 @@ import MenuFormModal from './MenuFormModal'
 import UploadSection from './UploadSection'
 import PreviewModal from './PreviewModal'
 import MenuAnalyticsSection from '../menu-analytics/MenuAnalyticsSection'
+import { downscaleImage } from '../../../utils/image'
 import { useAdminLang } from '../../../hooks/useAdminLang'
 
 export interface MenuItem {
@@ -153,7 +154,13 @@ function MenuListContent() {
 
     setIsAnalyzing(true)
     try {
-      const response = await VisionApi.analyzeImage(file, restaurantSlug, false)
+      // 画像は原寸(数MB/HEIC)だと回線が弱い時に送信が途中で切れて「Failed to fetch」になる。
+      // 客側/スタッフ側と同じく1600px JPEGに縮小してから送る。PDF/Excel/CSVはそのまま。
+      let uploadFile = file
+      if (file.type.startsWith('image/')) {
+        try { uploadFile = await downscaleImage(file) } catch { /* 原寸のままフォールバック */ }
+      }
+      const response = await VisionApi.analyzeImage(uploadFile, restaurantSlug, false)
       const items = (response.result?.items || []).map(normalizeVisionItem)
       if (items.length === 0) {
         toast('warning', t.menuList.noMenuDetected)
