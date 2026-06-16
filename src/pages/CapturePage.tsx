@@ -2999,6 +2999,7 @@ export default function CapturePage({
           open
           onClose={() => setShareOpen(false)}
           sessionToken={ownerSession.sessionToken}
+          restaurantName={selectedRestaurant?.name || null}
         />
       )}
 

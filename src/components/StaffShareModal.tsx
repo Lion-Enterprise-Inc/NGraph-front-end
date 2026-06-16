@@ -11,9 +11,10 @@ type StaffShareModalProps = {
   open: boolean
   onClose: () => void
   sessionToken: string
+  restaurantName?: string | null
 }
 
-export default function StaffShareModal({ open, onClose, sessionToken }: StaffShareModalProps) {
+export default function StaffShareModal({ open, onClose, sessionToken, restaurantName }: StaffShareModalProps) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
   const [customerUrl, setCustomerUrl] = useState('')
@@ -53,7 +54,8 @@ export default function StaffShareModal({ open, onClose, sessionToken }: StaffSh
     }
   }
 
-  const staffLineMsg = `スタッフモードのご案内\n\nURL: ${staffUrl}\nパスコード: ${passcode}\n\n上のURLを開いてパスコードを入力するとスタッフモードに入れます。`
+  const storeLabel = restaurantName ? `【${restaurantName}】` : ''
+  const staffLineMsg = `${storeLabel}スタッフモードのご案内\n\nURL: ${staffUrl}\nパスコード: ${passcode}\n\n上のURLを開いてパスコードを入力するとスタッフモードに入れます。メニューの確認・修正、今日の献立の登録ができます。このメッセージはトークにピン留めしておくと便利です。`
 
   const overlay: React.CSSProperties = {
     position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 1000,
@@ -75,7 +77,9 @@ export default function StaffShareModal({ open, onClose, sessionToken }: StaffSh
     <div style={overlay} onClick={onClose}>
       <div style={panel} onClick={(e) => e.stopPropagation()}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-          <span style={{ fontSize: 16, fontWeight: 700 }}>リンクを共有</span>
+          <span style={{ fontSize: 16, fontWeight: 700 }}>
+            リンクを共有{restaurantName ? <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--muted, #94A3B8)', marginLeft: 8 }}>{restaurantName}</span> : null}
+          </span>
           <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit' }}>
             <X size={20} />
           </button>
