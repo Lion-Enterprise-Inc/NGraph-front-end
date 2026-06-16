@@ -70,6 +70,14 @@ const HERO_CHIPS: Record<string, HeroChip[]> = {
 
 const getHeroChips = (lang: string): HeroChip[] => HERO_CHIPS[lang] || HERO_CHIPS.en;
 
+// LINE/Instagram等のアプリ内ブラウザは getUserMedia(専用カメラ画面 /camera)をブロックする。
+// その場合は OS標準カメラを直接開く <input capture> 経路に切り替える(アプリ内でも確実に動く)。
+const isInAppBrowser = (): boolean => {
+  if (typeof navigator === "undefined") return false;
+  const ua = navigator.userAgent || "";
+  return /\bLine\//i.test(ua) || /Instagram/i.test(ua) || /FBAN|FBAV/i.test(ua);
+};
+
 const SAFETY_NOTICE: Record<string, string> = {
   ja: 'アレルギー・宗教上の制約など重要なご質問はスタッフにご確認ください',
   en: 'For allergies and religious or dietary restrictions, please always confirm with our staff.',
@@ -264,7 +272,7 @@ export default function ChatDock({
                 aria-label={copy.chat.camera}
                 onClick={(e) => {
                   e.stopPropagation();
-                  if (onOpenCamera) {
+                  if (onOpenCamera && !isInAppBrowser()) {
                     onOpenCamera();
                   } else {
                     cameraInputRef.current?.click();
@@ -309,14 +317,14 @@ export default function ChatDock({
         </div>
       ) : (
         <div className="chat-dock-row">
-          <div className="chat-dock-icons" aria-hidden="true">
+          <div className="chat-dock-icons">
             <button
               className="chat-icon"
               type="button"
               aria-label={copy.chat.camera}
               onClick={(e) => {
                 e.stopPropagation();
-                if (onOpenCamera) {
+                if (onOpenCamera && !isInAppBrowser()) {
                   onOpenCamera();
                 } else {
                   cameraInputRef.current?.click();
