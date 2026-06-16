@@ -8682,6 +8682,7 @@ textarea.form-input {
 .nfgcard-action-row {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 8px;
   margin-top: 6px;
 }
@@ -8790,6 +8791,7 @@ textarea.form-input {
   cursor: pointer;
   color: #00e896;
   letter-spacing: 0.3px;
+  white-space: nowrap;
 }
 .nfgcard-ask-btn:hover {
   background: rgba(0, 232, 150, 0.18);

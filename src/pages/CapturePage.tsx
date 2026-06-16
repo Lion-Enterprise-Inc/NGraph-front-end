@@ -704,7 +704,10 @@ export default function CapturePage({
     setProcurementBusy(true);
     setProcurementMsg(null);
     try {
-      const res = await OwnerChatApi.procurementPhoto(ownerSession.sessionToken, file);
+      // 原寸/HEICはLINE内ブラウザや4Gで失敗するため1600px JPEGに縮小(失敗時は原寸)
+      let uploadFile = file;
+      try { uploadFile = await downscaleImage(file); } catch { /* 原寸のまま */ }
+      const res = await OwnerChatApi.procurementPhoto(ownerSession.sessionToken, uploadFile);
       setProcurementMsg(res.readable
         ? `${res.products.length}商品を読み取りました（金額は読み取っていません）。仕入れリスト累計${res.total_products}件`
         : '納品書を読み取れませんでした。商品名がはっきり写るように撮ってください');

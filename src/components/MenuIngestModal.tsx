@@ -5,6 +5,7 @@
 import { useRef, useState } from 'react'
 import { X, FolderOpen, Camera } from 'lucide-react'
 import { OwnerChatApi } from '../services/api'
+import { downscaleImage } from '../utils/image'
 
 type MenuIngestModalProps = {
   open: boolean
@@ -29,7 +30,11 @@ export default function MenuIngestModal({ open, onClose, sessionToken, onOpenMen
     let ok = 0
     for (let i = 0; i < files.length; i++) {
       try {
-        await OwnerChatApi.ingestMenuPhoto(sessionToken, files[i])
+        // 原寸(数MB/HEIC)はLINE内ブラウザや4Gで送信失敗する。客側チャットと同じく
+        // 1600px JPEGに縮小してから送る(downscaleが失敗したら原寸でフォールバック送信)。
+        let uploadFile = files[i]
+        try { uploadFile = await downscaleImage(files[i]) } catch { /* 原寸のまま送る */ }
+        await OwnerChatApi.ingestMenuPhoto(sessionToken, uploadFile)
         ok++
         setSentCount((c) => c + 1)
       } catch {

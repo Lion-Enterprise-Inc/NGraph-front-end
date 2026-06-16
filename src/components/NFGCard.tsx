@@ -464,7 +464,7 @@ export default function NFGCard({
                     onClick={(e) => { e.stopPropagation(); onOwnerEdit(item.menu_uid!); }}
                   >
                     <span aria-hidden="true">{'\u270f\ufe0f'}</span>
-                    \u3053\u306e\u6599\u7406\u3092\u76f4\u3059
+                    この料理を直す
                   </button>
                 )}
               </div>
