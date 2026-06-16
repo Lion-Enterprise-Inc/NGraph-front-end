@@ -42,9 +42,25 @@ export default function StoresPage() {
 
   // Fetch restaurants from API on mount
   useEffect(() => {
+    // 一覧を開いている間は店舗入り込み状態を解除(サイドバーをプラットフォームナビに戻す)
+    sessionStorage.removeItem('selectedStoreUid')
+    sessionStorage.removeItem('selectedStoreName')
+    window.dispatchEvent(new Event('selectedStoreChanged'))
     fetchRestaurants()
     fetchRestaurantStats()
   }, [])
+
+  // 店カードから「入り込む」: 選択中の店舗(uid+名前)を保存してから該当セクションへ。
+  // これでサイドバーがその店に固定され、セクション間を移動しても文脈が保たれる。
+  const enterStore = (
+    store: { uid: string; name: string },
+    section: 'basic-info' | 'menu-list' | 'store-knowledge' | 'qr-management',
+  ) => {
+    sessionStorage.setItem('selectedStoreUid', store.uid)
+    sessionStorage.setItem('selectedStoreName', store.name)
+    window.dispatchEvent(new Event('selectedStoreChanged'))
+    router.push(`/admin/${section}?uid=${store.uid}`)
+  }
 
   const fetchRestaurantStats = async () => {
     try {
@@ -457,16 +473,16 @@ export default function StoresPage() {
               })()}
 
               <div className="store-actions-compact">
-                <button className="btn btn-primary btn-small" onClick={() => router.push(`/admin/basic-info?uid=${store.uid}`)} title={t.stores.titleManage}>
+                <button className="btn btn-primary btn-small" onClick={() => enterStore(store, 'basic-info')} title={t.stores.titleManage}>
                   {t.stores.btnManage}
                 </button>
-                <button className="btn btn-secondary btn-small" onClick={() => router.push(`/admin/menu-list?uid=${store.uid}`)} title={t.stores.titleMenu}>
+                <button className="btn btn-secondary btn-small" onClick={() => enterStore(store, 'menu-list')} title={t.stores.titleMenu}>
                   {t.stores.btnMenu}
                 </button>
-                <button className="btn btn-secondary btn-small" onClick={() => router.push(`/admin/store-knowledge?uid=${store.uid}`)} title={t.stores.titleKnowledge}>
+                <button className="btn btn-secondary btn-small" onClick={() => enterStore(store, 'store-knowledge')} title={t.stores.titleKnowledge}>
                   {t.stores.btnKnowledge}
                 </button>
-                <button className="btn btn-secondary btn-small" onClick={() => router.push(`/admin/qr-management?uid=${store.uid}`)} title={t.stores.titleQr}>
+                <button className="btn btn-secondary btn-small" onClick={() => enterStore(store, 'qr-management')} title={t.stores.titleQr}>
                   {t.stores.btnQr}
                 </button>
                 <button

@@ -18,6 +18,7 @@ export default function AdminLayout({ children, title }: Props) {
   const [isLoading, setIsLoading] = useState(true)
   const [mounted, setMounted] = useState(false)
   const [selectedStoreName, setSelectedStoreName] = useState('')
+  const [selectedStoreUid, setSelectedStoreUid] = useState('')
   const pathname = usePathname()
   const router = useRouter()
   const toast = useToast()
@@ -59,13 +60,24 @@ export default function AdminLayout({ children, title }: Props) {
 
   useEffect(() => {
     setMounted(true)
-    // 選択店舗名を読み込み
-    setSelectedStoreName(sessionStorage.getItem('selectedStoreName') || '')
+    // 選択店舗(uid+名前)を読み込み。プラットフォーム管理者が店カードから入ると set される。
+    const sync = () => {
+      setSelectedStoreName(sessionStorage.getItem('selectedStoreName') || '')
+      setSelectedStoreUid(sessionStorage.getItem('selectedStoreUid') || '')
+    }
+    sync()
     // 同一タブ内でsessionStorage変更を検知するカスタムイベント
-    const handler = () => setSelectedStoreName(sessionStorage.getItem('selectedStoreName') || '')
-    window.addEventListener('selectedStoreChanged', handler)
-    return () => window.removeEventListener('selectedStoreChanged', handler)
+    window.addEventListener('selectedStoreChanged', sync)
+    return () => window.removeEventListener('selectedStoreChanged', sync)
   }, [])
+
+  // 店舗一覧に戻る: 選択を解除してプラットフォームのナビに戻す
+  const exitStoreContext = () => {
+    sessionStorage.removeItem('selectedStoreUid')
+    sessionStorage.removeItem('selectedStoreName')
+    window.dispatchEvent(new Event('selectedStoreChanged'))
+    router.push('/admin/stores')
+  }
 
   const handleNavClick = (e: React.MouseEvent, item: NavItem) => {
     e.preventDefault()
@@ -98,7 +110,20 @@ export default function AdminLayout({ children, title }: Props) {
     { key: 'prompts', label: t.nav.prompts, icon: '🤖', to: '/admin/prompts' },
   ]
 
-  const navItems = userType === 'store' ? restaurantNavItems : platformOwnerNavItems
+  // プラットフォーム管理者が店カードから「入り込んだ」状態(uid選択中)。
+  // この間はその店に固定した店舗レベルのナビを出し、全リンクに ?uid を載せて文脈を保つ。
+  const inStoreContext = userType === 'admin' && !!selectedStoreUid
+  const storeScopedNavItems: NavItem[] = [
+    { key: 'basic-info', label: t.nav.basicInfo, icon: '🧾', to: `/admin/basic-info?uid=${selectedStoreUid}` },
+    { key: 'menu-list', label: t.nav.menuList, icon: '📋', to: `/admin/menu-list?uid=${selectedStoreUid}` },
+    { key: 'daily', label: t.nav.dailySpecials, icon: '🍽️', to: `/admin/daily-specials?uid=${selectedStoreUid}` },
+    { key: 'store-knowledge', label: t.nav.storeKnowledge, icon: '🧠', to: `/admin/store-knowledge?uid=${selectedStoreUid}` },
+    { key: 'qr', label: t.nav.qrManagement, icon: '📱', to: `/admin/qr-management?uid=${selectedStoreUid}` },
+  ]
+
+  const navItems = userType === 'store'
+    ? restaurantNavItems
+    : (inStoreContext ? storeScopedNavItems : platformOwnerNavItems)
   const pageTitle = title ?? (userType === 'store' ? t.layout.restaurantSystemTitle : t.layout.platformSystemTitle)
 
   const handleLogout = () => {
@@ -243,6 +268,8 @@ export default function AdminLayout({ children, title }: Props) {
           <div className="user-type-badge">
             {userType === 'store' ? (
               <>🍽️ {selectedStoreName || user?.restaurant_slug || t.layout.restaurantView}</>
+            ) : inStoreContext ? (
+              <>🏪 {selectedStoreName || t.layout.platformView}</>
             ) : (
               <>👑 {t.layout.platformView}</>
             )}
@@ -251,7 +278,8 @@ export default function AdminLayout({ children, title }: Props) {
           {/* Navigation */}
           <nav className="nav">
             {navItems.map((item) => {
-              const isActive = pathname === item.to || (item.to !== '/admin' && pathname?.startsWith(item.to))
+              const toPath = item.to.split('?')[0]
+              const isActive = pathname === toPath || (toPath !== '/admin' && pathname?.startsWith(toPath))
               return (
                 <a
                   key={item.key}
@@ -314,6 +342,29 @@ export default function AdminLayout({ children, title }: Props) {
 
           <main className="app-main">
             <div className="app-container">
+              {inStoreContext && (
+                <div style={{
+                  display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20,
+                  padding: '10px 14px', background: 'var(--bg-surface)',
+                  border: '1px solid var(--border-strong)', borderRadius: 10,
+                }}>
+                  <button
+                    type="button"
+                    onClick={exitStoreContext}
+                    style={{
+                      display: 'inline-flex', alignItems: 'center', gap: 6,
+                      padding: '7px 12px', background: 'var(--bg-input)', color: 'var(--text-body)',
+                      border: '1px solid var(--border-strong)', borderRadius: 8,
+                      fontSize: 13, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0,
+                    }}
+                  >
+                    ← {t.nav.restaurantList}
+                  </button>
+                  <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    🏪 {selectedStoreName}
+                  </span>
+                </div>
+              )}
               {children}
             </div>
           </main>
