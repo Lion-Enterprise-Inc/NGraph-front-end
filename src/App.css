@@ -9745,9 +9745,12 @@ textarea.form-input {
   align-items: center;
   justify-content: flex-start;
   gap: 10px;
-  padding: 7px 12px;
-  background: rgba(16, 163, 127, 0.12);
-  border-bottom: 1px solid rgba(16, 163, 127, 0.25);
+  padding: 8px 14px;
+  /* スタッフ専用の「操作コンソール」バー。ライト/ダーク両テーマで同じ濃紺基調にして
+     視認性を担保しつつ、客向けUIと明確に切り替わったことが一目で分かる見た目にする。 */
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+  color: #cbd5e1;
   /* ボタンが増えても縦に折らず横スクロール(SPでの3行折れ防止)。
      flex子はmin-width:autoで中身幅まで膨張し親にclipされて
      スクロール自体が死ぬ(320pxで右端ボタンに届かない実害)→min-width:0必須 */
@@ -9756,6 +9759,49 @@ textarea.form-input {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
+}
+
+/* スタッフモード指標: 脈打つドット + グラデーション文字 + 未回答ピル */
+.staff-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #22d3ee;
+  flex: none;
+  animation: staffPulse 2.2s ease-in-out infinite;
+}
+@keyframes staffPulse {
+  0%   { box-shadow: 0 0 0 0 rgba(34, 211, 238, 0.5); }
+  70%  { box-shadow: 0 0 0 6px rgba(34, 211, 238, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(34, 211, 238, 0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .staff-dot { animation: none; }
+}
+.staff-label {
+  font-weight: 700;
+  font-size: 12.5px;
+  letter-spacing: 0.08em;
+  background: linear-gradient(90deg, #38bdf8, #22d3ee);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  white-space: nowrap;
+}
+.staff-hint {
+  font-size: 12px;
+  color: #94a3b8;
+  white-space: nowrap;
+}
+.staff-pending {
+  font-size: 11px;
+  font-weight: 700;
+  color: #0f172a;
+  background: linear-gradient(90deg, #fbbf24, #f59e0b);
+  border-radius: 999px;
+  padding: 2px 9px;
+  white-space: nowrap;
+  box-shadow: 0 1px 6px rgba(245, 158, 11, 0.4);
 }
 
 .owner-banner::-webkit-scrollbar { display: none; }

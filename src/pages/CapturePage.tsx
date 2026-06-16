@@ -2047,18 +2047,14 @@ export default function CapturePage({
       {staffUiActive && (
         <>
           <div className="owner-banner">
-            <span className="owner-banner-label" style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-              <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'linear-gradient(90deg, #3B82F6, #06B6D4)' }} />
-              <span style={{ fontWeight: 700, background: 'linear-gradient(90deg, #3B82F6, #06B6D4)', WebkitBackgroundClip: 'text', backgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                スタッフモード
-              </span>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7, flexShrink: 0 }}>
+              <span className="staff-dot" />
+              <span className="staff-label">スタッフモード</span>
             </span>
-            <span style={{ fontSize: 12, marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 8, flexShrink: 0, whiteSpace: 'nowrap' }}>
-              <span style={{ color: '#5b6b64' }}>≡ から操作</span>
+            <span style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+              <span className="staff-hint">≡ から操作</span>
               {ownerPending > 0 && (
-                <span style={{ color: '#fff', background: '#ef4444', borderRadius: 10, padding: '2px 8px', fontWeight: 700, fontSize: 11 }}>
-                  未回答 {ownerPending}件
-                </span>
+                <span className="staff-pending">未回答 {ownerPending}件</span>
               )}
             </span>
           </div>
