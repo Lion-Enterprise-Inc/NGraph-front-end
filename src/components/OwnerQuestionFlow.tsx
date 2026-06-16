@@ -45,8 +45,6 @@ type OwnerQuestionFlowProps = {
   onSessionExpired?: () => void
 }
 
-const SKIP_STORE_KEY = 'omiseai_owner_qa_skipped'
-
 // 店全体質問(kitchen=厨房共通/store=店舗プロフィール)か。undo・店主のひとこと非対象。
 // kind判定はこの1関数に集約する(新kind追加時に分岐の直し漏れを作らない)
 const isStoreLevelKind = (q?: Pick<OwnerQuestion, 'kind'> | null) =>
@@ -67,8 +65,8 @@ export default function OwnerQuestionFlow({ sessionToken, onClose, onCountChange
   const [photoResult, setPhotoResult] = useState<PhotoAnalyzeResult | null>(null)
   const photoInputRef = useRef<HTMLInputElement>(null)
   const [error, setError] = useState<string | null>(null)
-  // 「分からない(あとで答える)」のスキップ記憶。タブを閉じるまで有効(sessionStorage)、
-  // 次の来訪では再び聞く=回答データは作らない(分からないものを推測で埋めさせない)
+  // 「分からない(あとで答える)」のスキップ記憶。このパネルを開いている間だけ有効(メモリ)。
+  // 開き直すとリセットされ再び聞く=回答データは作らない(分からないものを推測で埋めさせない)
   const skippedKeysRef = useRef<Set<string>>(new Set())
   const histIdRef = useRef(0)                       // 楽観履歴の連番id
   const inFlightRef = useRef<Set<string>>(new Set()) // 送信中の質問キー(同一質問の二重送信防止)
@@ -109,14 +107,8 @@ export default function OwnerQuestionFlow({ sessionToken, onClose, onCountChange
   }
 
   useEffect(() => {
-    // スキップ記憶の復元(マウント後=hydration安全)
-    try {
-      const saved = sessionStorage.getItem(SKIP_STORE_KEY)
-      if (saved) {
-        skippedKeysRef.current = new Set(JSON.parse(saved) as string[])
-        setSkippedCount(skippedKeysRef.current.size)
-      }
-    } catch {}
+    // スキップ記憶はこのパネルを開いている間だけ有効(メモリ)。開き直すとリセットされ、
+    // 「あとで答える」にした質問は再び聞かれる(完了メッセージ「次に開いた時にまた聞きます」と一致)。
     fetchQuestions()
   }, [])  // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -171,9 +163,6 @@ export default function OwnerQuestionFlow({ sessionToken, onClose, onCountChange
     if (!current || submitting) return
     skippedKeysRef.current.add(skipKey(current))
     setSkippedCount(skippedKeysRef.current.size)
-    try {
-      sessionStorage.setItem(SKIP_STORE_KEY, JSON.stringify([...skippedKeysRef.current]))
-    } catch {}
     // サーバ側でも質問を末尾に回す(同じ品の次の質問が配信されるようになる)。失敗しても
     // FE側スキップは成立するので待たない(次回また聞かれるだけ)
     OwnerChatApi.skip(sessionToken, { menu_uid: current.menu_uid, question: current.question }).catch(() => {})
@@ -240,9 +229,6 @@ export default function OwnerQuestionFlow({ sessionToken, onClose, onCountChange
           k => k.startsWith('kitchen:') || k.startsWith('store:')))
         skippedKeysRef.current = keep
         setSkippedCount(keep.size)
-        try {
-          sessionStorage.setItem(SKIP_STORE_KEY, JSON.stringify([...keep]))
-        } catch {}
       }
     }).catch((e: unknown) => {
       if (isUnauthorized(e)) { onSessionExpired?.(); return }
