@@ -2053,8 +2053,13 @@ export default function CapturePage({
                 スタッフモード
               </span>
             </span>
-            <span style={{ fontSize: 12, opacity: 0.7, marginLeft: 'auto' }}>
-              ≡ から操作{ownerPending > 0 ? `・未回答 ${ownerPending}件` : ''}
+            <span style={{ fontSize: 12, marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 8, flexShrink: 0, whiteSpace: 'nowrap' }}>
+              <span style={{ color: '#5b6b64' }}>≡ から操作</span>
+              {ownerPending > 0 && (
+                <span style={{ color: '#fff', background: '#ef4444', borderRadius: 10, padding: '2px 8px', fontWeight: 700, fontSize: 11 }}>
+                  未回答 {ownerPending}件
+                </span>
+              )}
             </span>
           </div>
           {/* 納品書入力(ハンバーガーの「納品書を撮る」から発火。金額は読み取らない) */}
