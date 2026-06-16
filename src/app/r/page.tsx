@@ -33,8 +33,9 @@ export default function ShortCodeRedirect() {
         }
         const params = new URLSearchParams(window.location.search)
         const table = params.get('t')
+        const owner = params.get('owner')  // スタッフ招待リンク(/r/{code}?owner=token)のトークンを引き継ぐ
         const restaurantParam = data.result.url_slug || data.result.slug
-        const url = `/capture?restaurant=${encodeURIComponent(restaurantParam)}&source=qr${table ? `&t=${table}` : ''}`
+        const url = `/capture?restaurant=${encodeURIComponent(restaurantParam)}&source=qr${table ? `&t=${table}` : ''}${owner ? `&owner=${encodeURIComponent(owner)}` : ''}`
         router.replace(url)
       } catch {
         setError(true)
