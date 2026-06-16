@@ -833,7 +833,7 @@ function MenuListContent() {
       </div>
 
       {view === 'analytics' && (
-        <MenuAnalyticsSection uid={selectedStoreUid || undefined} />
+        <MenuAnalyticsSection uid={uidParam || selectedStoreUid || undefined} />
       )}
 
       {view === 'menu' && (
