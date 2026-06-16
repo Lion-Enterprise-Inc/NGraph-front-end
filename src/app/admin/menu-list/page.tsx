@@ -10,6 +10,7 @@ import MenuTable from './MenuTable'
 import MenuFormModal from './MenuFormModal'
 import UploadSection from './UploadSection'
 import PreviewModal from './PreviewModal'
+import MenuAnalyticsSection from '../menu-analytics/MenuAnalyticsSection'
 import { useAdminLang } from '../../../hooks/useAdminLang'
 
 export interface MenuItem {
@@ -84,6 +85,8 @@ function MenuListContent() {
   const [showPreviewModal, setShowPreviewModal] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
   const [activeTab, setActiveTab] = useState('basic')
+  // ページ上部の表示切替: メニュー一覧 / 分析(あまり開かないのでサイドバーから移設)
+  const [view, setView] = useState<'menu' | 'analytics'>('menu')
   const [previewItem, setPreviewItem] = useState<MenuItem | null>(null)
   const [editItem, setEditItem] = useState<MenuItem | null>(null)
   const [pendingMenus, setPendingMenus] = useState<{id: number, name: string, price: number, category: string, confidence: number}[]>([])
@@ -804,6 +807,30 @@ function MenuListContent() {
         </div>
       )}
 
+      <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+        {([['menu', `📋 ${t.nav.menuList}`], ['analytics', `📊 ${t.nav.menuAnalytics}`]] as const).map(([v, label]) => (
+          <button
+            key={v}
+            type="button"
+            onClick={() => setView(v)}
+            style={{
+              padding: '8px 16px', borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: 'pointer',
+              border: `1px solid ${view === v ? 'rgba(59,130,246,0.4)' : 'var(--border)'}`,
+              background: view === v ? 'rgba(59,130,246,0.12)' : 'var(--bg-surface)',
+              color: view === v ? '#3B82F6' : 'var(--text-body)',
+            }}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {view === 'analytics' && (
+        <MenuAnalyticsSection uid={selectedStoreUid || undefined} />
+      )}
+
+      {view === 'menu' && (
+      <>
       <UploadSection
         fileInputRef={fileInputRef}
         cameraInputRef={cameraInputRef}
@@ -870,6 +897,8 @@ function MenuListContent() {
           onToggleStatus={handleToggleStatus}
         />
       </div>
+      </>
+      )}
 
       <MenuFormModal
         isOpen={showAddModal}
