@@ -2052,12 +2052,12 @@ export default function CapturePage({
           <div className="owner-banner">
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7, flexShrink: 0 }}>
               <span className="staff-dot" />
-              <span className="staff-label">スタッフモード</span>
+              <span className="staff-label">{activeLanguage === 'ja' ? 'スタッフモード' : 'Staff mode'}</span>
             </span>
             <span style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-              <span className="staff-hint">≡ から操作</span>
+              <span className="staff-hint">{activeLanguage === 'ja' ? '≡ から操作' : 'Use ≡ menu'}</span>
               {ownerPending > 0 && (
-                <span className="staff-pending">未回答 {ownerPending}件</span>
+                <span className="staff-pending">{activeLanguage === 'ja' ? `未回答 ${ownerPending}件` : `${ownerPending} to answer`}</span>
               )}
             </span>
           </div>
@@ -2083,8 +2083,8 @@ export default function CapturePage({
           style={{ cursor: 'pointer', justifyContent: 'center', gap: 8 }}
           onClick={() => setPreviewAsCustomer(false)}
         >
-          <span className="owner-banner-label">👁 お客様プレビュー中</span>
-          <span style={{ fontSize: 12, textDecoration: 'underline' }}>タップでスタッフに戻る</span>
+          <span className="owner-banner-label">{activeLanguage === 'ja' ? '👁 お客様プレビュー中' : '👁 Customer preview'}</span>
+          <span style={{ fontSize: 12, textDecoration: 'underline' }}>{activeLanguage === 'ja' ? 'タップでスタッフに戻る' : 'Tap to return to staff'}</span>
         </div>
       )}
       {/* 納品書読み取りの結果(バナーの横スクロール行の外に出す) */}

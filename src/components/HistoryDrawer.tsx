@@ -82,39 +82,39 @@ export default function HistoryDrawer({
                 WebkitTextFillColor: 'transparent',
               }}
             >
-              スタッフ
+              {t('staffSection', 'Staff')}
             </div>
             <button className="sidebar-row" onClick={() => { staffMenu.onRegisterMenu(); onClose?.(); }}>
               <Camera size={16} strokeWidth={1.75} />
-              <span>メニューを登録（写真）</span>
+              <span>{t('staffRegisterMenu', 'Add menu (photo)')}</span>
             </button>
             <button className="sidebar-row" onClick={() => { staffMenu.onQuestions(); onClose?.(); }}>
               <ClipboardCheck size={16} strokeWidth={1.75} />
-              <span>{staffMenu.pending > 0 ? `質問に答える（${staffMenu.pending}件）` : '確認事項をチェック'}</span>
+              <span>{staffMenu.pending > 0 ? `${t('staffAnswerQuestions', 'Answer questions')} (${staffMenu.pending})` : t('staffCheckItems', 'Review checklist')}</span>
             </button>
             <button className="sidebar-row" onClick={() => { staffMenu.onDailyMenu(); onClose?.(); }}>
               <CalendarDays size={16} strokeWidth={1.75} />
-              <span>今日の献立</span>
+              <span>{t('staffTodayMenu', "Today's menu")}</span>
             </button>
             <button className="sidebar-row" onClick={() => { staffMenu.onBulkEdit(); onClose?.(); }}>
               <MessageSquare size={16} strokeWidth={1.75} />
-              <span>まとめて直す（チャット）</span>
+              <span>{t('staffBulkEdit', 'Fix in bulk (chat)')}</span>
             </button>
             <button className="sidebar-row" onClick={() => { staffMenu.onMenuFix(); onClose?.(); }}>
               <Pencil size={16} strokeWidth={1.75} />
-              <span>メニューを修正</span>
+              <span>{t('staffMenuFix', 'Edit menus')}</span>
             </button>
             <button className="sidebar-row" onClick={() => { staffMenu.onProcurement(); onClose?.(); }}>
               <Receipt size={16} strokeWidth={1.75} />
-              <span>納品書を撮る</span>
+              <span>{t('staffProcurement', 'Scan delivery slip')}</span>
             </button>
             <button className="sidebar-row" onClick={() => { staffMenu.onShareLinks(); onClose?.(); }}>
               <Share2 size={16} strokeWidth={1.75} />
-              <span>リンクを共有</span>
+              <span>{t('staffShareLinks', 'Share link')}</span>
             </button>
             <button className="sidebar-row" onClick={() => { staffMenu.onPreviewAsCustomer(); onClose?.(); }}>
               <Eye size={16} strokeWidth={1.75} />
-              <span>お客様画面で確認</span>
+              <span>{t('staffPreviewCustomer', 'Preview as customer')}</span>
             </button>
           </div>
         )}
