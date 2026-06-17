@@ -10438,7 +10438,7 @@ textarea.form-input {
    崩れて見える(2026-06-11実機指摘)。キーボード問題はソフトキーボードの話なので
    pointer:coarse に限定する */
 @media (pointer: coarse) {
-  .capture-page.is-hero-landing .chat-dock.chat-dock-floating:focus-within {
+  .capture-page.is-hero-landing .chat-dock.chat-dock-floating:has(textarea:focus) {
     bottom: 0;
     left: 0;
     right: 0;
