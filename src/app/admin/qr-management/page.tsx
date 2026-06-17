@@ -92,12 +92,14 @@ export default function QRManagementPage() {
     }
 
     setIsGenerating(true)
-    // 共有しやすさ・店名が見える透明性を優先して /capture?restaurant={slug} 形に統一
-    // ?source=qr は CapturePage 側で「店内QR=メニュー直表示モード」のトリガーになるため
-    // 共有用URLでは付けない (チャットUIで起動させる)
-    // url_slug があれば優先 (英数字で読みやすい)、無ければ slug にフォールバック
-    const targetSlug = (urlSlug && urlSlug.trim()) ? urlSlug.trim() : restaurantSlug.trim()
-    const url = `https://app.ngraph.jp/capture?restaurant=${encodeURIComponent(targetSlug)}`
+    // QRには名前非依存の不変アドレスを焼く(改名しても旧名が残らない/壊れない)。
+    // 県・市・url_slugが揃えば読みやすいクリーンURL、無ければ short_code(/r/) にフォールバック。
+    // どちらも不変なので印刷済みQRは将来も解決する。解決経路は不変なので旧QRも全部生きる。
+    const url = (prefectureSlug && citySlug && urlSlug)
+      ? `https://app.ngraph.jp/${prefectureSlug}/${citySlug}/${urlSlug}`
+      : shortCode
+        ? `https://app.ngraph.jp/r/${shortCode}`
+        : `https://app.ngraph.jp/capture?restaurant=${encodeURIComponent((urlSlug && urlSlug.trim()) ? urlSlug.trim() : restaurantSlug.trim())}`
     setQrCodeUrl(url)
 
     try {
