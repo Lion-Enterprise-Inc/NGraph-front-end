@@ -71,6 +71,9 @@ export type AdminCopy = {
     approvalFailed: string
     ownerVerifyFailed: string
     statusChangeFailed: string
+    statusChanging: string
+    movedToActive: string
+    movedToArchive: string
     noPendingApproval: string
     bulkApproveFailed: string
     confirmDeleteMenu: string
@@ -1116,6 +1119,9 @@ const adminCopy: Record<AdminLang, AdminCopy> = {
       approvalFailed: '承認に失敗しました',
       ownerVerifyFailed: '店主確認の登録に失敗しました',
       statusChangeFailed: 'ステータス変更に失敗しました',
+      statusChanging: '変更中…',
+      movedToActive: '提供中にしました',
+      movedToArchive: 'アーカイブに移動しました',
       noPendingApproval: '承認待ちのメニューはありません',
       bulkApproveFailed: '一括承認に失敗しました',
       confirmDeleteMenu: 'このメニューを削除しますか？',
@@ -2174,6 +2180,9 @@ const adminCopy: Record<AdminLang, AdminCopy> = {
       approvalFailed: 'Approval failed',
       ownerVerifyFailed: 'Failed to record owner verification',
       statusChangeFailed: 'Failed to change status',
+      statusChanging: 'Updating…',
+      movedToActive: 'Set to active',
+      movedToArchive: 'Moved to archive',
       noPendingApproval: 'No menus pending approval',
       bulkApproveFailed: 'Bulk approval failed',
       confirmDeleteMenu: 'Delete this menu?',

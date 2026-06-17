@@ -240,7 +240,7 @@ function MenuListContent() {
       restaurant_uid: restaurant!.uid,
       ingredients: item.ingredients || [],
       allergen_uids: allergenUids.length > 0 ? allergenUids : null,
-      status: false,
+      status: true,  // 登録したら提供中に出す(アーカイブに沈めない)。精度はヒアリングで後から上げる
       data_source: 'ai_inferred'
     }
   }
@@ -506,7 +506,7 @@ function MenuListContent() {
         allergen_uids: selectedAllergenUids.length > 0 ? selectedAllergenUids : null,
         cooking_method_uids: selectedCookingMethodUids.length > 0 ? selectedCookingMethodUids : null,
         restriction_uids: selectedRestrictionUids.length > 0 ? selectedRestrictionUids : null,
-        status: false,
+        status: true,  // 登録したら提供中に出す
         narrative: Object.keys(narrativeData).length > 0 ? narrativeData : null,
         serving: Object.keys(servingData).length > 0 ? servingData : null,
         price_detail: Object.keys(priceDetailData).length > 0 ? priceDetailData : null
@@ -613,7 +613,7 @@ function MenuListContent() {
           category: menu.category,
           price: menu.price,
           restaurant_uid: restaurant.uid,
-          status: false
+          status: true
         }
         await MenuApi.create(menuData)
         await refreshMenus()
@@ -639,7 +639,7 @@ function MenuListContent() {
           category: menu.category,
           price: menu.price,
           restaurant_uid: restaurant.uid,
-          status: false
+          status: true
         }
         await MenuApi.create(menuData)
       }
@@ -721,9 +721,11 @@ function MenuListContent() {
   }
 
   const handleApprove = async (item: MenuItem) => {
+    toast('info', t.menuList.statusChanging)
     try {
       await MenuApi.update(item.uid, { status: true })
       await refreshMenus()
+      toast('success', t.menuList.movedToActive)
     } catch (err) {
       console.error('Failed to approve menu:', err)
       toast('error', t.menuList.approvalFailed)
@@ -746,9 +748,12 @@ function MenuListContent() {
   }
 
   const handleToggleStatus = async (uid: string, newStatus: boolean) => {
+    // 即「変更中…」を出して固まってないことを伝え、完了で結果を通知(バグ②③: 無反応に見える対策)
+    toast('info', t.menuList.statusChanging)
     try {
       await MenuApi.update(uid, { status: newStatus })
       await refreshMenus()
+      toast('success', newStatus ? t.menuList.movedToActive : t.menuList.movedToArchive)
     } catch {
       toast('error', t.menuList.statusChangeFailed)
     }
