@@ -875,6 +875,18 @@ body {
   display: none;
 }
 
+/* iOS実機: フォーカス時はヒーローの浮いた配置(bottom:22/28dvh)をやめて最下部にピン留め。
+   dvh はキーボード出現で縮むため、浮かせたままだと入力欄がタップ中に飛び、
+   フォーカスが外れる(キーボードが出ない/何度もタップ)・位置がずれる。
+   通常の会話状態(bottom:0)と同じ挙動にすることで解消する。
+   ソフトキーボードのあるモバイルだけに限定(PCでは入力欄が下に飛ぶのを防ぐ)。 */
+@media (max-width: 768px) {
+  .capture-page.is-hero-landing .chat-dock.chat-dock-floating.chat-dock-input-focused {
+    bottom: 0;
+    transition: bottom 0.18s ease;
+  }
+}
+
 /* デスクトップ(>=769px)はヒーロー(店名+入力欄)を画面の縦中央に。
    ベースの 28dvh はモバイル基準で、PC では下余白が残り上寄りになる。
    dvh 固定だと画面高でズレるため、中央化の式 50dvh - (cluster高/2) で

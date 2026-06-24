@@ -133,6 +133,10 @@ export default function ChatDock({
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const measureRef = useRef<HTMLDivElement | null>(null);
   const [multiline, setMultiline] = useState(false);
+  // フォーカス中フラグ。ヒーロー時の浮いた入力欄(bottom:22dvh)はキーボード出現で
+  // dvh が縮んで飛び、iOS実機でフォーカスが外れる/位置がずれる。フォーカス中だけ
+  // 最下部にピン留めする(.chat-dock-input-focused)ためのフラグ。
+  const [inputFocused, setInputFocused] = useState(false);
 
   useEffect(() => {
     const dockEl = dockRef.current;
@@ -208,7 +212,7 @@ export default function ChatDock({
   return (
     <div
       ref={dockRef}
-      className="chat-dock chat-dock-floating"
+      className={`chat-dock chat-dock-floating${inputFocused ? " chat-dock-input-focused" : ""}`}
       onClick={(e) => e.stopPropagation()}
     >
       {attachment && (
@@ -251,7 +255,8 @@ export default function ChatDock({
             rows={1}
             enterKeyHint="send"
             autoComplete="off"
-            onFocus={onFocus}
+            onFocus={() => { setInputFocused(true); onFocus?.(); }}
+            onBlur={() => setInputFocused(false)}
             onClick={onFocus}
             onChange={onChange}
             onInput={(event) =>
@@ -355,7 +360,8 @@ export default function ChatDock({
               rows={1}
               enterKeyHint="send"
               autoComplete="off"
-              onFocus={onFocus}
+              onFocus={() => { setInputFocused(true); onFocus?.(); }}
+              onBlur={() => setInputFocused(false)}
               onClick={onFocus}
               onChange={onChange}
               onInput={(event) =>
