@@ -663,7 +663,9 @@ export default function CapturePage({
   const fromHome = searchParams?.get("from") === "home" || defaultFromHome;
   const fromRestaurant = searchParams?.get("from") === "restaurant";
   const isInStore = searchParams?.get("source") === "qr";
-  const [qrMenuMode, setQrMenuMode] = useState(isInStore);
+  // source=qr は流入計測(scanイベント)のためだけに使う。初回訪問の挙動は経路に
+  // 依存せず同一(オンボ→チャット)にするため、QR専用メニュー画面は自動表示しない。
+  const [qrMenuMode, setQrMenuMode] = useState(false);
   const scanLoggedRef = useRef(false);
   const isNfgMode = searchParams?.get("nfg") === "true";
   const isQuickMode = searchParams?.get("mode") === "quick";
